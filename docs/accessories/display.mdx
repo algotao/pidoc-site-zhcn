@@ -1,0 +1,170 @@
+---
+sidebar_position: 15
+draft: false
+description: 树莓派官方显示屏的参数列举，使用扁平软线缆连接显示屏，正确的供电电源接线，更改屏幕方向等。
+keywords: [树莓派, Raspberry Pi, 显示, 显示屏, display, hdmi]
+last_update: 
+  date: 2024-12-20
+---
+import Normal from "../_normal.mdx";
+
+# 触摸显示屏
+
+## 树莓派触摸显示屏
+[树莓派触摸显示屏](https://www.raspberrypi.com/products/raspberry-pi-touch-display/) 是一个液晶显示屏，通过 DSI 连接器和 GPIO 连接器与 Raspberry Pi 相连。
+
+<img src="/img/accessories/display/display.png" alt="树莓派7英寸触摸显示屏" width="70%" />
+*树莓派7英寸触摸显示屏*
+
+触摸显示屏兼容所有型号的 Raspberry Pi，但缺少 DSI 连接器的 Zero 系列和键盘系列除外。最早的 Raspberry Pi 型号缺少适当的安装孔，需要额外的安装硬件来安装显示屏 PCB 上的支座。
+
+显示屏具有以下主要功能：
+- 800×480px RGB 液晶显示屏
+- 24位色彩
+- 工业品质：水平视角 140 度，垂直视角 120 度
+- 10点多点触摸屏
+- 通过 I2C 接口实现 PWM 背光控制和电源控制
+- 金属框架背面，带有树莓派显示屏转换板和树莓派的安装点
+- 背光寿命：20000 小时
+- 工作温度：-20 至 +70 摄氏度
+- 存储温度：-30 至 +80 摄氏度
+- 对比度：500
+- 平均亮度：250 cd/m2
+- 视角（度）
+  - 顶部 - 50
+  - 底部 - 70
+  - 左 - 70
+  - 右 - 70
+- 电源要求： 最大亮度时，典型值为 5V 200mA。
+- 外部尺寸 192.96 × 110.76 毫米
+- 可视区域 154.08 × 85.92 毫米
+
+### 安装触摸显示屏
+您可以使用触控显示屏的支座将 Raspberry Pi 安装到触控显示屏的背面，然后连接相应的电缆。如果你有单独的机箱，也可以将触摸显示屏安装到机箱中。连接方式保持不变，但根据机箱的不同，您可能需要更长的电缆。
+
+<img src="/img/accessories/display/GPIO_power-500x333.jpg" alt="连接到触摸显示屏的树莓派图像" width="70%" />
+
+*连接到触摸显示屏的树莓派*
+
+将扁平柔性电缆 (FFC) 的一端连接到触摸显示电路板上的 `RPI-DISPLAY` 端口。银色或金色触点应远离显示屏。然后将 FFC 的另一端连接到树莓派上的 `DISPLAY` 端口。这一端的触点应朝内，朝向树莓派。
+
+如果 FFC 没有完全插入或位置不正确，显示屏就会出现问题。在排除故障时，尤其是在显示屏上看不到任何东西或显示屏只显示一种颜色时，应仔细检查此连接。
+
+:::note[注意]
+您可以下载触摸显示屏的[机械图纸](https://datasheets.raspberrypi.com/display/7-inch-display-mechanical-drawing.pdf)。
+:::
+
+### 为触摸显示屏供电
+我们建议使用 Raspberry Pi 的 GPIO 为触摸显示屏供电。或者，您也可以使用单独的微型 USB 电源直接为显示屏供电。
+
+#### 从树莓派供电
+要使用树莓派为触摸显示屏供电，您需要在[树莓派GPIO](../computers/raspberry-pi.mdx#通用io-gpio) 的 5V 和 `GND` 引脚与显示屏的 5V 和 `GND` 引脚之间连接两条跳线，如下图所示。
+
+<img src="/img/accessories/display/display_plugs.png" alt="显示屏引脚示意图" width="40%" />
+*显示屏 5V 和 `GND` 引脚的位置*
+
+开始之前，请确保 Raspberry Pi 已关闭电源，并且未连接任何电源。将黑色跳线的一端连接到 Raspberry Pi 的第六针（`GND`），红色跳线的一端连接到第四针（5V）。如果没有第六针，您可以使用任何其他开放的 `GND` 针来连接黑线。如果没有四号针脚，可以使用任何其他 5V 针脚连接红线，例如二号针脚。
+
+<img src="/img/accessories/display/pi_plugs.png" alt="树莓派针座示意图" width="50%" />
+*树莓派针座的位置*
+
+接下来，将黑线的另一端连接到显示屏上的 `GND` 引脚，红线的另一端连接到显示屏上的 5V 引脚。完成所有连接后，下次打开 Raspberry Pi 时就能看到触摸显示屏打开了。
+
+使用触摸显示屏上的其他三个引脚将显示屏连接到原始 Raspberry Pi 1 Model A 或 B。更多信息，请参阅我们的[传统支持](#传统支持)文档。
+
+:::note[注意]
+要识别原装 Raspberry Pi，请检查 GPIO 接头。只有原装型号有一个 26 针 GPIO 接头；后续型号有 40 针。
+:::
+
+#### 从微型USB供电
+如果不想使用树莓派为触摸显示屏供电，可以使用微型 USB 电源。我们建议使用[树莓派12.5W 电源](https://www.raspberrypi.com/products/micro-usb-power-supply/)，以确保显示屏按预期运行。
+
+如果您选择使用微型 USB 供电，请不要将树莓派上的 GPIO 引脚连接到显示屏。两块板之间的唯一连接应该是扁平柔性线缆。
+
+:::warning[警告]
+使用微型 USB 电缆为显示屏供电时，请将其安装在机箱内，以防止在使用过程中接触到显示屏的印刷电路板。
+:::
+
+### 使用屏幕键盘
+
+Raspberry Pi OS _Bookworm_ 及更高版本默认包含 Squeekboard 屏幕键盘。当连接触摸显示屏时，屏幕键盘会在可以输入文字时自动显示，在无法输入文字时自动隐藏。
+
+对于不支持文字输入检测的应用程序，可使用任务栏右端的键盘图标手动显示和隐藏键盘。
+
+您也可以在 Raspberry Pi 配置的 `Display` 选项卡或 `raspi-config` 的 `Display` 部分永久显示或隐藏屏幕键盘。
+
+:::tip
+在 _Bookworm_ 之前的 Raspberry Pi OS 版本中，请使用 `matchbox-keyboard` 代替。如果使用 wayfire 桌面合成器，请使用 `wvkbd` 代替。
+:::
+
+### 更改屏幕方向
+
+如果您想旋转显示屏或将其安装在特定位置，请从 **首选项** 菜单中选择 **屏幕配置** 。右键单击布局编辑器中的触摸显示矩形（可能是 DSI-1），选择 **方向**，然后选择最适合您需要的选项。
+
+<img src="/img/accessories/display/display-rotation.png" alt="屏幕配置中方向选项的屏幕截图" width="80%" />
+
+#### 在没有桌面的情况下旋转屏幕
+要在没有桌面环境的设备上设置屏幕方向，请编辑 `/boot/firmware/cmdline.txt` 配置文件，将方向传递给系统。在 `cmdline.txt` 中添加以下一行：
+```
+video=DSI-1:800x480@60,rotate=<rotation-value>
+```
+
+将 `<rotation-value>` 占位符替换为以下值之一，这些值与显示屏上相对于默认值的旋转度相对应：
+- 0
+- 90
+- 180
+- 270
+
+例如，旋转值为 `90` 时，显示屏会向右旋转 90 度。`180` 则将显示屏旋转 180 度，即上下颠倒。
+
+:::note[注意]
+使用 `cmdline.txt` 无法将 DSI 显示屏与 HDMI 显示屏分开旋转。同时使用 DSI 和 HDMI 时，它们共享相同的旋转值。
+:::
+
+#### 旋转触摸输入
+:::warning[警告]
+通过设备树旋转触摸输入可能会与输入库发生冲突。请尽可能在输入库或桌面中配置触摸事件旋转。
+:::
+
+触摸输入的旋转与显示屏本身的方向无关。要更改这一点，需要在 [/boot/firmware/config.txt](../computers/config-txt.mdx) 中手动添加 `dtoverlay` 指令。在 `config.txt` 最后添加以下一行：
+```
+dtoverlay=vc4-kms-dsi-7inch,invx,invy
+```
+
+然后，从 `config.txt` 中删除以下行（如果存在），禁用自动显示检测功能：
+```
+display_auto_detect=1
+```
+
+#### 触摸显示设备树选项参考
+`vc4-kms-dsi-7inch` 叠加支持以下选项：
+
+| DT参数 | 操作 |
+| -- | -- |
+| `sizex` | 设置 X 分辨率（默认为 800） |
+| `sizey` | 设置 Y 分辨率（默认为 480） |
+| `invx` | 反转 X 坐标 |
+| `invy` | 反转 Y 坐标 |
+| `swapxy` | 交换 X 和 Y 坐标 |
+| `disable_touch` | 完全禁用触摸覆盖 |
+
+要指定这些选项，请将它们添加到 `/boot/firmware/config.txt` 中的 `dtoverlay` 行，中间用逗号隔开。布尔值出现时默认为 "true"，但可以使用后缀 "=0" 将其设置为 "false"。整数值需要一个值，例如 `sizey=240`。例如，要将 X 分辨率设置为 400 像素并反转 X 和 Y 坐标，请使用下面一行：
+
+```
+dtoverlay=vc4-kms-dsi-7inch,sizex=400,invx,invy
+```
+
+## 传统支持
+:::warning[警告]
+这些说明仅适用于原版树莓派、A和B板。要识别原版树莓派，请检查 GPIO 接头。只有原版型号有一个 26 针 GPIO 接头；后续型号有 40 针。
+:::
+
+树莓派1A和B板上的 DSI 连接器没有与触摸屏控制器和 DSI 控制器通信所需的 I2C 连接。要解决这个问题，可以使用显示套件提供的附加跳线。将 GPIO 针座上的 SCL/SDA 连接到显示板上标有 SCL/SDA 的水平引脚。使用跳线通过 GPIO 引脚为 Model A/B 供电。
+
+这些板默认禁用 DSI 显示屏自动检测功能。要启用检测，请在 [/boot/firmware/config.txt](../computers/config-txt.mdx#什么是configtxt) 文件中添加以下一行：
+```ini
+ignore_lcd=0
+```
+通过显示板上的 `PWR IN` micro-USB 接口为设置供电。请勿通过树莓派的微型 USB 端口为设置供电。这将超过输入多芯保险丝的最大额定电流，因为显示屏的功耗约为 400mA。
+
+<Normal />

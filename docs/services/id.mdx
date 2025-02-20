@@ -1,0 +1,72 @@
+---
+sidebar_position: 1
+draft: false
+description: Raspberry Pi ID 是树莓派官方的ID。注册树莓派官方账号，可获得相关服务。
+keywords: [树莓派, Raspberry Pi, 账号, ID]
+---
+import Normal from "../_normal.mdx";
+
+# 树莓派 ID
+
+## 创建一个 Raspberry Pi ID
+
+要使用 Raspberry Pi 服务，必须先创建一个 [Raspberry Pi ID](https://id.raspberrypi.com)。
+
+在浏览器中，导航至 [id.raspberrypi.com](https://id.raspberrypi.com)。
+
+输入电子邮件和密码。点击**Sign up**按钮创建账户。
+<img src="/img/services/id/create_account_identity.png" alt="创建ID" width="80%" />
+
+创建账户后，您将收到一封验证电子邮件。
+
+<img src="/img/services/id/verify_identity.png" alt="验证身份" width="80%" />
+
+
+点击电子邮件中的**Verify Email**按钮，验证您的电子邮件地址并完成账户创建。
+
+<img src="/img/services/id/signed_in_identity.png" alt="验证完成" width="80%" />
+
+创建 Raspberry Pi ID 后，您可以使用 **Sign in with Raspberry Pi ID** 按钮登录 Raspberry Pi 服务。
+
+## 启用双因素身份验证
+
+与大多数现代网络服务一样，Raspberry Pi ID 使用 [基于时间的一次性密码](https://en.wikipedia.org/wiki/Time-based_one-time_password) (TOTP)支持双因素身份验证（2FA）。
+
+双因素身份验证增加了一层额外的保护。除密码外，2FA 还需要另一项信息才能登录。
+
+本指南使用智能手机作为验证的第二因素。
+
+:::tip
+Raspberry Pi ID 支持 macOS 和 iOS iCloud Keychain 集成。在 Mac 或 iPhone 上右击二维码，获取 **设置验证码** 选项。
+:::
+
+### 安装 2FA 应用程序
+
+首先，在手机上下载一个能生成 TOTP 的应用程序。安装任何 2FA 应用程序，如 [Authy](https://authy.com/)或 Google Authenticator。
+
+### 启用 2FA
+
+要启用 2FA，请在登录 [Raspberry Pi ID](https://id.raspberrypi.com) 时点击**双因素验证**选项。
+<img src="/img/services/id/enable_2fa.png" alt="启用双因素验证" width="80%" />
+
+打开手机上的 2FA 应用程序。用 2FA 应用程序扫描 Raspberry Pi ID 提供的二维码，开始生成令牌。
+
+:::note[注意]
+请参阅 2FA 应用程序的文档，了解如何扫描二维码生成令牌。
+:::
+
+<img src="/img/services/id/authenticate.png" alt="输入验证码" width="80%" />
+
+输入由 2FA 应用程序生成的六位数 TOTP，用 Raspberry Pi ID 注册 2FA 应用程序。
+
+此时会出现一个包含恢复密码的确认屏幕。将恢复密码保存在安全的地方。**如果丢失了手机和 2FA 应用程序，**这是绕过 2FA 的唯一方法。
+
+<img src="/img/services/id/totp_enabled.png" alt="双因素验证已启用" width="80%" />
+
+您现在已经将 Raspberry Pi ID 配置为需要 2FA。从现在起，登录需要使用手机上的 2FA 应用程序生成的 TOTP。
+
+:::tip
+今后您可以随时在 [id.raspberrypi.com](https://id.raspberrypi.com) 上禁用双因素身份验证。
+:::
+
+<Normal />

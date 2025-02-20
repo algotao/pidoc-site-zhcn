@@ -1,0 +1,155 @@
+---
+draft: false
+sidebar_position: 3
+title: LED 亮灯
+description: 在 Raspberry Pi 使用 GPIO 控制 LED 闪烁，每秒交替点亮与熄灭。
+keywords: [树莓派, GPIO, C, C++, Python, Raspberry Pi, LED, 闪烁]
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Blink1 from "../_gpio_python_led_blink_blink1.py.mdx";
+import Blink2 from "../_gpio_python_led_blink_blink2.py.mdx";
+import PWMBlink1 from "../_gpio_python_led_blink_pwm_blink1.py.mdx";
+import PWMBlink2 from "../_gpio_python_led_blink_pwm_blink2.py.mdx";
+import RGBLED1 from "../_gpio_python_led_blink_rgbled1.py.mdx";
+import RGBLED2 from "../_gpio_python_led_blink_rgbled2.py.mdx";
+
+# LED 亮灯
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+
+使用 GPIO 控制 LED 灯的点亮与熄灭，是初学者熟悉与掌握 GPIO 使用的有效手段。示例展示了树莓派的 GPIO 控制能力。
+
+Python 中的 gpiozero包 有三种 LED 控制模块，分别为 [LED（普通LED）](#led-模块)、[PWMLED（脉宽调制LED）](#pwmled-模块)、[RGBLED（三色LED）](#rgbled-模块)
+
+*以下代码在 树莓派5 + Bookworm 验证通过，同时向下兼容其它树莓派。*
+
+
+## LED 模块
+
+使用 LED 点灯的简单示例。
+
+### 接线图
+
+将 LED 的阴极（短腿、扁平侧）连接至接地引脚；将阳极（较长的腿）连接到限流电阻；将限流电阻的另一端连接到 GPIO 引脚（限流电阻可以放置在 LED 的任一侧）。
+
+<img src="/img/program/gpio/led1_bb.png" width="50%" alt="LED接线图" />
+
+
+### 代码示例（每秒交替点亮与熄灭）
+
+<Tabs>
+<TabItem value="blink1" label="示例1">
+
+<Blink1 />
+
+</TabItem>
+
+<TabItem value="blink2" label="示例2">
+
+<Blink2 />
+
+</TabItem>
+</Tabs>
+
+### 更多功能
+
+LED模块的更多功能请参考 [LED 模块](https://gpiozero.readthedocs.io/en/latest/api_output.html#led)。
+
+## PWMLED 模块
+
+使用 PWMLED 分级控制亮度。
+
+### 接线图
+
+将 LED 的阴极（短腿、扁平侧）连接至接地引脚；将阳极（较长的腿）连接到限流电阻；将限流电阻的另一端连接到 GPIO 引脚（限流电阻可以放置在 LED 的任一侧）。
+
+<img src="/img/program/gpio/led1_bb.png" width="50%" alt="PWMLED接线图" />
+
+### 代码示例（可变亮度调节）
+
+<Tabs>
+<TabItem value="pwm_blink1" label="示例">
+
+<PWMBlink1 />
+
+</TabItem>
+</Tabs>
+
+### 代码示例（连续淡入和淡出）
+
+使用 PWMLED pulse 方法实现连续淡入和淡出。
+
+<Tabs>
+<TabItem value="pwm_blink2" label="示例">
+
+<PWMBlink2 />
+
+</TabItem>
+</Tabs>
+
+### 更多功能
+
+PWMLED模块的更多功能请参考 [PWMLED 模块](https://gpiozero.readthedocs.io/en/latest/api_output.html#pwmled)。
+
+## RGBLED 模块
+
+使用 RGBLED 并控制全彩 LED 组件（由红色、绿色和蓝色 LED 组成）。
+
+### 接线图
+
+将共阴极（最长的引脚）连接到接地引脚；将其他每个引脚（代表红色、绿色和蓝色阳极）连接到 GPIO 引脚。您应该使用三个限流电阻（每个阳极一个）。
+
+:::warning
+请注意引脚阴极和阳极的顺序（红色、绿色和蓝色），不同的型号可能有着不同的定义，请根据实际情况进行接线。
+:::
+
+<img src="/img/program/gpio/ledrgb_bb.png" width="50%" alt="RGBLED接线图" />
+
+### 代码示例（显示黄色）
+
+<Tabs>
+<TabItem value="blink1" label="使用三色控制">
+
+<RGBLED1 />
+
+</TabItem>
+
+<TabItem value="blink2" label="使用Color组件">
+
+<RGBLED2 />
+
+</TabItem>
+</Tabs>

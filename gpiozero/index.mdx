@@ -1,0 +1,138 @@
+---
+sidebar_position: 0
+draft: false
+title: 1. GPIO Zero 介绍
+description: GPIO Zero 库是树莓派官方推荐的用于操作树莓派 GPIO 的 Python 库，这是当前在树莓派5及更早型号经过测试的 GPIO 库。它对常用外设的操作进行了封装，使用起来非常方便。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero]
+last_update: 
+  date: 2024-06-13
+---
+import Normal from "./_normal.mdx";
+
+# gpiozero
+
+使用 [Raspberry Pi](https://www.raspberrypi.org/) 连接 GPIO 设备的简单接口，由 [Ben Nuttall](https://github.com/bennuttall) 和 [Dave Jones](https://github.com/waveform80) 开发和维护。
+
+## 关于
+
+提供组件接口，让您以无障碍的方式开始物理计算：
+```py
+from gpiozero import LED
+from time import sleep
+
+led = LED(17)
+
+while True:
+    led.on()
+    sleep(1)
+    led.off()
+    sleep(1)
+```
+
+只需很少的代码，您就可以快速将组件连接起来：
+
+```py
+from gpiozero import LED, Button
+from signal import pause
+
+led = LED(17)
+button = Button(3)
+
+button.when_pressed = led.on
+button.when_released = led.off
+
+pause()
+```
+
+您可以进一步使用声明式范例和提供的方法来描述设备的行为及其交互：
+
+```py
+from gpiozero import OutputDevice, MotionSensor, LightSensor
+from gpiozero.tools import booleanized, all_values
+from signal import pause
+
+garden = OutputDevice(17)
+motion = MotionSensor(4)
+light = LightSensor(5)
+
+garden.source = all_values(booleanized(light, 0, 0.1), motion)
+
+pause()
+```
+
+更多信息，请参阅 [Source/Values](./source-values) 章节。
+
+该库包括许多简单日常组件的接口，以及一些更复杂的组件，如传感器、模数转换器、全彩 LED、机器人套件等。请参阅文档的 [方案](./recipes.mdx) 章节，了解如何入门。
+
+## 引脚工厂
+GPIO Zero 基于大量底层引脚库，包括 [RPi.GPIO](https://pypi.org/project/RPi.GPIO) 和 [pigpio](https://pypi.org/project/pigpio)，每个引脚库都有自己的优势。你可以根据自己的需要，为整个脚本或每个设备选择一个特定的引脚库。请参阅 [更改引脚工厂](./api-pins.mdx#todo) 部分。
+
+为测试目的，还提供了一个 "模拟引脚" 接口。请参阅 [模拟引脚](./api-pins.mdx#todo) 部分了解更多信息。
+
+## 安装
+GPIO Zero 默认安装在 Raspberry Pi OS 桌面映像中，可从 [raspberrypi.org](https://www.raspberrypi.org/software/) 获取。要在 Raspberry Pi OS Lite 或其他操作系统（包括使用远程 GPIO 的 PC）上安装，请参阅 [安装](./installing.mdx) 章节。
+
+## 文档
+全面的文档可从 [https://gpiozero.readthedocs.io/](https://gpiozero.readthedocs.io/) 获取。请参阅文档中的 [贡献](./contributing.mdx) 和 [开发](./development.mdx) 章节，了解有关项目贡献的信息。
+
+## 问题和疑问
+如果您有功能请求或错误报告，请 [在 GitHub 上打开一个问题](https://github.com/gpiozero/gpiozero/issues/new)。如果您有问题或需要帮助，我们的 [GitHub 讨论板](https://github.com/gpiozero/gpiozero/discussions)、[Raspberry Pi Stack Exchange](https://raspberrypi.stackexchange.com/) 或 [Raspberry Pi 论坛](https://www.raspberrypi.org/forums/) 可能更适合您。
+
+## 贡献
+
+- [Alex Chan](https://github.com/gpiozero/gpiozero/commits?author=alexwlchan)
+- [Alex Eames](https://github.com/gpiozero/gpiozero/commits?author=raspitv)
+- [Andrew Scheller](https://github.com/gpiozero/gpiozero/commits?author=lurch)
+- [Barry Byford](https://github.com/gpiozero/gpiozero/commits?author=ukBaz)
+- [Cameron Davidson-Pilon](https://github.com/gpiozero/gpiozero/commits?author=CamDavidsonPilon)
+- [Carl Monk](https://github.com/gpiozero/gpiozero/commits?author=ForToffee)
+- [Chris R](https://github.com/gpiozero/gpiozero/commits?author=chrisruk)
+- [Claire Pollard](https://github.com/gpiozero/gpiozero/commits?author=tuftii)
+- [Clare Macrae](https://github.com/gpiozero/gpiozero/commits?author=claremacrae)
+- [Dan Jackson](https://github.com/gpiozero/gpiozero/commits?author=e28eta)
+- [Daniele Procida](https://github.com/evildmp)
+- [Dariusz Kowalczyk](https://github.com/gpiozero/gpiozero/commits?author=darton)
+- [damosurfer](https://github.com/gpiozero/gpiozero/commits?author=damosurfer)
+- [David Glaude](https://github.com/gpiozero/gpiozero/commits?author=dglaude)
+- [Delcio Torres](https://github.com/gpiozero/gpiozero/commits?author=delciotorres)
+- [Edward Betts](https://github.com/gpiozero/gpiozero/commits?author=edwardbetts)
+- [Fatih Sarhan](https://github.com/gpiozero/gpiozero/commits?author=f9n)
+- [Fangchen Li](https://github.com/gpiozero/gpiozero/commits?author=fangchenli)
+- [G.S.](https://github.com/gpiozero/gpiozero/commits?author=gszy)
+- [gnicki](https://github.com/gpiozero/gpiozero/commits?author=gnicki2000)
+- [Ian Harcombe](https://github.com/gpiozero/gpiozero/commits?author=MrHarcombe)
+- [Jack Wearden](https://github.com/gpiozero/gpiozero/commits?author=NotBobTheBuilder)
+- [Jeevan M R](https://github.com/gpiozero/gpiozero/commits?author=jee1mr)
+- [Josh Thorpe](https://github.com/gpiozero/gpiozero/commits?author=ThorpeJosh)
+- [Kyle Morgan](https://github.com/gpiozero/gpiozero/commits?author=knmorgan)
+- [Linus Groh](https://github.com/gpiozero/gpiozero/commits?author=linusg)
+- [Mahallon](https://github.com/gpiozero/gpiozero/commits?author=Mahallon)
+- [Maksim Levental](https://github.com/gpiozero/gpiozero/commits?author=makslevental)
+- [Martchus](https://github.com/gpiozero/gpiozero/commits?author=Martchus)
+- [Martin O'Hanlon](https://github.com/martinohanlon/commits?author=martinohanlon)
+- [Mike Kazantsev](https://github.com/gpiozero/gpiozero/commits?author=mk-fg)
+- [Paulo Mateus](https://github.com/gpiozero/gpiozero/commits?author=SrMouraSilva)
+- [Phil Howard](https://github.com/gpiozero/gpiozero/commits?author=Gadgetoid)
+- [Philippe Muller](https://github.com/gpiozero/gpiozero/commits?author=pmuller)
+- [Rick Ansell](https://github.com/gpiozero/gpiozero/commits?author=ricksbt)
+- [Rimas Misevičius](https://github.com/gpiozero/gpiozero/commits?author=rmisev)
+- [Robert Erdin](https://github.com/gpiozero/gpiozero/commits?author=roberterdin)
+- [Russel Winder](https://github.com/russel)
+- [Ryan Walmsley](https://github.com/gpiozero/gpiozero/commits?author=ryanteck)
+- [Schelto van Doorn](https://github.com/gpiozero/gpiozero/commits?author=goloplo)
+- [Sofiia Kosovan](https://github.com/gpiozero/gpiozero/commits?author=SofiiaKosovan)
+- [Steve Amor](https://github.com/gpiozero/gpiozero/commits?author=SteveAmor)
+- [Stewart Adcock](https://github.com/gpiozero/gpiozero/commits?author=stewartadcock)
+- [Thijs Triemstra](https://github.com/gpiozero/gpiozero/commits?author=thijstriemstra)
+- [Tim Golden](https://github.com/gpiozero/gpiozero/commits?author=tjguk)
+- [Yisrael Dov Lebow](https://github.com/gpiozero/gpiozero/commits?author=yisraeldov)
+
+查看 GitHub [贡献页面](https://github.com/gpiozero/gpiozero/graphs/contributors) 获得更多信息。
+
+## 更新日志
+
+版本发布更新日志请参见 [这里](https://gpiozero.readthedocs.io/en/latest/changelog.html)
+
+## 目录
+
+<Normal />

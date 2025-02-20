@@ -1,0 +1,1 @@
+LA.init({ id: "3I5WoZLk6QIYP676", ck: "3I5WoZLk6QIYP676", autoTrack: true, hashMode: true })

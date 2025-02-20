@@ -1,0 +1,469 @@
+---
+sidebar_position: 100
+draft: false
+title_meta:  树莓派5是官方最新版的硬件，包含四核2.4GHz的64位Arm Cortex-A76(官网24年12月)
+description: 树莓派5的特点介绍，硬件配置列表。树莓派5使用了专用的27W电源，以提供高达5A的电流。对比官方带风扇的保护壳及金属外壳的主动散热壳在不同负载下的热管理情况。介绍新增的PCIe口，CSI/DSI通用摄像/显示插口，以及板载专用POE针脚。
+keywords: [树莓派, Raspberry Pi, 树莓派5]
+---
+
+import Normal from "../_normal.mdx";
+
+# Raspberry Pi 5
+
+:::tip[重要]
+如果您是第一次使用树莓派，请参阅我们有关[如何开始的说明](./getting-started.mdx#设置你的树莓派)。
+:::
+
+<img src="/img/computers/raspberry-pi-5/pi5-labelled.jpg" alt="树莓派5的标识图" />
+*树莓派5*
+
+树莓派5采用运行频率为2.4GHz的64位四核Arm Cortex-A76处理器，与树莓派4相比，CPU性能提高了2至3倍。此外图形性能也较800MHz VideoCore VII GPU大幅提升；通过HDMI双4Kp60显示输出；以及重新设计架构的树莓派图像信号处理器提供的最先进的摄像头支持，它为消费者提供了流畅的桌面体验，并为工业客户打开了新应用程序的大门。
+
+这是第一次，这是一台全尺寸的树莓派计算机，使用树莓派内部构建的芯片。RP1为树莓派5提供大量I/O功能，并在外设性能和功能方面实现了重大改变。USB总带宽增加了一倍以上，为外部 UAS 驱动器和其他高速外设提供更快的传输速度；早期型号上的专用双通道 1Gbps MIPI摄像头和显示接口已被一对四通道1.5Gbps MIPI收发器所取代，使总带宽增加了三倍，并支持最多两个摄像头或显示屏的任意组合；通过支持SDR104高速模式，峰值SD卡性能提高一倍；该平台首次公开单通道PCI Express 2.0接口，为高带宽外设提供支持。
+
+主要特点包括：
+- 四核 Arm Cortex-A76 @ 2.4GHz
+  + 加密扩展支持（硬件AES）
+  + 每核 512KB 二级缓存
+  + 2MB 三级缓存
+- 4GB 或 8GB LPDDR4X-4267 SDRAM
+- 双 4kp60 HDMI 显示输出，支持 HDR
+- 4kp60 HEVC 解码器
+- VideoCore VII 显卡，支持 OpenGL-ES 3.1、Vulkan 1.2
+- 树莓派 图像传感器处理器 (ISP)
+- 树莓派 PCIe 连接器（1 x 2.0 端口，需要额外的 HAT）
+- 802.11ac 双频 Wi-Fi
+- 蓝牙 5.0（支持 BLE）
+- 千兆以太网
+- 2个 USB 3.0（能够同时实现全吞吐量）
+- 2个 USB 2.0
+- PoE 支持（需要额外的 HAT）
+- 双 4 通道 MIPI CSI/DSI 收发器，支持以下模式之一
+  - 2个 显示器
+  - 2个 摄像头
+  - 1x 显示器 + 1x 摄像头
+- 树莓派 40 针 GPIO 接头
+- 风扇连接器
+- 实时时钟 (RTC)
+  - RTC 电池连接器
+- 电源按钮
+
+### 关闭并再次打开
+当您第一次将树莓派插入电源时，它会自动打开并启动进入操作系统，而无需按下按钮。
+
+如果您运行树莓派桌面，则可以通过短按电源按钮来启动干净关机。将出现一个菜单，询问您是否要关机、重新启动或注销。从菜单中选择一个选项或再次按电源按钮以启动干净关机。
+<img src="/img/computers/raspberry-pi-5/shutdown.jpg" alt="桌面菜单询问您是否要关机、重新启动或注销" />
+*使用电源按钮关闭树莓派5。*
+
+:::tip[注意]
+如果您运行树莓派桌面，则可以快速连续按两次电源按钮来关机。如果您在没有桌面的情况下运行树莓派OS Lite，请按一次电源按钮以关机。
+:::
+
+要强制硬关机，请按住电源按钮。
+
+如果树莓派已关闭，但仍通电，则按电源按钮将重新启动它。
+
+默认关闭功率约为1至1.4W。不过可以通过使用手动编辑EEPROM配置 `sudo rpi-eeprom-config -e` 来减少使用功率。将设置更改为以下内容：
+```ini
+BOOT_UART=1
+POWER_OFF_ON_HALT=1
+BOOT_ORDER=0xf416
+```
+这将使关机功耗降至0.01W左右。
+
+#### 添加您自己的电源按钮
+
+<img src="/img/computers/raspberry-pi-5/j2.jpg" alt="树莓派5上的J2跳线" width="70%" />
+*J2跳线*
+
+J2跳线位于RTC电源插口的板边缘之间。此跳线允许您通过添加桥接两个焊盘的常开(NO--Normally Open)瞬时开关，将自己的电源按钮添加到树莓派5。短暂关闭此开关将执行与板载电源按钮相同的操作。
+
+### 更新您的固件
+:::warning[警告]
+除非得到树莓派工程师的指示，否则请勿更新树莓派上的固件。
+:::
+
+虽然固件更新很少见，但如果您的树莓派遇到问题，您可能需要检查是否有可用的固件。您可以按照以下步骤操作：
+```sh
+sudo apt update
+sudo apt upgrade
+sudo rpi-eeprom-update -a
+```
+如果有可用的固件更新，系统将提示您安装它，并且您的树莓派将重新启动。有关更新树莓派的固件的更多信息，请[参阅文档中的其他部分](./raspberry-pi.mdx#树莓派启动eeprom)。
+
+## 为树莓派5供电
+
+树莓派生产两种不同的USB-C电源。
+
+第一个是树莓派15W USB-C电源，这是树莓派4和树莓派400的推荐电源。第二个是树莓派27W USB-C电源，在+5.1V下提供高达5A的电流，是树莓派5的推荐电源。
+
+树莓派4电源使用的USB-C标准限制为5V/3A，总功率输出为15W。USB-PD标准允许通过软件协商更高的电压和电流，但需要适当的电源管理集成电路 (PMIC)，该电路仅出现在树莓派5上。这些电源要求您使用合适的USB-PD兼容电缆。
+
+:::note[注意]
+即使使用支持USB-PD的电源，也无法使用较旧的USB”哑“电缆和插口提供超过15W的功率。
+:::
+
+虽然支持USB-PD的手机充电器宣称功率大于15W，但实际上所有充电器都是通过提高电压而不是在+5V下提供更多电流来实现这一目标。如果您使用的电源在首次启动时无法在+5V下提供5A电流，操作系统将警告您外设的电流消耗将限制为600mA。
+
+<img src="/img/computers/raspberry-pi-5/firstboot-powerwarning.jpg" alt="树莓派OS中欠压事件的屏幕警告" />
+*欠压事件屏幕警告*
+
+对于希望驱动硬盘和SSD等高功率外设，同时为峰值工作负载保留余量的用户，应使用能够在+5V(25W)下提供5A电流的支持USB-PD的电源。如果树莓派5固件检测到支持的5A电源，则会将外设的USB电流限制提高到1.6A，为下游USB设备提供5W的额外功率，以及5W的额外板载功率预算。
+
+:::note[注意]
+不支持 USB-PPS（可编程电源/可变电压快充）。
+:::
+
+我们推荐官方树莓派电源，该电源设计为即使电流消耗快速波动也能始终提供+5V。当您将外围设备与树莓派一起使用时，这些需求波动是常见且频繁的。其他电源通常设计用于提供稳定的电流为手机充电，不能很好地应对电力波动。官方电源还附带一根USB电缆，这意味着您不会意外使用劣质或“哑”电缆，而这可能是其他电源的问题。
+
+:::warning[警告]
+如果您使用第三方支持USB-PD的多端口电源，则将额外的设备插入电源以及树莓派将导致电源与树莓派之间重新协商。如果树莓派已通电，这将无缝发生，但如果树莓派已插入电源并断电，则此重新协商可能会导致树莓派启动。
+:::
+
+您可以使用 `vcgencmd` 检查USB端口的电源输出状态。
+```sh
+vcgencmd get_config usb_max_current_enable
+```
+
+### USB启动和电源
+默认情况下，使用3A电源将不能用从USB设备引导启动。但是在文件 `/boot/firmware/config.txt` 中设置 `usb_max_current_enable=1` ，将覆盖此设置并启用具有较低瓦数电源的USB引导启动。
+
+当使用3A电源启动时，如果在 `config.txt` 中没有上述声明，则bootloader在HDMI诊断屏幕上会显示一条警告消息，并且bootloader将跳至下一个启动模式。
+```
+Trying partition: 0
+type: 32 lba: 8192 'mkfs.fat' ' bootfs     ' clusters 130554 (4)
+rsc 32 fat-sectors 1020 root dir cluster 2 sectors 0 entries 0
+FAT32 clusters 130554
+[MSD [01:00] 2.00 000000:02] autoboot.txt not found
+Trying partition: 0
+type: 32 lba: 8192 'mkfs.fat' ' bootfs     ' clusters 130554 (4)
+rsc 32 fat-sectors 1020 root dir cluster 2 sectors 0 entries 0
+FAT32 clusters 130554
+Read config.txt bytes     2109 hnd 0x10a
+[MSD [01:00] 2.00 000000:02] pieeprom.upd not found
+usb_max_current_enable default 0 max-current 900
+Read bcm2712-rpi-5-b.dtb bytes    71862 hnd 0x5101
+dt-match: compatible: raspberrypi,5-model-b match: brcm,bcm2712
+dt-match: compatible: brcm,bcm2712 match: brcm,bcm2712
+***
+USB boot requires a high current (5V 5A) power supply.
+To disable this check set usb_max_current_enable=1 in config.txt
+or press the power button to temporarily enable usb_max_current_enable
+and continue booting.
+See https://rptl.io/rp5-power_supply for more information
+***
+```
+
+bootloader将提示您“按电源按钮继续”，这会临时启用 `usb_max_current_enable=1`，以允许您从USB引导。除非您的磁盘有自己的外部电源，否则您的树莓派可能没有足够的可用电流。
+
+### 电源和树莓派OS
+bootloader通过设备树 `/proc/device-tree/chosen/power` 传递有关电源的信息。用户通常不会直接阅读此内容。
+
+**max_current**<br />
+&emsp;最大电流（mA）
+
+**uspd_power_data_objects**<br />
+&emsp;PDO转储 - 供高级用户调试
+
+**usb_max_current_enable**<br />
+&emsp;电流限制器设置为高还是低
+
+**usb_over_current_Detected**<br />
+&emsp;在将控制权转移给操作系统之前启动过程中是否发生USB过流
+
+**reset_event**<br />
+&emsp;PMIC复位原因，例如Watchdog、过压或欠压、过温
+
+PMIC（电源管理芯片）具有内置ADC，除此之外还可以测量电源电压`EXT5V_V`。
+
+```
+vcgencmd pmic_read_adc
+```
+
+:::note[注意]
+您看不到USB当前电流或直接连接到5V引脚的电流信息，因为它绕过了PMIC。虽然您不期望看到增加电源的功耗，然而通过监视核心电压等指标可能是一种有效的评估供电情况的方法。
+:::
+
+## 给树莓派5散热
+树莓派5设计用于处理典型的客户端工作负载，无外壳，无主动冷却。对于较重的负载，在给树莓派5散热时有两种官方选项。这两种选项均插入位于电路板右上角、40针GPIO接头和USB 2之间的4针JST PWM风扇插口。
+
+这两个可用的官方配件均由树莓派固件主动管理。随着树莓派温度的升高，风扇会做出以下反应：
+- 低于 50°C，风扇不旋转（0% 速度）
+- 50°C时，风扇以低速运转（30%速度）
+- 60°C时，风扇速度增加至中速（50%速度）
+- 67.5°C时，风扇转速增至高速（70%转速）
+- 75°C时，风扇升至全速（100%速度）
+
+温度降低时风扇速度也与温度范围有相同的匹配关系，具有5°C的**滞后**；当温度降至低于上述每个阈值5°C时，风扇速度会降低。
+
+:::note[注意]
+USB端口和风扇插口均采用相同的1.6A电流限制。
+:::
+
+启动时风扇将被打开，以检查风扇是否旋转，如果是则将 `cooling_fan` 的`status`在设备树中置为 `enabled` 。默认情况 `bcm2712-rpi-5-b.dtb`设备树描述中的此项存在，但它的状态是 `status=disabled`.
+
+### 风扇盒
+<img src="/img/computers/raspberry-pi-5/case.jpg" alt="适用于树莓派5的带集成风扇的外壳" width="70%" />
+*树莓派5官方保护壳*
+
+树莓派5的官方保护壳配有集成风扇。HAT可以通过移除风扇直接安装在树莓派5顶部，也可以使用14毫米高的支架和19毫米GPIO延长器安装在风扇顶部。这些可以从授权经销商处单独购买。
+
+集成的2.79（最大）CFM风扇配备液态轴承，可实现低噪音和延长使用寿命。空气通过盖子下方的360°槽吸入，吹过连接到BCM2712的散热器，然后通过底座上的孔洞和通风口排出。
+
+### Active Cooler散热器
+<img src="/img/computers/raspberry-pi-5/active-cooler.jpg" alt="适用于树莓派5的Active Cooler"  width="70%" />
+*适用于树莓派5的Active Cooler*
+
+Active Cooler是一款带有集成风扇的一体式阳极氧化铝散热器。它具有预涂的导热垫用于传热，并使用弹簧推针直接安装到树莓派5板上。它连接到与风扇盒相同的4针JST插口。
+
+选择径向风机以降低噪音并延长使用寿命，将空气推过挤压和铣削过的铝制散热器。Active Cooler的散热性能比Fan Case稍胜一筹，特别适合超频玩家。
+
+:::note[注意]
+径向风机是机电系统，使用风扇和指定通道将空气引导至特定方向。虽然风扇可以排出大量空气并促进指定区域内的循环，但径向风机可以提供一定程度的空气加压，以将空气排出并向前移动。
+:::
+主动散热器并未设计为可从树莓派5中反复拆卸(*译注：一旦装上将很难拆下，请谨慎选择*)。
+
+### 散热
+对树莓派5的所有四个核心增加负载开始压力测试。测试期间检查了两种主要的热管理机制：无散热和受控主动散热。使用Active Cooler 和适用于树莓派5的树莓派Case运行托管主动冷却测试。
+
+<img src="/img/computers/raspberry-pi-5/thermals.jpg" alt="重负载时CPU温度与时间的关系图" />
+*CPU 温度与时间的关系图。*
+
+在没有散热的情况下，我们看到闲置温度约为65°C，在压力测试期间最高温度高于85°C，导致处理器报告的温度升至高于上限后持续的热限制。
+
+由于配备了Active Cooler的被动散热器，我们看到怠速温度低得多，约为45°C。在长时间的负载测试中，散热器的风扇低速旋转，将CPU温度稳定在60°C，测试期间最高温度为62°C至63°C。
+
+使用风扇盒时，我们发现闲置温度比单独使用Active Cooler高几度，约为48°C。取下盖子后，我们看到持续负载下的最高温度约为72°C，而盖上盖子后，我们看到重负载下的最高温度略高，约为74°C。虽然重负载下的温度高于Active Cooler，但重负载下的最高温度仍然远低于80和85°C节流温度。
+
+树莓派5设计用于处理典型的客户端工作负载，无外壳，无主动冷却。对于正常使用，添加散热是可选的，尽管主动散热可能会提高性能。然而重的连续负载（例如重建Linux内核）将迫使新的树莓派5进入热节流状态。对于重负载，热节流可以延长处理时间，而被动散热可能不足以实现热管理。
+
+然而，任何类型的散热都不是强制性的，如果不进行散热，不会对树莓派造成任何损害。
+
+### 引脚排列
+风扇插口为1mm间距JST SH插座，有四个引脚：
+
+| 别针 | 功能 |
+| -- | -- |
+| 1 | +5V |
+| 2 | PWM |
+| 3 | GND |
+| 4 | 转速 |
+
+官方风扇是[Coolcox CC3007H05S](https://www.coolcox.com/products/pdf/CC3007.pdf)部件.
+
+## 树莓派和GPIO
+使用[GPIO Zero](https://gpiozero.readthedocs.io/)库可以轻松开始使用Python控制GPIO设备。该库的完整文档位于[gpiozero.readthedocs.io](https://gpiozero.readthedocs.io/)。
+
+<img src="/img/computers/raspberry-pi-5/GPIO-duplicate.jpg" alt="GPIO布局" />
+有关在树莓派上使用GPIO引脚的更多信息可以在[文档的其他地方](./raspberry-pi.mdx#通用io-gpio)找到。
+
+## 树莓派PCIe接口
+<img src="/img/computers/raspberry-pi-5/pcie.jpg" alt="树莓派PCIe接口" width="70%" />
+*树莓派PCIe接口*
+
+树莓派5在板的右侧有一个FPC插口。该插口提供PCIe Gen 2.0 x1接口以连接快速外设。
+
+:::note[注意]
+提供M.2插口以允许使用NVMe驱动器的M.2 HAT仍处于原型阶段，尚未发布。
+:::
+
+有关PCIe FPC插口引脚排列的更多信息，以及创建第三方设备、配件和HAT所需的其他详细信息，请参阅适用于[树莓派PCIe插口标准](https://datasheets.raspberrypi.com/pcie/pcie-connector-standard.pdf)文档。应与新的[树莓派HAT+规范](https://datasheets.raspberrypi.com/hat/hat-plus-specification.pdf)一起阅读。
+
+### 启用PCIe
+默认情况下，PCIe插口未启用。要启用它，您应该添加以下选项到 `/boot/firmware/config.txt` 中并重新启动：
+```
+# Enable the PCIe External connector.
+dtparam=pciex1
+```
+
+存在比 `pciex1` 更容易记住的的别名 `nvme`，因此您也可以将其添加 `dtparam=nvme` 到 `/boot/firmware/config.txt` 文件中。
+
+:::note[注意]
+当前不支持枚举扫描PCIe switch后面的PCIe设备。
+:::
+
+### PCIe Gen 3.0
+该连接经过了Gen 2.0 速度（5GT/秒）认证，但您可以将以下行添加到您的 `/boot/firmware/config.txt` 以强制启用 Gen 3.0（8 GT/s）.
+
+```
+# Enable the PCIe external connector
+dtparam=pciex1
+
+# Force Gen 3.0 speeds
+dtparam=pciex1_gen=3
+```
+
+:::warning[警告]
+树莓派5未经过Gen 3.0速度认证，以这些速度连接到PCIe设备可能不稳定。
+:::
+然后您应该重新启动树莓派以使这些设置生效。
+
+### 从PCIe启动
+启用PCIe后，重启树莓派，此时通过PCIe连接的NVMe磁盘应该可见。但是您的树莓派不会尝试从NVMe驱动器启动。如果您希望启用引导支持，您将需要更改bootloader中的 `BOOT_ORDER` 配置。通过以下方式编辑 EEPROM 配置：
+```sh
+sudo rpi-eeprom-config --edit
+```
+并将该 `BOOT_ORDER` 行更改为如下所示。
+
+```sh
+BOOT_ORDER=0xf416
+```
+保存更改后，重新启动树莓派以更新EEPROM。
+
+:::note[注意]
+除非启用了外部PCIe端口，并且有一个NVMe驱动器具有连接到PCIe总线的有效启动分区，否则您的树莓派不会从连接的NVMe驱动器启动。
+:::
+
+## MIPI CSI/DSI插口
+<img src="/img/computers/raspberry-pi-5/mipi-connectors.jpg" alt="两个MIPI插口" width="70%" />
+两个MIPI插口
+
+之前型号的树莓派上的CSI和DSI端口已合并为两个双用途CSI/DSI(MIPI)端口。为了安装到板上，现在使用更密集的插口引脚排列，以前仅在树莓派Zero和CM4IO板上使用。您可以将 两台显示器 或 两个摄像头 或 一个摄像头和一台显示器 连接到这些端口。
+
+### 连接摄像头
+摄像头等树莓派设备无需配置。如果将相机插入任一MIPI插口，您将获得适当的CSI连接，并且您的摄像头将可供操作系统使用。
+
+#### 摄像头连接线
+<img src="/img/computers/raspberry-pi-5/camera-cables.jpg" alt="摄像头连接线" width="70%" />
+*摄像头连接线*
+
+共有三种扁平柔性电缆(FFC)可用于将CSI相机连接到树莓派5：
+- 200mm摄像头排线 标准转mini (15PIN转22PIN)
+- 300mm摄像头排线 标准转mini (15PIN转22PIN)
+- 500mm摄像头排线 标准转mini (15PIN转22PIN)
+
+:::note[注意]
+计算模块电缆适配器（请参阅 [原理图](https://datasheets.raspberrypi.com/cmcda/cmcda-schematics.pdf)和[设计文件](https://datasheets.raspberrypi.com/cmcda/RPi-CMCDA-1P1.zip)）可用于将标准接口电缆连接到更高密度的mini接口。
+:::
+
+### 连接显示器
+如果您将官方的[7英寸触摸显示屏](../accessories/display.mdx)与树莓派5一起使用，系统不会自动配置。您需要将以下两行之一添加到您的 `/boot/firmware/config.txt` 文件中。将显示器连接到 `CAM/DISP 1` 插口时，您应该添加：
+```
+dtoverlay=vc4-kms-dsi-7inch
+```
+或者将其连接到 `CAM/DISP 0` 插口，您可以添加以下行：
+```
+dtoverlay=vc4-kms-dsi-7inch,dsi0
+```
+
+:::warning[警告]
+在撰写本文时，要在7英寸触摸显示屏上获得触摸支持，您需要 `rpi-update` 获取内核更新。
+:::
+
+#### 可用的显示电缆
+<img src="/img/computers/raspberry-pi-5/display-cables.jpg" alt="显示电缆" width="70%" />
+*显示电缆*
+
+共有三种扁平柔性电缆 (FFC) 可用于将DSI显示器连接到树莓派5：
+- 200mm显示排线 标准转mini (15PIN转22PIN)
+- 300mm显示排线 标准转mini (15PIN转22PIN)
+- 500mm显示排线 标准转mini (15PIN转22PIN)
+
+### 使用非树莓派设备
+如果您使用的是非树莓派MIPI设备（无论是摄像头还是显示器），您的树莓派5不会自动配置它。您需要添加 `dtoverlay` 设置到文件中 `/boot/firmware/config.txt` 中，以正确配置摄像头或显示器的有效端口。
+
+这些 `dtoverlay` 设置应由您的设备制造商提供。例如，添加 `dtoverlay=ov9281` 将在CSI/DSI1上配置Omnivision OV9281摄像头，而添加 `dtoverlay=ov9281,cam0` 会将相同的摄像头添加到CSI/DSI0。
+
+## UART插口（板载专用串口）
+
+树莓派5有一个专用的调试UART插口。其最大波特率为921,600bps，可通过EEPROM参数进行配置。它始终处于活动状态并启用，并提供对早期启动和固件信息的直接访问；以及启动后的Linux控制台。
+
+<img src="/img/computers/raspberry-pi-5/uart-connector.jpg" alt="3针UART插口" width="70%" />
+*三针UART插口*
+
+UART插口是一个三针接头，与树莓派[调试插口规范](https://rptl.io/debug-spec)兼容。[Debug Probe调试套件](../microcontrollers/debug-probe.mdx)提供了一根线缆，该线缆接在适当的JST插口中，允许您连接到UART。
+
+<img src="/img/computers/raspberry-pi-5/debug-probe-and-pi5.jpg" alt="连接到树莓派5的Debug Probe" width="70%" />
+连接到树莓派5的Debug Probe
+默认情况下，它在`/dev/ttyAMA0`（别名为`/dev/serial0`）提供115,200波特率8数据位，1停止位，无校验位的连接。
+
+### 创建串口控制台
+<img src="/img/computers/raspberry-pi-5/serial-console.jpg" alt="启用串口控制台" />
+*启用串行控制台*
+
+与以前的树莓派型号不同的是，树莓派5在`raspi-config`启用串行控制台将在`/dev/ttyAMA0`设备对应的新UART口上启用串行控制台。而旧型号则在GPIO14和15上启用串行控制台，
+
+## 实时时钟 (RTC)
+树莓派5包含一个实时时钟模块。它可以通过USB-C电源插口右侧板上的J5(BAT)插口进行电池供电。
+
+<img src="/img/computers/raspberry-pi-5/j5.jpg" alt="J5电池连接器" width="70%" />
+*J5电池连接器*
+您可以设置唤醒警报，将板切换到非常低功耗的状态（大约3mA）。当到达闹钟时间时，树莓派将重新上电。这对于定时拍摄图像等周期性作业非常有用。
+
+要支持唤醒警报的低功耗模式，您应该编辑bootloader配置：
+```sh
+sudo -E rpi-eeprom-config --edit
+```
+添加以下两行。
+```
+POWER_OFF_ON_HALT=1
+WAKE_ON_GPIO=0
+```
+您可以使用以下方法测试功能：
+```sh
+echo +600 | sudo tee /sys/class/rtc/rtc0/wakealarm
+sudo halt
+```
+这将使开发板停机并进入低功耗的状态，然后在10分钟后唤醒并重新启动。
+
+实时时钟还提供启动时间，例如`dmesg`：
+```sh
+[    1.295799] rpi-rtc soc:rpi_rtc: setting system clock to 2023-08-16T15:58:50 UTC (1692201530)
+```
+...​如果您没有互联网连接来通过NTP获取时间，RTC可能会很有用。
+
+:::note[注意]
+即使J5插口上没有连接备用电池，RTC仍然可用。
+:::
+
+### 添加备用电池
+:::warning[警告]
+我们不建议为实时时钟使用锂电池，因为它具有涓流充电电路，该电路默认是禁用的。如果启用，会很快毁坏电池。
+:::
+
+<img src="/img/computers/raspberry-pi-5/rtc-battery.jpg" alt="锂锰可充电RTC电池]" width="70%" />
+*锂锰可充电RTC电池*
+
+官方电池模块是可充电锂锰纽扣电池，带有预装的两针JST插头和粘合安装垫。这适用于在树莓派5的主电源断开时为RTC供电，断电电流消耗为个位数µA，从而提供可以以月为单位的持续时间。
+
+### 启用涓流充电
+默认情况下禁用电池的涓流充电。有一些`sysfs`文件显示当前的涓流充电电压和限制：
+```
+/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage:0
+/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage_max:4400000
+/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage_min:1300000
+```
+如果您添加`rtc_bbat_vchg`到`/boot/firmware/config.txt`：
+```
+dtparam=rtc_bbat_vchg=3000000
+```
+...然后重新启动，您会看到：
+```
+/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage:3000000
+/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage_max:4400000
+/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage_min:1300000
+```
+电池将进行涓流充电。
+
+*移除`config.txt`中的`dtparam`行以停止涓流充电*。
+
+## 以太网供电(PoE)接头
+
+树莓派5上的以太网插口支持PoE+，支持IEEE 802.3at-2009 PoE标准。树莓派5有一个4针以太网供电(PoE)接头块，位于以太网插口和两个MIPI插口之间。
+
+<img src="/img/computers/raspberry-pi-5/poe.jpg" alt="PoE接头" width="70%" />
+*树莓派5 PoE接头*
+
+适用于树莓派5的树莓派PoE+ HAT是用于连接到PoE接头的树莓派5计算机的附加板。它用于通过以太网电缆为树莓派供电，前提是电源设备安装在以太网上。
+
+:::note[注意]
+适用于树莓派5的PoE+ HAT仍处于原型阶段，尚未发布。
+:::
+
+## 原理图和机械图
+
+以下是树莓派5的机械图：
+- [机械图纸，PDF](https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-mechanical-drawing.pdf)
+- 树莓派5的[STEP文件](https://datasheets.raspberrypi.com/rpi5/RaspberryPi5-step.zip)
+
+<Normal />

@@ -1,0 +1,2834 @@
+---
+sidebar_position: 8
+draft: false
+title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照、延时摄影、记录视频(官网24年12月)
+description: 树莓派摄像头系列工具介绍。通过libcamera及rpicam系列工具实现拍照、延时摄影、记录视频。使用opencv进行人脸检测等后期处理。使用Tensor Flow Lite进行分类识别。使用Gstreamer与rpicam-vid组成网络传输视频流。
+keywords: [树莓派, Raspberry Pi, 摄像头, 相机, 摄像头模块, camera, 摄像头软件, libcamera, rpicam, opencv, tensor flow lite]
+last_update: 
+  date: 2024-12-20
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Normal from "../_normal.mdx";
+
+# 摄像头软件
+
+本文档介绍如何将支持的摄像头模块与我们的软件工具配合使用。所有 Raspberry Pi 摄像头都可以使用我们的软件工具录制高分辨率照片和全高清 1080p 视频（或更好）。
+
+Raspberry Pi 生产多种官方摄像头模块，包括
+
+* 最初的 500 万像素摄像头模块 1（已停产）
+* 800 万像素 [摄像头模块 2](https://www.raspberrypi.com/products/camera-module-v2/)，带或不带红外滤镜
+* 1200 万像素 [摄像头模块 3](https://raspberrypi.com/products/camera-module-3/)，有标准镜头和广角镜头，带或不带红外滤光镜
+* 1200 万像素的 [高质量摄像头](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)，配有 CS 和 M12 卡口，可与外置镜头配合使用
+* 160 万像素 [全局快门摄像头](https://www.raspberrypi.com/products/raspberry-pi-global-shutter-camera/)，用于快速动态摄影
+* 1200 万像素的 [AI摄像头](https://www.raspberrypi.com/products/ai-camera/)，使用索尼IMX500成像传感器，为任何摄像头应用提供低延迟、高性能的AI功能
+
+有关摄像机硬件的更多信息，请参阅[摄像头硬件文档](../accessories/camera.mdx#关于摄像头模块)。
+
+首先，[安装摄像头模块](../accessories/camera.mdx#安装树莓派摄像头)。然后，按照本节中的指南使用你的摄像头模块。
+
+## rpicam-apps
+
+:::tip[提示]
+Raspberry Pi OS *Bookworm* 将摄像头捕捉应用程序从 `libcamera-\*` 更名为 `rpicam-*`。符号链接允许用户暂时使用旧名称。** 尽快采用新的应用程序名称。** *Bookworm*之前的 Raspberry Pi OS 版本仍使用 `libcamera-*` 名称。
+:::
+
+Raspberry Pi 提供了一小套示例 `rpicam-apps`。这些建立在 `libcamera` 基础上的 CLI 应用程序可以从摄像头捕捉图像和视频。这些应用程序包括
+
+* `rpicam-hello`： 相当于摄像头的 "hello world"，可启动摄像头预览流并显示在屏幕上。
+* `rpicam-jpeg`： 运行预览窗口，然后捕捉高分辨率静态图像。
+* `rpicam-still`： 模拟原始 `raspistill` 应用程序的许多功能。
+* `rpicam-vid`： 捕捉视频。
+* `rpicam-raw`： 直接从传感器捕捉原始（未经处理的拜尔）帧。
+* `rpicam-detect`： 默认不内置，但如果用户在 Raspberry Pi 上安装了 TensorFlow Lite，则可以内置。在检测到特定物体时捕获 JPEG 图像。
+
+最新版本的 Raspberry Pi OS 包含五个基本的 `rpicam-apps`，因此即使在刚安装 Raspberry Pi OS 的情况下，您也可以使用摄像头录制图像和视频。
+
+用户可以创建自己的基于 `rpicam` 的应用程序，并根据自己的要求定制功能。[rpicam-apps`源代码](https://github.com/raspberrypi/rpicam-apps)在 BSD-2-Clause 许可下免费提供。
+
+### libcamera
+
+`libcamera` 是一个开源软件库，目的是在 Arm 处理器上直接从 Linux 操作系统支持摄像头系统。在 Broadcom GPU 上运行的专有代码被最小化。有关 `libcamera` 的更多信息，请参阅 [libcamera网站](https://libcamera.org)。
+
+`libcamera` 提供了一个 C++ API 配置摄像头，然后允许应用程序请求图像帧。这些图像缓冲区位于系统内存中，可直接传递给静态图像编码器（如 JPEG）或视频编码器（如 h.264）。`libcamera` 本身并不编码或显示图像：该功能请使用 `rpicam-apps`。
+
+您可以在 [libcamera 官方资源库](https://git.linuxtv.org/libcamera.git/)中找到源代码。Raspberry Pi OS 发行版使用 [fork](https://github.com/raspberrypi/libcamera.git) 来控制更新。
+
+在 `libcamera` 核心之下，我们提供了一个自定义管道处理程序。`libcamera` 使用这一层来驱动 Raspberry Pi 上的传感器和图像信号处理器（ISP）。`libcamera` 包含一系列图像处理算法（IPA），包括自动曝光/增益控制（AEC/AGC）、自动白平衡（AWB）和自动镜头阴影校正（ALSC）。
+
+Raspberry Pi 的 `libcamera` 支持以下摄像头：
+
+* 官方摄像头:
+  * OV5647 (V1)
+  * IMX219 (V2)
+  * IMX708 (V3)
+  * IMX477 (HQ)
+  * IMX500 (AI)
+  * IMX296 (GS)
+
++ 第三方传感器:
+  + IMX290
+  + IMX327
+  + IMX378
+  + IMX519
+  + OV9281
+
+要扩展对新传感器的支持，请查看[为 libcamera 做贡献](https://git.linuxtv.org/libcamera.git/)。
+
+### rpicam-hello
+
+`rpicam-hello` 会短暂显示一个预览窗口，其中包含所连接摄像头的视频画面。要使用 `rpicam-hello` 显示五秒钟的预览窗口，请在终端中运行以下命令：
+
+```sh
+rpicam-hello
+```
+
+您可以使用 [`timeout`](#timeout) 选项传递一个可选的持续时间（以毫秒为单位）。值为 `0` 时，预览将无限期运行：
+
+```sh
+rpicam-hello --timeout 0
+```
+
+使用终端中的 `Ctrl+C` 或预览窗口上的关闭按钮停止 `rpicam-hello`。
+
+#### 显示图像传感器预览
+
+大多数 `rpicam-app` 都会在窗口中显示预览图像。如果没有活动的桌面环境，预览图像会使用 Linux 直接渲染管理器 (DRM) 直接绘制到显示器上。否则，`rpicam-apps` 会尝试使用桌面环境。这两种路径都使用零拷贝 GPU 缓冲区共享：因此不支持 X 转发。
+
+如果运行 X 窗口服务器并希望使用 X 转发，请使用 [`qt-preview`](#qt-preview) 标志在 [Qt](https://en.wikipedia.org/wiki/Qt_(software))窗口中呈现预览窗口。Qt 预览窗口比其他预览窗口占用更多资源。
+
+:::note
+使用 Gtk2 的旧系统在与 OpenCV 链接时可能会产生 `Glib-GObject` 错误，无法显示 Qt 预览窗口。在这种情况下，以 root 用户身份编辑文件 `/etc/xdg/qt5ct/qt5ct.conf`，将包含 `style=gtk2` 的行替换为 `style=gtk3`。
+:::
+
+要完全禁止预览窗口，请使用 [`nopreview`](#nopreview) 标志：
+
+```sh
+rpicam-hello -n
+```
+
+[`info-text`](#info-text) 选项使用 `%` 指令在窗口标题栏上显示图像信息。例如，以下命令显示当前的红色和蓝色增益值：
+
+```sh
+rpicam-hello --info-text "red gain %rg, blue gain %bg"
+```
+
+有关指令的完整列表，请参阅 [`info-text` 参考资料](#info-text)。
+
+### rpicam-jpeg
+
+`rpicam-jpeg` 可以帮助你捕捉 Raspberry Pi 设备上的图像。
+
+要捕获全分辨率的 JPEG 图像并将其保存到名为 `test.jpg` 的文件中，请运行以下命令：
+
+```
+rpicam-jpeg --output test.jpg
+```
+
+你会看到一个五秒钟的预览窗口。然后，`rpicam-jpeg` 会捕获全分辨率的 JPEG 图像并保存。
+
+使用 [`timeout`](#timeout) 选项可更改预览窗口的显示时间。[`width` 和`height`](#width-和-height)选项可改变保存图像的分辨率。例如，以下命令显示预览窗口 2 秒钟，然后捕捉并保存分辨率为 640×480 像素的图像：
+
+```sh
+rpicam-jpeg --output test.jpg --timeout 2000 --width 640 --height 480
+```
+
+### rpicam-still
+
+和 `rpicam-jpeg` 一样，`rpicam-still` 可以帮助你在 Raspberry Pi 设备上捕捉图像。
+与 `rpicam-jpeg` 不同，`rpicam-still` 支持传统的 `raspistill` 应用程序中提供的许多选项。
+
+要捕获全分辨率的 JPEG 图像并将其保存到名为 `test.jpg` 的文件中，请运行以下命令：
+
+```sh
+rpicam-still --output test.jpg
+```
+
+#### 编码器
+
+`rpicam-still` 可以保存多种格式的图像，包括`png`、`bmp`以及 RGB 和 YUV 二进制像素转储。要读取这些二进制转储，任何读取文件的应用程序都必须理解像素排列。
+
+使用 [`encoding`](#encoding) 选项指定输出格式。传递给 [`output`](#output) 的文件名对输出文件类型没有影响。
+
+要捕捉全分辨率 PNG 图像并将其保存到名为 `test.png` 的文件中，请运行以下命令：
+
+```sh
+rpicam-still --encoding png --output test.png
+```
+
+有关指定图像格式的更多信息，请参阅 [`encoding`选项参考](#encoding)。
+
+#### 捕捉原始图像
+
+原始图像是由图像传感器直接生成的图像，图像信号处理器（ISP）或中央处理器尚未对其进行任何处理。彩色图像传感器通常使用 Bayer 格式。使用 [`raw`](#raw) 选项捕捉原始图像。
+
+要捕捉图像并将其保存到名为 `test.jpg` 的文件中，同时将图像的原始版本保存到名为 `test.dng` 的文件中，请运行以下命令：
+
+```sh
+rpicam-still --raw --output test.jpg
+```
+
+`rpicam-still` 以 DNG（Adobe Digital Negative，Adobe 数字负片）格式保存原始图像。要确定原始图像的文件名，`rpicam-still` 使用与输出文件相同的名称，但扩展名改为`.dng`。要处理 DNG 图像，请使用 [Dcraw](https://en.wikipedia.org/wiki/Dcraw) 或 [RawTherapee](https://en.wikipedia.org/wiki/RawTherapee) 等应用程序。
+
+DNG 文件包含图像拍摄的元数据，包括黑电平、白平衡信息和 ISP 用于生成 JPEG 的色彩矩阵。使用 [ExifTool](https://exiftool.org/) 查看 DNG 元数据。以下输出显示了存储在 Raspberry Pi 使用 HQ 摄像机拍摄的原始图像中的典型元数据：
+
+```
+File Name                       : test.dng
+Directory                       : .
+File Size                       : 24 MB
+File Modification Date/Time     : 2021:08:17 16:36:18+01:00
+File Access Date/Time           : 2021:08:17 16:36:18+01:00
+File Inode Change Date/Time     : 2021:08:17 16:36:18+01:00
+File Permissions                : rw-r--r--
+File Type                       : DNG
+File Type Extension             : dng
+MIME Type                       : image/x-adobe-dng
+Exif Byte Order                 : Little-endian (Intel, II)
+Make                            : Raspberry Pi
+Camera Model Name               : /base/soc/i2c0mux/i2c@1/imx477@1a
+Orientation                     : Horizontal (normal)
+Software                        : rpicam-still
+Subfile Type                    : Full-resolution Image
+Image Width                     : 4056
+Image Height                    : 3040
+Bits Per Sample                 : 16
+Compression                     : Uncompressed
+Photometric Interpretation      : Color Filter Array
+Samples Per Pixel               : 1
+Planar Configuration            : Chunky
+CFA Repeat Pattern Dim          : 2 2
+CFA Pattern 2                   : 2 1 1 0
+Black Level Repeat Dim          : 2 2
+Black Level                     : 256 256 256 256
+White Level                     : 4095
+DNG Version                     : 1.1.0.0
+DNG Backward Version            : 1.0.0.0
+Unique Camera Model             : /base/soc/i2c0mux/i2c@1/imx477@1a
+Color Matrix 1                  : 0.8545269369 -0.2382823821 -0.09044229197 -0.1890484985 1.063961506 0.1062747385 -0.01334283455 0.1440163847 0.2593136724
+As Shot Neutral                 : 0.4754476844 1 0.413686484
+Calibration Illuminant 1        : D65
+Strip Offsets                   : 0
+Strip Byte Counts               : 0
+Exposure Time                   : 1/20
+ISO                             : 400
+CFA Pattern                     : [Blue,Green][Green,Red]
+Image Size                      : 4056x3040
+Megapixels                      : 12.3
+Shutter Speed                   : 1/20
+```
+
+要计算模拟增益，请用 ISO 数字除以 100。
+自动白平衡 (AWB) 算法会确定一个单一的校准光源，并始终标为 `D65`。
+
+#### 捕捉长时间曝光
+
+要拍摄长时间曝光的图像，请禁用自动曝光/增益控制 (AEC/AGC) 和自动白平衡 (AWB)。否则，这些算法将迫使用户在收敛时等待若干帧。
+
+要禁用这些算法，请为增益和 AWB 提供明确的值。由于长时间曝光已经耗费了大量时间，使用 [`immediate`](#immediate) 选项完全跳过预览阶段通常是合理的。
+
+要执行 100 秒曝光捕捉，请运行以下命令：
+
+```sh
+rpicam-still -o long_exposure.jpg --shutter 100000000 --gain 1 --awbgains 1,1 --immediate
+```
+
+要查找 Raspberry Pi 官方摄像头的最大曝光时间，请参阅 [摄像头硬件规格](../accessories/camera.mdx#硬件规格)。
+
+#### 创建延时视频
+
+要创建延时视频，可定期捕捉静态图像，例如每分钟捕捉一次，然后使用应用程序将图片拼接成视频。
+
+<Tabs>
+<TabItem value="rpicam-still" label="rpicam-still 延时模式">
+
+
+要使用 `rpicam-still` 的内置延时模式，请使用 [`timelapse`](#timelapse) 选项。该选项接受一个值，代表你希望 Raspberry Pi 在两次捕捉之间等待的时间，单位为毫秒。
+
+首先，创建一个存放延时照片的目录：
+
+```sh
+mkdir timelapse
+```
+
+运行以下命令创建 30 秒的延时，每两秒记录一张照片，将输出保存到 `image0001.jpg` 至 `image0013.jpg` 中：
+
+```sh
+rpicam-still --timeout 30000 --timelapse 2000 -o timelapse/image%04d.jpg
+```
+
+</TabItem>
+
+<TabItem value="cron" label="cron">
+
+您还可以使用 `cron` 自动执行延时。首先，创建名为 `timelapse.sh` 的脚本，其中包含以下命令。将`<username>`占位符替换为 Raspberry Pi 上的用户账户名：
+
+```sh
+#!/bin/bash
+DATE=$(date +"%Y-%m-%d_%H%M")
+rpicam-still -o /home/<username>/timelapse/$DATE.jpg
+```
+
+然后，使脚本可执行：
+
+```sh
+chmod +x timelapse.sh
+```
+
+创建 `timelapse` 目录，保存延时摄影图片：
+
+```sh
+mkdir timelapse
+```
+
+打开 crontab 进行编辑：
+
+```sh
+crontab -e
+```
+
+在编辑器中打开该文件后，添加以下行以计划每分钟捕获一次图像，用主用户账户的用户名替换占位符 `<username>`：
+
+```
+* * * * /home/<username>/timelapse.sh 2>&1
+```
+
+保存并退出后，您将看到以下信息：
+
+```
+crontab: installing new crontab
+```
+
+要停止为延时拍摄图像，请从 crontab 中删除上述行。
+
+</TabItem>
+
+</Tabs>
+
+##### 将图像拼接在一起
+
+有了一系列延时照片后，您可能想将它们合成一段视频。在 Raspberry Pi 上使用 `ffmpeg` 可以做到这一点。
+
+首先，安装 `ffmpeg`：
+
+```sh
+sudo apt install ffmpeg
+```
+
+在 `crontimelapse` 目录下运行以下命令，将 JPEG 文件转换为 mp4 视频：
+
+```sh
+ffmpeg -r 10 -f image2 -pattern_type glob -i 'timelapse/*.jpg' -s 1280x720 -vcodec libx264 timelapse.mp4
+```
+
+上述命令使用以下参数：
+
++ `-r 10`：将输出视频的帧频（赫兹值）设置为每秒十帧
++ `-f image2`：设置 `ffmpeg` 从模式指定的图像文件列表中读取文件
++ `-pattern_type glob`: 使用通配符模式（globbing）来解释用 `-i` 输入的文件名
++ `-i 'timelapse/*.jpg'`: 指定输入文件与 `timelapse` 目录中的 JPG 文件匹配
++ `-s 1280x720`：缩放至 720p
++ `-vcodec libx264` 使用软件 x264 编码器。
++ `timelapse.mp4` 输出视频文件的名称。
+
+有关 `ffmpeg` 选项的更多信息，请在终端运行 `ffmpeg --help`。
+
+### rpicam-vid
+
+`rpicam-vid` 可以帮助你在 Raspberry Pi 设备上捕获视频。`rpicam-vid` 会显示一个预览窗口，并将编码后的比特流写入指定输出。这将产生一个未打包的视频比特流，它未被任何容器（如 mp4 文件）格式包裹。
+
+:::tip
+如果可用，`rpicam-vid` 会使用硬件 H.264 编码。
+:::
+
+例如，以下命令将一段 10 秒钟的视频写入名为 `test.h264` 的文件：
+
+```sh
+rpicam-vid -t 10s -o test.h264
+```
+
+您可以用 VLC 和其他视频播放器播放生成的文件：
+
+```sh
+$ vlc test.h264
+```
+
+在 Raspberry Pi 5 上，您可以为输出文件指定 `mp4` 文件扩展名，直接输出为 MP4 容器格式：
+
+```sh
+rpicam-vid -t 10s -o test.mp4
+```
+
+#### 编码器
+
+`rpicam-vid` 支持动态 JPEG 以及未压缩和未格式化的 YUV420：
+
+```sh
+rpicam-vid -t 10000 --codec mjpeg -o test.mjpeg
+```
+
+```sh
+rpicam-vid -t 10000 --codec yuv420 -o test.data
+```
+
+[`codec`](#codec) 选项决定输出格式，而不是输出文件的扩展名。
+
+[`segment`](#segment) 选项会将输出文件分割成不同大小的片段（以毫秒为单位）。通过指定非常短（1 毫秒）的片段，可以方便地将动态 JPEG 流分解为单个 JPEG 文件。例如，以下命令将 1 毫秒的片段与输出文件名中的计数器相结合，为每个片段生成一个新的文件名：
+
+```sh
+rpicam-vid -t 10000 --codec mjpeg --segment 1 -o test%05d.jpeg
+```
+
+#### 捕捉高帧率视频
+
+要尽量减少高帧率（> 60fps）视频的丢帧，请尝试以下配置调整：
+
+- 使用 `--level 4.2` 将 [H.264 target level](https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels) 设置为 4.2。
+- 将 [`denoise`](#denoise) 选项设置为`cdn_off`，禁用软件色彩去噪处理。
+- 使用 [`nopreview`](#nopreview) 禁用显示窗口，以释放一些额外的 CPU 周期。
+- 在 [`/boot/firmware/config.txt`](../computers/config-txt.mdx#什么是configtxt) 中设置 `force_turbo=1`，以确保在视频捕获过程中 CPU 时钟不会节流。更多信息，请参阅 [`force_turbo` 文档](../computers/config-txt.mdx#force_turbo)。
+- 使用 `--width 1280 --height 720` 或更低的分辨率调整 ISP 输出分辨率，以实现帧速率目标。
+- 在 Raspberry Pi 4 上，可以通过在 `/boot/firmware/config.txt` 中添加 `gpu_freq=550` 或更高值来超频 GPU 以提高性能。更多详情，请参阅 [超频文档](../computers/config-txt.mdx#超频)。
+
+以下命令演示了如何实现 1280×720 120fps 视频：
+
+```sh
+rpicam-vid --level 4.2 --framerate 120 --width 1280 --height 720 --save-pts timestamp.pts -o video.264 -t 10000 --denoise cdn_off -n
+```
+
+#### libav 与 rpicam-vid 的集成
+
+`rpicam-vid` 可以使用 `ffmpeg`/`libav` 后端编解码器对音频和视频流进行编码。您既可以将这些流保存到文件中，也可以通过网络进行流式传输。如果存在，`libav` 会使用硬件 H.264 视频编码。
+
+要启用 `libav` 后端，在 [`codec`](#codec) 选项中加入 `libav` 值。
+
+```sh
+rpicam-vid --codec libav --libav-format avi --libav-audio --output example.avi
+```
+
+### rpicam-raw
+
+`rpicam-raw` 直接从传感器以原始贝叶帧的形式记录视频。它不会显示预览窗口。要将两秒钟的原始片段录制到名为 `test.raw` 的文件中，请运行以下命令：
+
+```sh
+rpicam-raw -t 2000 -o test.raw
+```
+
+`rpicam-raw` 直接输出没有任何格式信息的原始帧。应用程序会将像素格式和图像尺寸打印到终端窗口，以帮助用户解释像素数据。
+
+默认情况下，`rpicam-raw` 会将原始图像输出到一个可能非常大的文件中。使用 `%05d` [directive](#output) 选项将每个原始图像帧引导到单独的文件中，使每个图像帧的文件名都是唯一的：
+
+```sh
+rpicam-raw -t 2000 --segment 1 -o test%05d.raw
+```
+
+如果使用快速存储设备，`rpicam-raw` 能以 10fps 的速度将 18MB 的 1200 万像素 HQ 相机帧写入磁盘。`rpicam-raw` 无法将输出帧格式化为 DNG 文件；如需该功能，请使用 [`rpicam-still`](#rpicam-still)。使用低于 Class10 的 [`framerate`](#framerate) 选项可避免丢帧：
+
+```sh
+rpicam-raw -t 5000 --width 4056 --height 3040 -o test.raw --framerate 8
+```
+
+有关原始格式的更多信息，请参阅 [`mode` 文档](#mode)。
+
+### rpicam-detect
+
+:::tip
+Raspberry Pi OS 不包含 `rpicam-detect`。不过，如果你安装了 [安装 TensorFlow Lite](#使用tensorflow-lite进行后处理)，就可以构建 `rpicam-detect`。有关详细信息，请参阅 [`rpicam-apps`构建说明](#构建-rpicam-apps)。运行 `meson` 时不要忘记传递 `-Denable_tflite=enabled`。
+:::
+
+`rpicam-detect` 会显示一个预览窗口，并使用经过训练的 Google MobileNet v1 SSD（单次检测器）神经网络监控内容，该网络可使用 Coco 数据集识别约 80 类对象。`rpicam-detect` 能识别人、车、猫和许多其他物体。
+
+每当 `rpicam-detect` 检测到目标对象时，它就会捕获一张全分辨率的 JPEG 文件。然后返回监控预览模式。
+
+有关模型使用的一般信息，请参阅 [TensorFlow Lite 对象检测器](#使用tensorflow-lite进行后处理) 部分。例如，您可以在外出时偷偷监视您的猫：
+
+```sh
+rpicam-detect -t 0 -o cat%04d.jpg --lores-width 400 --lores-height 300 --post-process-file object_detect_tf.json --object cat
+```
+
+### 配置
+
+大多数用例都能自动运行，无需更改摄像头配置。不过，有些常见的使用情况确实需要对配置进行调整，其中包括
+
+- 第三方摄像头（制造商说明应解释必要的配置更改（如有）
+- 将非标准驱动程序或覆盖层与正式的 Raspberry Pi 摄像头一起使用
+
+Raspberry Pi OS 可在 `/boot/firmware/config.txt` 中识别以下覆盖层。
+
+| 摄像头模块 | 在 `/boot/firmware/config.txt` 中设置 |
+| -- | -- |
+| V1 摄像头 (OV5647) | `dtoverlay=ov5647` |
+| V2 摄像头（IMX219） | `dtoverlay=imx219` |
+| HQ 摄像头 (IMX477) | `dtoverlay=imx477` |
+| GS 摄像头 (IMX296) | `dtoverlay=imx296` |
+| 摄像头模块 3 (IMX708) | `dtoverlay=imx708` |
+| IMX290 和 IMX327 | `dtoverlay=imx290,clock-frequency=74250000` 或 `dtoverlay=imx290,clock-frequency=37125000`（这两个模块共享 imx290 内核驱动程序；有关正确频率，请参阅模块供应商的说明） |
+| IMX378 | `dtoverlay=imx378` |
+| OV9281 | `dtoverlay=ov9281` |
+
+要使用这些覆盖层之一，必须禁用摄像头自动检测功能。要禁用自动检测，请在 `/boot/firmware/config.txt` 中设置 `camera_auto_detect=0`。如果 `config.txt` 中已经有一行指定了 `camera_auto_detect` 值，请将该值改为 `0`。使用 `sudo reboot` 重启 Raspberry Pi，加载所作更改。
+
+#### 使用调谐文件调整摄像头行为
+
+Raspberry Pi 的 `libcamera` 实现为每个摄像头都包含一个**调谐文件**。该文件控制算法和硬件，以生成最佳图像质量。`libcamera` 只能确定使用的传感器，而不能确定模块。因此，某些模块需要覆盖调校文件。[`tuning-file`](#tuning-file) 选项指定覆盖。您也可以复制和更改现有的调谐文件来定制摄像机的行为。
+
+例如，无红外滤镜（NoIR）版本的传感器使用的自动白平衡（AWB）设置与标准版本不同。在 Raspberry Pi 5 或更高版本上，您可以使用以下命令为 IMX219 传感器指定 NoIR 调谐文件：
+
+```sh
+rpicam-hello --tuning-file /usr/share/libcamera/ipa/rpi/pisp/imx219_noir.json
+```
+
+:::tip
+Raspberry Pi 5 之前的 Raspberry Pi 型号使用不同的调谐文件。在这些设备上，请使用存储在 `/usr/share/libcamera/ipa/rpi/vc4/` 中的文件。
+:::
+
+`libcamera` 为许多摄像头（包括第三方型号）维护调谐文件。例如，您可以在 `se327m12.json` 中找到 Soho Enterprises SE327M12 的调谐文件。
+
+### 使用多台摄像机
+
+`rpicam-apps` 具有对多摄像头的基本支持。您可以通过以下方式将多个摄像头连接到 Raspberry Pi：
+
+* 对于 Raspberry Pi 计算模块，您可以将两个摄像头直接连接到 Raspberry Pi 计算模块的 I/O 板上。有关详细信息，请参阅 [计算模块文档](../computers/compute-module.mdx#连接摄像头模块)。使用这种方法，您可以_同时使用两个摄像头_。
+* 对于 Raspberry Pi 5，您可以使用双 MIPI 接口将两个摄像头直接连接到电路板上。
+* 对于其他带有摄像头端口的 Raspberry Pi 设备，您可以使用视频多路复用器板（如 [此第三方产品](https://www.arducam.com/product/multi-camera-v2-1-adapter-raspberry-pi/)）连接两台或多台摄像头。由于两个摄像头都连接到一个 Unicam 端口，因此_每次只能使用一个摄像头_。
+
+要列出平台上所有可用的摄像头，请使用 [`list-cameras`](#list-cameras) 选项。要选择使用哪台摄像机，请向 [`camera`](#camera) 选项传递所请求摄像机的索引值。
+
+:::tip[注意]
+`libcamera` 尚不支持立体摄像机。同时运行两台摄像机时，它们必须在不同的进程中运行。这意味着无法在它们之间同步传感器取景或 3A 操作。 作为一种变通方法，您可以通过 HQ (IMX477) 摄像机的外部同步信号来同步摄像机，并在必要时将 3A 切换为手动模式。
+:::
+
+### 安装 libcamera 和 rpicam-apps
+
+Raspberry Pi 提供两个 `rpicam-apps` 软件包：
+
+- `rpicam-apps` 包含完整的应用程序，支持使用桌面环境进行预览。该软件包已预装在 Raspberry Pi 操作系统中。
+- `rpicam-apps-lite` 不支持桌面环境，只提供 DRM 预览。此软件包已预装在 Raspberry Pi OS Lite 中。
+
+#### 依赖关系
+
+`rpicam-apps` 依赖于名为 `library-name<n>`的库包，其中 `<n>` 是 ABI 版本。软件包管理器会自动安装这些软件包。
+
+#### 开发包
+
+您可以重建 `rpicam-apps` 而无需从头开始构建 `libcamera` 和 `libepoxy`。有关详细信息，请参阅 [无需重建 `libcamera` 即可构建 `rpicam-apps`](#在不重建libcamera的情况下构建rpicam-apps) 。
+
+
+## 使用 rpicam-apps 通过网络串流视频
+
+本节介绍从 `rpicam-vid` 进行本机流式传输。您也可以使用 [`libav`](#libav-选项) 后端进行网络流式传输。
+
+### UDP
+
+要使用 Raspberry Pi 作为服务器通过 UDP 传输视频流，请使用以下命令，用客户端的 IP 地址或组播地址替换`<ip-addr>`占位符，用您希望用于流媒体传输的端口替换`<port>`占位符：
+
+```sh
+rpicam-vid -t 0 --inline -o udp://<ip-addr>:<port>
+```
+
+要使用 Raspberry Pi 作为客户端查看通过 UDP 传输的视频流，请使用以下命令，将`<port>`占位符替换为您希望从其传输流的端口：
+
+```sh
+vlc udp://@:<port> :demux=h264
+```
+
+或者，在客户端上使用以下命令，使用 `ffplay` 进行流式传输：
+
+```sh
+ffplay udp://<ip-addr-of-server>:<port> -fflags nobuffer -flags low_delay -framedrop
+```
+
+### TCP
+
+您还可以通过 TCP 传输视频流。将 Raspberry Pi 用作服务器：
+
+```sh
+rpicam-vid -t 0 --inline --listen -o tcp://0.0.0.0:<port>
+```
+
+要使用 Raspberry Pi 作为客户端查看通过 TCP 流传输的视频，请使用以下命令：
+
+```sh
+vlc tcp/h264://<ip-addr-of-server>:<port>
+```
+
+或者，在客户端上使用以下命令，以每秒 30 帧的速度使用 `ffplay` 进行流式传输：
+
+```sh
+ffplay tcp://<ip-addr-of-server>:<port> -vf "setpts=N/30" -fflags nobuffer -flags low_delay -framedrop
+```
+
+### RTSP
+
+要使用 VLC 通过 RTSP 以 Raspberry Pi 作为服务器串流视频，请使用以下命令：
+
+```sh
+rpicam-vid -t 0 --inline -o - | cvlc stream:///dev/stdin --sout '#rtp{sdp=rtsp://:8554/stream1}' :demux=h264
+```
+
+要在 Raspberry Pi 5 上获得最佳性能，请使用以下命令，该命令会添加 libav 以强制使用 H264 格式：
+
+```sh
+rpicam-vid -t 0 --inline --libav-format h264 -o - | cvlc stream:///dev/stdin --sout '#rtp{sdp=rtsp://:8554/stream1}' :demux=h264
+```
+
+要使用 Raspberry Pi 作为客户端查看通过 RTSP 传输的视频流，请使用以下命令：
+
+```sh
+ffplay rtsp://<ip-addr-of-server>:8554/stream1 -vf "setpts=N/30" -fflags nobuffer -flags low_delay -framedrop
+```
+
+或者，在客户端上使用以下命令使用 VLC 进行流式传输：
+
+```sh
+vlc rtsp://<ip-addr-of-server>:8554/stream1
+```
+
+要在服务器上抑制预览窗口，请使用 [`nopreview`](#nopreview)。
+
+使用 [`inline`](#inline) 标志可强制在每帧内包含流标题信息，这有助于客户端在错过开头时理解流。
+
+### libav
+
+您可以将 `libav` 后端用作音频/视频的网络流媒体源。
+要使用 Raspberry Pi 作为服务器通过 TCP 串流视频，请使用以下命令，用客户端的 IP 地址或组播地址替换 `<ip-addr>` 占位符，用您希望用于串流的端口替换 `<port>` 占位符：
+
+```sh
+rpicam-vid -t 0 --codec libav --libav-format mpegts --libav-audio -o "tcp://<ip-addr>:<port>?listen=1"
+```
+
+您也可以使用类似的命令通过 UDP 传输流媒体：
+
+```sh
+rpicam-vid -t 0 --codec libav --libav-format mpegts --libav-audio -o "udp://<ip-addr>:<port>"
+```
+
+### GStreamer
+
+[GStreamer](https://gstreamer.freedesktop.org/) 是一个用于读取、处理和播放多媒体文件的 Linux 框架。本节介绍如何使用 `rpicam-vid` 通过网络串流视频。
+
+此设置使用 `rpicam-vid` 将已编码的 h.264 比特流输出到 stdout。然后，我们使用 GStreamer `fdsrc` 元素接收比特流，并使用额外的 GStreamer 元素通过网络发送比特流。在服务器上，运行以下命令启动流，用客户端的 IP 地址或组播地址替换占位符 `<ip-addr>`，用您希望用于流媒体的端口替换占位符 `<port>`：
+
+```sh
+rpicam-vid -t 0 -n --inline -o - | gst-launch-1.0 fdsrc fd=0 ! udpsink host=<ip-addr> port=<port>
+```
+
+在客户端上运行以下命令接收流媒体，用客户端的 IP 地址或组播地址替换 `<ip-addr>` 占位符，用希望用于流媒体的端口替换 `<port>` 占位符：
+
+```sh
+gst-launch-1.0 udpsrc address=<ip-addr> port=<port> ! h264parse ! v4l2h264dec ! autovideosink
+```
+
+:::tip
+要测试此配置，请使用 `localhost` 作为地址，在同一设备上的不同终端运行服务器和客户端命令。
+:::
+
+#### RTP
+
+要使用 RTP 进行流式传输，请在服务器上运行以下命令，用客户端的 IP 地址或组播地址替换 `<ip-addr>`占位符，并用您希望用于流式传输的端口替换 `<port>` 占位符：
+
+```sh
+rpicam-vid -t 0 -n --inline -o - | gst-launch-1.0 fdsrc fd=0 ! h264parse ! rtph264pay ! udpsink host=<ip-addr> port=<port>
+```
+
+要通过 RTP 接收，请在客户端运行以下命令，将 `<ip-addr>` 占位符替换为客户端的 IP 地址或组播地址，并将 `<port>` 占位符替换为您希望用于流式传输的端口：
+
+```sh
+gst-launch-1.0 udpsrc address=<ip-addr> port=<port> caps=application/x-rtp ! rtph264depay ! h264parse ! v4l2h264dec ! autovideosink
+```
+
+如果客户端不是 Raspberry Pi，则可能有不同的 GStreamer 元素可用。在运行 Linux 的 x86 设备上，可以运行以下命令来代替：
+
+```sh
+gst-launch-1.0 udpsrc address=<ip-addr> port=<port> caps=application/x-rtp ! rtph264depay ! h264parse ! avdec_h264 ! autovideosink
+```
+
+#### libcamerasrc GStreamer 元素
+
+`libcamera` 提供了一个 `libcamerasrc` GStreamer 元素，可以直接使用它来代替 `rpicam-vid`。要使用该元素，请在服务器上运行以下命令，用客户端的 IP 地址或组播地址替换占位符 `<ip-addr>`，并用希望用于流媒体的端口替换占位符 `<port>`：
+
+```sh
+gst-launch-1.0 libcamerasrc ! capsfilter caps=video/x-raw,width=1280,height=720,format=NV12 ! v4l2convert ! v4l2h264enc extra-controls="controls,repeat_sequence_header=1" ! 'video/x-h264,level=(string)4.1' ! h264parse ! rtph264pay ! udpsink host=<ip-addr> port=<port>
+```
+
+在客户端，我们使用与之前相同的播放管道。
+
+## rpicam-apps 选项参考
+
+### 常用选项
+
+除非另有说明，下列选项适用于所有具有相似或相同语义的 `rpicam-apps`。
+
+要将下列选项之一传递给应用程序，请在选项名称前加上 `--`。如果选项需要一个值，则将该值紧跟在选项名称之后，用一个空格分隔。如果值中包含空格，则用引号将值包围起来。
+
+有些选项有速记别名，例如用 `-h` 代替 `--help`。使用这些速记别名代替完整的选项名称，可以节省空间和时间，但会影响可读性。
+
+#### help
+
+别名: `-h`
+
+打印全套选项，以及每个选项的简要说明。不接受值。
+
+#### version
+
+打印 `libcamera` 和 `rpicam-apps` 的版本字符串。不接受数值。
+
+输出示例：
+
+```
+rpicam-apps build: ca559f46a97a 27-09-2021 (14:10:24)
+libcamera build: v0.0.0+3058-c29143f7
+```
+
+#### list-cameras
+
+列出连接到 Raspberry Pi 的检测到的摄像头及其可用的传感器模式。不接受值。
+
+传感器模式标识符的形式如下：`S<Bayer order><Bit-depth>_<Optional packing> : <Resolution list>`
+
+裁切以原始传感器像素（即使在像素分档模式下）指定为 `(<x>，<y>)/<Width>×<Height>`。`(x, y)` 指定传感器阵列中大小为 `weidth × height` 的裁剪窗口的位置。
+
+例如，以下输出显示索引 0 处的 `IMX219` 传感器和索引 1 处的 `IMX477` 传感器的信息：
+
+```
+Available cameras
+-----------------
+0 : imx219 [3280x2464] (/base/soc/i2c0mux/i2c@1/imx219@10)
+    Modes: 'SRGGB10_CSI2P' : 640x480 [206.65 fps - (1000, 752)/1280x960 crop]
+                             1640x1232 [41.85 fps - (0, 0)/3280x2464 crop]
+                             1920x1080 [47.57 fps - (680, 692)/1920x1080 crop]
+                             3280x2464 [21.19 fps - (0, 0)/3280x2464 crop]
+           'SRGGB8' : 640x480 [206.65 fps - (1000, 752)/1280x960 crop]
+                      1640x1232 [41.85 fps - (0, 0)/3280x2464 crop]
+                      1920x1080 [47.57 fps - (680, 692)/1920x1080 crop]
+                      3280x2464 [21.19 fps - (0, 0)/3280x2464 crop]
+1 : imx477 [4056x3040] (/base/soc/i2c0mux/i2c@1/imx477@1a)
+    Modes: 'SRGGB10_CSI2P' : 1332x990 [120.05 fps - (696, 528)/2664x1980 crop]
+           'SRGGB12_CSI2P' : 2028x1080 [50.03 fps - (0, 440)/4056x2160 crop]
+                             2028x1520 [40.01 fps - (0, 0)/4056x3040 crop]
+                             4056x3040 [10.00 fps - (0, 0)/4056x3040 crop]
+```
+
+对于上述示例中的 IMX219 传感器：
+
+- 所有模式都有 `RGGB` 拜尔排序
+- 所有模式均可在所列分辨率下提供 8 位或 10 位 CSI2 封装读数
+
+#### camera
+
+选择要使用的摄像机。从 [可用摄像机列表](#list-cameras)中指定一个索引。
+
+#### config
+
+别名: `-c`
+
+指定包含 CLI 选项和值的文件。考虑一个名为 `example_configuration.txt` 的文件，其中包含以下文本，以键值对的形式指定选项和值，每行一个选项，只有长（非别名）选项名：
+
+```
+timeout=99000
+verbose=
+```
+
+:::tip
+省略通常在命令行中传递的前导 `--`。对于缺少值的标志，例如上例中的 `verbose`，必须包含尾部的 `=`。
+:::
+
+然后，你可以运行以下命令来指定超时 99000 毫秒和verbose 输出：
+
+```sh
+rpicam-hello --config example_configuration.txt
+```
+
+#### timeout
+
+别名： `-t`
+
+默认值：5000 毫秒（5 秒）
+
+指定应用程序运行多长时间后关闭。这适用于视频录制和预览窗口。捕捉静态图像时，应用程序会在捕捉输出图像前显示预览窗口 `timeout` 毫秒。
+
+要无限期运行应用程序，请指定`0`值。
+
+#### preview
+
+别名：`-p
+
+设置桌面或 DRM 预览窗口的位置（x、y 坐标）和大小（w、h 尺寸）。不会影响从摄像机请求的图像的分辨率或宽高比。缩放图像大小并调整图像宽高比，使其适合预览窗口。
+
+以下列逗号分隔的形式传递预览窗口尺寸： `x,y,w,h`。
+
+例如：`rpicam-hello --preview 100,100,500,500`
+
+<img src="/img/computers/camera-software/preview_window.jpg" alt="信箱预览图像" />
+
+#### fullscreen
+
+别名: `-f`
+
+强制预览窗口使用整个屏幕，无边框或标题栏。缩放图像大小和柱形图或字母框图像宽高比，以适应整个屏幕。不接受数值。
+
+#### qt-preview
+
+使用 Qt 预览窗口，它比其他方法消耗更多资源，但支持 X 窗口转发。与 [`fullscreen`](#fullscreen) 标志不兼容。不接受值。
+
+#### `nopreview`.
+
+别名: `n`
+
+使应用程序根本不显示预览窗口。不接受值。
+
+#### info-text
+
+默认值：`"#%frame (%fps fps) exp %exp ag %ag dg %dg"`
+
+在桌面环境中运行时，将提供的字符串设置为预览窗口的标题。支持以下图像元数据替换：
+
+| 指令 | 替换 |
+| -- | -- |
+| `%frame` | 帧的序列号 |
+| `%fps` | 瞬时帧频 |
+| `%exp` | 拍摄图像时使用的快门速度(微秒) |
+| `%ag` | 应用于传感器图像的模拟增益 |
+| `%dg` | ISP 应用于图像的数字增益 |
+| `%rg` | 应用于每个像素红色分量的增益 |
+| `%bg` | 应用于每个像素蓝色分量的增益 |
+| `%focus` | 图像的焦点度量，数值越大意味着图像越清晰 |
+| `%lp` | 当前镜头的位置，单位为度数（1/距离，单位为米） |
+| `%afstate` | 自动对焦算法状态（`idle`(空闲)、`scanning`(扫描)、`focused`(对焦)或`failed`(失败) |
+
+<img src="/img/computers/camera-software/focus.jpg" alt="显示焦点测量值的图像" />
+
+#### width 和 height
+
+接受以像素为单位定义捕获图像尺寸的数字。
+
+对于 `rpicam-still`、`rpicam-jpeg` 和 `rpicam-vid`，指定输出分辨率。
+
+对于 `rpicam-raw`，指定原始帧的分辨率。对于采用 2×2 分档读出模式的摄像机，指定等于或小于分档模式的分辨率可捕获 2×2 分档的原始图像。
+
+对于 `rpicam-hello` 没有影响。
+
+示例
+
+- `rpicam-vid -o test.h264 --width 1920 --height 1080` 捕捉 1080p 视频。
+
+- `rpicam-still -r -o test.jpg --width 2028 --height 1520` 捕捉分辨率为 2028×1520 的 JPEG 文件。如果与 HQ 摄像机一起使用，则使用 2×2 分档模式，因此原始文件 (`test.dng`)包含 2028×1520 的原始拜尔图像。
+
+#### viewfinder-width 和 viewfinder-height
+
+每个选项都接受一个数字，定义预览窗口中显示图像的尺寸（以像素为单位）。不会影响预览窗口的尺寸，因为图像会调整大小以适应。不影响捕获的静态图像或视频。
+
+#### mode
+
+允许以下列以冒号分隔的格式指定摄像机模式： `<宽度>:<高度>:<位深>:<包装>`。如果所提供的值不完全匹配，系统会为传感器选择最接近的可用选项。您可以使用打包 (`P`) 或未打包 (`U`) 的打包格式。影响存储视频和照片的格式，但不影响传递到预览窗口的帧格式。
+
+比特深度和打包是可选的。
+比特深度默认为 12。
+打包默认为 "P"（打包）。
+
+有关传感器可用的比特深度、分辨率和打包选项的信息，请参阅 [`list-cameras`](#list-cameras)。
+
+举例说明：
+
+- `4056:3040:12:P` - 4056×3040 分辨率，每像素 12 位，打包。
+- `1632:1224:10` - 1632×1224 分辨率，每个像素 10 位。
+- `2592:1944:10:U` - 2592×1944 分辨率，每像素 10 位，未打包。
+- `3264:2448` - 3264×2448 分辨率。
+
+##### 打包格式详情
+
+打包格式使用较少的像素数据存储空间。
+
+**在 Raspberry Pi 4 和更早的设备上**，打包格式使用 MIPI CSI-2 标准打包像素。这意味着
+
+- 10 位相机模式将 4 个像素打包成 5 个字节。前 4 个字节包含每个像素的 8 个最有效位（MSB），最后一个字节包含 4 对最小有效位（LSB）。
+- 12 位摄像机模式将 2 个像素打包成 3 个字节。前 2 个字节包含每个像素的 8 个最有效位 (MSB)，最后一个字节包含两个像素的 4 个最小有效位 (LSB)。
+
+**在 Raspberry Pi 5 及更高版本的设备上**，打包格式通过视觉无损压缩方案将像素值压缩为每个像素 8 位（1 个字节）。
+
+##### 未打包格式详情
+
+解压缩格式提供的像素值更易于手动操作，但需要为像素数据使用更多存储空间。
+
+在所有设备上，未打包格式每个像素使用 2 个字节。
+
+**在 Raspberry Pi 4 和更早的设备上**，应用程序会在*最显著端*应用零填充。在未打包格式中，10 位相机模式的像素值不能超过 1023。
+
+**在 Raspberry Pi 5 及更早的设备上**，应用程序会在*最不显著端*应用零填充，因此图像会使用传感器提供的像素深度的完整 16 位动态范围。
+
+#### viewfinder-mode
+
+与 `mode` 选项相同，但适用于传递到预览窗口的数据。更多信息，请参阅 [`mode` 文档](#mode)。
+
+#### lores-width 和 lores-height 选项
+
+从摄像机传输第二个较低分辨率的图像流，缩放到指定的尺寸。
+
+每种模式都接受以像素为单位定义低分辨率图像流尺寸的单个数字。
+
+适用于预览和视频模式。不适用于静态捕捉。如果指定的宽高比与正常分辨率数据流不同，则会生成非方形像素。
+
+对于 `rpicam-vid`，会禁用额外的色噪处理。
+
+与 [图像后处理](#使用-rpicam-apps-做后处理)结合使用时，可用于图像分析。
+
+#### hflip
+
+水平翻转图像。不接受数值。
+
+#### vflip
+
+垂直翻转图像。不接受数值。
+
+#### rotation
+
+旋转从传感器提取的图像。只接受 0 或 180 的值。
+
+#### roi
+
+裁剪从传感器全场提取的图像。接受四个十进制值，从 0 到 1，格式如下： `<x>,<y>,<w>,h>`。每个值都代表可用宽度和高度的百分比，小数点在 0 到 1 之间。
+
+这些值定义了以下比例：
+- `<x>`: 提取图像前要跳过的 X 坐标
+- `<y>`: 提取图像前要跳过的 Y 坐标
+- `<w>`: 提取图像的宽度
+- `<h>`: 要提取的图像高度
+
+默认为 `0,0,1,1`（从第一个 X 坐标和第一个 Y 坐标开始，使用图像宽度的 100%，使用图像高度的 100%）。
+
+例如
+- `rpicam-hello --roi 0.25,0.25,0.5,0.5` 精确选择从图像中心裁剪的像素总数的一半（跳过前 25% 的 X 坐标，跳过前 25% 的 Y 坐标，使用图像总宽度的 50% ，使用图像总高度的 50% ）。
+* `rpicam-hello --roi 0,0,0.25,0.25` 精确选择从图像左上方裁剪的像素总数的四分之一（跳过前 0% 的 X 坐标，跳过前 0% 的 Y 坐标，使用图像宽度的 25%，使用图像高度的 25%）。
+
+#### hdr
+
+默认值：`off`
+
+以 HDR 模式运行摄像机。如果传递时没有输入值，则假定为 `auto`。接受以下值之一：
+
+- `off` - 禁用 HDR。
+- `auto` - 在支持的设备上启用 HDR。如果可用，则使用传感器的内置 HDR 模式。如果传感器没有内置 HDR 模式，则使用可用的板载 HDR 模式。
+- `single-exp` - 使用板载 HDR 模式（如果可用），即使传感器有内置 HDR 模式。如果板载 HDR 模式不可用，则禁用 HDR。
+
+Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
+
+要检查传感器是否有内置 HDR 模式，除了 [`list-cameras`](#list-cameras) 之外，还需通过此选项。
+
+### 相机控制选项
+
+以下选项可控制影响相机图像质量的图像处理和算法。
+
+#### sharpness
+
+设置图像清晰度。接受以下范围内的数值：
+
+- `0.0` 不进行锐化
+- 大于`0.0`但小于`1.0`的数值应用小于默认的锐化量
+- 1.0 "应用默认的锐化量
+- 大于 `1.0`的值应用额外的锐化
+
+#### contrast
+
+指定图像对比度。接受以下范围内的数值：
+
+- `0.0` 应用最小对比度
+- 大于`0.0`但小于`1.0`的值应用小于默认值的对比度
+- `1.0` 应用默认对比度量
+- 大于 `1.0`的值应用额外的对比度
+
+
+#### brightness
+
+指定图像亮度，作为偏移量添加到输出图像中的所有像素。接受以下范围内的数值：
+
+* `-1.0` 应用最低亮度（黑色）
+* `0.0` 应用标准亮度
+* `1.0` 应用最大亮度（白色）
+
+对于许多用例，首选 [`ev`](#ev)。
+
+#### saturation
+
+指定图像色彩饱和度。接受以下范围内的数值：
+
+* `0.0` 应用最低饱和度（灰度）
+* 大于`0.0`但小于`1.0`的数值应用小于默认值的饱和度
+* `1.0` 应用默认的饱和度
+* 大于 `1.0`的值应用额外的饱和度
+
+#### ev
+
+指定 [曝光值 (EV)](https://en.wikipedia.org/wiki/Exposure_value) 补偿图像的光圈。接受一个数值，该数值可按以下范围控制传递给自动曝光/增益控制（AEC/AGC）处理算法的目标值：
+
+- `10.0` 应用最小目标值
+- `0.0` 应用标准目标值
+- `10.0` 应用最大目标值
+
+#### shutter
+
+使用快门指定曝光时间，单位为_微秒_。使用此选项时，增益仍可能发生变化。如果摄像机的帧频太快，无法达到指定的曝光时间（例如，帧频为 1fps，曝光时间为 10000 微秒），传感器将使用帧频所允许的最长曝光时间。
+
+有关正式相机的最小和最大快门时间列表，请参阅 [相机硬件文档](../accessories/camera.mdx#硬件规格)。超过最大值会导致未定义的行为。
+
+#### gain
+
+别名：`--analoggain`
+
+设置模拟和数字综合增益。当传感器驱动程序可以提供所需的增益时，只使用模拟增益。当模拟增益达到最大值时，ISP 将使用数字增益。接受数值。
+
+有关正式摄像机的模拟增益限制列表，请参阅 [摄像机硬件文档](../accessories/camera.mdx#硬件规格)。
+
+有时，即使没有超过模拟增益限制，数字增益也会超过 1.0。这种情况可能发生在以下情况：
+
+- 任一色彩增益低于 1.0，都会导致数字增益稳定在 1.0/min(red_gain,blue_gain)。这将使应用于任何色彩通道的总数字增益保持在 1.0 以上，以避免产生变色伪影。
+- 自动曝光/增益控制 (AEC/AGC) 变化时会出现轻微差异。
+
+#### metering
+
+默认值：`centre`
+
+设置自动曝光/增益控制 (AEC/AGC) 算法的测光模式。可接受以下值：
+
+- `centre` - 中央加权测光
+- `spot` - 点测光
+- `average`- 平均或整幅测光
+- `custom`- 在相机调谐文件中定义的自定义测光模式
+
+有关定义自定义测光模式和调整现有测光模式中区域权重的详细信息，请参阅 [Raspberry Pi 相机和 libcamera 的调校指南](https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf)。
+
+#### exposure
+
+设置曝光轮廓。更改曝光轮廓不会影响图像曝光。相反，不同模式会调整增益设置以达到相同的净结果。接受以下值：
+
+- `sport`：短时间曝光，较大增益
+- `normal`：正常曝光，正常增益
+- `long`：长时间曝光，较小增益
+
+您可以使用调谐文件编辑曝光配置文件。更多信息，请参阅 [Raspberry Pi 相机和 libcamera 的调整指南](https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf)。
+
+#### awb
+
+设置自动白平衡 (AWB) 模式。接受以下值：
+
+| 模式名称 | 色温 |
+| -- | -- |
+| `auto` (自动) | 2500K 至 8000K |
+| `incandescent` (白炽灯) | 2500K 至 3000K |
+| `tungsten` (钨丝灯) | 3000K 至 3500K |
+| `fluorescent` (荧光灯) | 4000K 至 4700K |
+| `indoor` (室内) | 3000K 至 5000K |
+| `daylight` (日光) | 5500K 至 6500K |
+| `cloudy` (阴天) | 7000K 至 8500K |
+| `custom` (自定义) | 自定义范围必须在摄像头调谐文件中定义 |
+
+这些数值仅为近似值：数值可能因相机调校而异。
+
+没有任何模式可以完全禁用 AWB。相反，您可以使用 [`awbgains`](#awbgains)来固定色彩增益。
+
+有关 AWB 模式的更多信息，包括如何定义自定义模式，请参阅 [Raspberry Pi 摄像头和 libcamera 的调校指南](https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf)。
+
+#### awbgains
+
+设置固定的红色和蓝色增益值，以代替自动白平衡 (AWB) 算法。设置非零值可禁用 AWB。接受以下格式的逗号分隔数字输入： `<red_gain>,<blue_gain>`。
+
+#### denoise
+
+默认值：`auto`
+
+设置去噪模式。接受以下值：
+
+- `auto`：启用标准空间去噪。对视频使用超快彩色去噪，对图像使用高质量彩色去噪。在预览窗口中不启用额外的色彩去噪。
+- `off`：禁用空间和色彩去噪。
+- `cdn_off`：禁用色彩去噪。
+- `cdn_fast`：使用快速色彩去噪。
+- `cdn_hq`：使用高质量色彩去噪。由于吞吐量降低，不适用于视频/取景器。
+
+即使是快速彩色去噪也会降低帧频。高质量色彩去噪会显著降低帧频。
+
+#### tuning-file
+
+指定摄像头调谐文件。通过调校文件可以控制图像处理的许多方面，包括自动曝光/增益控制 (AEC/AGC)、自动白平衡 (AWB)、色彩阴影校正、色彩处理、去噪等。接受调校文件路径作为输入。
+
+有关调谐文件的更多信息，请参阅 [调谐文件](#tuning-file)。
+
+#### autofocus-mode
+
+默认值：`default`
+
+指定自动对焦模式。接受以下值：
+
+* `default`: 使摄像机进入连续自动对焦模式，除非 [`lens-position`](#lens-position) 或 [`autofocus-on-capture`](#autofocus-on-capture) 将该模式覆盖为手动模式。
+* `manual`：完全不移动镜头，除非使用 [`lens-position`](#lens-position) 进行手动配置。
+* `auto`: 仅在摄像机启动时或拍摄前移动镜头进行自动对焦扫描，如果同时使用了 [`autofocus-on-capture`](#autofocus-on-capture)
+* `continuous`：根据场景变化自动调整镜头位置
+
+只有某些相机模块支持此选项。
+
+#### autofocus-window
+
+默认值：`normal`
+
+指定自动对焦范围。接受以下值：
+
+* `normal`：对焦范围从合理距离到无限远
+* `macro`：仅对近距离物体对焦，包括相机支持的最近焦距
+* `full`：对整个范围对焦，从最近的物体到无穷远
+
+此选项仅支持某些相机模块。
+
+#### autofocus-speed
+
+默认值：`normal`
+
+指定自动对焦速度。接受以下值：
+
+* `normal`：以正常速度改变镜头位置
+* `fast`：快速改变镜头位置
+
+此选项仅支持某些相机模块。 
+
+#### autofocus-range
+
+指定传感器全场范围内的自动对焦窗口。接受四个十进制值，从 0 到 1，格式如下：`<x>,<y>,<w>,h>`。每个值都代表可用宽度和高度的百分比，小数点在 0 到 1 之间。
+
+这些值定义了以下比例：
+
+- `<x>`: 应用自动对焦前要跳过的 X 坐标
+- `<y>`: 应用自动对焦前要跳过的 Y 坐标
+- `<w>`: 自动对焦区域宽度
+- `<h>`: 自动对焦区域高度
+
+默认值使用输出图像两个维度的中间三分之一（图像总面积的 1/9）。
+
+示例
+
+- `rpicam-hello --autofocus-window 0.25,0.25,0.5,0.5` 精确选择从图像中心裁剪的像素总数的一半（跳过 X 坐标的前 25%，跳过 Y 坐标的前 25%，使用图像总宽度的 50%，使用图像总高度的 50%）。
+- `rpicam-hello --autofocus-window 0,0,0.25,0.25` 精确选择从图像左上方裁剪的像素总数的四分之一（跳过 X 坐标的前 0%，跳过 Y 坐标的前 0%，使用图像宽度的 25%，使用图像高度的 25%）。
+
+此选项仅支持某些相机模块。
+
+#### lens-position
+
+默认值：`default`
+
+将镜头移动到一个固定的焦距，通常以二倍为单位（单位为 1 / **米**）。可接受以下数值范围：
+
+- `0.0`：将镜头移动到 **无限远** 位置
+- 任何其他 `数字`：将镜头移动到 1 / `数字` 位置。例如，数值 `2.0` 将对焦在大约 0.5 米处
+- `default`：将镜头移动到与镜头超焦距位置相对应的默认位置
+
+镜头校准并不完美，因此同一型号的不同相机模块可能会有所不同。
+
+#### verbose
+
+别名：`-v`
+
+默认值：`1`
+
+设置冗长程度。接受以下值：
+
+* `0`: 无输出
+* `1`: 正常输出
+* `2`: 冗余输出
+
+### 输出文件选项
+
+#### output
+
+别名: `-o`
+
+设置用于记录图像或视频的文件名。除了纯文本文件名，还接受以下特殊值：
+
+- `-`: 写入 stdout。
+- `udp://` （前缀）：用于 UDP 流的网络地址。
+- `tcp://` （前缀）：用于 TCP 流的网络地址。
+- 在文件名中包含 `%d` 指令，以替换为每打开一个文件就递增一次的计数指令。该指令支持标准 C 格式指令修饰符。
+
+示例
+
+- `rpicam-vid -t 100000 --segment 10000 -o chunk%04d.h264` 将一个 100 秒的文件记录为 10 秒的片段，每个文件都包含一个递增的四位数计数器，并用前导零填充：例如 `chunk0001.h264`、`chunk0002.h264` 等。
+- `rpicam-vid -t 0 --inline -o udp://192.168.1.13:5000` 使用端口 5000 上的 UDP 将 H.264 视频流传输到网络地址 192.168.1.13。
+
+#### wrap
+
+为 [`output`](#output) `%d` 指令使用的计数器设置最大值。达到此值后，计数器将重置为零。接受数值。
+
+#### flush
+
+在一个帧完成写入后立即将输出文件刷新到磁盘，而不是等待系统处理。不接受数值。
+
+#### post-process-file
+
+指定一个 JSON 文件，用于配置成像管道应用的后处理。这适用于相机图像到达应用程序之前。其工作原理与传统的 `raspicam` **图像特效** 类似。接受文件名路径作为输入。
+
+后处理是一个大课题，需要使用 OpenCV 和 TensorFlowLite 等第三方软件来分析和处理图像。更多信息，请参阅 [后处理](#使用-rpicam-apps-做后处理)。 
+
+### 图像选项
+
+本节中指定的命令行选项仅适用于静态图像输出。
+
+要将下列选项之一传递给应用程序，请在选项名称前加上 `--`。如果选项需要一个值，则在选项名称后立即传递该值，并用一个空格分隔。如果值中包含空格，则用引号将值包围起来。
+
+有些选项有速记别名，例如用 `-h` 代替 `--help`。使用这些速记别名代替完整的选项名称，可以节省空间和时间，但会影响可读性。
+
+#### quality
+
+别名: `-q`
+
+默认值：`93`
+
+设置 JPEG 质量。接受介于 `1` 和 `100` 之间的值。
+
+#### exif
+
+在 JPEG 输出文件中保存额外的 EXIF 标记。仅适用于 JPEG 输出。由于 `libexif` 库的限制，许多标签目前（错误地）格式化为 ASCII，并在终端中打印警告。
+
+要添加某些与相机设置相关的 EXIF 标记，必须使用此选项。您可以使用 [ExifTool](https://exiftool.org/)，在拍摄后向输出 JPEG 添加与相机设置无关的标记。
+
+示例：`rpicam-still -o test.jpg --exif IDO0.Artist=Someone`
+
+#### timelapse
+
+以指定的时间间隔记录图像。接受以毫秒为单位的时间间隔。将此设置与 [`timeout`](#timeout) 结合使用，可在一段时间内捕捉重复图像。
+
+可以使用字符串格式为每个输出文件指定单独的文件名，例如 `--output test%d.jpg`。
+
+例如：`rpicam-still -t 100000 -o test%d.jpg --timelapse 10000` 在 100 秒内每 10 秒捕捉一幅图像。
+
+#### framestart
+
+为在输出文件名中以 `%d` 访问的帧计数器配置起始值。接受整数起始值。
+
+#### datetime
+
+在输出文件名中使用当前日期和时间，格式为 `MMDDhhmmss.jpg`：
+
+* `MM` = 两位月号
+* `DD` = 两位数的日号
+* `hh` = 两位数的 24 小时小时制小时数
+* `mm` = 两位数的分钟数
+* `ss` = 两位数的秒数
+
+不接受数值。
+
+#### timestamp
+
+使用当前系统 [Unix 时间](https://en.wikipedia.org/wiki/Unix_time) 作为输出文件名。不接受数值。
+
+#### restart
+
+默认值：`0`
+
+配置 JPEG 输出的重新启动标记间隔。JPEG 重启标记可帮助限制损坏对 JPEG 图像的影响，还能启用多线程 JPEG 编码和解码。接受整数值。
+
+#### immediate
+
+应用程序运行时立即捕获图像。
+
+#### keypress
+
+别名：`-k`
+
+当 [`timeout`](#timeout) 过期或按下 **Enter** 键时捕获图像，以先到者为准。按 `x` 键，然后按 **Enter** 键退出，不捕捉图像。不接受数值。
+
+#### signal
+
+当 [`timeout`](#timeout) 过期或收到 `SIGUSR1` 时捕获图像。使用 `SIGUSR2` 可在不捕捉图像的情况下退出。不接受数值。
+
+#### thumb
+
+默认值：`320:240:70`
+
+按以下格式配置缩略图的尺寸和质量： `<w:h:q>`（或 `none`，省略缩略图）。
+
+#### encoding
+
+别名: `-e`
+
+默认值: `jpg`
+
+设置图像输出使用的编码器。接受以下值：
+
+- `jpg` - JPEG
+- `png` - PNG
+- `bmp` - BMP
+- `rgb` - 未压缩 RGB 像素的二进制转储
+- `yuv420` - 未压缩的 YUV420 像素的二进制转储
+
+此选项始终决定编码，覆盖传递给 [`output`](#output) 的扩展名。
+
+当使用 [`datetime`](#datetime) 和 [`timestamp`](#timestamp) 选项时，此选项决定输出文件的扩展名。
+
+#### raw
+
+别名: `-r`
+
+除输出图像外，还以 DNG 格式保存原始拜尔文件。用 `.dng`替换输出文件扩展名。您可以使用 *dcraw* 或 *RawTherapee* 等工具处理这些标准 DNG 文件。不接受数值。
+
+原始文件中的图像数据正是传感器输出的数据，未经 ISP 或其他任何处理。文件中保存的 EXIF 数据主要包括
+
+- 曝光时间
+- 模拟增益（ISO 标签是所用模拟增益的 100 倍）
+- 白平衡增益（是 "拍摄时中性 "值的倒数）
+- ISP 使用的色彩矩阵
+
+#### latest
+
+创建指向最近保存文件的符号链接。接受符号链接名称作为输入。
+
+#### autofocus-on-capture
+
+如果设置，则在捕捉图像前运行自动对焦循环。与下列 [`autofocus_mode`](#autofocus-mode) 值交互：
+
+- `default` 或 `manual`：仅运行捕捉时自动对焦循环。
+- `auto`: 在预览窗口加载时运行额外的自动对焦循环。
+- `continuous`: 忽略此选项，而是在整个预览过程中持续对焦。
+
+不需要值，但可以通过 `1` 启用，通过 `0` 关闭。不传递值等同于传递 `1`。
+
+只有某些相机模块（如 *Raspberry Pi Camera Module 3*）支持该选项。
+
+### 视频选项
+
+本节中指定的命令行选项仅适用于视频输出。
+
+要将下列选项之一传递给应用程序，请在选项名称前加上 `--`。如果选项需要一个值，则在选项名称之后传递该值，并用一个空格分隔。如果值中包含空格，则用引号将值包围起来。
+
+有些选项有速记别名，例如用 `-h` 代替 `--help`。使用这些速记别名代替完整的选项名称，可以节省空间和时间，但会影响可读性。
+
+#### quality
+
+别名: `-q`
+
+默认值：`50`
+
+接受介于 1 和 100 之间的 MJPEG 质量级别。仅适用于以 MJPEG 格式编码的视频。
+
+#### bitrate
+
+别名：`-b`
+
+控制 H.264 编码器使用的目标比特率（单位：比特/秒）。仅适用于以 H.264 格式编码的视频。影响输出视频的大小。
+
+示例： `rpicam-vid -b 10000000 --width 1920 --height 1080 -o test.h264`.
+
+#### intra
+
+别名： `-g`
+
+默认值： `60`
+
+设置 H.264 比特流中 Iframes（帧内）的频率。接受帧数。仅适用于以 H.264 格式编码的视频。
+
+#### profile
+
+设置 H.264 配置文件。接受以下值：
+
+- `baseline`：基准
+- `main`：主要
+- `high`：高
+
+仅适用于以 H.264 格式编码的视频。
+
+#### level
+
+设置 H.264 级别。接受以下值：
+
+- `4`
+- `4.1`
+- `4.2`
+
+仅适用于以 H.264 格式编码的视频。
+
+#### codec
+
+设置视频输出要使用的编码器。可接受以下值：
+
+- `h264` - 使用 H.264 编码器（默认值）
+- `mjpeg` - 使用 MJPEG 编码器
+- `yuv420` - 输出未压缩的 YUV420 帧。
+- `libav` - 使用 libav 后端对音频和视频进行编码（更多信息，请参阅 [`libav`](#libav-与-rpicam-vid-的集成))
+
+#### save-pts
+
+:::warning
+Raspberry Pi 5 不支持 `save-pts` 选项。请使用 `libav` 为容器格式自动生成时间戳。
+:::
+
+启用帧时间戳输出，以便使用 `mkvmerge` 等工具将比特流转换为容器格式。接受时间戳输出文件的明文文件名。
+
+例如：`rpicam-vid -o test.h264 --save-pts timestamps.txt`
+
+然后，您可以使用以下命令从比特流和时间戳文件生成 MKV 容器文件：
+
+```sh
+mkvmerge -o test.mkv --timecodes 0:timestamps.txt test.h264
+```
+
+#### keypress
+
+别名: `-k`
+
+允许 CLI 使用 **Enter** 键启用和禁用视频输出。除非使用 [`initial`](#initial) 另行指定，否则始终以录制状态启动。键入 `x` 键并按 **Enter** 退出。不接受数值。
+
+#### signal
+
+别名： `-s`
+
+允许 CLI 使用 `SIGUSR1` 启用和禁用视频输出。使用 `SIGUSR2` 退出。除非使用 [`initial`](#initial)另行指定，否则始终以录制状态启动。不接受值。
+
+#### initial
+
+默认值：`record`
+
+指定启动应用程序时是否启用或禁用视频输出。接受以下值：
+
+* `record`： 启用视频输出时启动。
+* `pause`： 启动时禁用视频输出。
+
+将此选项与 [`keypress`](#keypress-1) 或 [`signal`](#signal-1) 一起使用可在两种状态之间切换。
+
+#### split
+
+当使用 [`keypress`](#keypress-1) 或 [signal](#signal-1) 切换录制时，会将不同录制会话的视频输出写入不同的文件。不接受值。除非与 [`output`](#output) 结合使用，为每个文件指定唯一的名称，否则每次写入文件时都会覆盖。
+
+#### segment
+
+将视频输出剪切为多个文件，文件长度与所传递的长度相同。接受以毫秒为单位的持续时间。如果传入的持续时间很小（例如 `1`），则会将每一帧记录到单独的输出文件中，以模拟突发捕捉。
+
+可以使用字符串格式为每个文件指定单独的文件名，例如`--output test%04d.h264`。
+
+#### circular
+
+默认值：`4`
+
+将视频记录写入内存中的循环缓冲区。应用程序退出时，将循环缓冲区记录到磁盘。接受以 MB 为单位的可选大小。
+
+#### inline
+
+在每个 Iframe（帧内）写入序列头。这可以帮助客户端从视频中的任意点解码视频序列，而不是只从开头解码。建议与 [`segment`](#segment)、[`split`](#split)、[`circular`](#circular) 和流媒体选项一起使用。
+
+仅适用于以 H.264 格式编码的视频。不接受值。
+
+#### listen
+
+编码视频前等待传入的客户端连接。用于 TCP/IP 网络流媒体。不接受数值。
+
+#### frames
+
+精确记录指定的帧数。任何非零值都会覆盖 [`timeout`](#timeout)。接受非零整数。
+
+#### framerate
+
+精确记录指定帧频。接受一个非零整数。 
+
+### libav 选项
+
+本节中指定的命令行选项仅适用于 `libav` 视频后端。
+
+要启用 `libav` 后端，请在 [`codec`](#codec) 选项中加入 `libav` 值。
+
+要向应用程序传递下列选项之一，请在选项名称前加上 `--`。如果选项需要一个值，则应在选项名称之后传递该值，并用一个空格分隔。如果值中包含空格，则用引号将值包围起来。
+
+有些选项有速记别名，例如用 `-h` 代替 `--help`。使用这些速记别名代替完整的选项名称，可以节省空间和时间，但会影响可读性。
+
+#### libav-format
+
+设置 `libav` 输出格式。接受以下值：
+
+- `mkv` 编码
+- `mp4` 编码
+- `avi` 编码
+- `h264` 流
+- `mpegts` 流
+
+如果不提供此选项，传递给 [`output`](#output) 选项的文件扩展名将决定文件格式。
+
+#### libav-audio
+
+启用音频记录。启用时还必须指定 [`audio-codec`](#audio-codec)。不接受值。
+
+#### audio-codec
+
+默认值：`aac`
+
+为输出选择音频编解码器。有关可用编解码器的列表，请运行 `ffmpeg -codecs`。
+
+#### audio-bitrate
+
+设置音频编码的比特率（比特/秒）。接受数字输入。
+
+例如：`rpicam-vid --codec libav -o test.mp4 --audio_codec mp2 --audio-bitrate 16384`（使用 mp2 编解码器以 16 千比特/秒的速度记录音频）
+
+#### audio-samplerate
+
+默认值：`0`
+
+以 Hz 为单位设置音频采样率。接受数字输入。`0` 使用输入采样率。
+
+#### audio-device
+
+为音频录音选择 ALSA 输入设备。要查看可用设备列表，请运行以下命令：
+
+```sh
+pactl list | grep -A2 'Source #' | grep 'Name: '
+```
+
+您应该会看到与下面类似的输出：
+
+```
+Name: alsa_output.platform-bcm2835_audio.analog-stereo.monitor
+Name: alsa_output.platform-fef00700.hdmi.hdmi-stereo.monitor
+Name: alsa_output.usb-GN_Netcom_A_S_Jabra_EVOLVE_LINK_000736B1214E0A-00.analog-stereo.monitor
+Name: alsa_input.usb-GN_Netcom_A_S_Jabra_EVOLVE_LINK_000736B1214E0A-00.mono-fallback
+```
+
+#### av-sync
+
+以微秒为单位移动音频采样时间戳。可接受正负数值。
+
+### 检测选项
+
+本节中指定的命令行选项仅适用于使用 `rpicam-detect` 进行对象检测。
+
+要向 `rpicam-detect` 传递下列选项之一，请在选项名称前加上 `--`。如果选项需要一个值，则将该值紧跟在选项名称之后，用一个空格分隔。如果值包含空格，则用引号将值包围起来。
+
+有些选项有速记别名，例如用 `-h` 代替 `--help`。使用这些速记别名代替完整的选项名称，可以节省空间和时间，但会影响可读性。
+
+#### object
+
+从模型的标签文件中检测具有给定名称的对象。接受纯文本文件名作为输入。
+
+#### gap
+
+在捕捉之间至少等待这么多帧。接受数值。
+
+## 使用 rpicam-apps 做后处理
+
+`rpicam-apps` 共享一个共同的后处理框架。这样，它们就可以将从相机系统接收到的图像通过许多自定义图像处理和图像分析例程进行处理。每个此类例程都被称为_stage_ (阶段)。要运行后处理阶段，需要提供一个 JSON 文件，指示应用程序应用哪些阶段和选项。您可以在 [`rpicam-apps`资源库的`assets`文件夹](https://github.com/raspberrypi/rpicam-apps/tree/main/assets) 中找到使用内置后处理阶段的 JSON 文件示例。
+
+例如，**negate** 阶段会将浅色像素变暗，将深色像素变亮。因为negate阶段是基本的，不需要任何配置，所以`negate.json`只是为该阶段命名：
+```json
+{
+    "negate": {}
+}
+```
+
+要对图像应用 **negate** 阶段，请在`post-process-file`选项中加入`negate.json`：
+
+```sh
+rpicam-hello --post-process-file negate.json
+```
+
+
+要运行多个后处理阶段，请创建一个 JSON 文件，将多个阶段作为顶层键。例如，以下配置先运行 Sobel 阶段，然后运行 negate 阶段：
+
+```json
+{
+    "sobel_cv":
+    {
+        "ksize": 5
+    },
+    "negate":{}
+}
+```
+
+[Sobel阶段](#sobel_cv阶段) 使用 OpenCV，因此后缀名为 `cv`。它有一个用户可配置的参数 `ksize`，用于指定所用滤波器的内核大小。在本例中，Sobel 滤波器会在黑色背景上产生亮边，而 negate 阶段会将其转化为白色背景上的暗边。
+
+<img src="/img/computers/camera-software/sobel_negate.jpg" alt="使用索贝尔和负滤波的图像" />
+
+有些阶段，如 `negate`，会以某种方式改变图像。其他阶段则分析图像以生成元数据。后处理阶段可以将这些元数据传递给其他阶段甚至应用程序。
+
+为了提高性能，图像分析通常会降低分辨率。`rpicam-apps` 可直接从 ISP 提供专用的低分辨率馈送。
+
+:::tip[注意]
+Raspberry Pi OS 提供的 `rpicam-apps` 不包括 OpenCV 和 TensorFlow Lite。因此，某些依赖于它们的后处理阶段会被禁用。要使用这些阶段，请使用 [重新编译 `rpicam-apps`](#构建libcamera和rpicam-apps)。在运行 32 位内核的 Raspberry Pi 3 或 4 上，使用 `-DENABLE_COMPILE_FLAGS_FOR_TARGET=armv8-neon` 标记编译可加快某些阶段的速度。
+:::
+
+#### negate(负片)阶段
+
+这一阶段将亮像素变暗，暗像素变亮。
+
+`negate`(负片)阶段没有用户可配置的参数。
+
+默认的 `negate.json` 文件：
+
+```
+{
+    "negate":
+    {}
+}
+```
+
+在 `rpicam-hello` 中使用该阶段文件：
+```sh
+rpicam-hello --post-process-file negate.json
+```
+
+样例示例：
+
+<img src="/img/computers/camera-software/negate.jpg" alt="负片图像" />
+
+#### hdr阶段
+
+这一阶段使用高动态范围 (HDR) 和动态范围压缩 (DRC) 来突出图像的细节。DRC 使用单张图像，而 HDR 则将多张图像合并，以获得相似的效果。
+
+参数分为三组：LP 滤镜、全局色调映射和局部对比度。
+
+该阶段对完全处理过的输入图像应用平滑滤波器，生成低通（LP）图像。然后根据原始图像和 LP 图像的差值生成高通（HP）图像。然后，对 LP 图像应用全局色调地图，并将其添加回 HP 图像。这一过程有助于保留局部对比度。
+
+您可以使用以下参数配置此阶段：
+
+|  |  |
+| -- | -- |
+| `num_frames` | 要累积的帧数；对于 DRC，使用 1；对于 HDR，尝试使用 8 |
+| `lp_filter_strength` | 低通 IIR 滤波器的系数。 |
+| `lp_filter_threshold` | 一个片断线性函数，用于将像素级别与有意义的细节阈值联系起来。 |
+| `global_tonemap_points` | 将输入图像直方图中的点映射到输出范围中需要移动的目标。使用以下子配置：<br /> * 象限间平均值（"q "和 "宽度）；<br /> * 目标占整个输出范围的比例 (`target`)；<br /> * 最大 (`max_up`)和最小 (`max_down`)增益，用于移动测得的四分位点间平均值，以防止图像变化过于剧烈 |
+| `global_tonemap_strength` | 全局色调分布图的应用强度. |
+| `local_pos_strength` | 片断线性函数，用于定义局部对比度的增益，当添加回色调映射的 LP 图像时，用于正（亮）细节。 |
+| `local_neg_strength` | 一个片断线性函数，用于定义添加回色调映射 LP 图像时应用于局部对比度的增益，以获得负（暗）细节。 |
+| `local_tonemap_strength` | 应用于所有局部对比度的整体增益，并被添加回去。 |
+| `local_colour_scale` | 允许输出颜色受到或多或少影响的因子。 |
+
+要控制处理强度，可更改 `global_tonemap_strength` 和 `local_tonemap_strength` 参数。
+
+在 Raspberry Pi 4 上处理一张 1200 万像素的图像需要两到三秒。在累积多帧图像时，该阶段只向应用程序发送处理后的图像。
+
+DRC 的默认 `drc.json` 文件：
+```json
+{
+    "hdr" : {
+		"num_frames" : 1,
+		"lp_filter_strength" : 0.2,
+		"lp_filter_threshold" : [ 0, 10.0 , 2048, 205.0, 4095, 205.0 ],
+		"global_tonemap_points" :
+			[
+			    { "q": 0.1, "width": 0.05, "target": 0.15, "max_up": 1.5, "max_down": 0.7 },
+			    { "q": 0.5, "width": 0.05, "target": 0.5, "max_up": 1.5, "max_down": 0.7 },
+			    { "q": 0.8, "width": 0.05, "target": 0.8, "max_up": 1.5, "max_down": 0.7 }
+			],
+		"global_tonemap_strength" : 1.0,
+		"local_pos_strength" : [ 0, 6.0, 1024, 2.0, 4095, 2.0 ],
+		"local_neg_strength" : [ 0, 4.0, 1024, 1.5, 4095, 1.5 ],
+		"local_tonemap_strength" : 1.0,
+		"local_colour_scale" : 0.9
+    }
+}
+```
+
+示例：
+
+<img src="/img/computers/camera-software/nodrc.jpg" alt="未进行 DRC 处理的图像" />
+*未进行 DRC 处理的图像*
+
+在 `rpicam-still` 中使用该阶段文件：
+
+```sh
+rpicam-still -o test.jpg --post-process-file drc.json
+```
+
+<img src="/img/computers/camera-software/drc.jpg" alt="经过 DRC 处理的图像" />
+*经 DRC 处理的图像*
+
+HDR 的默认 `hdr.json` 文件：
+```json
+{
+    "hdr" : {
+		"num_frames" : 8,
+		"lp_filter_strength" : 0.2,
+		"lp_filter_threshold" : [ 0, 10.0 , 2048, 205.0, 4095, 205.0 ],
+		"global_tonemap_points" :
+			[
+			    { "q": 0.1, "width": 0.05, "target": 0.15, "max_up": 5.0, "max_down": 0.5 },
+			    { "q": 0.5, "width": 0.05, "target": 0.45, "max_up": 5.0, "max_down": 0.5 },
+			    { "q": 0.8, "width": 0.05, "target": 0.7, "max_up": 5.0, "max_down": 0.5 }
+			],
+		"global_tonemap_strength" : 1.0,
+		"local_pos_strength" : [ 0, 6.0, 1024, 2.0, 4095, 2.0 ],
+		"local_neg_strength" : [ 0, 4.0, 1024, 1.5, 4095, 1.5 ],
+		"local_tonemap_strength" : 1.0,
+		"local_colour_scale" : 0.8
+    }
+}
+```
+
+示例：
+
+<img src="/img/computers/camera-software/nohdr.jpg" alt="未进行 HDR 处理的图像" />
+*未进行 HDR 处理的图像*
+
+在 `rpicam-still` 中使用该阶段文件：
+```sh
+picam-still -o test.jpg --ev -2 --denoise cdn_off --post-process-file hdr.json
+```
+
+<img src="/img/computers/camera-software/hdr.jpg" alt="经过 HDR 处理的图像" />
+*经过 HDR 处理的图像*
+
+#### motion_detect(运动检测)阶段
+
+`motion_detect` （运动检测）阶段分析低分辨率图像流中的帧。必须配置低分辨率流才能使用此阶段。该阶段通过比较帧中的感兴趣区域 (ROI) 和前一帧的相应部分来检测运动。如果帧与帧之间有足够多的像素发生变化，该阶段就会在 `motion_detect.result` （运动检测结果）键下的元数据中显示运动。
+
+此阶段不依赖第三方库。
+
+您可以使用以下参数配置此阶段，传递的尺寸占低分辨率图像大小的比例在 0 和 1 之间：
+
+|  |  |
+| -- | -- |
+| `roi_x` | 用于比较的相关区域的 x 偏移量（比例介于 0 和 1 之间） |
+| `roi_y` | 比较区域的 y 偏移量（比例介于 0 和 1 之间） |
+| `roi_width` | 比较区域的宽度（比例介于 0 和 1 之间） |
+| `roi_height` | 比较区域的高度（比例介于 0 和 1 之间） |
+| `difference_m` | 用于构建像素差异阈值的线性系数 |
+| `difference_c` | 常数系数，用于根据阈值 = `difference_m * pixel_value + difference_c` 构建不同像素的阈值 |
+| `frame_period` | 运动检测器只运行这么多帧 |
+| `hskip` | 像素检测在水平方向上的子采样率为此值 |
+| `vksip` | 像素检测的垂直采样率为此值 |
+| `region_threshold` | 像素（或 "区域"）中必须被归类为不同的像素（或 "区域"）才能算作运动的比例 |
+| `verbose` | 向控制台打印信息，包括 "运动"/"无运动 "状态变化时的信息 |
+
+默认的 `motion_detect.json` 配置文件：
+```json
+{
+    "motion_detect" : {
+		"roi_x" : 0.1,
+		"roi_y" : 0.1,
+		"roi_width" : 0.8,
+		"roi_height" : 0.8,
+		"difference_m" : 0.1,
+		"difference_c" : 10,
+		"region_threshold" : 0.005,
+		"frame_period" : 5,
+		"hskip" : 2,
+		"vskip" : 2,
+		"verbose" : 0
+    }
+}
+```
+调整差值和阈值可提高或降低算法的灵敏度。要提高性能，可使用 `hskip` 和 `vskip` 参数。
+
+在 `rpicam-still` 中使用该阶段文件：
+```sh
+rpicam-hello --lores-width 128 --lores-height 96 --post-process-file motion_detect.json
+```
+
+### 使用OpenCV进行后期处理
+:::note[注意]
+这些阶段需要安装 OpenCV。您可能需要 [重新构建支持 OpenCV 的 `rpicam-apps`](#构建libcamera和rpicam-apps)。
+:::
+
+#### sobel_cv阶段
+
+该阶段对图像应用 [索贝尔滤波器](https://en.wikipedia.org/wiki/Sobel_operator)，以突出边缘。
+
+您可以使用以下参数配置此阶段：
+
+|  |  |
+| -- | -- |
+| `ksize` | Sobel 过滤器的内核大小 |
+
+默认的 `sobel_cv.json` 文件：
+```json
+{
+    "sobel_cv" : {
+        "ksize": 5
+    }
+}
+```
+
+示例：
+
+<img src="/img/computers/camera-software/sobel.jpg" alt="使用索贝尔滤波器的图像" />
+*使用索贝尔滤波器的图像*
+
+#### face_detect_cv(人脸检测)阶段
+
+该阶段使用 OpenCV Haar 分类器检测图像中的人脸。它以 `face_detect.results` 为关键字返回人脸位置元数据，并可选择在图像上绘制人脸位置。
+
+您可以使用以下参数配置此阶段：
+
+|  |  |
+| -- | -- |
+| `cascade_name` | 可以找到 Haar 级联的文件名。 |
+| `scaling_factor` | 决定搜索图像中人脸的比例范围。 |
+| `min_neighbors` | 算作一个人脸所需的最小重叠邻域数。 |
+| `min_size` | 最小人脸尺寸。 |
+| `max_size` | 最大人脸尺寸。 |
+| `refresh_rate` | 尝试重新运行人脸检测器前需要等待的帧数。 |
+| `draw_features` | 是否在返回的图像上绘制人脸位置。 |
+
+`face_detect_cv` 阶段仅在预览和视频捕获期间运行。它忽略静态图像捕捉。它在分辨率介于 320×240 和 640×480 像素之间的低分辨率数据流上运行。
+
+默认的 `face_detect_cv.json` 文件：
+```json
+{
+    "face_detect_cv" : {
+        "cascade_name" : "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml",
+        "scaling_factor" : 1.1,
+        "min_neighbors" : 2,
+        "min_size" : 32,
+        "max_size" : 256,
+        "refresh_rate" : 1,
+        "draw_features" : 1
+    }
+}
+```
+
+示例：
+
+<img src="/img/computers/camera-software/face_detect.jpg" alt="将检测到的人脸绘制到图像上" />
+*将检测到的人脸绘制到图像上*
+
+#### annotate_cv(注释)阶段
+
+此阶段使用与 [`info-text`](#info-text) 选项相同的 `%` 替换将文本写入图像顶角。
+
+首先解释 [`info-text`指令](#info-text)，然后将剩余的标记传递给 [`strftime`](https://www.man7.org/linux/man-pages/man3/strftime.3.html)。
+
+例如，要在视频上显示日期时间戳，可传递 `%F %T %z`：
+
+* `%F` 显示 ISO-8601 日期（2023-03-07）
+* `%T` 显示 24 小时当地时间（例如 "09:57:12）
+* `%z` 显示相对于 UTC 的时区（例如"-0800）
+
+该阶段不输出任何元数据，但会写入在 `annotate.text` 中找到的元数据，以取代 JSON 配置文件中的任何内容。这样，其他后处理阶段就可以将文本写入图像。
+
+您可以使用以下参数配置此阶段：
+
+|  |  |
+| -- | -- |
+| `text` | 要写入的文本字符串。 |
+| `fg` | 前景颜色。 |
+| `bg` | 背景颜色。 |
+| `scale` | 与文字大小成比例的数字。 |
+| `thickness` | 决定文字粗细的数字。 |
+| `alpha` | 覆盖背景像素时应用的 `alpha` 值。 |
+
+默认 `annotate_cv.json` 文件：
+```json
+{
+    "annotate_cv" : {
+        "text" : "Frame %frame exp %exp ag %ag dg %dg",
+        "fg" : 255,
+        "bg" : 0,
+        "scale" : 1.0,
+        "thickness" : 2,
+        "alpha" : 0.3
+    }
+}
+```
+
+示例：
+
+<img src="/img/computers/camera-software/annotate.jpg" alt="用注释将相机和日期信息写入图像" />
+*用注释将相机和日期信息写入图像*
+
+### 使用TensorFlow Lite进行后处理
+
+#### 先决条件
+
+这些阶段需要导出 C++ API 的 TensorFlow Lite (TFLite) 库。TFLite 并不分发这种形式的库，但您可以从 [lindevs.com](https://lindevs.com/install-precompiled-tensorflow-lite-on-raspberry-pi/) 下载并安装导出 API 的版本。
+
+安装后，必须 [使用 TensorFlow Lite 支持重新编译`rpicam-apps`](#构建libcamera和rpicam-apps)。
+
+#### object_classify_tf(对象分类)阶段
+
+下载：https://storage.googleapis.com/download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_1.0_224_quant.tgz
+
+`object_classify_tf` 使用 Google MobileNet v1 模型对摄像头图像中的物体进行分类。该阶段需要一个 [`labels.txt`文件](https://storage.googleapis.com/download.tensorflow.org/models/mobilenet_v1_1.0_224_frozen.tgz)。
+
+您可以使用以下参数配置此阶段：
+
+|  |  |
+| -- | -- |
+| `top_n_results` | 要显示的结果数量 |
+| `refresh_rate` | 模型运行之间必须间隔的帧数 |
+| `threshold_high` | 将对象视为存在的置信度阈值（介于 0 和 1 之间 |
+| `threshold_low` | 对象必须低于置信度阈值才会被视为匹配对象而丢弃 |
+| `model_file` | TFLite 模型的文件名 |
+| `labels_file` | 包含对象标签的文件名 |
+| `display_labels` | 是否在图像上显示对象标签；插入 `annotate.text` 元数据，以便在 `annotate_cv` 阶段进行渲染 |
+| `verbose` | 向控制台输出更多信息 |
+
+`object_classify_tf.json` 文件示例：
+```json
+{
+    "object_classify_tf" : {
+        "top_n_results" : 2,
+        "refresh_rate" : 30,
+        "threshold_high" : 0.6,
+        "threshold_low" : 0.4,
+        "model_file" : "/home/<username>/models/mobilenet_v1_1.0_224_quant.tflite",
+        "labels_file" : "/home/<username>/models/labels.txt",
+        "display_labels" : 1
+    },
+    "annotate_cv" : {
+        "text" : "",
+        "fg" : 255,
+        "bg" : 0,
+        "scale" : 1.0,
+        "thickness" : 2,
+        "alpha" : 0.3
+    }
+}
+```
+
+该阶段在尺寸为 224x224 的低分辨率流图像上运行.
+运行以下命令，在 `rpicam-hello` 中使用该阶段文件：
+
+```sh
+rpicam-hello --post-process-file object_classify_tf.json --lores-width 224 --lores-height 224
+```
+<img src="/img/computers/camera-software/classify.jpg" alt="台式电脑和显示器的对象分类" />
+*台式电脑和显示器的对象分类*
+
+#### pose_estimation_tf阶段
+
+下载：https://github.com/Qengineering/TensorFlow_Lite_Pose_RPi_32-bits
+
+`pose_estimation_tf` 使用 Google MobileNet v1 模型检测姿势信息。
+
+您可以使用以下参数配置此阶段：
+
+|  |  |
+| -- | -- |
+| `refresh_rate` | 模型运行之间必须间隔的帧数 |
+| `model_file` | tflite 模型的文件名 |
+| `verbose` | 向控制台输出更多信息 |
+
+使用单独的 `plot_pose_cv` 阶段将检测到的姿势绘制到主图像上。
+
+可以使用以下参数配置 `plot_pose_cv` 阶段：
+
+|  |  |
+| -- | -- |
+| `confidence_threshold` | 决定提取多少的置信度阈值；可以小于零。 |
+
+`pose_estimation_tf.json` 文件示例：
+```json
+{
+    "pose_estimation_tf" : {
+        "refresh_rate" : 5,
+        "model_file" : "posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite"
+    },
+    "plot_pose_cv" : {
+       "confidence_threshold" : -0.5
+    }
+}
+```
+
+该平台在尺寸为 257×257 的低分辨率流图像上运行。**由于 YUV420 图像必须是偶数尺寸，因此对于 YUV420 图像，四舍五入为 258×258**。
+
+运行以下命令，在 `rpicam-hello` 中使用此 stage 文件：
+
+```sh
+rpicam-hello --post-process-file pose_estimation_tf.json --lores-width 258 --lores-height 258
+```
+
+<img src="/img/computers/camera-software/pose.jpg" alt="成年男性的姿势估计" />
+*成年男性的姿势估计*
+
+#### object_detect_tf(对象检测)阶段
+
+下载：https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
+
+`object_detect_tf` 使用 Google MobileNet v1 SSD（单发探测器）模型来检测和标记对象。
+
+您可以使用以下参数配置此阶段：
+
+|  |  |
+| -- | -- |
+| `refresh_rate` | 模型运行之间必须间隔的帧数 |
+| `model_file` | tflite 模型文件名 |
+| `labels_file` | 包含标签列表的文件名 |
+| `confidence_threshold` | 接受匹配前的置信阈值 |
+| `overlap_threshold` | 确定将匹配合并为单个匹配时匹配间的重叠程度。 |
+| `verbose` | 向控制台输出更多信息 |
+
+使用单独的 `object_detect_draw_cv` 阶段将检测到的对象绘制到主图像上。
+
+您可以使用以下参数配置 `object_detect_draw_cv` 阶段：
+
+|  |  |
+| -- | -- |
+| `line_thickness` | 边框线的厚度 |
+| `font_size` | 标签使用的字体大小 |
+
+`object_detect_tf.json` 文件示例：
+```json
+{
+    "object_detect_tf" : {
+        "number_of_threads" : 2,
+        "refresh_rate" : 10,
+        "confidence_threshold" : 0.5,
+        "overlap_threshold" : 0.5,
+        "model_file" : "/home/<username>/models/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29/detect.tflite",
+        "labels_file" : "/home/<username>/models/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29/labelmap.txt",
+        "verbose" : 1
+    },
+    "object_detect_draw_cv" : {
+       "line_thickness" : 2
+    }
+}
+```
+
+该阶段在 300×300 的低分辨率流图像上运行。运行下面的命令，从 400×300 的低分辨率图像中心向探测器传递 300×300 的裁剪图像，即可将该 stage 文件与 `rpicam-hello` 一起使用：
+```sh
+rpicam-hello --post-process-file object_detect_tf.json --lores-width 400 --lores-height 300
+```
+
+<img src="/img/computers/camera-software/detection.jpg" alt="检测苹果和猫的物体" />
+*检测苹果和猫的物体*
+
+#### segmentation_tf阶段
+
+下载：https://tfhub.dev/tensorflow/lite-model/deeplabv3/1/metadata/2?lite-format=tflite
+
+`segmentation_tf` 使用 Google MobileNet v1 模型。该阶段需要一个标签文件，可在 `assets/segmentation_labels.txt` 中找到。
+
+该阶段在大小为 257×257 的图像上运行。由于 YUV420 图像的尺寸必须均匀，因此低分辨率图像的宽度和高度至少应为 258 像素。该阶段将 257×257 值的向量添加到图像元数据中，其中每个值表示像素所属的类别。您还可以选择在图像右下角绘制分割表示。
+
+您可以使用以下参数配置该阶段：
+
+|  |  |
+| -- | -- |
+| `refresh_rate` | 模型运行之间必须间隔的帧数 |
+| `model_file` | TFLite 模型的文件名 |
+| `labels_file` | 包含标签列表的文件名 |
+| `threshold` | 当设置为 `verbose`（冗长）时，当带有任何标签的像素数超过此值时打印 |
+| `draw` | 在图像右下角绘制分割图 |
+| `verbose` | 向控制台输出更多信息 |
+
+`segmentation_tf.json` 文件示例：
+```json
+{
+    "segmentation_tf" : {
+        "number_of_threads" : 2,
+        "refresh_rate" : 10,
+        "model_file" : "/home/<username>/models/lite-model_deeplabv3_1_metadata_2.tflite",
+        "labels_file" : "/home/<username>/models/segmentation_labels.txt",
+        "draw" : 1,
+        "verbose" : 1
+    }
+}
+```
+
+本示例将相机图像缩小到 258×258 像素大小。这一阶段甚至可以在不裁剪的情况下压缩非正方形图像。此示例启用了右下角的分割图。
+
+运行以下命令，在 `rpicam-hello` 中使用此阶段文件：
+
+```sh
+rpicam-hello --post-process-file segmentation_tf.json --lores-width 258 --lores-height 258 --viewfinder-width 1024 --viewfinder-height 1024
+```
+
+<img src="/img/computers/camera-software/segmentation.jpg" alt="运行分割，并在右下角的地图上显示结果" />
+*运行分割，并在右下角的地图上显示结果*
+
+### 编写自己的后处理阶段
+
+利用 `rpicam-apps` 后处理框架，用户可以创建自己的自定义后处理阶段。您甚至可以加入 OpenCV 和 TensorFlow Lite 的算法和例程。
+
+#### 基本后处理阶段
+
+要创建自己的后处理阶段，请从 `PostProcessingStage` 类派生一个新类。
+所有后处理阶段都必须实现以下成员函数：
+
+|  |  |
+| -- | -- |
+| `char const *Name() const` | 返回阶段名称。与 JSON 后处理配置文件中列出的阶段匹配。 |
+| `void Read(boost::property_tree::ptree const &params)` | 从提供的 JSON 文件中读取 stage 的配置参数。 |
+| `void AdjustConfig(std::string const &use_case, StreamConfiguration *config)` | 为 stage 提供影响摄像头配置的机会。对于不需要配置摄像机的 stage ，通常为空。 |
+| `void Configure()` | 在摄像头配置完成后调用，以分配资源并检查 stage 是否能访问必要的数据流。 |
+| `void Start()` | 摄像头启动时调用。对于不需要配置摄像头的 stage ，通常为空。 |
+| `bool Process(CompletedRequest &completed_request)` | 显示已完成的摄像头请求，以便进行后处理。这是您执行像素处理和图像分析的地方。如果后处理框架不应***将此请求传送给应用程序，则返回 `true`。 |
+| `void Stop()` | 摄像头停止时调用。用于关闭异步线程上的任何活动处理。 |
+| `void Teardown()` | 摄像头配置销毁时调用。将其用作解构器，在此可以取消分配在 `Configure` 方法中设置的资源。 |
+
+在任何 stage 实现中，调用 `RegisterStage` 向系统注册 stage 。
+
+不要忘记将您的 stage 添加到后处理文件夹中的 `meson.build` 中。
+
+在编写自己的 stage 时，请牢记以下提示：
+
+- `Process` 方法会阻塞成像管道。如果耗时过长，流水线就会停滞。**始终将耗时的算法委托给异步线程**。
+- 将工作委托给另一个线程时，必须复制图像缓冲区。对于不需要全分辨率的图像分析等应用，可尝试使用低分辨率的图像流。
+- 后处理框架 _利用并行性来处理每一帧图像_。这可以提高吞吐量。然而，一些 OpenCV 和 TensorFlow Lite 函数会在每一帧中引入另一层并行性。由于后处理已经利用了多线程，因此可以考虑在每一帧内进行序列化调用。
+- 大多数数据流（包括低分辨率数据流）使用 YUV420 格式。对于某些 OpenCV 或 TFLite 函数，您可能需要将其转换为其他格式。
+- 为获得最佳性能，请始终就地更改图像。
+
+有关基本示例，请参见 [`negate_stage.cpp`](https://github.com/raspberrypi/rpicam-apps/blob/main/post_processing_stages/negate_stage.cpp)。该阶段通过将亮像素变暗和将暗像素变亮来负片图像。该阶段主要是派生类的模板，只用了不到半行代码就实现了负片逻辑。
+
+另一个例子是 [`sobel_cv_stage.cpp`](https://github.com/raspberrypi/rpicam-apps/blob/main/post_processing_stages/sobel_cv_stage.cpp)，它只用了几行 OpenCV 函数就实现了索贝尔滤波器。
+
+#### TensorFlow Lite阶段
+
+对于使用 TensorFlow Lite (TFLite) 的 stage，可从 `TfStage` 类派生一个新类。
+该类将模型执行委托给单独的线程，以防止相机卡顿。
+
+`TfStage` 类实现了后处理阶段通常必须实现的所有 `PostProcessingStage` 成员函数，但 `Name` 除外。
+所有源于 `TfStage` 的舞台都必须实现 `Name` 函数，并应实现以下部分或全部虚拟成员函数：
+
+|  |  |
+| -- | -- |
+| `void readExtras()` | 基类读取已命名的模型和某些其他参数，如 `refresh_rate` 。使用此函数可读取派生阶段的额外参数，并检查加载的模型是否正确（例如，具有正确的输入和输出尺寸）。 |
+| `void checkConfiguration()` | 基类获取 TFLite 运行所需的低分辨率数据流和全分辨率数据流，以备派生阶段需要。使用该函数检查舞台所需的流。如果您的舞台无法访问所需的流之一，您可能会跳过处理或抛出错误。 |
+| `void interpretOutputs()` | 使用此函数读取并解释模型输出。当模型完成时，在与模型相同的线程中运行。 |
+| `void applyResults()` | 使用此函数将模型结果（可能是几帧前的结果）应用到当前帧。通常涉及附加元数据或绘图。_在主线程中运行，在帧传送之前_。 |
+
+有关实现示例，请参阅 [`object_classify_tf_stage.cpp`](https://github.com/raspberrypi/rpicam-apps/blob/main/post_processing_stages/object_classify_tf_stage.cpp) 和 [`pose_estimation_tf_stage.cpp`](https://github.com/raspberrypi/rpicam-apps/blob/main/post_processing_stages/pose_estimation_tf_stage.cpp)。
+
+## rpicam-apps 高级使用
+
+### 构建libcamera和rpicam-apps
+
+自己构建 `libcamera` 和 `rpicam-apps` 有以下好处。
+- 可以获得最新的增强功能和特性。
+- `rpicam-apps` 可针对运行 32 位操作系统的树莓派3 和树莓派4 设备进行额外优化编译。
+- 可以包含可选的 OpenCV 和/或 TFLite 后处理阶段（或添加自己的后处理阶段）。
+- 您可以定制或添加从 `rpicam-apps` 派生的自己的应用程序。
+
+#### 删除预装的 `rpicam-apps
+
+Raspberry Pi OS 包含预安装的 `rpicam-apps` 副本。在构建和安装自己的 `rpicam-apps` 版本之前，必须先移除预安装版本。运行以下命令从 Raspberry Pi 中删除 `rpicam-apps` 软件包：
+
+```sh
+sudo apt remove --purge rpicam-apps
+```
+
+#### 在不重建libcamera的情况下构建rpicam-apps
+要在不重建 `libcamera` 和 `libepoxy` 的情况下构建 `rpicam-apps` ，请使用 `apt` 安装 `libcamera` 和 `libepoxy` 及其依赖项：
+```sh
+sudo apt install -y libcamera-dev libepoxy-dev libjpeg-dev libtiff5-dev libpng-dev
+```
+
+:::tip
+如果不需要 GLES/EGL 预览窗口支持，请省略 `libepoxy-dev`。
+:::
+
+要使用 Qt 预览窗口，请安装以下附加依赖项：
+```sh
+sudo apt install -y qtbase5-dev libqt5core5a libqt5gui5 libqt5widgets5
+```
+
+如果想在 `rpicam-vid` 中支持 [libav](#libav-与-rpicam-vid-的集成)，必须安装额外的库：
+```sh
+sudo apt install libavcodec-dev libavdevice-dev libavformat-dev libswresample-dev
+```
+
+树莓派OS Lite 应安装 git
+
+```sh
+sudo apt install -y git
+```
+
+现在直接进入 [构建 rpicam-apps](#构建libcamera和rpicam-apps) 的说明。
+
+#### 构建libcamera
+:::note
+只有在需要自定义行为或尚未到达 apt 仓库的最新功能时，才从头开始构建 `libcamera`。
+:::
+
+:::note[注意]
+树莓派OS Lite 用户如果以前没有安装过下列附加软件包，则需要首先安装：
+
+```sh
+sudo apt install -y python3-pip git python3-jinja2
+```
+:::
+
+首先，安装以下 "libcamera "依赖项：
+```sh
+$ sudo apt install -y libboost-dev
+$ sudo apt install -y libgnutls28-dev openssl libtiff5-dev pybind11-dev
+$ sudo apt install -y qtbase5-dev libqt5core5a libqt5gui5 libqt5widgets5
+$ sudo apt install -y meson cmake
+$ sudo apt install -y python3-yaml python3-ply
+$ sudo apt install -y libglib2.0-dev libgstreamer-plugins-base1.0-dev
+```
+
+现在我们准备构建 `libcamera` 本身。
+
+从 GitHub 下载 Raspberry Pi 的 `libcamera` 分支的本地副本：
+
+```sh
+git clone https://github.com/raspberrypi/libcamera.git
+```
+
+导航到版本库的根目录：
+
+```sh
+cd libcamera
+```
+
+接下来，运行 `meson` 配置构建环境：
+
+```sh
+meson setup build --buildtype=release -Dpipelines=rpi/vc4,rpi/pisp -Dipas=rpi/vc4,rpi/pisp -Dv4l2=true -Dgstreamer=enabled -Dtest=false -Dlc-compliance=disabled -Dcam=disabled -Dqcam=disabled -Ddocumentation=disabled -Dpycamera=enabled
+```
+
+:::note[注意]
+您可以在 `meson` 编译配置中将 `-Dgstreamer=enabled` 替换为 `Dgstreamer=disabled`，从而禁用 `gstreamer` 插件。如果禁用了 `gstreamer`，则无需安装 `libglib2.0-dev` 和 `libgstreamer-plugins-base1.0-dev` 依赖项。
+:::
+
+现在，您可以使用 "ninja "构建 "libcamera"：
+
+```sh
+ninja -C build
+```
+
+最后，运行以下命令安装新构建的`libcamera`二进制文件：
+
+```sh
+sudo ninja -C build install
+```
+
+:::tip
+在内存为 1GB 或更小的设备上，构建可能会超出可用内存。在 `ninja` 命令中添加 `-j 1` 标志，将编译限制为单个进程。在 Raspberry Pi Zero 和 Raspberry Pi 3 等设备上，这应可防止联编过程超出可用内存。
+:::
+
+`libcamera` 还没有稳定的二进制接口。请务必在构建 `libcamera` 之后再构建 `rpicam-apps`。
+
+#### 构建 rpicam-apps
+
+首先获取 `rpicam-apps` 的必要依赖项。
+
+```sh
+sudo apt install -y cmake libboost-program-options-dev libdrm-dev libexif-dev
+sudo apt install -y meson ninja-build
+```
+
+下载 Raspberry Pi 的 `rpicam-apps` GitHub 代码库的本地副本：
+
+```sh
+git clone https://github.com/raspberrypi/rpicam-apps.git
+```
+
+导航到版本库的根目录：
+
+```sh
+cd rpicam-apps
+```
+
+对于基于桌面的操作系统（如 Raspberry Pi OS），使用以下 `meson` 命令配置 `rpicam-apps` 构建：
+
+```sh
+meson setup build -Denable_libav=enabled -Denable_drm=enabled -Denable_egl=enabled -Denable_qt=enabled -Denable_opencv=disabled -Denable_tflite=disabled -Denable_hailo=disabled
+```
+
+对于 Raspberry Pi OS Lite 等无头操作系统，使用以下 `meson` 命令配置 `rpicam-apps` 构建：
+
+```sh
+meson setup build -Denable_libav=disabled -Denable_drm=enabled -Denable_egl=disabled -Denable_qt=disabled -Denable_opencv=disabled -Denable_tflite=disabled -Denable_hailo=disabled
+```
+
+:::tip
+- 使用 `-Dneon_flags=armv8-neon` 在 Raspberry Pi 3 或 Raspberry Pi 4 上启用针对 32 位操作系统的优化。
+- 如果安装了 OpenCV 并希望使用基于 OpenCV 的后处理阶段，请使用 `-Denable_opencv=enabled`。
+- 如果安装了 TensorFlow Lite 并希望在后处理阶段使用它，请使用 `Denable_tflite=enabled`。
+- 如果安装了 HailoRT 并希望在后处理阶段使用它，请使用 `-Denable_hailo=enabled` 。
+:::
+
+现在可以使用以下命令构建 `rpicam-apps` 了：
+
+```sh
+meson compile -C build
+```
+
+:::tip 
+在内存为 1GB 或更小的设备上，编译可能会超出可用内存。在 `meson` 命令中添加 `-j 1` 标志，将编译限制为单个进程。这样就能防止 Raspberry Pi Zero 和 Raspberry Pi 3 等设备上的构建过程超出可用内存。
+:::
+
+最后，运行以下命令安装新构建的 `rpicam-apps` 二进制文件：
+
+```sh
+sudo meson install -C build
+```
+
+安装后打开一个新的终端窗口，以确保使用新的二进制文件。
+
+:::tip
+上述命令会自动更新 `ldconfig` 缓存。如果在访问新的 `rpicam-apps` 版本时遇到问题，请运行以下命令更新缓存：
+
+```sh
+sudo ldconfig
+```
+:::
+
+运行以下命令检查设备是否使用了新的二进制文件：
+
+```sh
+rpicam-still --version
+```
+
+输出结果应包括本地 `rpicam-apps` 生成的日期和时间。
+
+最后，按照 [配置](#配置)中的 `dtoverlay` 和显示驱动程序说明进行操作。
+
+#### rpicam-apps meson 标志参考
+
+用于 `rpicam-apps` 的 `meson` 构建配置支持以下标志：
+
+- `-Dneon_flags=armv8-neon`：在运行 32 位操作系统的 Raspberry Pi 3 或 Raspberry Pi 4 设备上加速某些后处理功能。
+- `-Denable_libav=enabled`：启用或禁用 `libav` 编码器集成。
+- `-Denable_drm=enabled`：启用或禁用**DRM/KMS 预览渲染**，即在没有桌面环境时使用的预览窗口。
+- `-Denable_egl=enabled`：启用或禁用基于非 Qt 桌面环境的预览。如果系统缺乏桌面环境，请禁用。
+- `-Denable_qt=enabled`：启用或禁用对基于 Qt 实现的预览窗口的支持。如果没有安装桌面环境或无意使用基于 Qt 的预览窗口，请禁用。通常不建议使用基于 Qt 的预览，因为它的计算成本非常高，但它可以与 X 显示转发一起使用。
+- `-Denable_opencv=enabled`：强制基于 OpenCV 的后处理阶段链接或不链接。需要启用 OpenCV。安装 OpenCV 时默认为 `enabled`，否则为 `disabled`。
+- `-Denable_tflite=enabled`：启用或禁用 TensorFlow Lite 后处理阶段。默认为禁用。需要 Tensorflow Lite 才能启用。根据您构建和/或安装 TFLite 的方式，您可能需要调整 `post_processing_stages` 目录中的 `meson.build` 文件。
+- `Denable_hailo=enabled`：启用或禁用基于 HailoRT 的后处理阶段。需要 HailoRT 才能启用。默认为 `auto`。
+- `Ddownload_hailo_models=true`：为 HailoRT 后处理阶段下载并安装模型。需要安装 `wget`。默认为 `true`。
+
+上述每个选项（除了 `neon_flags`）都支持以下值：
+
+- `enabled`：启用该选项，如果依赖项不可用，则构建失败
+- `disabled`: 禁用该选项
+- `auto`: 在依赖项可用时启用该选项
+
+#### 构建libepoxy
+通常不需要重建 `libepoxy`，因为这个库很少发生变化。不过，如果您确实想从头开始构建，请按照以下说明操作。
+
+首先安装必要的依赖项。
+```sh
+sudo apt install -y libegl1-mesa-dev
+```
+
+接下来，从 GitHub 下载本地的 `libepoxy` 代码库副本：
+
+```sh
+git clone https://github.com/anholt/libepoxy.git
+```
+
+导航到该版本库的根目录：
+
+```sh
+cd libepoxy
+```
+
+在版本库根目录下创建构建目录，然后导航到该目录：
+
+```sh
+mkdir _build
+cd _build
+```
+
+接下来，运行 `meson` 配置构建环境：
+
+```sh
+$ meson
+```
+
+现在，你可以用 `ninja` 来构建 `libexpoxy` 了：
+
+```sh
+ninja
+```
+
+最后，运行以下命令安装新构建的 `libepoxy` 二进制文件：
+
+```
+sudo ninja install
+```
+
+### 编写自己的 rpicam 应用程序
+
+`rpicam-apps` 并不提供任何人都可能需要的所有相机相关功能。相反，这些应用程序小巧灵活。需要不同行为的用户可以自己实现。
+
+所有的 `rpicam-apps` 都使用一个事件循环，当一组新的帧从摄像机系统到达时，它就会接收信息。这组帧称为 `CompletedRequest`。包含：
+- 从该单个摄像机帧衍生出的所有图像：通常是低分辨率图像和全尺寸输出图像
+- 来自摄像机和后处理系统的元数据
+
+#### rpicam-hello
+`rpicam-hello` 是最小的应用程序，也是了解 `rpicam-apps` 设计的最佳起点。它从消息中提取 `CompletedRequestPtr`（指向 `CompletedRequest` 的共享指针），并将其转发到预览窗口：
+
+```cpp
+CompletedRequestPtr &completed_request = std::get<CompletedRequestPtr>(msg.payload);
+app.ShowPreview(completed_request, app.ViewfinderStream());
+```
+
+每个 `CompletedRequest` 都必须回收到摄像机系统，以便缓冲区可以重复使用。否则，摄像机就会耗尽缓冲区来存储新的摄像机帧。当使用 C++ 的 _shared pointer_（共享指针）和 _custom deleter_（自定义删除）机制后，当没有对 `CompletedRequest` 的引用时，这个回收过程就会自动发生。
+
+因此，`rpicam-hello` 必须完成以下操作才能回收缓冲空间：
+
+- 事件循环必须完成一个循环，这样持有对 `CompletedRequest` 引用的消息（代码中的 `msg`）才能被下一条消息替换。这样就会丢弃对上一条消息的引用。
+- 当事件线程调用 `ShowPreview` 时，它会向预览线程传递对 `CompletedRequest` 的引用。每次调用 `ShowPreview` 时，预览线程都会丢弃最后一个 `CompletedRequest` 实例。
+
+#### rpicam-vid
+
+`rpicam-vid` 与 `rpicam-hello` 类似，但在事件循环中添加了编码。在事件循环开始之前，`rpicam-vid` 通过回调配置编码器。回调将处理包含编码图像数据的缓冲区。在下面的代码中，我们将缓冲区发送到 `Output` 对象。根据指定的选项，`Output` 可以将其写入文件或流式传输。
+
+```cpp
+	app.SetEncodeOutputReadyCallback(std::bind(&Output::OutputReady, output.get(), _1, _2, _3, _4));
+```
+
+由于这段代码向编码器传递了对 `CompletedRequest` 的引用，因此 `rpicam-vid` 无法循环使用缓冲区数据，直到事件循环、预览窗口和编码器都丢弃了它们的引用。
+
+#### rpicam-raw
+
+`rpicam-raw` 类似于 `rpicam-vid`。它也在事件循环期间进行编码。不过，`rpicam-raw` 使用了一个称为 `NullEncoder` 的虚拟编码器。它使用输入图像作为输出缓冲区，而不是使用编解码器进行编码。只有在输出回调完成后，`NullEncoder` 才会丢弃对缓冲区的引用。这保证了在回调处理图像之前缓冲区不会被回收。
+
+`rpicam-raw` 不会向预览窗口转发任何内容。
+
+在 `rpicam-raw` 中，`NullEncoder` 可能是矫枉过正。我们也许可以直接将图像发送到 `Output` 对象。然而，`rpicam-apps` 需要限制事件循环中的工作。`NullEncoder` 演示了如何在其他线程中处理大多数进程（甚至是保持引用）。
+
+#### rpicam-jpeg
+
+`rpicam-jpeg` 以常规方式在预览模式下启动摄像头。当定时器计时结束时，它将停止预览并切换到静态捕捉：
+
+```cpp
+	app.StopCamera()；
+	app.Teardown()；
+	app.ConfigureStill()；
+	app.StartCamera()；
+```
+
+事件循环抓取从静止模式返回的第一帧图像，并将其保存为 JPEG 文件。
+
+### 将 libcamera 与 Qt 结合使用
+
+Qt 是一种流行的应用程序框架和图形用户界面工具包。`rpicam-apps` 包含一个使用 Qt 的相机预览窗口选项。
+
+遗憾的是，Qt 将某些符号（如 `slot` 和 `emit`）定义为全局命名空间中的宏。这导致在包含 `libcamera` 文件时出现错误。这个问题在所有同时使用 Qt 和 `libcamera` 的平台上都存在。请尝试以下变通方法来避免这些错误：
+
+- 尽可能将包含 `libcamera` 的文件或包含 `libcamera` 文件的文件（如 `rpicam-apps` 文件）列在任何 Qt 头文件之前。
+- 如果确实需要将 Qt 应用程序文件与 `libcamera` 包含文件混合，请将 `signals:` 替换为 `Q_SIGNALS:`，将 `slots:` 替换为 `Q_SLOTS:`，将 `emit` 替换为 `Q_EMIT`，将 `foreach` 替换为 `Q_FOREACH`。
+- 在所有 `libcamera` 包含文件的顶部添加以下内容：
+```cpp
+#undef signals
+#undef slots
+#undef emit
+#undef foreach
+```
+
+- 如果您的项目使用 `qmake`，请在项目文件中添加 `CONFIG += no_keywords`。
+- 如果您的项目使用 `cmake`，请添加 `SET(QT_NO_KEYWORDS ON)`。
+
+### 使用 Python 中的 libcamera 和 Picamera2
+
+[Picamera2库](https://github.com/raspberrypi/picamera2) 是基于 `rpicam` 的Picamera替代品，后者是Raspberry Pi传统摄像头栈的Python接口。Picamera2 提供了一个易于使用的 Python API。
+
+有关 Picamera2 的文档可查阅 [GitHub](https://github.com/raspberrypi/picamera2) 和 [Picamera2 手册](https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf)。
+
+#### 安装
+
+最新的 Raspberry Pi OS 映像包含 Picamera2 和所有图形用户界面（Qt 和 OpenGL）依赖项。最近的 Raspberry Pi OS Lite 镜像包含不带 GUI 依赖项的 Picamera2，但仍可使用 DRM/KMS 显示预览图像。
+
+如果您的镜像不包含 Picamera2，请运行以下命令安装 Picamera2 和所有 GUI 依赖项：
+
+```sh
+sudo apt install -y python3-picamera2
+```
+
+如果不需要 GUI 依赖项，可运行以下命令安装 Picamera2，但不包含 GUI 依赖项：
+
+```sh
+sudo apt install -y python3-picamera2 --no-install-recommends
+```
+
+:::tip
+如果之前使用 `pip` 安装了 Picamera2，请使用以下方法卸载：`pip3 uninstall picamera2`.
+:::
+
+## 使用 USB 网络摄像头
+
+大多数 Raspberry Pi 设备都有摄像头模块专用端口。摄像头模块是深受 Raspberry Pi 用户喜爱的高质量、可高度配置的摄像头。
+
+不过，对于许多用途来说，USB 网络摄像头可以满足您从 Raspberry Pi 上录制图片和视频的一切需要。本节将介绍如何在 Raspberry Pi 上使用 USB 网络摄像头。
+
+### 安装依赖项
+
+首先，安装 `fswebcam` 软件包：
+
+```sh
+sudo apt install fswebcam
+```
+
+然后，将用户名添加到 `video` 组，否则可能会出现 "permission denied" (权限被拒绝) 的错误：
+
+```sh
+sudo usermod -a -G video <username>
+```
+
+要检查用户是否已正确加入组，请使用 `groups` 命令。
+
+### 拍照
+
+运行以下命令使用网络摄像头拍照，并将图像保存到名为 `image.jpg` 的文件中：
+
+```sh
+fswebcam image.jpg
+```
+
+您应该会看到与下面类似的输出：
+
+```
+--- Opening /dev/video0...
+Trying source module v4l2...
+/dev/video0 opened.
+No input was specified, using the first.
+Adjusting resolution from 384x288 to 352x288.
+--- Capturing frame...
+Corrupt JPEG data: 2 extraneous bytes before marker 0xd4
+Captured frame in 0.00 seconds.
+--- Processing captured image...
+Writing JPEG image to 'image.jpg'.
+```
+
+<img src="/img/computers/camera-software/webcam-image.jpg" alt="默认情况下，`fswebcam` 使用低分辨率，并添加一个显示时间戳的横幅" />
+*默认情况下，fswebcam 使用低分辨率并添加显示时间戳的横幅*
+
+
+要为捕获的图像指定不同的分辨率，请使用 `-r` 标志，并将宽度和高度以两个数字的形式传入，中间用 `x` 分隔：
+
+```sh
+fswebcam -r 1280x720 image2.jpg
+```
+
+您应该会看到类似下面的输出：
+
+```
+--- Opening /dev/video0...
+Trying source module v4l2...
+/dev/video0 opened.
+No input was specified, using the first.
+--- Capturing frame...
+Corrupt JPEG data: 1 extraneous bytes before marker 0xd5
+Captured frame in 0.00 seconds.
+--- Processing captured image...
+Writing JPEG image to 'image2.jpg'.
+```
+
+<img src="/img/computers/camera-software/webcam-image-high-resolution.jpg" alt="指定分辨率以捕获更高质量的图像" />
+*指定分辨率以捕获更高质量的图像*
+
+#### 删除横幅
+
+要从捕获的图像中移除横幅，请使用 `--no-banner` 标记：
+
+```sh
+fswebcam --no-banner image3.jpg
+```
+
+您应该会看到类似下面的输出：
+
+```
+--- Opening /dev/video0...
+Trying source module v4l2...
+/dev/video0 opened.
+No input was specified, using the first.
+--- Capturing frame...
+Corrupt JPEG data: 2 extraneous bytes before marker 0xd6
+Captured frame in 0.00 seconds.
+--- Processing captured image...
+Disabling banner.
+Writing JPEG image to 'image3.jpg'.
+```
+
+<img src="/img/computers/camera-software/webcam-image-no-banner.jpg" alt="指定 `--no-banner` 可保存无时间戳横幅的图像" />
+*指定 `--no-banner` 可保存无时间戳横幅的图像*
+
+### 自动图像捕获
+
+不同于 [`rpicam-apps`](#rpicam-apps)，`fswebcam` 没有在输出图像名称中替换时间戳和数字的内置功能。这在捕获多张图像时很有用，因为每次录制图像时手动编辑文件名可能会很乏味。相反，你可以使用 Bash 脚本自己实现这一功能。
+
+在主文件夹中新建一个名为 `webcam.sh` 的文件。添加以下示例代码，使用 `bash` 编程语言将图像保存到文件中，文件名包含年、月、日、时、分和秒：
+
+```sh
+#!/bin/bash
+
+DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+
+fswebcam -r 1280x720 --no-banner $DATE.jpg
+```
+
+然后，运行以下命令使 bash 脚本可执行：
+
+```sh
+chmod +x webcam.sh
+```
+
+用以下命令运行脚本，捕捉图像并保存到文件中，文件名用时间戳表示，类似于 `2024-05-10_12-06-33.jpg`：
+
+```sh
+./webcam.sh
+```
+
+您应该会看到类似下面的输出：
+
+```
+--- Opening /dev/video0...
+Trying source module v4l2...
+/dev/video0 opened.
+No input was specified, using the first.
+--- Capturing frame...
+Corrupt JPEG data: 2 extraneous bytes before marker 0xd6
+Captured frame in 0.00 seconds.
+--- Processing captured image...
+Disabling banner.
+Writing JPEG image to '2024-05-10_12-06-33.jpg'.
+```
+
+### 捕捉延时照片
+
+使用 `cron` 在给定的时间间隔内安排照片捕捉。如果间隔时间合适，例如一分钟一次，就可以捕捉延时照片。
+
+首先，打开 cron 表进行编辑：
+
+```sh
+crontab -e
+```
+
+在编辑器中打开文件后，在计划表中添加以下一行，每分钟拍摄一张照片，将 `<username>` 替换为您的用户名：
+
+```bash
+* * * * * /home/<username>/webcam.sh 2>&1
+```
+
+保存并退出，您应该会看到以下信息：
+
+```sh
+crontab: installing new crontab
+```
+
+## V4L2 驱动程序
+
+V4L2 驱动程序为访问摄像头和编解码器功能提供了一个标准的 Linux 界面。通常，Linux 会在启动时自动加载驱动程序。但在某些情况下，你可能需要 [明确加载摄像头驱动程序](#配置)。
+
+### 使用 libcamera 时的设备节点
+
+| /dev/videoX | 默认操作 |
+| -- | -- |
+| `video0` | 第一个 CSI-2 接收器的 Unicam 驱动程序。 |
+| `video1` | 第二个 CSI-2 接收器的 Unicam 驱动程序。 |
+| `video10` | 视频解码。 |
+| `video11` | 视频编码。 |
+| `video12` | 简单的 ISP。可执行 RGB/YUV 格式之间的转换和大小调整，还可以将 Bayer 转换为 RGB/YUV 格式。 |
+| `video13` | 输入到完全可编程的 ISP。 |
+| `video14` | 从完全可编程 ISP 的高分辨率输出。 |
+| `video15` | 从完全可编程 ISP 的低分辨率输出。 |
+| `video16` | 完全可编程 ISP 的图像统计。 |
+| `video19` | HEVC 解码 |
+
+### 使用 V4L2 驱动程序
+
+有关如何使用 V4L2 驱动程序的详细信息，请参阅 [V4L2 文档](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/v4l2.html)。
+
+## Unicam
+
+Raspberry Pi SoC 都有两个摄像头接口，支持 CSI-2 D-PHY 1.1 或 Compact Camera Port 2 (CCP2) 信号源。该接口的代号为 Unicam。第一个 Unicam 实例支持两个 CSI-2 数据通道，第二个支持四个。每个通道的运行速度可达 1Gbit/s（DDR，因此最大链接频率为 500MHz）。
+
+计算模块和 Raspberry Pi 5 可从两个外设路由出所有通道。Raspberry Pi 5 之前的其他型号只暴露了第二个实例，只路由出两条数据通道到摄像头连接器。
+
+### 软件接口
+
+V4L2 软件接口是与 Unicam 外围设备通信的唯一途径。以前还有固件和 MMAL 原始摄像头组件接口，但现在已不再支持。
+
+#### V4L2
+
+:::tip[注意]
+Unicam 的 V4L2 接口仅在使用 `libcamera` 时可用。
+:::
+
+Unicam 模块有一个完全开源的内核驱动程序；该内核模块名为 `bcm2835-unicam`，与 V4L2 子设备驱动程序连接，以传输原始帧。该 `bcm2835-unicam` 驱动程序可控制传感器并配置摄像头串行接口 2 (CSI-2) 接收器。外设将原始帧（Debayer 后）写入 SDRAM，由 V4L2 发送给应用程序。从摄像头传感器捕捉图像到 `bcm2835-unicam` 驱动程序将图像数据存入 SDRAM 之间，除了贝叶解包为 16 位/像素外，不进行任何图像处理。
+
+```
+|------------------------|
+|     bcm2835-unicam     |
+|------------------------|
+     ^             |
+     |      |-------------|
+ img |      |  Subdevice  |
+     |      |-------------|
+     v   -SW/HW-   |
+|---------|   |-----------|
+| Unicam  |   | I2C or SPI|
+|---------|   |-----------|
+csi2/ ^             |
+ccp2  |             |
+    |-----------------|
+    |     sensor      |
+    |-----------------|
+```
+
+主线 Linux 包含一系列现有驱动程序。Raspberry Pi 内核树中有一些额外的驱动程序和设备树（Device Tree）覆盖层，可以对它们进行配置：
+
+| 设备 | 设备类型 | 备注 |
+| -- | -- | -- |
+| Omnivision OV5647 | 500 万像素摄像头 | 原始树莓派摄像头 |
+| 索尼 IMX219 | 800 万像素摄像头 | 修订版 2树莓派摄像头 |
+| 索尼 IMX477 | 1200 万像素摄像头 | 树莓派HQ 摄像头 |
+| 索尼 IMX708 | 1200 万像素摄像头 | 树莓派摄像头模块 3 |
+| 索尼 IMX296 | 160 万像素摄像头 | 树莓派全局快门摄像头模块 |
+| 东芝 TC358743 | HDMI 至 CSI-2 桥接器 |  |
+| 模拟器件 ADV728x-M | 模拟视频至 CSI-2 桥接器 | 不支持隔行扫描 |
+| 英飞凌 IRS1125 | 飞行时间深度传感器 | 由第三方提供支持 |
+
+由于子设备驱动程序也是具有标准化应用程序接口的内核驱动程序，因此第三方可以自由地为其选择的任何源编写自己的驱动程序。
+
+### 开发第三方驱动程序
+
+这是通过 Unicam 接口的推荐方法。
+
+在开发新设备的驱动程序时，如果打算与 `bcm2835-unicam` 模块一起使用，则需要驱动程序和相应的设备树覆盖。理想情况下，驱动程序应提交到 [linux-media](http://vger.kernel.org/vger-lists.html#linux-media) 邮件列表进行代码审查并合并到主线，然后移动到 [Raspberry Pi 内核树](https://github.com/raspberrypi/linux)；但也有例外情况，驱动程序可直接审查并合并到 Raspberry Pi 内核。
+
+:::warning
+所有内核驱动程序均采用 GPLv2 许可，因此必须提供源代码。仅提供二进制模块违反了 Linux 内核所遵循的 GPLv2 许可。
+:::
+
+编写 `bcm2835-unicam` 模块的目的是为了适应目前主线 Linux 内核中所有类型的 CSI-2 源驱动程序。这些驱动可大致分为摄像头传感器和桥接芯片。桥接芯片允许在其他格式和 CSI-2 之间进行转换。
+
+#### 摄像头传感器
+
+摄像头传感器的驱动程序负责设备的所有配置，通常通过 I2C 或 SPI 进行。与其从头开始编写驱动程序，不如在现有驱动程序的基础上进行适当修改。
+
+[IMX219 驱动程序](https://github.com/raspberrypi/linux/blob/rpi-6.1.y/drivers/media/i2c/imx219.c) 就是一个很好的起点。该驱动程序同时支持 8 位和 10 位拜尔读出，因此枚举帧格式和帧大小的工作会稍微复杂一些。
+
+传感器通常支持 [V4L2 用户控制](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/control.html)。并非所有这些控制都需要在驱动程序中实现。IMX219 驱动程序只实现了下面列出的一小部分，其实现由 `imx219_set_ctrl` 函数处理。
+
+* `V4L2_CID_PIXEL_RATE` / `V4L2_CID_VBLANK` / `V4L2_CID_HBLANK`：允许应用程序设置帧频。
+* `V4L2_CID_EXPOSURE`: 以行为单位设置曝光时间；应用程序需要使用 `V4L2_CID_PIXEL_RATE`、`V4L2_CID_HBLANK` 和帧宽来计算行时间。
+* `V4L2_CID_ANALOGUE_GAIN`：以传感器为单位的模拟增益
+* `V4L2_CID_DIGITAL_GAIN`：以传感器为单位的可选数字增益
+* `V4L2_CID_HFLIP / V4L2_CID_VFLIP`： 水平或垂直翻转图像；此操作可能会改变帧中数据的拜耳顺序，IMX219 就是这种情况。
+* `V4L2_CID_TEST_PATTERN` / `V4L2_CID_TEST_PATTERN_*`： 从传感器输出各种测试模式；用于调试。
+
+就 IMX219 而言，其中许多控制都直接映射到写入传感器本身的寄存器上。
+
+更多指导可参阅 `libcamera` [传感器驱动程序要求](https://git.linuxtv.org/libcamera.git/tree/Documentation/sensor_driver_requirements.rst)，以及 [Raspberry Pi 摄像头调试指南](https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf) 第 3 章。
+
+##### 设备树
+设备树用于选择传感器驱动程序和配置参数，如 CSI-2 通道数、连续时钟通道操作和链路频率（通常只支持一种）。
+
+GitHub 上提供了 6.1 内核的 IMX219 [设备树覆盖图](https://github.com/raspberrypi/linux/blob/rpi-6.1.y/arch/arm/boot/dts/overlays/imx219-overlay.dts)。
+
+#### 桥接芯片
+这些设备可将输入的视频流（如 HDMI 或复合视频流）转换为树莓派CSI-2 接收器可接受的 CSI-2 流。
+
+处理桥接芯片比较复杂，因为与摄像头传感器不同，桥接芯片必须对输入信号做出响应，并向应用程序报告。
+
+处理桥接芯片的机制可分为两类：模拟或数字。
+
+在下面的章节中使用 `ioctl` 时，`ioctl` 名称中的 `S` 表示集合函数，`G` 表示获取函数，`_ENUM_` 枚举一组允许值。
+
+##### 模拟视频源
+模拟视频源使用标准 ioctl 检测和设置视频标准。[VIDIOC_G_STD](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-g-std.html)、[VIDIOC_S_STD](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-g-std.html)、[VIDIOC_ENUMSTD](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-enumstd.html) 和 [VIDIOC_QUERYSTD](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-querystd.html)
+
+选择错误的标准通常会导致图像损坏。设置标准通常也会设置 V4L2 CAPTURE 队列的分辨率。它不能通过 VIDIOC_S_FMT 设置。一般来说，最好先通过 VIDIOC_QUERYSTD 请求检测到的标准，然后在流媒体传输前用 VIDIOC_S_STD 设置标准。
+
+##### 数字视频源
+对于 HDMI 等数字视频信号源，有一组备用调用可以指定所有数字定时参数（[VIDIOC_G_DV_TIMINGS](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-g-dv-timings.html)、[VIDIOC_S_DV_TIMINGS](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-g-dv-timings.html)、[VIDIOC_ENUM_DV_TIMINGS](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-enum-dv-timings.html) 和 [VIDIOC_QUERY_DV_TIMINGS](https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-query-dv-timings.html)）。
+
+与模拟桥接器一样，时序通常会固定 V4L2 CAPTURE 队列的分辨率，在串流之前调用 `VIDIOC_S_DV_TIMINGS` 和 `VIDIOC_QUERY_DV_TIMINGS` 的结果应能确保格式正确。
+
+根据桥接芯片和驱动程序的不同，输入源的变化可能会通过 `VIDIOC_SUBSCRIBE_EVENT` 和 `V4L2_EVENT_SOURCE_CHANGE` 报告给应用程序。
+
+##### 目前支持的设备
+树莓派Linux 内核目前支持两款桥接芯片：Analog Devices ADV728x-M 用于模拟视频源，Toshiba TC358743 用于 HDMI 源。
+
+Analog Devices ADV728x(A)-M 模拟视频至 CSI2 桥接芯片可将复合 S-video (Y/C) 或分量 (YPrPb) 视频转换为单通道 CSI-2 接口，并受 [ADV7180 内核驱动程序](https://github.com/raspberrypi/linux/blob/rpi-6.1.y/drivers/media/i2c/adv7180.c) 支持。
+
+有关该芯片各种版本的产品详细信息，请访问 Analog Devices 网站：[ADV7280A](https://www.analog.com/en/products/adv7280a.html)、[ADV7281A](https://www.analog.com/en/products/adv7281a.html) 和 [ADV7282A](https://www.analog.com/en/products/adv7282a.html)。
+
+由于当前核心 V4L2 实现中的某些代码缺失，导致选择源失败，因此树莓派内核版本向 ADV7180 内核驱动程序添加了一个名为 `dbg_input` 的内核模块参数，该参数可在每次调用 VIDIOC_S_STD 时设置输入源。主流将在某个时候修复根本问题（内核 API 调用 s_routing 与用户空间调用 `VIDIOC_S_INPUT` 之间的脱节），届时这一修改将被删除。
+
+不支持接收隔行扫描视频，因此 ADV7281(A)-M 版本的芯片用途有限，因为它没有必要的 I2P 去隔行扫描块。在选择设备时，请确保指定 -M 选项。否则，您将得到一条并行输出总线，无法与 Raspberry Pi 连接。
+
+目前还没有使用这些芯片的商用电路板，但已通过 Analog Devices [EVAL-ADV7282-M 评估板](https://www.analog.com/en/design-center/evaluation-hardware-and-software/evaluation-boards-kits/EVAL-ADV7282A-M.html)对该驱动程序进行了测试。
+
+如果使用的是 `ADV7282-M` 芯片变体，可以使用 `config.txt` dtoverlay `adv7282m` 加载该驱动程序；如果使用的是其他变体，则可以使用 `adv7280m=1`、`adv7281m=1` 或 `adv7281ma=1` 的参数加载 `adv728x-m`
+```ini
+dtoverlay=adv728x-m,adv7280m=1
+```
+
+东芝 TC358743 是一款 HDMI 转 CSI-2 桥接芯片，能够转换高达 1080p60 的视频数据。
+
+有关该桥接芯片的信息，请访问 [东芝网站](https://toshiba.semicon-storage.com/ap-en/semiconductor/product/interface-bridge-ics-for-mobile-peripheral-devices/hdmir-interface-bridge-ics/detail.TC358743XBG.html)。
+
+TC358743 将 HDMI 接口转换为 CSI-2 和 I2S 输出。[TC358743 内核模块](https://github.com/raspberrypi/linux/blob/rpi-6.1.y/drivers/media/i2c/tc358743.c) 支持它。
+
+该芯片支持输入 RGB888、YUV444 或 YUV422 的 HDMI 信号，最高可达 1080p60。它可以转发 RGB888，或将其转换为 YUV444 或 YUV422，也可以在 YUV444 和 YUV422 之间进行转换。目前只测试了对 RGB888 和 YUV422 的支持。使用两个 CSI-2 通道时，可支持的最高速率为 RGB888 的 1080p30 或 YUV422 的 1080p50。在计算模块上使用四个通道时，可接收任何一种格式的 1080p60。
+
+HDMI 通过接收设备公布其可支持的所有模式的 [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) 来协商分辨率。内核驱动程序并不了解用户希望接收的分辨率、帧速率或格式，因此用户需要通过 VIDIOC_S_EDID ioctl 提供合适的文件，或者使用 `v4l2-ctl --fix-edid-checksums --set-edid=file=filename.txt`（添加 --fix-edid-checksums 选项意味着无需在源文件中正确获取校验和值）。生成所需的 EDID 文件（二进制 EDID 文件的文本十六进制转储）并不繁琐，也有一些工具可以生成，但不在本页讨论范围之内。
+
+如上所述，使用 `DV_TIMINGS` ioctls 配置驱动程序以匹配输入视频。最简单的方法是使用命令 `v4l2-ctl --set-dv-bt-timings query`。驱动程序确实支持生成 SOURCE_CHANGED 事件，如果你想编写一个应用程序来处理不断变化的信号源的话。通过 VIDIOC_S_FMT 设置可以更改输出像素格式，但只有像素格式字段会更新，因为分辨率是由 dv 时序配置的。
+
+有几种市售的电路板可将该芯片连接到树莓派。最常见的是 Auvidea B101 和 B102，但也有其他同类电路板。
+
+该驱动程序使用 `config.txt` dtoverlay `tc358743` 加载。
+
+该芯片还支持通过 I2S 捕捉立体声 HDMI 音频。Auvidea 电路板将相关信号分解到一个针座上，然后连接到树莓派的 40 针座上。所需接线如下
+
+| 信号 | B101针座 | 40针座 | BCM GPIO |
+| -- | -- | -- | -- |
+| LRCK/WFS | 7 | 35 | 19 |
+| BCK/SCK | 6 | 12 | 18 |
+| DATA/SD | 5 | 38 | 20 |
+| GND | 8 | 39 | 不适用 |
+
+除了 `tc358743` 覆盖层之外，还需要 `tc358743-audio` 覆盖层。这将为 HDMI 音频创建一个 ALSA 录音设备。
+
+音频不会重新采样。音频的存在反映在 V4L2 控制项 `TC358743_CID_AUDIO_PRESENT`（音频存在）中，而输入音频的采样率反映在 V4L2 控制项 `TC358743_CID_AUDIO_SAMPLING_RATE`（音频采样频率）中。在没有音频或音频采样率与报告的采样率不同的情况下进行录音会发出警告。
+
+### rpicam 与 raspicam 的区别
+
+`rpicam-apps` 模拟了传统的 `raspicam` 应用程序的大部分功能。不过，用户可能会注意到以下差异：
+
+- Boost `program_options` 不允许使用多字符的简短选项，因此必须取消原来的简短选项。长格式选项以相同的方式命名，任何单字符的短格式都会保留。
+- `rpicam-still` 和 `rpicam-jpeg` 不在预览窗口中显示捕获的图像。
+- `rpicam-apps` 删除了以下 `raspicam` 功能：
+  - 不透明度 (`--opacity`)
+  - 图像效果 (`--imxfx`)
+  - 颜色效果 (`--colfx`)
+  - 注释 (`--annotate`, `--annotateex`)
+  - 动态范围压缩或 DRC (`--drc`)
+  - 立体声（`--stereo`、`--decimate`和`--3dswap）
+  - 图像稳定 (`--vstab`)
+  - 演示模式 (`--demo`)
+
+[后处理](#使用-rpicam-apps-做后处理) 取代了许多这些功能。
+
+- `rpicam-apps` 删除了 [`rotation`](#rotation) 选项对 90° 和 270° 旋转的支持。
+- `raspicam` 将测光和曝光混为一谈；`rpicam-apps` 则将这些选项分开。
+- 要禁用 `rpicam-apps` 中的自动白平衡 (AWB)，请使用 [`awbgains`](#awbgains) 设置一对色彩增益（例如 `1.0,1.0`）。
+- `rpicam-apps` 无法将 NoIR 相机模块的自动白平衡 (AWB) 设置为灰度模式。取而代之的是通过 [`tuning-file`](#tuning-file) 选项传递一个 NoIR 专用的调整文件，如 `imx219_noir.json`。
+* `rpicam-apps` 不提供明确的数字增益控制。相反，[`gain`](#gain) 选项会对其进行隐式设置。
+* `rpicam-apps` 删除了 `--ISO` 选项。取而代之的是计算与所需 ISO 值相对应的增益。供应商可以提供增益与 ISO 值的映射。
+* `rpicam-apps` 不支持设置闪烁周期。
+* `rpicam-still` 不支持连拍。相反，可以考虑在 MJPEG 模式下使用 `rpicam-vid` 和 `--segment 1` 来强制将每一帧都放入一个单独的文件。
+* `rpicam-apps` 使用适用于所有图像传感器的开源驱动程序，因此启用或禁用传感器缺陷像素校正（DPC）的机制各不相同。Raspberry Pi HQ Camera 上的 imx477 驱动程序默认启用传感器上 DPC。要在 HQ 相机上禁用传感器上的 DPC，请运行以下命令：
+
+```sh
+sudo echo 0 > /sys/module/imx477/parameters/dpc_enable
+```
+
+## 故障排除
+
+如果你的相机模块不能像你期望的那样工作，请尝试以下修复方法：
+
+- 在运行 Raspberry Pi OS _Bullseye_ 或更早版本的 Raspberry Pi 3 及更早设备上：
+  - 要启用硬件加速相机预览，请启用 **Glamor**。要启用 Glamor，在终端中输入 `sudo raspi-config`，选择 `Advanced Options` > `Glamor` > `Yes`。然后用 `sudo reboot` 重启 Raspberry Pi。
+  - 如果看到与显示驱动程序有关的错误，请在 `/boot/config.txt` 中添加 `dtoverlay=vc4-fkms-v3d` 或 `dtoverlay=vc4-kms-v3d`。然后用 `sudo reboot` 重启 Raspberry Pi。
+  - 图形硬件只能支持最大 2048×2048 像素的图像，这就限制了预览窗口中可调整大小的摄像头图像。因此，对大于 2048 像素的图像进行视频编码时，预览图像会损坏或丢失。
+- 在 Raspberry Pi 4 上，图形硬件只能支持最大 4096×4096 像素的图像，这就限制了可在预览窗口中调整大小的摄像头图像。因此，视频编码时如果图像宽度大于 4096 像素，预览图像就会损坏或丢失。
+- 在桌面环境中，预览窗口可能会出现显示撕裂。这是一个已知的、无法修复的问题。
+- 检查 FFC（扁平柔性线缆）是否牢固就位、完全插入，以及触点是否朝向正确方向。FFC 应均匀插入，不得倾斜。
+- 如果在摄像头和 Raspberry Pi 之间使用连接器，请检查连接器上的端口是否牢固就位、完全插入，以及触点是否朝向正确方向。
+- 检查并确保 FFC（扁平软电缆）连接到 CSI（摄像头串行接口），而不是 DSI（显示器串行接口）。连接器可以插入任何一个端口，但只有 CSI 端口可以供电和控制摄像机。请查看端口附近电路板上印有的 "CSI "标签。
+- 运行 `sudo apt update` 和 `sudo apt full-upgrade`，确保运行的是最新软件。
+- 尝试使用不同的电源。摄像头模块会增加 Raspberry Pi 约 200-250mA 的电力需求。如果电源质量较差，Raspberry Pi 可能无法为摄像头模块供电。
+- 如果您已经检查了上述所有问题，但摄像头模块仍然无法像您期望的那样工作，请尝试在我们的论坛上发帖寻求更多帮助。
+
+## 获取帮助
+
+有关 `libcamera` 和 `rpicam-apps` 的进一步帮助，请访问 [Raspberry Pi Camera 论坛](https://forums.raspberrypi.com/viewforum.php?f=43)。发帖前
+
+- 记下您的操作系统版本 (`uname -a`)。
+- 记下您的 `libcamera` 和 `rpicam-apps` 版本 (`rpicam-hello --version`).
+- 报告正在使用的摄像头模块的品牌和型号。
+- 报告您尝试使用的软件。我们不支持第三方摄像头模块供应商的软件。
+- 报告您的 Raspberry Pi 型号，包括内存大小。
+- 包括应用程序控制台输出的任何相关摘录。
+
+如果相机软件存在特定问题（如崩溃），请考虑 [在 `rpicam-apps` GitHub 存储库中创建一个问题](https://github.com/raspberrypi/rpicam-apps)，包括上述相同的详细信息。
+
+<Normal />

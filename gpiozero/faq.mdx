@@ -1,0 +1,319 @@
+---
+sidebar_position: 10
+draft: false
+title: 10. 常见问题(FAQ)
+description: 在使用 GPIO Zero 时遇到的常见问题。gpiozero 适用于所有型号的 Raspberry Pi，而不仅仅是 Pi Zero。"Zero" 是 "zero-boilerplate" 教育友好库命名惯例的一部分，该命名惯例始于 Pygame Zero，之后又有 NetworkZero、guizero 等。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, FAQ, 常见问题]
+last_update: 
+  date: 2024-06-14
+---
+import Normal from "./_normal.mdx";
+
+# 常见问题(FAQ)
+
+## 如何保持脚本运行？
+
+下面的脚本看起来应该能打开 LED：
+
+```py
+from gpiozero import LED
+
+led = LED(17)
+led.on()
+```
+
+如果您使用的是 Python 或 IPython shell，或者 IDLE、Thonny 或 Mu 编辑器，它确实可以打开 LED。但是，如果将此脚本保存为 Python 文件并运行，LED 会短暂闪亮，然后脚本结束，LED 关闭。
+
+下面的文件包含了一个有意的 `pause()` 来保持脚本的活力：
+
+```py
+from gpiozero import LED
+from signal import pause
+
+led = LED(17)
+led.on()
+
+pause()
+```
+
+现在，脚本将一直运行，使 LED 亮起，直到手动终止（例如按下 Ctrl+C）。同样，在对按下的按钮或其他输入设备设置回调时，脚本也需要一直运行才能检测到事件：
+
+```py
+from gpiozero import Button
+from signal import pause
+
+def hello()：
+    print("Hello")
+
+button = Button(2)
+button.when_pressed = hello
+
+pause()
+```
+
+## when_pressed, is_pressed 和 wait_for_press 有什么区别？
+
+gpiozero 提供了一系列读取输入设备的不同方法。有时，您想询问按钮是否被按下；有时，您想在按钮被按下之前执行某些操作；有时，您想在按钮被按下时发生某些操作，而不管发生了什么。
+
+在一个简单的例子中，按钮是唯一起作用的设备，所有选项都同样有效。但一旦引入了额外的元素，如另一个 GPIO 设备，就可能需要根据使用情况选择正确的方法。
+
+- `is_pressed` 是一个属性，通过返回 `True` 或 `False` 来显示按钮当前是否被按下：
+
+```py
+while True：
+    if btn.is_pressed：
+        print("Pressed")
+    else：
+        print("Not pressed")
+```
+
+- `wait_for_press()` 是一个阻止代码继续运行的方法，直到按钮被按下。另请参阅 `wait_for_release()`：
+
+```py
+while True：
+    print("Released. Waiting for press...")
+    btn.wait_for_press()
+    print("Pressed. Waiting for release...")
+    btn.wait_for_release()
+```
+
+- `when_pressed` 是一个属性，它为按钮被按下的事件指定了一个回调函数。每次按下按钮时，回调函数都会在一个单独的线程中执行。另请参阅 `when_released`：
+
+```py
+def pressed()：
+    print("Pressed")
+
+def released()：
+    print("Released")
+btn.when_pressed = pressed
+btn.when_released = released
+```
+
+这种选项模式在许多设备中都很常见。所有输入设备和内部设备都有 `is_active`、`when_activated`、`when_deactivated`、`wait_for_active` 和 `wait_for_inactive`，许多设备还提供了别名（如 "pressed" 表示 "activated"）。
+
+另请参阅 [源与值](./source-values.mdx) 页面中更高级的方法。
+
+## 我的事件处理程序没有被调用
+
+分配事件处理程序时，不要调用所分配的函数。例如
+
+```py
+from gpiozero import Button
+
+def pushed()：
+    print("Don't push the button!")
+
+b = Button(17)
+b.when_pressed = pushed()
+```
+
+在上面的例子中，当赋值给 `when_pressed` 时，被赋值的是调用 `pushed` 函数的结果。由于 `pushed` 并没有明确返回任何内容，因此结果是 `None`。因此，这等同于
+
+```py
+b.when_pressed = None
+```
+
+这不会引发错误，因为它是完全有效的：当你不想让事件处理程序做任何事情时，你就会这样赋值。相反，你应该这样做：
+
+```py
+b.when_pressed = pushed
+```
+
+这将把函数赋值给事件处理程序，而不会调用它。这就是 `my_function`（对函数的引用）和 `my_function()`（调用函数的结果）之间的关键区别。
+
+:::tip
+请注意，从 v1.5 版起，将回调设置为 `None`（之前为 `None`）将引发 `CallbackSetToNone` 警告，目的是在回调意外设置为 `None` 时提醒用户。不过，如果这是有意为之，则可以抑制该警告。请参考 `warnings` 模块。
+:::
+
+## 导入 gpiozero 时为什么会收到 PinFactoryFallback 警告？
+
+您很可能是在虚拟 Python 环境中工作时忘记安装 `RPi.GPIO` 等引脚驱动库。GPIO Zero 依赖较低级别的引脚驱动程序来处理与 Raspberry Pi 上 GPIO 引脚的接口，因此只需安装 GPIO Zero 的首选项即可消除警告：
+
+```sh
+pip install rpi.gpio
+```
+
+导入 GPIO Zero 时，它会按照首选顺序（详见 [API-引脚](./api-pins.mdx)）尝试查找引脚驱动程序。如果加载第一个首选项（`RPi.GPIO`）失败，它会发出警告，然后返回尝试第二个首选项，以此类推。最终，它会一直返回到 `native` 实现。这是 GPIO Zero 本身内置的纯 Python 实现。虽然它在大多数情况下都能工作，但几乎肯定不是你想要的（它不支持 PWM，而且在某些情况下运行速度很慢）。
+
+如果你想使用默认引脚驱动程序以外的引脚驱动程序，并希望抑制警告，你有几个选择：
+
+1. 通过 `GPIOZERO_PIN_FACTORY` 环境变量明确指定所需的引脚驱动程序。例如
+```sh
+GPIOZERO_PIN_FACTORY=pigpio python3
+```
+
+在这种情况下，不会发出警告，因为没有回退机制；要么加载指定的工厂，要么加载失败，在这种情况下会引发 `ImportError`。
+
+2. 抑制警告，让回退机制发挥作用：
+```py
+import warnings
+warnings.simplefilter('ignore')
+import gpiozero
+```
+
+有关过滤特定警告类的更精细方法，请参阅 `warnings` 模块文档。
+
+
+## 如何判断我安装的是哪个版本的 gpiozero？
+
+gpiozero 库依赖 setuptools 软件包提供安装服务。您可以使用 setuptools 的 `pkg_resources` API 来查询 Python 环境中 gpiozero 的版本：
+
+```py
+>>> from pkg_resources import require
+>>> require('gpiozero')
+[gpiozero 1.6.2 (/usr/lib/python3/dist-packages)] (/usr/lib/python3/dist-packages)
+>>> require('gpiozero')[0].version
+'1.6.2'
+```
+
+如果安装了多个版本（例如来自 `pip` 和 `apt`），它们将不会出现在 `pkg_resources.require()` 方法返回的列表中。不过，列表中的第一个条目将是 `import gpiozero` 的版本。
+
+如果出现 "No module named pkg_resources"（没有名为 pkg_resources 的模块）的错误，则需要安装 `pip`。在 Raspberry Pi 操作系统中，可以使用以下命令完成安装：
+
+```sh
+sudo apt install python3-pip
+```
+
+或者使用 [get-pip](https://pip.pypa.io/en/stable/installing/) 安装 pip。
+
+## 为什么运行 pinout 时出现 "command not found"（找不到命令）？
+
+gpiozero 库作为 Debian 软件包可用于 Python 2 和 Python 3，但 [pinout](./cli-tools.mdx#pinout) 工具无法同时在两个软件包中使用，因此只包含在 Python 3 版本的软件包中。要确保 [pinout](./cli-tools.mdx#pinout) 工具可用，必须安装 "python3-gpiozero" 软件包：
+
+```sh
+sudo apt install python3-gpiozero
+```
+
+或者，无论 Python 版本如何，使用 pip 安装 gpiozero 都能安装命令行工具：
+
+```sh
+sudo pip3 install gpiozero
+```
+
+或者
+
+```sh
+sudo pip install gpiozero
+```
+
+## 引脚分配命令行工具无法正确识别我的 Raspberry Pi 型号
+
+如果您的 Raspberry Pi 型号是新的，可能在您使用的 gpiozero 版本发布时还不知道它的存在。请确保您安装的是最新版本（请记住，[pinout](./cli-tools.mdx#pinout) 工具通常来自 Python 3 版本的软件包，这在之前的常见问题中已经提到）。
+
+如果 gpiozero 不知道您使用的 Pi 型号，那么它可能是在上次发布后添加的。您可以查看 [GitHub上的问题](https://github.com/gpiozero/gpiozero/issues)，看是否以前报告过，或者查看 GitHub 上自上次发布以来的 [提交](https://github.com/gpiozero/gpiozero/commits/master) 情况，看是否已添加。模型判定可在 `gpiozero/pins/data.py` 中找到。
+
+## 与 GPIO.cleanup() 对应的 gpiozero 是什么？
+
+很多人询问如何使用 `RPi.GPIO` 中的 `cleanup` 函数。在 gpiozero 中，脚本结束时会自动执行清理，将 GPIO 引脚恢复到发现时的状态。
+
+要明确关闭与引脚的连接，可以手动调用设备对象上的 `close()` 方法：
+
+```py
+>>> led = LED(2)
+>>> led.on()
+>>> led
+<gpiozero.LED object on pin GPIO2, active_high=True, is_active=True>
+>>> led.close()
+>>> led
+<gpiozero.LED object closed>
+```
+
+这意味着您可以在其他设备上重复使用该引脚，尽管 LED 处于打开状态（因此引脚处于高电平），但调用 `close()` 后，它将恢复到之前的状态（LED 关闭，引脚处于低电平）。
+
+了解更多有关 [从RPi.GPIO移植](https://gpiozero.readthedocs.io/en/latest/migrating_from_rpigpio.html#migrating-from-rpigpio) 的信息。
+
+## 如何同时使用 button.when_pressed 和 button.when_held？
+
+`Button` 类提供了一个 `when_held` 属性，用于设置按钮按住一段时间后的回调（由 `hold_time` 属性决定）。如果你想同时设置 `when_held` 和 `when_pressed`，你会发现这两个回调都会触发。有时，这种情况是可以接受的，但通常情况下，您只想在按钮未被按住、只被按下时触发 `when_pressed` 回调。
+
+实现这一点的方法是不在 `when_pressed` 上设置回调，而是使用 `when_released` 来确定按钮是被按住还是被按下：
+
+```py
+from gpiozero import Button
+
+Button.was_held = False
+
+def held(btn):
+    btn.was_held = True
+    print("button was held not just pressed")
+
+def released(btn):
+    if not btn.was_held:
+        pressed()
+    btn.was_held = False
+
+def pressed():
+    print("button was pressed not held")
+
+btn = Button(2)
+
+btn.when_held = held
+btn.when_released = released
+```
+
+## 在尝试从 gpiozero 导入时，为什么会出现 "ImportError: cannot import name"（导入错误：无法导入名称）？
+
+人们通常会将自己的第一个 gpiozero 脚本命名为 `gpiozero.py`。不幸的是，这会导致脚本尝试导入自身，而不是从库路径中导入 gpiozero 库。你会看到如下错误
+
+```py
+Traceback (most recent call last):
+  File "gpiozero.py", line 1, in <module>
+    from gpiozero import LED
+  File "/home/pi/gpiozero.py", line 1, in <module>
+    from gpiozero import LED
+ImportError: cannot import name 'LED'
+```
+
+只需将脚本重命名为其他名称，然后重新运行即可。请注意不要将脚本命名为与您可能要导入的 Python 模块相同的名称，例如 `picamera.py`。
+
+## 在设备对象上设置属性时，为什么会出现属性错误（AttributeError）？
+
+如果在初始化后尝试向 gpiozero 设备对象添加属性，会发现无法添加：
+
+```py
+>>> from gpiozero import Button
+>>> btn = Button(2)
+>>> btn.label = 'alarm'
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/lib/python3/dist-packages/gpiozero/devices.py", line 118, in __setattr__
+    self.__class__.__name__, name))
+AttributeError: 'Button' object has no attribute 'label'
+```
+
+这是为了防止用户错误地设置新属性。由于 gpiozero 通过属性设置属性（如按钮上的回调）来提供功能（通常在设置属性时没有即时反馈），这可能导致很难发现的错误。请看下面的示例：
+
+```py
+from gpiozero import Button
+
+def hello()：
+    print("hello")
+
+btn = Button(2)
+
+btn.pressed = hello
+```
+
+这完全是有效的 Python 代码，不会出现任何错误，但程序不会像预期的那样运行：按下按钮不会做任何事情，因为设置回调的属性是 `when_pressed` 而不是 `pressed`。如果没有 gpiozero 阻止设置这个不存在的属性，用户很可能很难发现错误。
+
+如果你真的想在设备对象上设置一个新属性，你需要在初始化对象之前在类中创建它：
+
+```py
+>>> from gpiozero import Button
+>>> Button.label = ''
+>>> btn = Button(2)
+>>> btn.label = 'alarm'
+>>> def press(btn):
+...:    print(btn.label, "was pressed")
+>>> btn.when_pressed = press
+```
+
+## 为什么叫 GPIO Zero？它是否只适用于 Pi Zero？
+
+gpiozero 适用于所有型号的 Raspberry Pi，而不仅仅是 Pi Zero。
+
+"Zero" 是 "zero-boilerplate" 教育友好库命名惯例的一部分，该命名惯例始于 [Pygame Zero](https://pygame-zero.readthedocs.io/en/stable/)，之后又有 [NetworkZero](https://pygame-zero.readthedocs.io/en/stable/)、[guizero](https://lawsie.github.io/guizero/) 等。
+
+这些库旨在消除入门门槛，为初学者提供平滑的学习曲线，使他们能够轻松上手，并容易建立更高级的项目。
+
+<Normal />

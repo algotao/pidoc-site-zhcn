@@ -1,0 +1,460 @@
+---
+sidebar_position: 7
+draft: false
+description: 树莓派摄像头早期型号(摄像头模块1、摄像头模块2)，最新型号（摄像头模块3）。普通型号与广告型号，可见光型号与红外型号，HQ与GS摄像头。摄像头的安装与设置，如何使用外部触发器进行触发式的拍摄。
+keywords: [树莓派, Raspberry Pi, 摄像头, 相机, 摄像头模块, camera, HQ, GS, 红外, 摄像头模块3, 滤镜, 拆卸]
+last_update: 
+  date: 2024-12-20
+---
+import Normal from "../_normal.mdx";
+
+# 摄像头
+
+## 关于摄像头模块
+树莓派目前有多个官方摄像头模块。最初的 500 万像素型号[发布于](https://www.raspberrypi.com/news/camera-board-available-for-sale/) 2013 年，随后是 2016 年[发布](https://www.raspberrypi.com/news/new-8-megapixel-camera-board-sale-25/)的 800 万像素[摄像头模块2](https://www.raspberrypi.com/products/camera-module-v2/)。最新的摄像头型号是 2023 年[发布](https://www.raspberrypi.com/news/new-autofocus-camera-modules/)的 1200 万像素摄像头模块3。树莓派已不再提供最初的 500 万像素设备。
+
+所有这些摄像头都有可见光和红外版本，而摄像头模块3也有标准和广视角两种型号，共有四种不同的变体。
+
+<img src="/img/accessories/camera/cm3.jpg" alt="摄像头模块3普通和广角" />
+*摄像头模块 3（左）和摄像头模块 3 广角（右）*
+
+<img src="/img/accessories/camera/cm3_noir.jpg" alt="摄像头模块 3 NoIR 普通型和广角型" />
+*摄像头模块 3 NoIR 普通型和广角型*
+
+此外，还分别于 [2020年](https://www.raspberrypi.com/news/new-product-raspberry-pi-high-quality-camera-on-sale-now-at-50/) 和 [2023年](https://www.raspberrypi.com/news/new-autofocus-camera-modules/) 推出了 1200 万像素的[高像素摄像头](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)，配有 CS 或 M12 卡口，可与外置镜头配合使用。HQ 摄像头没有红外版本，但可根据需要[拆除红外滤镜](#移除滤镜)。
+
+
+<img src="/img/accessories/camera/hq.jpg" alt="M12 和 C/CS 安装型 HQ 摄像头" />
+*HQ 摄像头，M12 安装（左）和 C/CS 安装（右）*
+
+Raspberry Pi AI 相机使用索尼 IMX500 成像传感器，可为任何相机应用提供低延迟和高性能的 AI 功能。与 [Raspberry Pi 的相机软件栈](../computers/camera-software.mdx) 的紧密集成使用户能够以最小的工作量部署自己的神经网络模型。
+
+<img src="/img/accessories/camera/ai-camera-hero.png" alt="Raspberry Pi AI 摄像头" />
+*Raspberry Pi AI 摄像头*
+
+最后是 [2023年](http://raspberrypi.com/news/new-raspberry-pi-global-shutter-camera) 发布的全局快门摄像头。GS 摄像头没有红外版本，但可根据需要[拆除红外滤镜](#移除滤镜)。
+<img src="/img/accessories/camera/gs-camera.jpg" alt="GS 摄像头" />
+*全局快门摄像头*
+
+:::note[注意]
+Raspberry Pi 相机模块兼容所有带有 CSI 接口的 Raspberry Pi 计算机。
+:::
+
+### 滚动快门还是全局快门？
+大多数数码摄像头 (包括我们的摄像头模块) 都使用**滚动快门**：它们逐行扫描正在捕捉的图像，然后输出结果。您可能已经注意到，这在某些情况下会造成失真效果；如果您曾经拍摄过旋转的螺旋桨叶片，您可能会发现图像在闪烁，而不像是一个正在旋转的物体。螺旋桨叶片有足够的时间在摄像头扫过和观察场景的瞬间改变位置。
+
+**全局快门**--就像我们的全局快门摄像头模块，它不会这样做。它能一次性捕捉到场景中每个像素的光线，因此您拍摄的螺旋桨叶片不会出现同样的失真。
+
+这有什么用呢？快速移动的物体，比如螺旋桨叶片，现在很容易捕捉；我们还可以同步多台摄像头，在精确的同一时刻拍摄照片。这样做有很多好处，比如在捕捉立体图像时可以最大限度地减少失真。(如果左眼出现的任何动作尚未在右眼出现，人脑就会感到困惑）。树莓派全局快门摄像头的曝光时间也比滚动快门摄像头短，在光线充足的情况下，曝光时间最短可达 30µs，这使它在高速摄影时非常有用。
+
+:::note[注意]
+全局快门摄像头的图像传感器具有 6.3 毫米对角线有效感应区域，与树莓派的 HQ 摄像头大小相似。不过，像素更大，可以收集更多光线。大像素尺寸和低像素数量在机器视觉应用中很有价值；传感器产生的像素越多，实时处理图像的难度就越大。为了解决这个问题，许多应用都会缩小和裁剪图像。使用全局快门摄像头和适当的镜头倍率就不需要这样做了，较低的分辨率和较大的像素尺寸意味着可以原生捕捉图像。
+:::
+
+## 安装树莓派摄像头
+:::warning[警告]
+摄像头对静电很敏感。在处理 PCB 之前，请先接地。如果没有接地带，水槽水龙头或类似装置就足够了。
+:::
+
+### 连接摄像头
+将柔性电缆插入树莓派上标有 CAMERA 的连接器，该连接器位于以太网和 HDMI 端口之间。插入电缆时，银色触点必须朝向 HDMI 端口。要打开连接器，将连接器顶部的卡扣向上拉，然后拉向以太网端口。应将柔性电缆牢固地插入连接器，注意不要将柔性电缆弯曲得太厉害。关闭连接器时，将连接器上部推向 HDMI 端口并向下，同时将软线固定到位。
+
+我们制作了一段视频来说明连接摄像头的过程。以下视频展示了如何在原始 Raspberry Pi 1 上连接原始摄像头。虽然 Raspberry Pi 5 和所有 Raspberry Pi Zero 型号都需要 [不同的摄像头连接线](https://www.raspberrypi.com/products/camera-cable/)，但所有带摄像头连接器的 Raspberry Pi 板的原理都是一样的。
+
+**未能嵌入YOUTUBE视频**
+
+根据型号的不同，摄像头的镜头上可能会覆盖一小块半透明的蓝色塑料薄膜。这只是为了在邮寄给您的过程中保护镜头，需要轻轻撕掉。
+
+:::note[注意]
+请参阅有关将推荐的 [6毫米](https://datasheets.raspberrypi.com/hq-camera/cs-mount-lens-guide.pdf) 和 [16毫米](https://datasheets.raspberrypi.com/hq-camera/c-mount-lens-guide.pdf) 镜头安装到 HQ 摄像头上的其他文档，。
+:::
+
+### 准备软件
+在继续之前，我们建议确保您的内核、GPU 固件和应用程序都是最新的。请按照说明[保持操作系统为最新版本](../computers/os.mdx#升级软件)。
+
+然后，请按照 [libcamera](../computers/camera-software.mdx#rpicam-apps) 软件栈和 [Picamera2 Python 库](https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf) 的相关设置说明进行设置。
+
+## 硬件规格
+|  | 摄像头模块v1 | 摄像头模块v2 | 摄像头模块3 | 摄像头模块3广角型 | 高清摄像头  | AI摄像头 | GS摄像头 |
+| -- | -- | -- | -- | -- | -- | -- | -- |
+| 净价 | $25 | $25 | $25 | $35 | $50 | $70 | $50 |
+| 尺寸 | 约 25 × 24 × 9 毫米 | 约 25 × 24 × 24 × 9 毫米 | 约 25 × 24 × 24 × 11.5 毫米 | 约 25 × 24 × 24 × 12.4 毫米 | 38 x 38 x 18.4 毫米(不包括镜头) | 25 x 24 x 11.9 毫米 | 38 x 38 x 19.8 毫米(带适配器和防尘盖时为 29.5 毫米) |
+| 重量 | 3g | 3g | 4g | 4g | 30.4g | 6g | 34g （带适配器和防尘盖时为 41g） |
+| 静态分辨率 | 500 万像素 | 800 万像素 | 1,190 万像素 | 1,190 万像素 | 1,230 万像素 | 1230 万像素 | 158 万像素 |
+| 视频模式 | 1080p30、720p60 和 640 × 480p60/90 | 1080p47、1640 × 1232p41 和 640 × 480p206 | 2304 × 1296p56、2304 × 1296p30 HDR、1536 × 864p120 | 2304 × 1296p56，2304 × 1296p30 HDR，1536 × 864p120 | 2028 × 1080p50、2028 × 1520p40 和 1332 × 990p120 | 2280 x 1088p30、4056 x 3040p10 | 1456 x 1088p60 |
+| 传感器 | OmniVision OV5647 | 索尼 IMX219 | 索尼 IMX708 | 索尼 IMX708 | 索尼 IMX477 | 索尼 IMX500 | 索尼 IMX296 |
+| 传感器分辨率 | 2592 × 1944 像素 | 3280 × 2464 像素 | 4608 x 2592 像素 | 4608 x 2592 像素 | 4056 x 3040 像素 | 4056 x 3040 像素 | 1456 x 1088 像素 |
+| 传感器图像区域 | 3.76 × 2.74 毫米 | 3.68 x 2.76 毫米（对角线 4.6 毫米） | 6.45 x 3.63 毫米（对角线 7.4 毫米） | 6.45 x 3.63 毫米（对角线 7.4 毫米） | 6.287 毫米 x 4.712 毫米（对角线长 7.9 毫米） | 6.287 毫米 x 4.712 毫米（对角线长 7.9 毫米） | 6.3 毫米对角线 |
+| 像素尺寸 | 1.4 微米 × 1.4 微米 | 1.12 微米 x 1.12 微米 | 1.4 微米 x 1.4 微米 | 1.4 微米 x 1.4 微米 | 1.55 微米 x 1.55 微米 | 1.55 微米 x 1.55 微米 | 3.45 微米 x 3.45 微米 |
+| 光学尺寸 | 1/4" | 1/4" | 1/2.43" | 1/2.43" | 1/2.3" | 1/2.3" | 1/2.9" |
+| 聚焦 | 固定式 | 可调 | 电动 | 电动 | 可调 | 可调 | 可调 |
+| 景深 | 约 1 米至∞ | 约 10 厘米至 ∞ | 约 10 厘米至 ∞ | 约 5 厘米至 ∞ | 不适用 | 约 20 厘米至 ∞ | 不适用 |
+| 焦距 | 3.60 毫米 ± 0.01 | 3.04 毫米 | 4.74 毫米 | 2.75 毫米 | 取决于镜头 | 4.74 毫米 | 取决于镜头 |
+| 水平视场角 (FoV) | 53.50 ± 0.13 度 | 62.2 度 | 66 度 | 102 度 | 取决于镜头 | 66 ±3 度 | 取决于镜头 |
+| 垂直视场角 (FoV) | 41.41 ± 0.11 度 | 48.8 度 | 41 度 | 67 度 | 取决于镜头 | 52.3 ±3 度 | 取决于镜头 |
+| 焦距比 (F档) | F2.9 | F2.0 | F1.8 | F2.2 | 取决于镜头 | F1.79 | 取决于镜头 |
+| 最长曝光时间（秒） | 3.28 | 11.76 | 112 | 112 | 670.74 | 112 | 15.5 |
+| 镜头安装 | 不适用 | 不适用 | 不适用 | 不适用 | C/CS 或 M12 安装 | 不适用 | C/CS |
+| 是否提供 NoIR 版本？ | 是 | 是 | 是 | 是 | 否 | 否 | 否 |
+
+:::note[注意]
+[有证据表明](https://github.com/raspberrypi/libcamera/issues/43)，摄像头模块3可能会以 CSI 时钟频率的谐波发射射频干扰。这种射频干扰的范围会干扰 GPS L1 频率（1575 MHz）。请参阅 [Github 上的主题](https://github.com/raspberrypi/libcamera/issues/43)，了解详细信息和建议的解决方法。
+:::
+
+### 机械图纸
+可用的机械图纸；
+- 摄像头模块 2 [PDF](https://datasheets.raspberrypi.com/camera/camera-module-2-mechanical-drawing.pdf)
+- 摄像头模块 3 [PDF](https://datasheets.raspberrypi.com/camera/camera-module-3-standard-mechanical-drawing.pdf)
+- 宽幅摄像头模块 3 [PDF](https://datasheets.raspberrypi.com/camera/camera-module-3-wide-mechanical-drawing.pdf)
+- 摄像头模块 3 [STEP](https://datasheets.raspberrypi.com/camera/camera-module-3-step.zip)
+- HQ 摄像头模块（CS 安装版）[PDF](https://datasheets.raspberrypi.com/hq-camera/hq-camera-cs-mechanical-drawing.pdf)
+  - CS 卡口 [PDF](https://datasheets.raspberrypi.com/hq-camera/hq-camera-cs-lensmount-drawing.pdf)
+- HQ 摄像头模块（M12 安装版）[PDF](https://datasheets.raspberrypi.com/hq-camera/hq-camera-m12-mechanical-drawing.pdf)
+- GS 摄像头模块 [PDF](https://datasheets.raspberrypi.com/gs-camera/gs-camera-mechanical-drawing.pdf)
+
+:::note[注意]
+摄像头模块3的电路板尺寸和安装孔位置与摄像头模块2相同。但是，由于传感器模块的尺寸和位置发生了变化，它与树莓派Zero外壳的摄像头盖在机械上不兼容。
+:::
+
+### 示意图
+树莓派 CSI 摄像头连接器示意图。
+
+<img src="/img/accessories/camera/RPi-S5-conn.png" alt="摄像头连接器" width="70%" />
+
+其他可用示意图；
+- 摄像头模块 v2 [PDF](https://datasheets.raspberrypi.com/camera/camera-module-2-schematics.pdf)
+- 摄像头模块 v3 [PDF](https://datasheets.raspberrypi.com/camera/camera-module-3-schematics.pdf)
+- HQ 摄像头模块 [PDF](https://datasheets.raspberrypi.com/hq-camera/hq-camera-schematics.pdf)
+
+## 摄像头滤镜
+某些传输特性适用于摄像头模块3 以及 HQ 和 GS 摄像头。
+
+:::note[注意]
+这些图表以 PDF 格式提供。
+:::
+
+### 摄像头模块3
+摄像头模块3 以 IMX708 为核心，其光谱灵敏度特性如下。
+
+<img src="/img/accessories/camera/cm3-filter.png" alt="摄像头模块 3 传输图" width="70%" />
+
+### HQ摄像头
+不带红外滤镜的树莓派 HQ 摄像头。
+
+<img src="/img/accessories/camera/hq.png" alt="不带红外截止滤镜的 HQ 摄像头传输图" width="70%" />
+
+### GS摄像头
+树莓派 GS 摄像头，不带红外截止滤镜。
+
+<img src="/img/accessories/camera/gs.png" alt="不带红外截止滤镜的 GS 摄像头传输图" width="70%" />
+
+### HQ和GS摄像头
+HQ 和 GS 摄像头使用 Hoya CM500 红外滤镜。其传输特性如下图所示。
+
+<img src="/img/accessories/camera/hoyacm500.png" alt="CM500 传输图" width="70%" />
+
+## 红外滤光片
+
+高画质相机和全局快门相机都含有红外滤光镜，可降低相机对红外光的敏感度，使户外照片看起来更自然。不过，您也可以去掉滤光片：
+
+* 增强某些摄影类型的色彩，例如植物、水和天空的图像
+* 在有红外光照射的地方提供夜视效果
+
+### 移除滤镜
+
+:::warning
+**此过程不能颠倒**：固定滤光片的粘合剂经不起抬起和更换，虽然红外滤光片厚约 1.1 毫米，但取出时可能会破裂。**取下滤镜将导致产品保修失效**。
+:::
+
+您可以从 HQ 和 GS 摄像机上取下滤镜。HQ 摄像机的演示如下。
+
+<img src="/img/accessories/camera/FILTER_ON_small.jpg" alt="小滤镜" width="65%" />
+
+:::tip
+请确保在清洁无尘的环境中工作，因为传感器会暴露在空气中。
+:::
+
+1. 拧下主电路板底部的两个 1.5 毫米六角锁匙。小心不要让垫圈滚落。
+<img src="/img/accessories/camera/SCREW_REMOVED_small.jpg" alt="拆下小螺钉" width="65%" />
+
+2. 外壳和电路板之间有一个略带粘性的垫圈，需要用一些力才能将其分开。您可以尝试一些削弱粘合剂的方法，例如使用少量异丙醇和/或加热（~20-30 ℃）。
+3. 粘合剂松开后，提起电路板并将其放在非常干净的表面上。确保传感器不接触表面。
+<img src="/img/accessories/camera/FLATLAY_small.jpg" alt="平放" width="65%" />
+
+4. 镜头朝上，将卡口放在平坦的表面上。
+<img src="/img/accessories/camera/SOLVENT_small.jpg" alt="溶剂" width="65%" />
+
+5. 为了最大限度地降低滤镜破裂的风险，请使用笔头或类似的软塑料物品，仅在玻璃与铝材连接的最边缘向下按压滤镜。胶水会断裂，滤镜就会从镜头支架上脱落。
+<img src="/img/accessories/camera/REMOVE_FILTER_small.jpg" alt="取下滤镜" width="65%" />
+
+6. 鉴于更换镜头会暴露传感器，此时您可以粘贴一个透明滤镜（例如 OHP 塑料），以尽量减少灰尘进入传感器腔的机会。
+7. 更换电路板上的主外壳。确保将外壳与电路板上的垫圈重新对齐。
+8. 先戴上尼龙垫圈，以防损坏电路板。
+9. 然后装上钢垫圈，以防止损坏尼龙垫圈。拧下两个六角锁匙。只要垫圈安装顺序正确，就不需要拧得很紧。
+<img src="/img/accessories/camera/FILTER_OFF_small.jpg" alt="关闭滤镜" width="65%" />
+
+:::note[注意]
+要将滤镜粘回原位并使设备恢复正常光学照摄像头功能可能会很困难，甚至不可能。
+:::
+
+## 推荐镜头
+建议将以下镜头与我们的 HQ 和 GS 摄像头配合使用。
+
+:::note[注意]
+HQ 摄像头有 C/CS 卡口和 M12 卡口两种型号，而 GS 摄像头只有 C/CS 卡口。
+:::
+
+### C/CS 镜头
+我们推荐使用两个镜头，一个 6 毫米广角镜头和一个 16 毫米长焦镜头。这些镜头可从最近的[授权经销商](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)处购买。
+
+
+<table>
+    <tr align="center">
+        <td colspan="2"></td>
+        <td>16 毫米长焦镜头</td>
+        <td>6 毫米广角镜头</td>
+    </tr>
+    <tr align="center">
+        <td colspan="2">分辨率</td>
+        <td>1000 万像素</td>
+        <td>300 万像素</td>
+    </tr>
+    <tr align="center">
+        <td colspan="2">图像格式</td>
+        <td>1"</td>
+        <td>1/2"</td>
+    </tr>
+    <tr align="center">
+        <td colspan="2">光圈</td>
+        <td>F1.4 至 F16</td>
+        <td>F1.2</td>
+    </tr>
+    <tr align="center">
+        <td colspan="2">安装</td>
+        <td>C</td>
+        <td>CS</td>
+    </tr>
+    <tr align="center">
+        <td rowspan="2">视场角 H°×V° (D°)</td>
+        <td>HQ</td>
+        <td>22.2°×16.7° (27.8°)</td>
+        <td>55°×45° (71°)</td>
+    </tr>
+    <tr align="center">
+        <td>GS</td>
+        <td>17.8°×13.4° (22.3)</td>
+        <td>45°×34° (56°)</td>
+    </tr>
+    <tr align="center">
+        <td colspan="2">背面焦距</td>
+        <td>17.53 毫米</td>
+        <td>7.53 毫米</td>
+    </tr>
+    <tr align="center">
+        <td colspan="2">外径</td>
+        <td>0.2m</td>
+        <td>0.2m</td>
+    </tr>
+    <tr align="center">
+        <td colspan="2">尺寸</td>
+        <td>φ39.00×50.00毫米</td>
+        <td>φ30×34毫米</td>
+    </tr>
+</table>
+
+### M12镜头
+
+<img src="/img/accessories/camera/m12-lens.jpg" alt="M12 镜片" />
+
+我们推荐三种由[高佳光学](https://www.gaojiaoptotech.com/)制造的镜片。这些镜片可从离您最近的[授权经销商](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)处购买。
+
+<table>
+    <tr align="center">
+        <td></td>
+        <td>8 毫米</td>
+        <td>25 毫米</td>
+        <td>鱼眼</td>
+    </tr>
+    <tr align="center">
+        <td>分辨率</td>
+        <td>1200 万像素</td>
+        <td>500 万像素</td>
+        <td>1500 万像素</td>
+    </tr>
+    <tr align="center">
+        <td>图像格式</td>
+        <td>1/1.7"</td>
+        <td>1/2"</td>
+        <td>1/2.3"</td>
+    </tr>
+    <tr align="center">
+        <td>光圈</td>
+        <td>F1.8</td>
+        <td>F2.4</td>
+        <td>F2.5</td>
+    </tr>
+    <tr align="center">
+        <td>安装</td>
+        <td colspan="3">M12</td>
+    </tr>
+    <tr align="center">
+        <td>HQ 视场角 H°×V° (D°)</td>
+        <td>49°×36° (62°)</td>
+        <td>14.4°×10.9° (17.9)°</td>
+        <td>140°×102.6° (184.6°)</td>
+    </tr>
+</table>
+
+## 同步捕捉
+HQ 摄像头和全局快门摄像头均支持同步捕捉。利用 XVS 引脚（垂直同步），一台摄像头可以在开始帧捕捉时发出脉冲。然后，另一台摄像头可以监听该同步脉冲，并与另一台摄像头同时捕捉帧。
+
+### 使用HQ摄像头
+为了正确操作，两台摄像头的 XVS 线路都需要 1.65V 的上拉电压，该电压通过树莓派上的 3.3V 和 GND 引脚的电位分配器产生。
+
+<img src="/img/accessories/camera/synchronous_camera_wiring.jpg" alt="显示电位分配器设置的图片" width="50%" />
+
+从两个 10kΩ 电阻器上创建一个电位分压器，分别连接到 3.3V 和地（使电压达到 1.65V，有效源阻抗为 5kΩ）。这可以连接到任意一台 Raspberry Pi。
+
+将每块 HQ 摄像头电路板的接地和 XVS 测试点相互焊接。
+
+将 XVS 线连接到 1.65V 电位分压器上拉电阻。
+
+#### 启动两个树莓派
+文件 `/sys/module/imx477/parameters/trigger_mode` 决定哪块板输出脉冲或等待接收脉冲（源和"汇"）。该参数只能在超级用户模式下更改。
+
+运行以下命令配置"汇"：
+```sh
+sudo su
+echo 2 > /sys/module/imx477/parameters/trigger_mode
+exit
+```
+
+运行以下命令配源：
+```sh
+sudo su
+echo 1 > /sys/module/imx477/parameters/trigger_mode
+exit
+```
+
+运行以下命令启动"汇"：
+```sh
+rpicam-vid --frames 300 --qt-preview -o sink.h264
+```
+
+运行以下启动配源：
+```sh
+rpicam-vid --frames 300 --qt-preview -o source.h264
+```
+
+帧应同步。使用 `--frames` 可确保捕捉到的帧数相同，且录制长度完全相同。先运行汇集器可确保不遗漏任何帧。
+
+:::note[注意]
+当信号源处于空闲状态时，需要使用电位分配器将 XVS 引脚拉高。这可确保启动时不会创建或丢失帧。信号源在初始化时从低电平变为高电平，可能会触发误帧。
+:::
+
+### 使用GS摄像头
+:::note[注意]
+全局快门 (GS) 摄像头也可以在同步模式下操作。但是，源摄像头将多记录一帧。要确保两台摄像头拍摄相同的帧数，更好的替代方法是使用[外部触发方法](#gs摄像头上的外部触发器)。
+:::
+
+全局快门摄像头还需要将 XHS（水平同步）引脚连接在一起，才能作为源和"从"一起工作。不过，这些引脚不需要连接上拉电阻器。
+
+接线设置与 [HQ摄像头](#使用hq摄像头) 的方法相同，只是您还需要将 XHS 引脚连接在一起。
+
+从两个 10kΩ 电阻器上创建一个电位分压器，分别连接到 3.3V 和地（使电压达到 1.65V，有效源阻抗为 5kΩ）。这可以连接到任意一台 Raspberry Pi。
+
+将 2 根导线焊接到每块电路板上的 XVS 测试点，然后将这 2 根导线一起连接到 1.65V 电位分压器。
+
+将每块摄像头板的 GND 焊接在一起。同时将 2 根导线焊接到每块电路板上的 XHS 测试点，并将其连接起来。XHS 引脚无需上拉。
+
+在希望用作"汇流排"的电路板上，将 MAS 焊盘的两半焊接在一起。这将告知传感器充当"汇"，并等待信号以捕获帧。
+
+#### 启动源与汇
+运行以下命令配置"汇"：
+
+```sh
+rpicam-vid --frames 300 -o sync.h264
+```
+
+由于 IMX296 传感器的限制，汇接收器无法记录与源完全相同的帧数。**在汇接收器开始记录之前，源会多记录一帧**。因此，需要使用 `--frames` 选项指定水槽少记录一帧。
+
+在启动源之前至少等待两秒钟。
+
+等待两秒后，运行以下命令启动源：
+
+```sh
+rpicam-vid --frames 299 -o sync.h264
+```
+
+由于汇和源录制的帧数不同，请使用 `ffmpeg` 重新同步视频。去掉源视频的第一帧后，我们就能得到两段起点和帧长相同的视频：
+
+```sh
+ffmpeg -i source.h264 -vf select="gte(n\, 1)" source.h264
+```
+
+## GS摄像头上的外部触发器
+全局快门（GS）摄像头可通过电路板上的外部触发器（在电路板上表示为 XTR）连接进行外部触发。同一脉冲可连接多台摄像头，这也是同步两台摄像头的另一种方法。
+
+曝光时间等于低脉冲宽度时间加上 14.26us 的额外时间，即 10000us 的低脉冲导致 10014.26us 的曝光时间。帧频直接受控于对引脚的脉冲频率。PWM 频率为 30Hz 时，帧频为每秒 30 帧。
+
+<img src="/img/accessories/camera/external_trigger.jpg" alt="显示脉冲格式的图片" width="80%" />
+
+### 准备工作
+:::warning[警告]
+本修改包括拆除 SMD 焊接部件。除非您认为自己有能力完成此改装，否则不应尝试。焊接到摄像头电路板时，请取下塑料后盖，以免损坏电路板。
+:::
+
+如果电路板上安装了晶体管 Q2（如下图中蓝色所示），则需要从电路板上拆下 R11（如下图中红色所示）。它将 GP1 连接到 XTR，如果不取下 R11，摄像头将无法在外部触发模式下工作。元件位置如下所示。
+
+<img src="/img/accessories/camera/resistor.jpg" alt="显示待拆除电阻的图片" width="50%" />
+
+接下来，将一根导线焊接到 GS 摄像头电路板上的 XTR 和 GND 连接点上。请注意，XTR 是 1.8V 输入电压，因此可能需要电平转换器或电位分配器。
+
+我们可以使用树莓派Pico来提供触发器。通过 1.5kΩ 电阻器将任何 Pico GPIO 引脚（本例中使用 GP28）连接至 XTR。同时在 XTR 和 GND 之间连接一个 1.8kΩ 电阻器，以将高逻辑电平降至 1.8V。接线图如下所示。
+
+<img src="/img/accessories/camera/pico_wiring.jpg" alt="显示树莓派Pico接线的图片" width="50%" />
+
+#### 启动连接了摄像头的树莓派
+通过超级用户模式启用外部触发：
+```sh
+sudo su
+echo 1 > /sys/module/imx296/parameters/trigger_mode
+exit
+```
+
+#### 树莓派Pico Micropython代码
+```py
+from machine import Pin, PWM
+
+from time import sleep
+
+pwm = PWM(Pin(28))
+
+framerate = 30
+shutter = 6000  # In microseconds
+
+frame_length = 1000000 / framerate
+pwm.freq(framerate)
+
+pwm.duty_u16(int((1 - (shutter - 14) / frame_length) * 65535))
+```
+
+低脉冲宽度等于快门时间，PWM 频率等于帧频。
+
+:::note[注意]
+在本示例中，引脚 28 用于连接 GS 摄像头板上的 XTR 触摸点。
+:::
+
+### 操作
+在 Pico 上运行代码并设置摄像头运行：
+```sh
+rpicam-hello -t 0 --qt-preview --shutter 3000
+```
+
+Pico 每脉冲一次该引脚，就会产生一个帧。要控制帧频，可改变脉冲之间的持续时间。
+
+:::note[注意]
+运行 `rpicam-apps` 时，请始终指定一个固定的快门持续时间，以确保 AGC 不会调整相机的快门速度。持续时间并不重要，因为它实际上是由外部触发脉冲控制的。
+:::
+
+<Normal />

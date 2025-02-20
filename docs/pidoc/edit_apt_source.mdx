@@ -1,0 +1,63 @@
+---
+draft: false
+sidebar_position: 2
+title: 编辑 APT 源
+description: 在 Raspberry Pi 上使用国内的镜像仓库。
+keywords: [树莓派, apt, source, Raspberry Pi, 国内源, 国内镜像, 国内镜像仓库]
+---
+import Normal from "../_normal.mdx";
+
+# 使用国内源加速您的 APT
+
+:::warning
+本文档适用于 Raspberry Pi OS 的 Bookworm 版本。
+:::
+
+## 快速实施
+
+使用阿里云作为镜像源，替换 `/etc/apt/sources.list` 中的 `deb.debian.org` 为 `mirrors.aliyun.com`。
+
+适合于新手首次操作，只需要复制并执行以下命令即可。
+
+```sh
+sudo sed 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list -i
+sudo apt update
+```
+
+## 手动修改
+
+如果您想手动修改，请按照以下步骤操作：
+
+1. 打开终端命令行模式
+2. 备份 `/etc/apt/sources.list` 文件
+```sh
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+```
+3. 编辑apt源配置文件，使用文本编辑器打开/etc/apt/sources.list文件：
+```sh
+sudo nano /etc/apt/sources.list
+```
+4. 在打开的文件中，将原始的apt源地址替换为公有云的源地址。以下是阿里云的源地址示例，你可以根据自己的地理位置选择合适的源地址：
+```
+# 默认的树莓派源注释掉或删除
+# deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+
+# 阿里云的源地址
+deb http://mirrors.aliyun.com/debian bookworm main contrib non-free non-free-firmware
+```
+
+5. 保存并关闭文件。在nano编辑器中，按下Ctrl + X，然后按下Y确认保存，最后按下Enter退出编辑器。
+
+6. 更新apt源列表，以使更改生效：
+```sh
+sudo apt update
+```
+
+### 各种云的源地址
+
+| 云服务商 | 源地址 |
+| --- | --- |
+| 阿里云 | `http://mirrors.aliyun.com/debian` |
+| 腾讯云 | `http://mirrors.cloud.tencent.com/debian` |
+
+<Normal />

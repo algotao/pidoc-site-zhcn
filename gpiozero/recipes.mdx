@@ -1,0 +1,1299 @@
+---
+sidebar_position: 2
+draft: false
+title: 3. 基本用法
+description: 演示了使用 GPIO Zero 库操作 LED、按钮、字符显示屏、运动传感器、光传感器、距离传感器、旋转编码器、伺服、电机、机器人的基本方式。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, LED, 按钮, 字符显示屏, 光传感器, 距离传感器, 旋转编码器, 伺服, 电机, 机器人]
+last_update: 
+  date: 2024-06-13
+---
+import Normal from "./_normal.mdx";
+import Pin_layout from '@site/static/gpiozeroimg/pin_layout.svg';
+import Led_bb from '@site/static/gpiozeroimg/led_bb.svg';
+import Button_bb from '@site/static/gpiozeroimg/button_bb.svg';
+import LedButton_bb from '@site/static/gpiozeroimg/led_button_bb.svg';
+import LedBoard_bb from '@site/static/gpiozeroimg/ledboard_bb.svg';
+import LedBarGraph_bb from '@site/static/gpiozeroimg/ledbargraph_bb.svg';
+import LedCharDisplay_bb from '@site/static/gpiozeroimg/led_char_display_bb.svg';
+import TrafficLight_bb from '@site/static/gpiozeroimg/traffic_lights_bb.svg';
+import ReactionGame_bb from '@site/static/gpiozeroimg/reaction_game_bb.svg';
+import MusicBox_bb from '@site/static/gpiozeroimg/music_box_bb.svg';
+import RGBLed_bb from '@site/static/gpiozeroimg/rgb_led_bb.svg';
+import MotionSensor_bb from '@site/static/gpiozeroimg/motion_sensor_bb.svg';
+import LightSensor_bb from '@site/static/gpiozeroimg/light_sensor_bb.svg';
+import DistanceSensor_bb from '@site/static/gpiozeroimg/distance_sensor_bb.svg';
+import ColorPicker_bb from '@site/static/gpiozeroimg/color_picker_bb.svg';
+import Motor_bb from '@site/static/gpiozeroimg/motor_bb.svg';
+import Robot_bb from '@site/static/gpiozeroimg/robot_bb.svg';
+import ButtonRobot_bb from '@site/static/gpiozeroimg/button_robot_bb.svg';
+import MotionRobot_bb from '@site/static/gpiozeroimg/motion_robot_bb.svg';
+import Potentiometer_bb from '@site/static/gpiozeroimg/potentiometer_bb.svg';
+import RGBLedPot_bb from '@site/static/gpiozeroimg/rgbled_pot_bb.svg';
+import ERobot_bb from '@site/static/gpiozeroimg/robot_bb.svg';
+
+# 基本用法
+
+以下示例演示了 GPIO Zero 库的部分功能。请注意，所有配方都是假设 Python 3 编写的。在 Python 2 下可能也能运行，但并不保证！
+
+## 导入 GPIO Zero
+
+在 Python 中，脚本中使用的库和函数必须在文件顶部按名称导入，Python 默认内置的函数除外。
+
+例如，要使用 GPIO Zero 中的 `Button` 接口，必须明确导入：
+```py
+from gpiozero import Button
+```
+
+现在 `Button` 可以直接在脚本中使用了：
+
+```py
+button = Button(2)
+```
+
+或者，也可以导入整个 GPIO Zero 库：
+```py
+import gpiozero
+```
+
+在这种情况下，对 GPIO Zero 中所有项目的引用都必须加上前缀：
+
+```py
+button = gpiozero.Button(2)
+```
+
+## 引脚编号
+
+该库的 GPIO 引脚使用 Broadcom (BCM) 引脚编号，而非物理 (BOARD) 编号。与 [RPi.GPIO](https://pypi.python.org/pypi/RPi.GPIO) 库不同的是，它不可配置。不过，可以通过为引脚编号提供前缀来转换其他方案（见下文）。
+
+下图中任何标有 `GPIO` 的引脚都可以用作引脚编号。例如，如果 LED 连接到 `GPIO17`，则应将引脚编号指定为 `17`，而不是 `11`：
+
+<Pin_layout title="GPIO 引脚布局"/>
+
+如果希望使用物理（BOARD）编号，则可将引脚编号指定为 `BOARD11`。如果您熟悉 wiringPi 引脚编号（另一种物理布局），可以使用 `WPI0` 来代替。最后，还可以将引脚指定为 `header:number`（头：编号），例如 `J8:11` 表示头 J8（现代 Pis 上的 GPIO 头）上的物理引脚 `11`。因此，以下几行都是等价的：
+
+```py
+led = LED(17)
+led = LED("GPIO17")
+led = LED("BCM17")
+led = LED("BOARD11")
+led = LED("WPI0")
+led = LED("J8:11")
+```
+
+请注意，这些备用方案只是转换。如果您在命令行上请求设备状态，相关引脚编号将始终以 Broadcom (BCM) 方案报告：
+```py
+led = LED("BOARD11")
+led
+<gpiozero.LED object on pin GPIO17, active_high=True, is_active=False>
+```
+
+在本手册中，我们将按照上图所示的 Broadcom (BCM) 布局使用默认的整数引脚编号。
+
+## LED (`LED`)
+
+<Led_bb title="LED 接线图"/>
+<br /><br />
+
+反复打开和关闭 `LED`：
+
+```py
+from gpiozero import LED
+from time import sleep
+
+red = LED(17)
+
+while True:
+    red.on()
+    sleep(1)
+    red.off()
+    sleep(1)
+```
+
+或者
+
+```py
+from gpiozero import LED
+from signal import pause
+
+red = LED(17)
+
+red.blink()
+
+pause()
+```
+
+:::tip
+Python 脚本结束时会终止进程，GPIO 可能会被重置。请使用 `signal.pause()` 使脚本继续运行。更多信息，请参阅 [如何保持脚本运行？](./faq.mdx#如何保持脚本运行)
+:::
+
+### 亮度可变的 LED
+
+<Led_bb title="LED 接线图"/>
+<br /><br />
+
+任何普通 LED 都可以使用 PWM（脉宽调制）设置其亮度值。在 GPIO Zero 中，可以使用 `PWMLED`（亮度值在 0 和 1 之间）来实现这一功能：
+
+```py
+from gpiozero import PWMLED
+from time import sleep
+
+led = PWMLED(17)
+
+while True:
+    led.value = 0  # off
+    sleep(1)
+    led.value = 0.5  # half brightness
+    sleep(1)
+    led.value = 1  # full brightness
+    sleep(1)
+```
+
+与连续闪亮和熄灭类似，`PWMLED` 也可以脉冲（连续淡入淡出）：
+
+```py
+from gpiozero import PWMLED
+from signal import pause
+
+led = PWMLED(17)
+
+led.pulse()
+
+pause()
+```
+
+## 按钮 (`Button`)
+
+<Led_bb title="Button 接线图"/>
+<br /><br />
+
+检查 `Button` 是否被按下：
+
+```py
+from gpiozero import Button
+
+button = Button(2)
+
+while True:
+    if button.is_pressed:
+        print("Button is pressed")
+    else:
+        print("Button is not pressed")
+```
+
+等待按下按钮后再继续：
+
+```py
+from gpiozero import Button
+
+button = Button(2)
+
+button.wait_for_press()
+print("Button was pressed")
+```
+
+每次按下按钮都运行一个功能：
+
+```py
+from gpiozero import Button
+from signal import pause
+
+def say_hello():
+    print("Hello!")
+
+button = Button(2)
+
+button.when_pressed = say_hello
+
+pause()
+```
+
+:::tip
+请注意，`button.when_pressed = say_hello` 这一行并不运行 `say_hello` 函数，而是创建一个指向按下按钮时要调用的函数的引用。意外使用 `button.when_pressed = say_hello()`，会将 `when_pressed` 操作设置为 `None`（该函数的返回值），这意味着按下按钮时什么也不会发生。
+:::
+
+同样，按钮释放也可以附加功能：
+
+```py
+from gpiozero import Button
+from signal import pause
+
+def say_hello():
+    print("Hello!")
+
+def say_goodbye():
+    print("Goodbye!")
+
+button = Button(2)
+
+button.when_pressed = say_hello
+button.when_released = say_goodbye
+
+pause()
+```
+
+### 按钮 控制 LED
+
+<LedButton_bb title="Button 控制 LED 接线图"/>
+<br /><br />
+
+按下 `Button` 时打开 `LED`：
+
+```py
+from gpiozero import LED, Button
+from signal import pause
+
+led = LED(17)
+button = Button(2)
+
+button.when_pressed = led.on
+button.when_released = led.off
+
+pause()
+```
+
+或者
+
+```py
+from gpiozero import LED, Button
+from signal import pause
+
+led = LED(17)
+button = Button(2)
+
+led.source = button
+
+pause()
+```
+
+### 按钮 控制 摄像头
+
+使用 `button.when_pressed = camera.capture` 来触发 `PiCamera` 拍照是行不通的，因为 `capture()` 方法需要一个 `输出` 参数。不过，可以使用无需参数的自定义函数来实现：
+
+```py
+from gpiozero import Button
+from picamera import PiCamera
+from datetime import datetime
+from signal import pause
+
+button = Button(2)
+camera = PiCamera()
+
+def capture():
+    camera.capture(f'/home/pi/{datetime.now():%Y-%m-%d-%H-%M-%S}.jpg')
+
+button.when_pressed = capture
+
+pause()
+```
+
+另一个例子是使用一个按钮来启动和停止摄像头预览，另一个按钮用来捕捉：
+
+```py
+from gpiozero import Button
+from picamera import PiCamera
+from datetime import datetime
+from signal import pause
+
+left_button = Button(2)
+right_button = Button(3)
+camera = PiCamera()
+
+def capture():
+    camera.capture(f'/home/pi/{datetime.now():%Y-%m-%d-%H-%M-%S}.jpg')
+
+left_button.when_pressed = camera.start_preview
+left_button.when_released = camera.stop_preview
+right_button.when_pressed = capture
+
+pause()
+```
+
+### 关机按钮
+
+`Button` 类还提供了在按住按钮一定时间后运行函数的功能。本示例将在按住按钮 2 秒时关闭 Raspberry Pi：
+
+```py
+from gpiozero import Button
+from subprocess import check_call
+from signal import pause
+
+def shutdown():
+    check_call(['sudo', 'poweroff'])
+
+shutdown_btn = Button(17, hold_time=2)
+shutdown_btn.when_held = shutdown
+
+pause()
+```
+
+## LED板 (`LEDBoard`)
+
+<LedBoard_bb title="LED板 接线图"/>
+<br /><br />
+
+使用 `LEDBoard` 可以访问 LED 集合：
+
+```py
+from gpiozero import LEDBoard
+from time import sleep
+from signal import pause
+
+leds = LEDBoard(5, 6, 13, 19, 26)
+
+leds.on()
+sleep(1)
+leds.off()
+sleep(1)
+leds.value = (1, 0, 1, 0, 1)
+sleep(1)
+leds.blink()
+
+pause()
+```
+
+使用 `pwm=True` 的 `LEDBoard` 可以控制每个 LED 的亮度：
+
+```py
+from gpiozero import LEDBoard
+from signal import pause
+
+leds = LEDBoard(5, 6, 13, 19, 26, pwm=True)
+
+leds.value = (0.2, 0.4, 0.6, 0.8, 1.0)
+
+pause()
+```
+
+在 [高级 LEDBoard 方案](./recipes-advanced.mdx#led板-ledboard) 中查看更多 `LEDBoard` 示例。
+
+## LED条形图 (`LEDBarGraph`)
+<LedBarGraph_bb title="LED条形图 接线图"/>
+<br /><br />
+
+使用 `LEDBarGraph` 可以像条形图一样处理 LED 集合：
+
+```py
+from gpiozero import LEDBarGraph
+from time import sleep
+
+graph = LEDBarGraph(5, 6, 13, 19, 26, 20)
+
+graph.value = 1  # (1, 1, 1, 1, 1, 1)
+sleep(1)
+graph.value = 1/2  # (1, 1, 1, 0, 0, 0)
+sleep(1)
+graph.value = -1/2  # (0, 0, 0, 1, 1, 1)
+sleep(1)
+graph.value = 1/4  # (1, 0, 0, 0, 0, 0)
+sleep(1)
+graph.value = -1  # (1, 1, 1, 1, 1, 1)
+sleep(1)
+```
+
+由于 LED 只能在 `pwm=False` 时开启或关闭（默认值），因此数值基本上是四舍五入的。
+
+不过，在 `pwm=True` 时使用 `LEDBarGraph` 可以使用 LED 亮度获得更精确的数值：
+
+```py
+from gpiozero import LEDBarGraph
+from time import sleep
+
+graph = LEDBarGraph(5, 6, 13, 19, 26, pwm=True)
+
+graph.value = 1/10  # (0.5, 0, 0, 0, 0)
+sleep(1)
+graph.value = 3/10  # (1, 0.5, 0, 0, 0)
+sleep(1)
+graph.value = -3/10  # (0, 0, 0, 0.5, 1)
+sleep(1)
+graph.value = 9/10  # (1, 1, 1, 1, 0.5)
+sleep(1)
+graph.value = 95/100  # (1, 1, 1, 1, 0.75)
+sleep(1)
+```
+
+## LED字符显示屏 (`LEDCharDisplay`)
+
+<LedCharDisplay_bb title="LED字符显示屏 接线图"/>
+<br /><br />
+
+使用 `LEDCharDisplay`（实际上支持任意数量的显示段），可以用普通的 [7 段显示](https://baike.baidu.com/item/7%E6%AE%B5LED%E6%98%BE%E7%A4%BA%E5%99%A8/9291472) 来表示各种字符：
+
+```py
+from gpiozero import LEDCharDisplay
+from time import sleep
+
+display = LEDCharDisplay(21, 20, 16, 22, 23, 24, 12, dp=25)
+
+for char in '321GO':
+    display.value = char
+    sleep(1)
+
+display.off()
+```
+
+或者
+
+```py
+from gpiozero import LEDCharDisplay
+from signal import pause
+
+display = LEDCharDisplay(21, 20, 16, 22, 23, 24, 12, dp=25)
+display.source_delay = 1
+display.source = '321GO '
+
+pause()
+```
+
+在 [高级 LEDBoard 方案](./recipes-advanced.mdx#led板-ledboard) 中查看更多多字符示例。
+
+## 交通信号灯 (`TrafficLights`)
+
+<TrafficLight_bb title="交通信号灯 接线图"/>
+<br /><br />
+
+完整的交通灯系统
+
+使用像 Pi-Stop 这样的 `TrafficLights` 套件：
+
+```py
+from gpiozero import TrafficLights
+from time import sleep
+
+lights = TrafficLights(2, 3, 4)
+
+lights.green.on()
+
+while True:
+    sleep(10)
+    lights.green.off()
+    lights.amber.on()
+    sleep(1)
+    lights.amber.off()
+    lights.red.on()
+    sleep(10)
+    lights.amber.on()
+    sleep(1)
+    lights.green.on()
+    lights.amber.off()
+    lights.red.off()
+```
+
+或者
+
+```py
+from gpiozero import TrafficLights
+from time import sleep
+from signal import pause
+
+lights = TrafficLights(2, 3, 4)
+
+def traffic_light_sequence():
+    while True:
+        yield (0, 0, 1) # green
+        sleep(10)
+        yield (0, 1, 0) # amber
+        sleep(1)
+        yield (1, 0, 0) # red
+        sleep(10)
+        yield (1, 1, 0) # red+amber
+        sleep(1)
+
+lights.source = traffic_light_sequence()
+
+pause()
+```
+
+使用 `LED` 组件:
+
+```py
+from gpiozero import LED
+from time import sleep
+
+red = LED(2)
+amber = LED(3)
+green = LED(4)
+
+green.on()
+amber.off()
+red.off()
+
+while True:
+    sleep(10)
+    green.off()
+    amber.on()
+    sleep(1)
+    amber.off()
+    red.on()
+    sleep(10)
+    amber.on()
+    sleep(1)
+    green.on()
+    amber.off()
+    red.off()
+
+```
+
+## 组合设计
+
+### 按钮定格
+
+每次按下按钮时，摄像头模块都会拍摄一张照片：
+
+```py
+from gpiozero import Button
+from picamera import PiCamera
+
+button = Button(2)
+camera = PiCamera()
+
+camera.start_preview()
+frame = 1
+while True:
+    button.wait_for_press()
+    camera.capture(f'/home/pi/frame{frame:03d}.jpg')
+    frame += 1
+```
+
+请参阅 [按钮定格](https://projects.raspberrypi.org/en/projects/push-button-stop-motion) 获取完整资源。
+
+### 反应游戏
+
+<ReactionGame_bb title="反应游戏 接线图"/>
+<br /><br />
+
+当看到灯亮起时，最先按下按钮的人获胜！
+
+```py
+from gpiozero import Button, LED
+from time import sleep
+import random
+
+led = LED(17)
+
+player_1 = Button(2)
+player_2 = Button(3)
+
+time = random.uniform(5, 10)
+sleep(time)
+led.on()
+
+while True:
+    if player_1.is_pressed:
+        print("Player 1 wins!")
+        break
+    if player_2.is_pressed:
+        print("Player 2 wins!")
+        break
+
+led.off()
+```
+
+请参阅 [快速反应游戏](https://projects.raspberrypi.org/en/projects/python-quick-reaction-game) 获取完整资源。
+
+### GPIO音乐盒
+<MusicBox_bb title="GPIO音乐盒 接线图"/>
+<br /><br />
+
+每个按钮都会发出不同的声音！
+
+```py
+from gpiozero import Button
+import pygame.mixer
+from pygame.mixer import Sound
+from signal import pause
+
+pygame.mixer.init()
+
+button_sounds = {
+    Button(2): Sound("samples/drum_tom_mid_hard.wav"),
+    Button(3): Sound("samples/drum_cymbal_open.wav"),
+}
+
+for button, sound in button_sounds.items():
+    button.when_pressed = sound.play
+
+pause()
+```
+
+请参阅 [GPIO音乐盒](https://projects.raspberrypi.org/en/projects/gpio-music-box) 获取完整资源。
+
+
+### 按下时全部打开
+
+`FishDish`：
+
+按下按钮时，蜂鸣器和所有指示灯都会亮起。
+
+```py
+from gpiozero import FishDish
+from signal import pause
+
+fish = FishDish()
+
+fish.button.when_pressed = fish.on
+fish.button.when_released = fish.off
+
+pause()
+```
+
+Ryanteck `TrafficHat`：（译注：由 Ryanteck 出品的 交通灯 小板）
+
+```py
+from gpiozero import TrafficHat
+from signal import pause
+
+th = TrafficHat()
+
+th.button.when_pressed = th.on
+th.button.when_released = th.off
+
+pause()
+```
+
+使用 `LED`，`Buzzer`，和 `Button` 组件：
+
+```py
+from gpiozero import LED, Buzzer, Button
+from signal import pause
+
+button = Button(2)
+buzzer = Buzzer(3)
+red = LED(4)
+amber = LED(5)
+green = LED(6)
+
+things = [red, amber, green, buzzer]
+
+def things_on():
+    for thing in things:
+        thing.on()
+
+def things_off():
+    for thing in things:
+        thing.off()
+
+button.when_pressed = things_on
+button.when_released = things_off
+
+pause()
+```
+
+## 全彩LED (`RGBLED`)
+
+<RGBLed_bb title="全彩LED 接线图"/>
+<br /><br />
+
+用 `RGBLED` 制作色彩：
+
+```py
+from gpiozero import RGBLED
+from time import sleep
+
+led = RGBLED(red=9, green=10, blue=11)
+
+led.red = 1  # full red
+sleep(1)
+led.red = 0.5  # half red
+sleep(1)
+
+led.color = (0, 1, 0)  # full green
+sleep(1)
+led.color = (1, 0, 1)  # magenta
+sleep(1)
+led.color = (1, 1, 0)  # yellow
+sleep(1)
+led.color = (0, 1, 1)  # cyan
+sleep(1)
+led.color = (1, 1, 1)  # white
+sleep(1)
+
+led.color = (0, 0, 0)  # off
+sleep(1)
+
+# slowly increase intensity of blue
+for n in range(100):
+    led.blue = n/100
+    sleep(0.1)
+```
+
+## 运动传感器 (`MotionSensor`)
+
+<MotionSensor_bb title="运动传感器 接线图"/>
+<br /><br />
+
+当 `MotionSensor`(运动传感器) 检测到运动时，点亮 `LED`：
+
+```py
+from gpiozero import MotionSensor, LED
+from signal import pause
+
+pir = MotionSensor(4)
+led = LED(16)
+
+pir.when_motion = led.on
+pir.when_no_motion = led.off
+
+pause()
+```
+
+## 光传感器 (`LightSensor`)
+
+<LightSensor_bb title="光传感器 接线图"/>
+<br /><br />
+
+让 `LightSensor`(光传感器) 检测明暗：
+
+```py
+from gpiozero import LightSensor
+
+sensor = LightSensor(18)
+
+while True:
+    sensor.wait_for_light()
+    print("It's light! :)")
+    sensor.wait_for_dark()
+    print("It's dark :(")
+```
+
+在光线变化时运行功能：
+
+```py
+from gpiozero import LightSensor, LED
+from signal import pause
+
+sensor = LightSensor(18)
+led = LED(16)
+
+sensor.when_dark = led.on
+sensor.when_light = led.off
+
+pause()
+```
+
+或使 `PWMLED` 根据检测到的光亮度改变亮度：
+
+```py
+from gpiozero import LightSensor, PWMLED
+from signal import pause
+
+sensor = LightSensor(18)
+led = PWMLED(16)
+
+led.source = sensor
+
+pause()
+```
+
+## 距离传感器 (`DistanceSensor`)
+
+<DistanceSensor_bb title="距离传感器 接线图"/>
+<br /><br />
+
+:::tip
+在上图中，从传感器到面包板的导线可以省略；只需将传感器直接插入面包板，面向边缘即可（遗憾的是，如果传感器的示意图没有遮住面包板的大部分，就很难在图中说明这一点！）。
+:::
+
+让距离传感器(`DistanceSenso`) 检测最近物体的距离：
+
+```py
+from gpiozero import DistanceSensor
+from time import sleep
+
+sensor = DistanceSensor(23, 24)
+
+while True:
+    print('Distance to nearest object is', sensor.distance, 'm')
+    sleep(1)
+```
+
+当有东西靠近传感器时，运行一个功能：
+
+```py
+from gpiozero import DistanceSensor, LED
+from signal import pause
+
+sensor = DistanceSensor(23, 24, max_distance=1, threshold_distance=0.2)
+led = LED(16)
+
+sensor.when_in_range = led.on
+sensor.when_out_of_range = led.off
+
+pause()
+```
+
+## 旋转编码器 (`RotaryEncoder`)
+
+<ColorPicker_bb title="旋转编码器 接线图"/>
+<br /><br />
+
+:::tip
+在本方案中，使用的是普通阳极 RGB LED。通常情况下，Pi 项目会使用共阴极 RGB LED，因为它们在电气上更容易理解。但在本例中，所有三个元件都可以在一个发光旋转编码器中找到，该编码器包含一个共阳极 RGB LED 和一个瞬时按钮。这也是按钮为低电平有效接线的原因，与本文档中的大多数其他示例相反。
+
+为清晰起见，图中显示了三个独立的组件，但同样的电路也可以用这种常见的 [发光旋转编码器](https://shop.pimoroni.com/products/rotary-encoder-illuminated-rgb) 代替。
+:::
+
+将旋转编码器(`RotaryEncoder`)、`RGBLED` 和按钮(`Button`) 作颜色选择器：
+
+```py
+from threading import Event
+from colorzero import Color
+from gpiozero import RotaryEncoder, RGBLED, Button
+
+rotor = RotaryEncoder(16, 20, wrap=True, max_steps=180)
+rotor.steps = -180
+led = RGBLED(22, 23, 24, active_high=False)
+btn = Button(21, pull_up=False)
+led.color = Color('#f00')
+done = Event()
+
+def change_hue():
+    # Scale the rotor steps (-180..180) to 0..1
+    hue = (rotor.steps + 180) / 360
+    led.color = Color(h=hue, s=1, v=1)
+
+def show_color():
+    print(f'Hue {led.color.hue.deg:.1f}° = {led.color.html}')
+
+def stop_script():
+    print('Exiting')
+    done.set()
+
+print('Select a color by turning the knob')
+rotor.when_rotated = change_hue
+print('Push the button to see the HTML code for the color')
+btn.when_released = show_color
+print('Hold the button to exit')
+btn.when_held = stop_script
+done.wait()
+```
+
+## 伺服 (`Servo`)
+
+依次在最小位置、中间位置和最大位置之间控制伺服(`Servo`)：
+
+```py
+from gpiozero import Servo
+from time import sleep
+
+servo = Servo(17)
+
+while True:
+    servo.min()
+    sleep(2)
+    servo.mid()
+    sleep(2)
+    servo.max()
+    sleep(2)
+```
+
+使用按钮在最小和最大位置之间控制伺服(`Servo`)：
+
+```py
+from gpiozero import Servo, Button
+
+servo = Servo(17)
+btn = Button(14)
+
+while True:
+    servo.min()
+    btn.wait_for_press()
+    servo.max()
+    btn.wait_for_press()
+```
+
+自动伺服(`Servo`)连续缓慢扫动：
+
+```py
+rom gpiozero import Servo
+from gpiozero.tools import sin_values
+from signal import pause
+
+servo = Servo(17)
+
+servo.source = sin_values()
+servo.source_delay = 0.1
+
+pause()
+```
+
+使用角度伺服(`AngularServo`)可以指定角度：
+
+```py
+from gpiozero import AngularServo
+from time import sleep
+
+servo = AngularServo(17, min_angle=-90, max_angle=90)
+
+while True:
+    servo.angle = -90
+    sleep(2)
+    servo.angle = -45
+    sleep(2)
+    servo.angle = 0
+    sleep(2)
+    servo.angle = 45
+    sleep(2)
+    servo.angle = 90
+    sleep(2)
+```
+
+## 电机 (`Motor`)
+
+<Motor_bb title="电机 接线图"/>
+<br /><br />
+
+正向和反向旋转电机(`Motor`)：
+
+```py
+from gpiozero import Motor
+from time import sleep
+
+motor = Motor(forward=4, backward=14)
+
+while True:
+    motor.forward()
+    sleep(5)
+    motor.backward()
+    sleep(5)
+```
+
+## 机器人 (`Robot`)
+
+<Robot_bb title="机器人 接线图"/>
+<br /><br />
+
+让机器人(`Robot`) 在（大致）一个正方形内行驶：
+
+```py
+from gpiozero import Robot, Motor
+from time import sleep
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+
+for i in range(4):
+    robot.forward()
+    sleep(10)
+    robot.right()
+    sleep(1)
+```
+
+制作一个带有距离传感器(`DistanceSensor`)的机器人(`Robot`)，当物体靠近它 20 厘米以内时，它就会逃跑：
+
+```py
+from gpiozero import Robot, Motor, DistanceSensor
+from signal import pause
+
+sensor = DistanceSensor(23, 24, max_distance=1, threshold_distance=0.2)
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+
+sensor.when_in_range = robot.backward
+sensor.when_out_of_range = robot.stop
+pause()
+```
+
+## 组合控制
+
+### 按钮控制机器人
+
+<ButtonRobot_bb title="按钮控制机器人 接线图"/>
+<br /><br />
+
+将四个 GPIO 按钮用作机器人(`Robot`)的前进/后退/左转/右转控制器：
+
+```py
+from gpiozero import Robot, Motor, Button
+from signal import pause
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+
+left = Button(26)
+right = Button(16)
+fw = Button(21)
+bw = Button(20)
+
+fw.when_pressed = robot.forward
+fw.when_released = robot.stop
+
+left.when_pressed = robot.left
+left.when_released = robot.stop
+
+right.when_pressed = robot.right
+right.when_released = robot.stop
+
+bw.when_pressed = robot.backward
+bw.when_released = robot.stop
+
+pause()
+```
+
+### 键盘控制机器人
+
+<Robot_bb title="机器人 接线图"/>
+<br /><br />
+
+使用上/下/左/右键控制机器人(`Robot`)：
+
+```py
+import curses
+from gpiozero import Robot, Motor
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+
+actions = {
+    curses.KEY_UP:    robot.forward,
+    curses.KEY_DOWN:  robot.backward,
+    curses.KEY_LEFT:  robot.left,
+    curses.KEY_RIGHT: robot.right,
+}
+
+def main(window):
+    next_key = None
+    while True:
+        curses.halfdelay(1)
+        if next_key is None:
+            key = window.getch()
+        else:
+            key = next_key
+            next_key = None
+        if key != -1:
+            # KEY PRESSED
+            curses.halfdelay(3)
+            action = actions.get(key)
+            if action is not None:
+                action()
+            next_key = key
+            while next_key == key:
+                next_key = window.getch()
+            # KEY RELEASED
+            robot.stop()
+
+curses.wrapper(main)
+```
+
+:::tip
+本教程使用标准的 curses 模块。该模块要求 Python 在终端中运行才能正常工作，因此该方案无法在 IDLE 等环境中运行。
+:::
+
+如果你更喜欢在 IDLE 下运行的版本，下面的方案就足够了：
+
+```py
+from gpiozero import Robot, Motor
+from evdev import InputDevice, list_devices, ecodes
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+
+# Get the list of available input devices
+devices = [InputDevice(device) for device in list_devices()]
+# Filter out everything that's not a keyboard. Keyboards are defined as any
+# device which has keys, and which specifically has keys 1..31 (roughly Esc,
+# the numeric keys, the first row of QWERTY plus a few more) and which does
+# *not* have key 0 (reserved)
+must_have = {i for i in range(1, 32)}
+must_not_have = {0}
+devices = [
+    dev
+    for dev in devices
+    for keys in (set(dev.capabilities().get(ecodes.EV_KEY, [])),)
+    if must_have.issubset(keys)
+    and must_not_have.isdisjoint(keys)
+]
+# Pick the first keyboard
+keyboard = devices[0]
+
+keypress_actions = {
+    ecodes.KEY_UP: robot.forward,
+    ecodes.KEY_DOWN: robot.backward,
+    ecodes.KEY_LEFT: robot.left,
+    ecodes.KEY_RIGHT: robot.right,
+}
+
+for event in keyboard.read_loop():
+    if event.type == ecodes.EV_KEY and event.code in keypress_actions:
+        if event.value == 1:  # key pressed
+            keypress_actions[event.code]()
+        if event.value == 0:  # key released
+            robot.stop()
+```
+
+:::tip
+本方案使用第三方 `evdev` 模块。请先使用 `sudo pip3 install evdev` 安装该库。请注意，`evdev` 只适用于本地输入设备；本方案无法通过 SSH 运行。
+:::
+
+### 运动传感器机器人
+
+<MotionRobot_bb title="运动传感器机器人 接线图"/>
+<br /><br />
+
+让机器人在检测到运动时向前驱动：
+```py
+from gpiozero import Robot, Motor, MotionSensor
+from signal import pause
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+pir = MotionSensor(5)
+
+pir.when_motion = robot.forward
+pir.when_no_motion = robot.stop
+
+pause()
+```
+
+或者
+
+```py
+from gpiozero import Robot, Motor, MotionSensor
+from gpiozero.tools import zip_values
+from signal import pause
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+pir = MotionSensor(5)
+
+robot.source = zip_values(pir, pir)
+
+pause()
+```
+
+### 电位器
+
+<Potentiometer_bb title="电位器 接线图"/>
+<br /><br />
+
+连续打印连接到 `MCP3008` 模数转换器的电位计的数值（数值在 0 和 1 之间）：
+
+```py
+from gpiozero import MCP3008
+
+pot = MCP3008(channel=0)
+
+while True:
+    print(pot.value)
+```
+
+使用 PWM 在 LED 柱状图上显示电位器的值，以表示不会 "填满" LED 的状态：
+
+```py
+from gpiozero import LEDBarGraph, MCP3008
+from signal import pause
+
+graph = LEDBarGraph(5, 6, 13, 19, 26, pwm=True)
+pot = MCP3008(channel=0)
+
+graph.source = pot
+
+pause()
+```
+
+### 使用 ADC 测量温度
+
+将 TMP36 温度传感器连接到 `MCP3008` 模数转换器的第一通道：
+
+```py
+from gpiozero import MCP3008
+from time import sleep
+
+def convert_temp(gen):
+    for value in gen:
+        yield (value * 3.3 - 0.5) * 100
+
+adc = MCP3008(channel=0)
+
+for temp in convert_temp(adc.values):
+    print('The temperature is', temp, 'C')
+    sleep(1)
+```
+
+### 3个电位器控制的全彩LED
+
+<RGBLedPot_bb title="RTBLED+电位器 接线图"/>
+<br /><br />
+
+连接三个电位器（红、绿、蓝），用每个电位器的值组成 LED 的颜色：
+
+```py
+from gpiozero import RGBLED, MCP3008
+
+led = RGBLED(red=2, green=3, blue=4)
+red_pot = MCP3008(channel=0)
+green_pot = MCP3008(channel=1)
+blue_pot = MCP3008(channel=2)
+
+while True:
+    led.red = red_pot.value
+    led.green = green_pot.value
+    led.blue = blue_pot.value
+```
+
+另外，下面的示例与此相同，但使用的是 `source` 属性而不是 `while` 循环：
+
+```py
+from gpiozero import RGBLED, MCP3008
+from gpiozero.tools import zip_values
+from signal import pause
+
+led = RGBLED(2, 3, 4)
+red_pot = MCP3008(0)
+green_pot = MCP3008(1)
+blue_pot = MCP3008(2)
+
+led.source = zip_values(red_pot, green_pot, blue_pot)
+
+pause()
+```
+
+### 定时加热灯
+
+如果您饲养的宠物（如乌龟）需要每天在一定时间内打开保温灯，您可以使用 [Energenie Pi-mote](https://energenie4u.co.uk/catalogue/product/ENER002-2PI) 远程控制保温灯，并使用 `TimeOfDay` 类来控制时间：
+
+```py
+from gpiozero import Energenie, TimeOfDay
+from datetime import time
+from signal import pause
+
+lamp = Energenie(1)
+daytime = TimeOfDay(time(8), time(20))
+
+daytime.when_activated = lamp.on
+daytime.when_deactivated = lamp.off
+
+pause()
+```
+
+### 互联网连接状态指示灯
+
+您可以使用一对绿色和红色 LED 灯来指示互联网连接是否正常。只需使用 `PingServer` 类即可识别 ping 到 baidu.com 是否成功。如果成功，则点亮绿色 LED 灯；如果不成功，则点亮红色 LED 灯：
+
+```py
+from gpiozero import LED, PingServer
+from gpiozero.tools import negated
+from signal import pause
+
+green = LED(17)
+red = LED(18)
+
+google = PingServer('baidu.com')
+
+google.when_activated = green.on
+google.when_deactivated = green.off
+red.source = negated(green)
+
+pause()
+```
+
+### CPU温度条形图
+
+您可以使用内置的 `CPUTemperature` 类读取 Raspberry Pi 自身 CPU 的温度，并将其显示在 LED 的 "条形图" 上：
+
+```py
+from gpiozero import LEDBarGraph, CPUTemperature
+from signal import pause
+
+cpu = CPUTemperature(min_temp=50, max_temp=90)
+leds = LEDBarGraph(2, 3, 4, 5, 6, 7, 8, pwm=True)
+
+leds.source = cpu
+
+pause()
+```
+
+<Normal />

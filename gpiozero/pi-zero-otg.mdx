@@ -1,0 +1,102 @@
+---
+sidebar_position: 7
+draft: false
+title: 7. Pi Zero USB OTG
+description: Raspberry Pi Zero 和 Pi Zero W 具有一个 USB OTG 端口，允许用户将设备配置为（除其他外）以太网设备。在这种模式下，可以使用远程GPIO功能从另一台计算机通过 USB 控制 Pi Zero 的 GPIO 引脚。
+keywords: [GPIO Zero, gpiozero, Python, 树莓派, Raspberry Pi, Pi Zero, Pi Zero W, OTG, USB, 远程, 远程GPIO, rgpio, pigpio]
+last_update: 
+  date: 2024-06-13
+---
+import Normal from "./_normal.mdx";
+
+# Pi Zero USB OTG
+
+[Raspberry Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/) 和 [Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/) 具有一个 USB OTG 端口，允许用户将设备配置为（除其他外）以太网设备。在这种模式下，可以使用 [远程GPIO](./remote-gpio.mdx) 功能从另一台计算机通过 USB 控制 Pi Zero 的 GPIO 引脚。
+
+## GPIO扩展器方法--无需SD卡
+
+GPIO 扩展器方法允许您通过 USB 从电脑启动 Pi Zero，无需 SD 卡。电脑通过 USB 电缆向 Pi 发送所需的启动固件，启动迷你版 Raspberry Pi OS 并在 RAM 中启动。然后，操作系统启动 pigpio 守护进程，允许通过 USB 电缆进行 "远程" 访问。
+
+在撰写本文时，只有使用 Raspberry Pi Desktop x86 操作系统或 Ubuntu（或其衍生版本），或从另一台 Raspberry Pi 上才能实现这一功能。目前不支持从 Windows 和 Mac OS 使用。
+
+### 在 Raspberry Pi Desktop x86 安装
+
+1. 从 raspberrypi.org 下载 [Raspberry Pi 桌面操作系统](https://www.raspberrypi.org/downloads/raspberry-pi-desktop/) ISO
+2. 将映像写入 U 盘或刻录到 DVD。
+3. 将 PC 或 Mac 实时引导至操作系统（选择 "Run with persistence"（持久运行），之后电脑将恢复正常）。(译注：写的操作方式没看懂)
+
+### 在 Raspberry Pi 安装(使用 Raspberry Pi OS)
+
+更新软件包列表并安装 `usbbootgui` 软件包：
+
+```sh
+sudo apt update
+sudo apt install usbbootgui
+```
+
+### 在 Ubuntu 安装
+
+1. 将 Raspberry Pi PPA 添加到系统中：
+
+```sh
+sudo add-apt-repository ppa:rpi-distro/ppa
+```
+
+2. 如果之前用 pip 安装了 `gpiozero` 或 `pigpio`，请先卸载它们：
+
+```sh
+sudo pip3 uninstall gpiozero pigpio
+```
+
+3. 从 PPA 安装所需的软件包：
+
+```sh
+sudo apt install usbbootgui pigpio python3-gpiozero python3-pigpio
+```
+
+### 访问 GPIO
+
+PC 或 Pi 安装 USB 启动 GUI 工具后，连接 Pi Zero 会自动启动提示，选择设备的角色。选择 "GPIO 扩展板" 并继续：
+
+![](@site/static/gpiozeroimg/gpio-expansion-prompt.png)
+
+写入闪存需要 30 秒左右，然后对话将消失。
+
+Raspberry Pi OS 会将 Pi Zero 连接命名为 `usb0`。在 Ubuntu 上，这可能是其他名称。你可以使用地址 `fe80::1%` 和连接字符串来 ping 它。您可以使用 `ifconfig` 查找。
+
+在电脑上设置 `GPIOZERO_PIN_FACTORY` 和 `PIGPIO_ADDR` 环境变量，这样 GPIO Zero 就能连接到 "远程" Pi Zero：
+
+```sh
+export GPIOZERO_PIN_FACTORY=pigpio
+export PIGPIO_ADDR=fe80::1%usb0
+```
+
+现在，您在 PC 上运行的任何 GPIO Zero 代码都将使用连接的 Pi Zero 的 GPIO：
+
+![](@site/static/gpiozeroimg/gpio-expansion-example.png)
+
+或者，您也可以按照 [配置远程GPIO](./remote-gpio.mdx) 中的说明，在线设置引脚工厂。
+
+有关 GPIO 扩展器的更多信息，请参阅 [raspberrypi.org](https://www.raspberrypi.org/blog/gpio-expander/) 和 [bennuttall.com](http://bennuttall.com/raspberry-pi-zero-gpio-expander/) 上的博文。
+
+## 传统方法--需要SD卡
+
+传统方法要求 Pi Zero 插入装有 Raspberry Pi OS 的 SD 卡。
+
+首先创建一张 Raspberry Pi OS（桌面版或精简版）SD 卡，然后像这样配置启动分区：
+
+1. 编辑 `config.txt`，在新行中添加 `dtoverlay=dwc2`，然后保存文件。
+2. 创建一个名为 `ssh` 的空文件（无文件扩展名）并保存在启动分区中。
+3. 编辑 `cmdline.txt`，在 `rootwait` 后插入 `modules-load=dwc2,g_ether`。
+
+(更详细的说明请参见 [blog.gbaman.info](http://blog.gbaman.info/?p=791) 和 [learn.adafruit.com](https://learn.adafruit.com/turning-your-raspberry-pi-zero-into-a-usb-gadget/ethernet-gadget) 上的指南）
+
+然后使用微型 USB 电缆将 Pi Zero 连接到电脑（连接到 USB 端口，而不是电源端口）。当 Pi Zero 启动时，您会看到 LED 指示灯闪烁。准备就绪后，您可以使用主机名 `raspberrypi.local` 进行 ping 和 SSH 登录。SSH 进入 Pi Zero，安装 pigpio 并运行 pigpio 守护进程。
+
+然后，退出 SSH 会话，你就可以在电脑上运行 Python 代码来控制连接到 Pi Zero 的设备，例如通过主机名（或 IP 地址，如果你知道的话）来引用它：
+
+```sh
+GPIOZERO_PIN_FACTORY=pigpio PIGPIO_ADDR=raspberrypi.local python3 led.py
+```
+
+<Normal />

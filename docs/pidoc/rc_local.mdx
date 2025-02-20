@@ -1,0 +1,66 @@
+---
+draft: false
+sidebar_position: 3
+title: 开机启动脚本
+description: 使用rc.local设置开机启动脚本，在所有服务运行后执行自定义操作
+keywords: [树莓派, rc.local, PiDoc, 开机启动]
+---
+import Normal from "../_normal.mdx";
+
+# rc.local开机启动脚本
+
+树莓派有多种加入自定义开机启动的方式。其中的开机启动脚本`/etc/rc.local`是一个比较常用的措施，它是其它服务运行之后的最后一个脚本。
+
+## 使用方法
+
+使用nano编辑内容，运行`sudo nano /etc/rc.local`
+
+```sh
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+// highlight-next-line
+### 在这里添加你的脚本 ###
+
+# 下面一行一定要存在
+exit 0
+```
+
+编辑完成后，保存并退出。
+
+重启服务器，查看脚本是否成功运行。
+
+:::note
+注意：系统在执行这段代码时使用了root用户权限，其环境变量也于树莓派普通用户`pi`不同。如执行脚本错误，请注意检查是否是相关原因产生。
+:::
+
+
+## 故障排除
+
+`/etc/rc.local`脚本的运行依赖 `rc-local` 服务。在默认情况下树莓派已经启用了 `rc-local` 服务。用户无须进行其它操作。如出现问题请按照以下步骤排查。
+
+### 检查rc-local服务是否正常
+
+运行`sudo systemctl status rc-local`，查看服务状态。此命令将输出服务的运行状态以及部分日志。
+
+### 检查服务的更多日志
+
+运行`sudo journalctl -u rc-local`，查看服务的更多日志。
+
+<Normal />

@@ -1,0 +1,151 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+
+.h1_header {
+  color: #cd2355 !important;
+  font-size: 4rem;
+  margin-bottom: 1.2rem;
+}
+
+
+.os_bg {
+  background-image: url('/static/img/downloads/rpi_os_bg.svg');
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+  background-size: 130% auto;
+  padding-bottom: 3rem;
+  padding-top: 65vw;
+}
+
+@media only screen and (min-width: 768px) {
+  .os_bg {
+    align-items: flex-start;
+    background-position: 100%;
+    background-size: 62% auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 0;
+    padding-top: 0;
+  }
+}
+
+@media only screen and (min-width: 870px) {
+  .os_bg {
+    background-size: auto 80%;
+  }
+}
+
+@media only screen and (min-width: 1050px) {
+  .os_bg {
+    background-size: auto 100%;
+  }
+}
+
+
+.os_content {
+  width: 50%
+}
+
+.all_header {
+  margin-bottom: 3.2rem;
+}
+
+.all_content {
+  font-size: 1.3rem;
+}
+
+.header_content {
+  font-size: 1.5rem;
+}
+
+.gray_bg {
+  background-color: #F0F8FF;
+}
+
+.imager_termial_download {
+  font-size: 1.2rem;
+  width: 80%;
+  padding: 20px;
+  background-color: white;
+}
+
+.imager_terminal_cmdbg {
+  background-color: gray;
+}
+
+.inner_url_box {
+  background-color: #F0F8FF;
+  text-align: left;
+  max-width: 350px;
+}
+
+.normal_text {
+  font-size: 1.1rem;
+}
+
+.compatibilities_btn {
+  background-color: #004881;
+  border-radius: .5rem;
+  color: #fff;
+  padding: .25rem .4rem;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 1.3rem;
+}
+
+.compatibilities_li {
+  display: inline-block;
+  list-style-type: none;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.small_hero {
+  padding: 4rem 8rem;
+}
+
+.short_hero {
+  padding: 1rem 1rem;
+}
+
+.info_li {
+  list-style: none;
+}
+
+.info_ul {
+  padding: 0;
+}
+
+.red_line {
+  background-color: #cd2355;
+  border-width: 0;
+  height: 2px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 130rem;
+}
+
+.sh256link {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.sha256span {
+  display: block;
+  width: 75%;
+  word-wrap: break-word;
+  background-color: #f5f6f9;
+  border: 1px solid #ccc;
+  border-radius: .5rem;
+  display: none;
+  margin-bottom: .8rem;
+  margin-top: .8rem;
+  margin-block: .8rem;
+  overflow-wrap: anywhere;
+  padding: .8rem;
+
+}

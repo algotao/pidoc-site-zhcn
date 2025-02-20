@@ -1,0 +1,1534 @@
+---
+sidebar_position: 7
+draft: false
+title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等(官网24年12月)
+description: 树莓派远程访问。通过ssh远程访问，配置免密ssh登录。使用scp安全复制文件。使用rsync同步文件。使用nfs及samba等服务提供网上文件共享。使用VNC服务远程访问桌面。使用apache设立web服务。
+keywords: [树莓派, Raspberry Pi, 远程控制, 远程访问, VNC, NFS, SSH, Apache, 网络启动]
+last_update: 
+  date: 2024-12-21
+---
+import Normal from "../_normal.mdx";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# 远程访问
+
+## 远程访问简介
+有时，您需要在不连接显示器、键盘和鼠标的情况下访问 Raspberry Pi。也许 Raspberry Pi 嵌入了机器人或安装在不方便的位置。或者您没有备用显示器。
+
+### 通过本地网络远程控制
+
+要从本地网络上的其他设备远程控制 Raspberry Pi，请使用以下服务之一：
+
+- [SSH](#使用-ssh-访问远程终端)
+- [VNC](#使用-vnc-共享屏幕)
+- [Raspberry Pi Connect](#使用-raspberry-pi-connect-远程访问)
+
+SSH (**S**ecure **SH**ell)可安全访问 Raspberry Pi 上的终端会话。VNC（**V**irtual **N**etwork **C**omputing ）可让您安全地访问 Raspberry Pi 上的桌面屏幕共享。您只需要另一台电脑、本地网络和 Raspberry Pi 的本地 [IP地址](https://en.wikipedia.org/wiki/IP_address)。Raspberry Pi Connect 可以安全地共享 Raspberry Pi 的屏幕，无需确定本地 IP 地址。
+
+### 通过本地网络在设备间共享文件
+
+通过 [NFS](#网络文件系统nfs)（网络文件系统）、[SCP](#使用-scp-共享文件)（安全复制协议）、[Samba](#在树莓派上安装-samba) 和 [`rsync`](#使用-rsync-在计算机之间同步文件夹)等服务，你可以在本地网络的设备间共享文件，而无需直接控制远程设备。当你需要从另一台设备访问存储在一台设备上的数据时，这些服务会非常有用。
+
+### 通过互联网远程控制
+
+要从任何连接到互联网的设备上远程控制 Raspberry Pi，你可以
+
+- 通过开放的互联网、VPN 或使用外部服务（如 RealVNC 的云 [VNC Viewer](https://www.realvnc.com/download/viewer/)）在 Raspberry Pi 上显示 [SSH](#使用-ssh-访问远程终端)或 vnc[VNC](#使用-vnc-共享屏幕)。
+- 使用由 Raspberry Pi 提供的免费屏幕共享及远程SSH服务 [Raspberry Pi Connect](#使用-raspberry-pi-connect-远程访问)。
+
+## 如何查找IP地址
+
+从另一台机器连接到 Raspberry Pi 的大多数方法都要求您知道 Raspberry Pi 的本地 IP 地址。
+
+任何连接到局域网的设备都会被分配一个 IP 地址。为了使用 [SSH](#使用-ssh-访问远程终端) 或 [VNC](#使用-vnc-共享屏幕) 从另一台机器连接到 Raspberry Pi，你需要知道 Raspberry Pi 的 IP 地址。如果连接了显示器，这就很容易了，而且有很多方法可以从网络上的另一台机器远程找到它。
+
+要找到 Raspberry Pi 的本地 IP 地址，请使用以下方法之一。
+
+### 桌面
+将鼠标悬停在系统托盘中的网络图标上，会出现一个工具提示。该工具提示会显示当前连接的网络名称和 IP 地址。
+
+<img src="/img/computers/remote-access/network-tooltip.png" alt="显示 WiFi 网络名称和 IP 地址的网络管理器工具提示" />
+
+### 命令行
+运行以下命令将你的 IP 地址输出到命令行：
+```sh
+hostname -I
+```
+
+### 启动输出
+如果您在树莓派上使用显示器，并启动到命令行而不是桌面，启动顺序将包括您的 IP 地址，作为登录提示前的最后几条输出信息之一。
+
+### 网络管理器
+您可以使用内置的网络管理器 CLI (nmcli) 访问网络的详细信息。运行以下命令
+```sh
+nmcli device show
+```
+您应该会看到与下面类似的输出：
+
+```
+GENERAL.DEVICE:                         wlan0
+GENERAL.TYPE:                           wifi
+GENERAL.HWADDR:                         D0:3B:FF:41:AB:8A
+GENERAL.MTU:                            1500
+GENERAL.STATE:                          100 (connected)
+GENERAL.CONNECTION:                     exampleNetworkName
+GENERAL.CON-PATH:                       /org/freedesktop/NetworkManager/ActiveConnection/2
+IP4.ADDRESS[1]:                         192.168.1.42/24
+IP4.GATEWAY:                            192.168.1.1
+IP4.ROUTE[1]:                           dst = 192.168.1.0/24, nh = 0.0.0.0, mt = 600
+IP4.ROUTE[2]:                           dst = 0.0.0.0/0, nh = 192.168.1.1, mt = 600
+IP4.DNS[1]:                             192.168.1.3
+IP6.ADDRESS[1]:                         ab80::11ab:b1fc:bb7e:a8a5/64
+IP6.GATEWAY:                            --
+IP6.ROUTE[1]:                           dst = ab80::/64, nh = ::, mt = 1024
+
+GENERAL.DEVICE:                         lo
+GENERAL.TYPE:                           loopback
+GENERAL.HWADDR:                         00:00:00:00:00:00
+GENERAL.MTU:                            65536
+GENERAL.STATE:                          100 (connected (externally))
+GENERAL.CONNECTION:                     lo
+GENERAL.CON-PATH:                       /org/freedesktop/NetworkManager/ActiveConnection/1
+IP4.ADDRESS[1]:                         127.0.0.1/8
+IP4.GATEWAY:                            --
+IP6.ADDRESS[1]:                         ::1/128
+IP6.GATEWAY:                            --
+
+GENERAL.DEVICE:                         p2p-dev-wlan0
+GENERAL.TYPE:                           wifi-p2p
+GENERAL.HWADDR:                         (unknown)
+GENERAL.MTU:                            0
+GENERAL.STATE:                          30 (disconnected)
+GENERAL.CONNECTION:                     --
+GENERAL.CON-PATH:                       --
+
+GENERAL.DEVICE:                         eth0
+GENERAL.TYPE:                           ethernet
+GENERAL.HWADDR:                         D0:3B:FF:41:AB:89
+GENERAL.MTU:                            1500
+GENERAL.STATE:                          20 (unavailable)
+GENERAL.CONNECTION:                     --
+GENERAL.CON-PATH:                       --
+WIRED-PROPERTIES.CARRIER:               off
+IP4.GATEWAY:                            --
+IP6.GATEWAY:                            --
+```
+
+此命令将输出树莓派上可访问的各种网络接口的信息。查看 `GENERAL.TYPE` 行，了解每个块描述的网络接口类型。例如，"ethernet" 指的是设备上的以太网端口，而 "wifi" 指的是某些设备内置的 Wi-Fi 芯片。您可以根据设备访问互联网的方式，查看不同的输出块来查找 IP 地址：
+- 如果设备使用 Wi-Fi 连接互联网，请查看 "wifi" 块
+- 如果设备使用以太网端口连接互联网，请检查 "ethernet" 块
+
+确定了正确的网络接口块后，请查找名为 `IP4.ADDRESS[1]` 的字段以获取 IPv4 地址，或查找 `IP6.ADDRESS[1]` 以获取 IPv6 地址。您可以忽略这些字段中的斜线和数字（如 `/24`）。
+
+在上例中，树莓派使用 Wi-Fi 上网。检查 `GENERAL.TYPE` 字段为 "wifi "的区块，即可找到 IP 地址。在这种情况下，可以使用 `IP4.ADDRESS[1]` 字段中的 IPv4 地址访问该设备：`192.168.1.42`。
+
+### 使用mDNS解析raspberrypi.local
+在树莓派OS上，Avahi 服务开箱即支持多播 DNS。
+
+如果您的设备支持 mDNS，您就可以使用树莓派的主机名和 `.local `后缀来访问它。新安装的树莓派 OS的默认主机名是 `raspberrypi`，因此默认情况下，任何运行 树莓派OS的树莓派都会响应以下命令：
+```sh
+ping raspberrypi.local
+```
+如果可以连接到 树莓派，`ping` 会显示其 IP 地址：
+```
+PING raspberrypi.local (192.168.1.131): 56 data bytes
+64 bytes from 192.168.1.131: icmp_seq=0 ttl=255 time=2.618 ms
+```
+
+如果更改树莓派的系统主机名（例如编辑 `/etc/hostname`），Avahi 也会更改 `.local` mDNS 地址。
+
+如果不记得树莓派的主机名，但系统安装了 Avahi，则可以使用 [avahi-browse](https://linux.die.net/man/1/avahi-browse) 命令浏览局域网上的所有主机和服务。
+
+### 路由器设备列表
+在网络浏览器中，导航到路由器的 IP 地址。这个地址通常是 `http://192.168.1.1`，但你也可以在路由器的标签上找到它。这将带你进入一个控制面板。然后使用你的凭据登录，凭据通常也印在路由器上或随附的文件中。浏览已连接设备或类似设备的列表（所有路由器都不一样），你应该能看到一些你认识的设备。有些设备会被检测为个人电脑、平板电脑、手机、打印机等，所以你应该认出其中一些并排除它们，以确定哪个是你的树莓派。还要注意连接类型；如果你的树莓派是用线缆连接的，可供选择的设备应该会少一些。
+
+### nmap命令
+`nmap` 命令（网络映射器）是用于网络发现的免费开源工具，适用于 Linux、macOS 和 Windows。
+- 要在 **Linux** 上安装，请安装 `nmap` 软件包，例如 `apt install nmap`。
+- 要在 **macOS** 或 **Windows** 上安装，请参阅 [nmap.org 下载页面](http://nmap.org/download.html)。
+
+要使用 `nmap` 扫描网络上的设备，你需要知道所连接的子网。首先找到你自己的 IP 地址，换句话说，就是你用来查找树莓派IP地址的电脑的IP地址：
+- 在 **Linux** 上，在终端窗口中输入 `hostname -I`
+- 在 **MacOS** 上，进入 "`系统偏好设置`"，然后进入 "`网络`"，选择活动网络连接，查看 IP 地址
+- 在 **Windows** 上，进入控制面板，然后在`网络和共享中心`下单击 "`查看网络连接`"，选择活动网络连接并单击 "`查看此连接的状态` "以查看 IP 地址
+
+有了电脑的 IP 地址后，就可以扫描整个子网，查找其他设备了。例如，如果您的 IP 地址是 `192.168.1.5`，其他设备将使用 `192.168.1.2`、`192.168.1.6`、`192.168.1.20` 等地址。该子网范围的符号是 `192.168.1.0/24`（包括 `192.168.1.0` 至 `192.168.1.255`）。
+
+现在在整个子网范围内使用带有 `-sn` 标志的 `nmap` 命令（ping 扫描）。这可能需要几秒钟：
+
+```sh
+nmap -sn 192.168.1.0/24
+```
+
+Ping 扫描只是 ping 所有 IP 地址，看它们是否响应。对于每个响应 ping 的设备，输出都会显示主机名和 IP 地址，如下所示：
+
+```
+Starting Nmap 6.40 ( http://nmap.org ) at 2014-03-10 12:46 GMT
+Nmap scan report for hpprinter (192.168.1.2)
+Host is up (0.00044s latency).
+Nmap scan report for Gordons-MBP (192.168.1.4)
+Host is up (0.0010s latency).
+Nmap scan report for ubuntu (192.168.1.5)
+Host is up (0.0010s latency).
+Nmap scan report for raspberrypi (192.168.1.8)
+Host is up (0.0030s latency).
+Nmap done: 256 IP addresses (4 hosts up) scanned in 2.41 seconds
+```
+
+在这里，你可以看到一个主机名为 `raspberrypi` 的设备，其 IP 地址为 `192.168.1.8`。注意，要查看主机名，必须以 root 身份运行 nmap，在命令前加上 `sudo`。
+
+### 使用智能手机获取树莓派的IP地址
+Fing 应用程序是一款免费的智能手机网络扫描程序。它适用于 [Android](https://play.google.com/store/apps/details?id=com.overlook.android.fing) 和 [iOS](https://itunes.apple.com/gb/app/fing-network-scanner/id430921107?mt=8)。
+
+您的手机和树莓派必须在同一个网络上，因此请将手机连接到正确的无线网络。
+
+打开 Fing 应用程序后，轻触屏幕右上角的刷新按钮。几秒钟后，你会看到一个列表，其中列出了所有连接到你网络的设备。向下滚动到制造商为 "树莓派" 的条目。你会在左下角看到 IP 地址，在右下角看到 MAC 地址。
+
+## 使用 SSH 访问远程终端
+
+你可以使用 **S**ecure **SH**ell (SSH) 协议从同一网络的另一台计算机远程访问 Raspberry Pi 的终端。
+
+### 启用 SSH 服务器
+
+默认情况下，Raspberry Pi OS 禁用 SSH 服务器。请通过以下方式之一启用 SSH：
+
+<Tabs>
+<TabItem value="桌面操作" label="桌面操作">
+
+1. 从 **首选项** 菜单，启动 **Raspberry Pi 配置**。
+2. 导航至 **接口** 选项卡。
+3. 选择 **SSH** 旁边的 **启用**。
+4. 单击 **好**。
+
+</TabItem>
+<TabItem value="烧录新系统" label="烧录新系统">
+
+在全新安装的 Raspberry Pi OS 上配置 SSH：
+
+1. 按照 [Install with Imager](./getting-started.mdx#使用imager工具安装) 指南中的说明操作。
+2. 在**操作系统自定义**步骤中，导航至**服务**选项卡。
+3. 勾选**启用 SSH**复选框。
+4. 选择**密码验证**，使用与实际使用 Raspberry Pi 时相同的用户名和密码登录。选择 **Allow public-key authentication only** 以 [配置 SSH 密钥](#手动配置-ssh-密钥)进行无密码登录。
+
+</TabItem>
+<TabItem value="终端操作" label="终端操作">
+
+1. 在终端窗口输入 `sudo raspi-config`。
+2. 选择 `Interfacing Options·（连接选项）。
+3. 导航至并选择 `SSH`。
+4. 选择 `YES`。
+5. 选择 `OK`。
+6. 选择 `Finish`。
+
+</TabItem>
+<TabItem value="手动" label="手动">
+
+1. 在启动分区中创建名为 `ssh` 的空文件：
+
+</TabItem>
+</Tabs>
+
+```sh
+sudo touch /boot/firmware/ssh
+```
+
+- 重新启动机器：
+```sh
+sudo reboot
+```
+
+### 连接到 SSH 服务器
+
+在电脑上打开一个终端窗口，输入以下命令，用 [你尝试连接的 Raspberry Pi 的 IP 地址](#如何查找ip地址) 替换 `<ip address>` 占位符，用你的用户名替换 `<username>` ：
+
+```sh
+ssh <username>@<ip address>
+```
+
+连接成功后，你会看到一个安全警告。输入 "YES" 继续。只有在第一次连接时才会看到此警告。
+
+根据提示输入账户密码。
+
+现在你应该看到 Raspberry Pi 命令提示符：
+
+```sh
+<username>@<hostname> ~ $
+```
+
+您现在已经远程连接到 Raspberry Pi，可以执行命令。
+
+:::tip[注意]
+如果收到 "连接超时" 错误，可能是输入了错误的 Raspberry Pi IP 地址。请检查 [Raspberry Pi 的 IP 地址](#如何查找ip地址)。
+:::
+
+#### 通过 SSH 转发 X11
+
+:::tip[注意]
+在 Raspberry Pi 4 和 5 上，Raspberry Pi OS Bookworm 默认使用 Wayland 窗口服务器。只有使用 X 窗口服务器才能转发 X11。要启用 X11 窗口转发，请在 Raspberry Pi 配置中将桌面切换到 X 窗口服务器。
+:::
+
+:::tip[注意]
+许多桌面环境不再默认安装 X11。请安装第三方 X 服务器，如 [XQuartz](https://www.xquartz.org/)，以使用 X11 转发。
+:::
+
+X11 可通过 SSH 实现图形应用程序。通过 `-Y` 标志可在 SSH 上转发 X 会话：
+
+```sh
+ssh -Y <username>@<ip address>
+```
+
+通过身份验证后，你将像往常一样看到命令行。不过，你也可以打开 X 服务器为你呈现的图形窗口。例如，键入以下命令启动 [Geany](https://www.geany.org/) 窗口：
+
+```sh
+Geany &
+```
+
+### 配置无密码登录 SSH
+
+要远程访问 Raspberry Pi 而无需在每次连接时提供密码，请使用 SSH 密钥对。
+
+#### 使用 Raspberry Pi Imager 预先配置操作系统映像
+
+使用 Raspberry Pi Imager 配置启动映像时，可以预先配置 SSH 密钥。你可以生成新的 SSH 密钥对或现有的 SSH 密钥。
+
+- 按照 [使用 Imager 安装](./getting-started.mdx#使用imager工具安装) 指南配置启动映像。
+- 在 **OS Customisation** 步骤中，导航至 **Services** 选项卡并勾选 **Enable SSH** 复选框。
+- 选择 **Allow public-key authentication only** 单选按钮。如果你已经在 `~/.ssh/id_rsa.pub` 中存储了 SSH 公钥，Imager 会自动使用该公钥预填文本框。如果 Imager 没有找到 SSH 公钥，你可以点击 **RUN SSH-KEYGEN** 按钮来生成新的密钥对。
+
+#### 手动配置 SSH 密钥
+
+如果已经安装了 Raspberry Pi OS，可以更新现有配置以使用 SSH 密钥验证。
+
+#### 检查现有的 SSH 公钥
+
+要检查用于远程连接 Raspberry Pi 的计算机上是否存在 SSH 公钥，请运行以下命令：
+
+```sh
+ls ~/.ssh
+```
+
+如果你看到名为 `id_ed25519.pub`、`id_rsa.pub` 或 `id_dsa.pub` 的文件，说明你已经拥有 SSH 密钥。跳过 SSH 密钥对生成，继续 [将 SSH 密钥添加到 SSH Identity 列表中](#将-ssh-密钥添加到-ssh-身份列表中)。
+
+#### 生成新的 SSH 密钥对
+
+:::tip
+本指南提供了生成新 RSA 密钥的说明。为提高安全性，你可以生成 [Ed25519](http://ed25519.cr.yp.to/) 密钥。向 `ssh-keygen` 传递 `-t ed25519` 并在引用公钥和私钥文件名时用 `ed25519` 替换 `rsa` 以使用 Ed25519 密钥。
+:::
+
+要生成新的 SSH 密钥对，请输入以下命令：
+
+```sh
+ssh-keygen
+```
+
+当被问及保存密钥的位置时，按 **Enter** 使用默认位置 `~/.ssh/id_rsa`。
+
+当要求输入可选的关键字时，按 **Enter** 键不输入关键字。
+
+运行以下命令检查 `.ssh` 目录的内容：
+
+```sh
+ls ~/.ssh
+```
+
+您应该可以看到文件 `id_rsa` 和 `id_rsa.pub`：
+
+```sh
+authorized_keys id_rsa id_rsa.pub known_hosts
+```
+
+`id_rsa` 文件包含你的私人密钥。请将其妥善保存在用于远程连接 Raspberry Pi 的计算机上。
+
+`id_rsa.pub` 文件包含您的公钥。您将与 Raspberry Pi 共享此密钥。当你远程连接 Raspberry Pi 时，它会使用此密钥验证你的身份。
+
+#### 将 SSH 密钥添加到 SSH 身份列表中
+
+启动 SSH 代理：
+
+```sh
+eval "$(ssh-agent -s)"
+```
+
+接下来，使用以下命令将您的密钥身份添加到 `ssh-agent` 中：
+
+```sh
+ssh-add ~/.ssh/id_rsa
+```
+
+#### 复制公钥到 Raspberry Pi
+
+在用于远程连接 Raspberry Pi 的计算机上，使用以下命令将公钥安全地复制到 Raspberry Pi 上：
+
+```sh
+ssh-copy-id <username>@<ip address>
+```
+
+出现提示时，输入 Raspberry Pi 用户账户的密码。
+现在，您无需输入密码即可连接到 Raspberry Pi。
+
+#### 手动复制公钥到 Raspberry Pi
+
+如果你的操作系统不支持 `ssh-copy-id`，你可以使用 [`scp`](#使用-scp-共享文件) 复制公钥。
+
+首先，_在你的 Raspberry Pi_上，创建 Linux 希望找到密钥的目录： 
+
+```sh
+mkdir .ssh
+```
+
+然后，为`.ssh`目录配置适当的权限：
+
+```sh
+chmod 700 .ssh
+```
+
+在您常用的计算机上_，使用 `scp` 将您的公钥复制到 Raspberry Pi 上名为 `.ssh/authorized_keys` 的文件中：
+
+```sh
+scp .ssh/id_rsa.pub <username>@<ip address>:.ssh/authorized_keys
+```
+
+:::tip
+上述命令假定您从未授权任何密钥访问 Raspberry Pi。如果以前至少添加过一个密钥，则应在 `authorized_keys` 文件末尾添加包含公钥的新行，以保留现有密钥。
+:::
+
+出现提示时，输入 Raspberry Pi 上用户账户的密码。
+
+然后，_在你的 Raspberry Pi_上，配置 `authorized_keys` 文件的权限：
+
+```sh
+chmod 644 .ssh/authorized_keys
+```
+
+现在无需输入密码即可连接到 Raspberry Pi。
+
+## 使用 VNC 共享屏幕
+
+有时，使用设备工作并不方便。虚拟网络计算（VNC）允许你从另一个设备控制一个设备的桌面。
+
+VNC 依赖于客户端和服务器。客户端运行在您可以进行物理交互的设备上，例如个人笔记本电脑、台式机、平板电脑或手机。服务器运行在 Raspberry Pi 上。
+使用 VNC 时，客户端向服务器发送键盘和鼠标事件。服务器在 Raspberry Pi 上执行这些事件，并向客户端返回屏幕更新。
+
+VNC 客户端会在一个窗口中显示 Raspberry Pi 的桌面。你可以与桌面进行交互，就像在 Raspberry Pi 上工作一样。
+
+Raspberry Pi OS 包含 [wayvnc](https://github.com/any1/wayvnc)。它提供了一个 VNC 服务器，你可以在设备偏好设置中启用它。
+
+在 Raspberry Pi 上使用 VNC 之前，必须先启用 VNC 服务器。
+
+### 启用 VNC 服务器
+
+Raspberry Pi OS 支持以图形方式和命令行方式启用 VNC 服务器。
+
+:::tip
+启用后，你可以在 `/etc/wayvnc/`访问你的 WayVNC 配置。
+:::
+
+#### 以图形方式启用 VNC 服务器
+
+1. 启动进入 Raspberry Pi 的图形桌面。
+2. 单击桌面系统托盘中的 Raspberry Pi 图标。
+3. 从菜单中选择 **Preferences** > **Raspberry Pi Configuration**。
+<img src="/img/computers/remote-access/raspberry-pi-configuration.png" alt="从系统托盘的首选项菜单中选择 树莓派 配置" width="80%" />
+
+4. 导航至 **Interfaces** 选项卡。
+5. 点击 *VNC* 旁边的单选按钮，使其处于活动状态。
+<img src="/img/computers/remote-access/vnc-enable.png" alt="树莓派配置" width="80%" />
+
+6. 单击 *OK* 按钮保存配置更改。
+
+#### 在命令行上启用 VNC 服务器
+
+使用 [raspi-config](./configuration.mdx#raspi-config) 在命令行上启用 VNC 服务器。
+
+1. 用以下一行打开 `raspi-config`：
+```sh
+sudo raspi-config
+```
+2. 导航至**Interfaces**。按 `Enter` 键选择。
+3. 选择 **VNC**。按 `Enter`键选择。
+4. 在 **Would you like the VNC Server to be enabled?**（是否启用 VNC 服务器）下，选择 `<Yes>`，然后按 `Enter`。
+5. 按 `Enter`返回菜单。按`Esc`退出 `raspi-config`。
+
+### 连接到 VNC 服务器
+
+要连接到 Raspberry Pi，你需要以下设备：
+
+* 你的 Raspberry Pi 和运行 VNC 客户端的设备连接到同一个网络（例如家庭无线网络或 VPN）
+* Raspberry Pi 的主机名或 IP 地址
+* Raspberry Pi 账户的有效用户名和密码组合
+
+如果不知道设备的 IP 地址，请参阅 [我们关于查找 IP 地址的说明](#如何查找ip地址)。
+
+1. 下载 [TigerVNC](https://tigervnc.org/)。你可以从 [GitHub 仓库的发布页面](https://github.com/TigerVNC/tigervnc/releases) 安装最新版本。点击最新版本的链接，找到适合你平台的二进制文件。Windows 用户应下载 `exe`；macOS 用户应下载 `dmg`；Linux 用户应安装 `jar`。
+2. 在客户端设备上启动 TigerVNC。在 macOS 和 Windows 上，可以双击二进制文件。在 Linux 上，用 `sudo apt install default-jre` 安装 java，然后运行 `java -jar VncViewer-<版本>.jar`，用下载的版本替换`<version>`占位符。
+3. 在 "VNC 服务器 "字段中输入 Raspberry Pi 的 IP 地址。
+<img src="/img/computers/remote-access/vnc-tigervnc-enter-ip.png" alt="在TigerVNC中输入树莓派的本地IP地址" width="60%" />
+
+4. 点击 "选项" 按钮。导航至 "输入" 选项卡。选中 "Show dot when no cursor"（无光标时显示点）旁边的复选框，确保在 TigerVNC 中始终能看到光标。
+<img src="/img/computers/remote-access/vnc-tigervnc-show-dot.png" alt="将光标始终显示为点的TigerVNC选项" width="60%" />
+
+5. 点击 "连接" 按钮，启动与服务器的连接。
+  * 如果 TigerVNC 警告你 "主机名与服务器证书不匹配"，请点击 "是 "按钮继续。
+  <img src="/img/computers/remote-access/vnc-tigervnc-cert-warning.png" alt="TigerVNC 关于证书不匹配的警告" width="60%" />
+
+  * 如果 TigerVNC 警告您 "证书由未知机构签署"，请点击 "是 "按钮为您的 Raspberry Pi 申请例外。
+  <img src="/img/computers/remote-access/vnc-tigervnc-cert-signer-warning.png" alt="TigerVNC 警告证书由未知机构签署" width="60%" />
+
+6. 提示输入用户名和密码时，请输入您的凭据。
+<img src="/img/computers/remote-access/vnc-tigervnc-username-password.png" alt="当提示输入用户名和密码时，请输入你的凭证" width="60%" />
+
+7. 点击 "OK" 按钮验证 VNC 服务器。如果凭据正确无误，TigerVNC 将打开一个窗口，其中包含与你在 Raspberry Pi 上的账户相对应的桌面。你应该可以移动鼠标和键盘输入文本并与桌面互动。
+<img src="/img/computers/remote-access/vnc-tigervnc-desktop.png" alt="成功通过 TigerVNC 验证后的 树莓派 桌面" width="60%" />
+
+## 使用 Raspberry Pi Connect 远程访问
+
+您可以使用 Raspberry Pi Connect 从其他设备上的浏览器远程访问 Raspberry Pi。Connect 会自动处理配置，因此您不必查找 Raspberry Pi 的本地 IP 地址、网络的公共 IP 地址，也不必修改本地网络防火墙以启用外部访问。
+
+Connect 包括在运行 Wayland 窗口服务器的 Raspberry Pi 型号上进行屏幕共享的功能，以及在所有 Raspberry Pi 型号上进行远程 shell（终端）访问的功能。
+
+更多信息，请参阅 [Connect 文档](/docs/services/connect.mdx)。
+
+## 使用 SCP 共享文件
+
+安全复制协议（`scp`）通过 SSH 发送文件。您可以使用 `scp` 在 Raspberry Pi 和另一台计算机之间复制文件。
+
+要使用 `scp`，请使用 [查找 Raspberry Pi 的 IP 地址](#如何查找ip地址)。
+
+### 复制文件到你的 Raspberry Pi
+
+要将个人电脑中名为 `myfile.txt` 的文件复制到 Raspberry Pi 上的用户主文件夹，请在包含 `myfile.txt` 的目录中运行以下命令，用登录 Raspberry Pi 的用户名替换 `<username>` 占位符，用 Raspberry Pi 的 IP 地址替换 `<pi_ip_address>`占位符：
+
+```sh
+scp myfile.txt <username>@<pi_ip_address>：
+```
+
+要将文件复制到特定目录，请在 `scp` 命令中的 `:` 后添加目录路径。在运行 `scp` 之前创建文件夹，因为 `scp` 不会自动创建文件夹。例如，以下命令会将名为 `myfile.txt` 的文件复制到用户主文件夹下的 `project/` 目录中：
+
+```sh
+scp myfile.txt <username>@<pi_ip_address>:project/
+```
+
+### 从 Raspberry Pi 复制文件
+
+要从 Raspberry Pi 上用户的主目录复制名为 `myfile.txt` 的文件到另一台计算机的当前目录，请运行以下命令：
+
+```sh
+scp <username>@<pi_ip_address>:myfile.txt .
+```
+
+### 用一条命令复制多个文件
+
+要复制多个文件，请在一条命令中列出文件名，用空格分隔：
+
+```sh
+scp myfile.txt myfile2.txt <username>@<pi_ip_address>：
+```
+
+或者，使用通配符复制与特定过滤器匹配的所有文件。以下命令会复制所有以 `.txt` 结尾的文件：
+
+```sh
+scp *.txt <username>@<pi_ip_address>：
+```
+
+下面的命令复制所有以`m`开头的文件：
+
+```sh
+scp m* <username>@<pi_ip_address>：
+```
+
+以下命令会复制所有以`m`开头、`.txt`结尾的文件：
+
+```sh
+scp m*.txt <username>@<pi_ip_address>：
+```
+
+:::tip
+要复制名称包含空格的文件，请用引号括住文件名：
+
+```sh
+scp "my file.txt" <username>@<pi_ip_address>：
+```
+:::
+
+### 复制文件夹
+
+要复制一个文件夹及其所有内容，请在传递文件夹名称时加上 `-r`（递归）标记：
+
+```sh
+scp -r project/ <username>@<pi_ip_address>：
+```
+
+
+## 使用 rsync 在计算机之间同步文件夹
+
+您可以使用 `rsync` 在计算机之间同步文件夹。例如，你可以使用 `rsync` 将 Raspberry Pi 拍摄的新图片自动传输到个人电脑。
+
+在配置 `rsync` 之前，请确定以下值：
+
+* `<pi_ip_address>`: Raspberry Pi 的本地 IP 地址：请参阅 [查找 Raspberry Pi 的 IP 地址](#如何查找ip地址) 获取更多信息。
+* `<pi_username>`：登录 Raspberry Pi 时使用的用户名
+* `<pi_folder_name>`: 你想从 Raspberry Pi 上复制文件的文件夹名称
+* `<pc_folder_name>`：您想在个人电脑上同步的文件夹名称
+
+要配置 `rsync` 同步文件，请在个人电脑上完成以下步骤，用上述确定的值替换命令中的占位符：
+
+1. 创建要同步到的文件夹：
+```sh
+mkdir <pc_folder_name>
+```
+
+2. 使用 `rsync` 将文件同步到文件夹：
+```sh
+rsync -avz -e ssh <pi_username>@<pi_ip_address>:<pi_folder_name>/ <pc_folder_name>/
+```
+
+该命令会将 Raspberry Pi 上选定文件夹中的所有文件复制到个人电脑上的选定文件夹中。如果多次运行该命令，`rsync` 会跟踪已下载的文件并跳过它们。如果删除或修改 Raspberry Pi 上已同步的文件，`rsync` 会相应地更新个人电脑上的文件。
+
+
+## 网络文件系统（NFS）
+网络文件系统（NFS）允许你与同一网络中的其他计算机或设备共享位于一台联网计算机上的目录。目录所在的计算机称为**服务器**，连接到该服务器的计算机或设备称为客户端。客户端通常会`挂载`共享目录，使其成为自己目录结构的一部分。共享目录是共享资源或网络共享的一个例子。
+
+NFS 是在 Linux/Unix 环境中创建简单 NAS（网络附加存储）的常用方法。
+
+NFS 可能最适用于更永久的网络挂载目录，如 `/home` 目录或定期访问的共享资源。如果你想要一个访客用户可以轻松连接的网络共享，Samba 则更适合。从 Samba 共享中临时挂载和分离的工具在各操作系统中更容易获得。
+
+在部署 NFS 之前，你应该熟悉以下内容：
+- Linux文件和目录权限
+- 挂载和卸载文件系统
+
+### 设置基本NFS服务器
+使用下面的命令安装所需的软件包：
+```sh
+sudo apt install nfs-kernel-server
+```
+为了便于维护，我们将把所有 NFS 导出文件隔离到一个目录中，并使用 `--bind` 选项将真实目录挂载到该目录中。
+
+假设我们要导出 `/home/users` 中的用户主目录。首先创建导出文件系统：
+```sh
+sudo mkdir -p /export/users
+```
+
+:::tip
+如果计划配置 LDAP/NIS 身份验证，请跳过下面的 `chmod` 步骤。
+:::
+
+授予 `/export` 和 `/export/users` 读、写和执行权限 (`777`)，这样就可以在没有 LDAP/NIS 身份验证的情况下从客户端访问 NFS 共享：
+
+```sh
+chmod -R 777 /export
+```
+
+接下来，用以下命令挂载真正的 `users` 目录：
+
+```sh
+sudo mount --bind /home/users /export/users
+```
+为了省去每次重启后重新键入的麻烦，我们在 /etc/fstab 中添加以下一行：
+
+/home/users /export/users none bind 0 0
+有三个配置文件与 NFS 服务器有关：
+
+1. `/etc/default/nfs-kernel-server`
+2. `/etc/default/nfs-common`
+3. `/etc/exports`
+
+目前，`/etc/default/nfs-kernel-server` 中唯一重要的选项是 `NEED_SVCGSSD`。该选项默认设置为 "`no`"，这没有问题，因为我们这次不会激活 NFSv4 安全性。
+
+为了自动映射 ID 名称，客户端和服务器上都必须存在 `/etc/idmapd.conf`，且内容相同，域名正确。此外，该文件的 `Mapping` 部分应包含以下几行：
+```
+[Mapping]
+
+Nobody-User = nobody
+Nobody-Group = nogroup
+```
+但请注意，客户端可能对 Nobody-User 和 Nobody-Group 有不同的要求。例如，在 RedHat 变体上，两者都是 `nfsnobody`。如果不确定，可通过以下命令检查是否存在 `nobody` 和 `nogroup`：
+```sh
+cat /etc/passwd
+cat /etc/group
+```
+这样，服务器和客户端就不需要用户共享相同的 UID/GUID。对于使用基于 LDAP 身份验证的用户，请在客户端的 `idmapd.conf` 中添加以下几行：
+```
+[Translation]
+
+Method = nsswitch
+```
+这将使 `idmapd` 知道查看 `nsswitch.conf`，以确定应在何处查找凭据信息。如果你的 LDAP 身份验证已经正常工作，那么 `nsswitch` 就不需要进一步解释了。
+
+为了将目录导出到本地网络 `192.168.1.0/24`，添加以下两行到 `/etc/exports` 中：
+```
+/export       192.168.1.0/24(rw,fsid=0,insecure,no_subtree_check,async)
+/export/users 192.168.1.0/24(rw,nohide,insecure,no_subtree_check,async)
+```
+
+#### 端口映射锁定（可选）
+NFS 上的文件对网络上的任何人都是开放的。作为一项安全措施，您可以限制指定客户端的访问权限。
+
+在 `/etc/hosts.deny` 中添加以下一行：
+```
+rpcbind mountd nfsd statd lockd rquotad : ALL
+```
+先阻止所有客户端，然后只允许 `/etc/hosts.allow`（添加如下）中的客户端访问服务器。
+
+现在在 `/etc/hosts.allow` 中添加以下一行：
+```
+rpcbind mountd nfsd statd lockd rquotad : <IPv4列表>
+```
+其中 `<IPv4列表>` 是服务器和所有客户端的 IP 地址列表。(这些必须是 IP 地址，因为 `rpcbind` 有限制，它不喜欢主机名）。请注意，如果已经设置了 NIS，可以直接将这些地址添加到同一行。
+
+请确保授权 IP 地址列表中包括 `localhost` 地址（`127.0.0.1`），因为 Ubuntu 最新版本的启动脚本会使用 `rpcinfo` 命令来发现 NFSv3 支持，如果 `localhost` 无法连接，该命令就会被禁用。
+
+最后，要使更改生效，请重启服务：
+```sh
+sudo systemctl restart nfs-kernel-server
+```
+
+### 配置NFS客户端
+现在服务器已经运行，您需要设置客户端来访问服务器。首先，安装所需的软件包：
+```sh
+sudo apt install nfs-common
+```
+在客户端上，我们只需一条命令就能挂载完整的导出树：
+```sh
+mount -t nfs -o proto=tcp,port=2049 <nfs-server-IP>:/ /mnt
+```
+您也可以指定 NFS 服务器主机名，而不是其 IP 地址，但在这种情况下，您需要确保主机名能在客户端解析为 IP。使用 `/etc/hosts` 文件是确保始终能解析的一种有效方法。
+
+请注意，`<nfs-server-IP>:/export` 在 NFSv4 中不是必需的，在 NFSv3 中也是如此。根导出 `:/` 默认为导出，`fsid=0`。
+
+我们还可以使用以下命令挂载已导出的子树
+```sh
+mount -t nfs -o proto=tcp,port=2049 <nfs-server-IP>:/users /home/users
+```
+为确保每次重启时都能挂载，请在 `/etc/fstab` 中添加以下一行：
+```
+<nfs-server-IP>:/ /mnt nfs auto 0 0
+```
+如果挂载后，`/proc/mounts` 中的条目显示为 `<nfs-server-IP>://`（带两个斜线），则可能需要在 `/etc/fstab` 中指定两个斜线，否则 `umount` 可能会抱怨找不到挂载。
+
+#### 端口映射锁定（可选）
+在 `/etc/hosts.deny` 中添加以下一行：
+```
+rpcbind : ALL
+```
+首先封锁所有客户端，然后只允许 `/etc/hosts.allow`（添加于下）中的客户端访问服务器。
+
+现在在 `/etc/hosts.allow` 中添加以下一行：
+```
+rpcbind : <NFS 服务器 IP 地址
+```
+其中 `<NFS 服务器 IP 地址>` 是服务器的 IP 地址。
+
+### 配置复杂的 NFS 服务器
+NFS 用户权限基于用户 ID（UID）。客户端上任何用户的 UID 必须与服务器上的 UID 匹配，用户才有访问权限。典型的方法有
+- 手动同步密码文件
+- 使用 LDAP
+- 使用 DNS
+- 使用 NIS
+
+请注意，在主要用户拥有 root 访问权限的系统中必须小心谨慎：该用户可以更改系统中的 UID，允许自己访问任何人的文件。本页假定管理团队是唯一拥有根权限的群体，而且他们都是可信的。其他任何情况都是更高级的配置，在此不再赘述。
+
+#### 组权限
+用户的文件访问权限由其在客户端而非服务器上的群组成员身份决定。但有一个重要的限制：从客户端到服务器最多只能传递 16 个组，如果用户在客户端上的组超过 16 个，某些文件或目录可能会意外地无法访问。
+
+#### DNS（可选，仅在使用DNS时）
+在 `/etc/hosts` 中添加任何客户端名称和 IP 地址。(服务器的IP已经在这里) 这样即使 DNS 出现故障，NFS 也能正常工作。或者，你也可以依赖 DNS - 这取决于你。
+
+#### NIS（可选，仅在使用NIS的情况下）
+这适用于使用 NIS 的客户端。否则就不能使用 netgroups，而应在 `/etc/exports` 中指定单个 IP 或主机名。更多信息请阅读 `man netgroup` 中的 BUGS 部分。
+
+首先，编辑 `/etc/netgroup`，添加一行对客户端进行分类（这一步不是必须的，只是为了方便）：
+```
+myclients (client1,,) (client2,,) ...
+```
+其中，`myclients` 是网络组名称。
+
+接下来运行此命令重建 NIS 数据库：
+```sh
+sudo make -C /var/yp
+```
+文件名 `yp` 指的是黄页，即 NIS 的前身。
+
+#### 端口映射锁定（可选）
+在 `/etc/hosts.deny` 中添加以下一行：
+```
+rpcbind mountd nfsd statd lockd rquotad : ALL
+```
+首先禁止所有客户端，然后只允许 `/etc/hosts.allow`（添加于下）中的客户端访问服务器。
+
+请考虑在 `/etc/hosts.allow` 中添加以下一行：
+```
+rpcbind mountd nfsd statd lockd rquotad : <IP列表>。
+```
+其中 `<IP列表>` 是服务器和所有客户端的 IP 地址列表。由于 `rpcbind` 的限制，这些必须是 IP 地址。需要注意的是，如果已经设置了 NIS，可以直接将这些地址添加到同一行。
+
+#### 软件包安装和配置
+安装必要的软件包：
+```sh
+sudo apt install rpcbind nfs-kernel-server
+```
+编辑 `/etc/exports` 并添加共享：
+```sh
+/home @myclients(rw,sync,no_subtree_check)
+/usr/local @myclients(rw,sync,no_subtree_check)
+```
+上面的示例将 `/home` 和 `/usr/local` 共享给 `myclients` 网络组中的所有客户端。
+```sh
+/home 192.168.0.10(rw,sync,no_subtree_check) 192.168.0.11(rw,sync,no_subtree_check)
+/usr/local 192.168.0.10(rw,sync,no_subtree_check) 192.168.0.11(rw,sync,no_subtree_check)
+```
+上面的示例将 `/home` 和 `/usr/local` 共享给两个使用静态 IP 地址的客户端。如果你想允许访问专用网络中指定 IP 地址范围内的所有客户端，可以考虑以下方法：
+```sh
+/home 192.168.0.0/255.255.255.0(rw,sync,no_subtree_check)
+/usr/local 192.168.0.0/255.255.255.0(rw,sync,no_subtree_check)
+no_subtree_check)
+```
+在这里，`rw` 使共享成为可读/可写的，而 `sync` 则要求服务器只在任何更改刷新到磁盘后才回复请求。这是最安全的选项；`async` 更快，但很危险。如果考虑其他选项，强烈建议阅读 `man exports`。
+
+设置完 `/etc/exports` 后，导出共享：
+```sh
+sudo exportfs -ra
+```
+每当修改 `/etc/exports` 时，都要运行该命令。
+
+#### 重启服务
+
+重新启动 `rpcbind` 和 NFS 使更改生效：
+```sh
+sudo systemctl restart rpcbind
+sudo systemctl restart nfs-kernel-server
+```
+
+#### 需要考虑的安全事项
+除了上面讨论的 UID 问题外，应该注意的是，攻击者有可能伪装成允许映射共享的机器，这样他们就可以创建任意 UID 来访问你的文件。一个潜在的解决方案是 IPSec。您可以将所有域成员设置为只能通过 IPSec 进行对话，这样就能有效验证您的客户端的身份。
+
+IPSec 的工作原理是用服务器的公开密钥加密发送到服务器的流量，服务器再用客户端的公开密钥加密发送所有回复。通信是用各自的私钥解密的。如果客户端没有它应该拥有的密钥，就无法发送或接收数据。
+
+IPSec 的另一个替代方案是物理隔离网络。这需要单独的网络交换机和单独的以太网卡，以及网络的物理安全。
+
+### 故障排除
+只有在成功登录且主目录解密后，挂载加密主目录内的 NFS 共享才会起作用。这意味着使用 /etc/fstab 在启动时挂载 NFS 共享将不起作用，因为在挂载时主目录尚未解密。有一种使用符号链接的简单方法可以解决这个问题：
+
+创建一个替代目录来加载 NFS 共享：
+```sh
+sudo mkdir /nfs
+sudo mkdir /nfs/music
+```
+编辑`/etc/fstab`，将 NFS 共享挂载到该目录中：
+```
+nfsServer:music /nfs/music nfs auto 0 0
+```
+在主目录中创建一个符号链接，指向实际的挂载位置。例如，在本例中，首先删除已存在的 `Music` 目录：
+```sh
+rmdir /home/user/Music
+ln -s /nfs/music/ /home/user/Music
+```
+
+## Samba（SMB/CIFS）
+
+Samba 是对 [Server Message Block](https://en.wikipedia.org/wiki/Server_Message_Block) (SMB) 网络协议的免费软件重新实现。通过 Samba，您可以在 Windows、macOS 和 Linux 机器之间共享文件夹。
+
+### 在树莓派上安装 Samba
+
+默认情况下，Raspberry Pi OS 不包含 Samba。要在 Raspberry Pi 上安装 Samba，请运行以下命令，它将安装运行 Samba 服务器或客户端所需的所有依赖项：
+
+```sh
+sudo apt update
+sudo apt install samba samba-common-bin smbclient cifs-utils
+```
+
+### 挂载从Windows共享的文件夹
+首先，你需要在 Windows 设备上共享一个文件夹。
+
+#### 打开共享
+1. 在系统托盘上单击右键并从菜单串选择 **网络和共享中心**
+2. 选择**更改高级共享设置**
+3. 选择**打开网络发现**
+4. 选择**打开文件和打印机共享**
+5. 点击**保存**，以保存你的更改
+
+#### 共享文件夹
+请按照以下步骤从 Windows 共享文件夹：
+
+1. 右键单击要共享的文件夹，然后选择 **属性**。
+2. 选择 **共享** 选项卡。
+3. 单击 **高级共享** 按钮。
+4. 选择 **共享此文件夹**；默认情况下，Windows 使用文件夹名称作为共享名称。
+5. 单击 **权限** 按钮。
+6. 配置 **每个人** 和 **完全控制** 权限。
+7. 单击 **OK** 按钮离开 **权限** 页面。
+8. 再次单击 **OK** 按钮离开 **高级共享** 页面。
+9. 选择 **安全性** 选项卡。
+10. 配置 **每个人** 和 **完全控制** 权限。
+11. 单击 **OK** 按钮。
+
+文件夹现在应该可以共享了。您可以通过更改 **权限** 和 **安全** 页面上的权限来修改共享文件夹的权限。
+
+#### Windows10共享向导
+在 Windows 10 中，共享向导可帮助完成其中一些步骤。
+
+1. 从开始栏运行 **计算机管理** 应用程序
+2. 选择 "**共享文件夹**" -> "**共享**"
+3. 右键单击并选择 **新建共享**，这将启动共享向导；
+4. 单击 **下一步**
+5. 单击 **下一步** 使用共享默认值，或选择 **自定义** 并设置所需的权限。
+6. 单击 **OK** 按钮。
+7. 单击 **Finish** 按钮共享文件夹。
+
+#### 在树莓派上挂载文件夹
+在 Linux 中，**挂载**是将文件夹附加到某个位置的过程，因此我们首先需要该位置。
+```sh
+mkdir windowshare
+```
+现在，我们需要将远程文件夹挂载到该位置。远程文件夹是 Windows PC 的主机名或 IP 地址，以及共享时使用的共享名称。我们还需要提供用于访问远程计算机的 Windows 用户名。不要忘记用您的 Raspberry Pi OS 用户名替换`<username>`占位符。
+```sh
+sudo mount.cifs //<hostname or IP address>/<shared windows folder> /home/<username>/windowshare -o user=<name>
+```
+现在您应该可以在树莓派上查看 Windows 共享的内容了。
+```sh
+ls windowshare/
+```
+
+#### "Host is down"错误
+
+当 SMB 协议版本不匹配，Linux Samba 客户端返回误导性错误信息时，就会发生此错误。默认情况下，Raspberry Pi OS 使用 2.1 及以上版本，与 Windows 7 及更高版本兼容。包括某些 NAS 在内的旧设备可能需要 1.0 版本。要修复此错误，请在挂载命令中添加一个版本条目（如 `,vers=1.0` ）：
+
+```sh
+sudo mount.cifs //IP/share /mnt/point -o user=<uname>,vers=1.0
+```
+您可能需要尝试不同的版本，以便与服务器版本相匹配。可能的值有
+| 版本 | 描述 |
+| -- | -- |
+| 1.0 | 经典 CIFS/SMBv1 协议 |
+| 2.0 | SMBv2.002 协议。Windows Vista Service Pack 1 和 Windows Server 2008 |
+| 2.1 | SMBv2.1 协议。Windows 7 和 Windows Server 2008R2 |
+| 3.0 |  SMBv3.0 协议。Windows 8 和 Windows Server 2012 |
+| 3.02 |  SMBv3.0.2 协议。Windows 8.1 和 Windows Server 2012R2 |
+| 3.11 | SMBv3.1.1 协议。Windows 10 和 Windows Server 2016 |
+| 3 | SMBv3.0 协议及以上版本 |
+
+### 从树莓派共享文件夹
+首先，创建一个共享文件夹。本例在当前用户的主文件夹中创建了一个名为 shared 的文件夹：
+```sh
+cd ~
+mkdir shared
+chmod 0740 shared
+```
+现在，我们需要告诉 Samba 在访问该文件夹时你的默认用户账户。出现提示时，输入您的密码，将 `<username>` 占位符替换为主用户账户的用户名：
+```sh
+$ sudo smbpasswd -a <username>
+```
+现在，我们需要使用 Samba 配置文件告诉 Samba 共享此文件夹。
+```sh
+sudo nano /etc/samba/smb.conf
+```
+在文件末尾，添加以下内容以共享文件夹，并赋予远程用户读/写权限。用你的树莓派主用户账户的用户名替换 `<username>` 占位符：
+```
+[share]
+    path = /home/<username>/shared
+    read only = no
+    public = yes
+    writable = yes
+```
+在同一文件中，找到 `workgroup` 行，如有必要，将其更改为本地 Windows 网络的工作组名称。
+```
+workgroup = <这里填你的工作组名>
+```
+
+共享文件夹现在应该会出现在网络上的 Windows 或 macOS 设备上。输入 Raspberry Pi 用户名和密码挂载文件夹。
+
+## 设置Apache网络服务器
+Apache 是一种流行的网络服务器应用程序，你可以将它安装到树莓派上，让它为网页提供服务。
+
+Apache本身可以通过HTTP提供HTML文件，使用附加模块还可以使用脚本语言（如PHP）提供动态网页。
+
+### 安装Apache
+首先，在终端中输入以下命令更新可用软件包：
+```sh
+sudo apt update
+```
+然后，使用此命令安装 `apache2` 软件包：
+```sh
+sudo apt install apache2 -y
+```
+
+### 测试网络服务器
+默认情况下，Apache 会在 Web 文件夹中放置一个测试 HTML 文件。当你在树莓派上浏览 `http://localhost/` 或从网络上的另一台电脑浏览 `http://192.168.1.10`（无论树莓派的 IP 地址是什么）时，这个默认网页就会提供服务。要查找树莓派的 IP 地址，请在命令行中键入 `hostname -I`（或阅读有关查找 [IP地址](#如何查找ip地址) 的更多信息）。
+
+在树莓派上或网络上的另一台电脑上浏览默认网页，你应该会看到以下信息：
+
+<img src="/img/computers/remote-access/apache-it-works.png" alt="Apache 成功消息" />
+
+这说明 Apache 已经正常工作！
+
+#### 更改默认网页
+默认网页只是文件系统中的一个 HTML 文件。它位于 `/var/www/html/index.html`。
+
+在终端窗口中导航到该目录，看看里面有什么：
+```sh
+cd /var/www/html
+ls -al
+```
+将显示
+```sh
+total 12
+drwxr-xr-x  2 root root 4096 Jan  8 01:29 .
+drwxr-xr-x 12 root root 4096 Jan  8 01:28 ..
+-rw-r--r--  1 root root  177 Jan  8 01:29 index.html
+```
+这表明默认情况下，在 `/var/www/html/` 中有一个名为 `index.html` 的文件，它归 `root` 用户所有（外层文件夹也是如此）。要编辑该文件，需要将其所有者更改为自己的用户名。使用以下命令更改文件的所有者，将 `<username>` 占位符替换为主用户账户的用户名：
+```sh
+sudo chown <username>: index.html
+```
+现在你可以尝试编辑该文件，然后刷新浏览器，看看网页的变化。如果你懂 HTML，就可以把自己的 HTML 文件和其他资产放到这个目录中，并在本地网络上作为网站提供服务。
+
+### 为Apache安装PHP
+要让 Apache 服务器处理 PHP 文件，需要安装最新版本的 PHP 和 Apache 的 PHP 模块。键入以下命令安装它们：
+```sh
+sudo apt install php libapache2-mod-php -y
+```
+现在删除 `index.html` 文件
+```sh
+sudo rm index.html
+```
+并创建文件 `index.php`
+```sh
+sudo nano index.php
+```
+放入一些 PHP 内容
+```php
+<?php echo "hello world"; ?>
+```
+现在保存并刷新浏览器。你应该会看到 "hello world"。这不是动态的，但仍由 PHP 提供。试试动态的：
+```php
+<?php echo date('Y-m-d H:i:s'); ?>
+```
+或显示 PHP 信息：
+```php
+<?php phpinfo(); ?>
+```
+
+## 通过网络启动你的树莓派
+你可以设置一个 DHCP/TFTP 服务器，让你从网络启动树莓派3或4。
+
+本说明假定你有一个现有的家庭网络，并且你想使用树莓派作为服务器。您还需要另外一台树莓派3或4作为客户端启动。只需要一张 SD 卡，因为客户端将在初始客户端配置后从服务器启动。
+
+:::note[注意]
+由于可用的网络设备和路由器种类繁多，我们不能保证任何设备都能进行网络启动。有报告称，如果无法进行网络启动，禁用网络上的 STP 帧可能会有帮助。
+:::
+
+### 配置网络启动客户端
+#### 树莓派3B
+:::note[注意]
+本节仅适用于树莓派3B，因为树莓派3B+出厂时已启用网络启动。
+:::
+在树莓派3B进行网络启动之前，需要从 SD 卡启动，并配置启用 USB 启动模式的选项。这将在树莓派SoC 的 OTP（一次性可编程）内存中设置一个位，以启用网络启动。设置完成后，树莓派3B将尝试从 USB 启动，如果不能从 SD 卡启动，则从网络启动。
+
+按常规方法在 SD 卡上安装树莓派OS Lite或树莓派OS桌面版。然后，使用以下命令启用 USB 启动模式：
+```sh
+echo program_usb_boot_mode=1 | sudo tee -a /boot/firmware/config.txt
+```
+这将在 [/boot/firmware/config.txt](./config-txt.mdx#什么是configtxt) 的末尾添加 `program_usb_boot_mode=1`。使用 `sudo reboot` 重启树莓派。树莓派客户端重启后，检查 OTP 是否已编程：
+```sh
+vcgencmd otp_dump | grep 17：
+17:3020000a
+```
+确保输出 `0x3020000a` 正确无误。
+
+客户端配置基本完成。最后一步是禁用 USB 启动。运行以下命令
+```sh
+sudo nano /boot/firmware/config.txt
+```
+删除包含 `program_usb_boot_mode=1` 的文本行。最后，用 `sudo poweroff` 关闭客户端树莓派。
+
+#### 树莓派4B
+可以使用 `raspi-config` 工具在树莓派4上启用网络启动。首先，运行 `raspi-config` 如下：
+```sh
+sudo raspi-config
+```
+在 `raspi-config` 中选择 "`高级选项`"，然后选择 "`启动顺序`"，再选择 "`网络启动`"。然后必须重启设备，才能将启动顺序的更改写入引导加载器 EEPROM。重新启动树莓派后，检查启动顺序是否已变为 `0xf21`：
+```sh
+vcgencmd bootloader_config
+```
+有关配置树莓派4 bootloader的更多详情，请参阅[树莓派bootloader配置](./raspberry-pi.mdx#树莓派bootloader配置)。
+
+### 以太网MAC地址
+配置网络启动前，请记下序列号和 MAC 地址，以便 TFTP/DHCP 服务器能识别电路板。
+
+在 Raspberry Pi 4 及以后的旗舰型号上，MAC 地址是在生产时编程的，MAC 地址和序列号之间没有联系。MAC 地址和序列号都显示在引导加载程序 [HDMI 诊断](./raspberry-pi.mdx#启动诊断)屏幕上。
+
+要查找以太网 MAC 地址，请运行以下命令：
+
+```sh
+ethtool -P eth0
+```
+查找序列号，请运行以下命令：
+```sh
+grep Serial /proc/cpuinfo | cut -d ' ' -f 2 | cut -c 9-16
+```
+
+### 配置网络启动服务器
+
+将 SD 卡插入服务器树莓派，然后启动服务器。客户端树莓派需要一个根文件系统来启动：我们将使用服务器根文件系统的副本，并将其放在 `/nfs/client1`：
+```sh
+sudo mkdir -p /nfs/client1
+sudo apt install rsync
+sudo rsync -xa --progress --exclude /nfs / /nfs/client1
+```
+
+通过 chrooting 进入客户端文件系统，在客户端文件系统上重新生成 SSH 主机密钥：
+
+```sh
+cd /nfs/client1
+sudo mount --bind /dev dev
+sudo mount --bind /sys sys
+sudo mount --bind /proc proc
+sudo chroot .
+rm /etc/ssh/ssh_host_*
+dpkg-reconfigure openssh-server
+exit
+sudo umount dev sys proc
+```
+
+查找本地网络设置。您需要找到路由器（或网关）的地址，可以使用
+
+```sh
+ip route | awk '/default/ {print $3}'
+```
+
+然后运行
+```sh
+ip -4 addr show dev eth0 | grep inet
+```
+
+您应该会看到类似下面的输出：
+
+```sh
+inet 10.42.0.211/24 brd 10.42.0.255 scope global eth0
+```
+
+第一个地址是网络上树莓派服务器的 IP 地址，斜线后的部分是网络大小。你的网络很可能是 `/24`。还要注意网络的广播地址（`brd`）。记下上一条命令的输出，其中将包含树莓派的 IP 地址和网络的广播地址。
+
+最后，记下 DNS 服务器地址，该地址与网关地址相同。您可以通过以下方式找到它
+```sh
+cat /etc/resolv.conf
+```
+通过 `systemd` 网络在服务器树莓派上配置静态网络地址，它是网络处理程序和 DHCP 服务器。
+
+为此，你需要创建 `10-eth0.netdev` 和 `11-eth0.network` 这样的文件：
+```sh
+sudo nano /etc/systemd/network/10-eth0.netdev
+```
+添加以下几行
+```ini
+[Match]
+Name=eth0
+
+[Network]
+DHCP=no
+```
+然后创建网络文件
+```sh
+sudo nano /etc/systemd/network/11-eth0.network
+```
+添加以下内容
+```ini
+[Match]
+Name=eth0
+
+[Network]
+Address=10.42.0.211/24
+DNS=10.42.0.1
+
+[Route]
+Gateway=10.42.0.1
+```
+此时，DNS 无法正常工作，因此需要将之前记下的服务器添加到 `systemd/resolved.conf`。在本例中，网关地址为 10.42.0.1。
+```sh
+sudo nano /etc/systemd/resolved.conf
+```
+取消注释 DNS 行，并在其中添加 DNS IP 地址。此外，如果您有后备 DNS 服务器，也请在此处添加。
+```ini
+[Resolve]
+DNS=10.42.0.1
+#FallbackDNS=
+```
+启用 `systemd-networkd`，然后重启以使更改生效：
+```sh
+sudo systemctl enable systemd-networkd
+sudo restart
+```
+现在启动 `tcpdump`，以便搜索来自树莓派客户端的 DHCP 数据包：
+
+```sh
+sudo apt install tcpdump dnsmasq
+sudo systemctl enable dnsmasq
+sudo tcpdump -i eth0 port bootpc
+```
+
+将树莓派客户端连接到网络并打开电源。检查客户端的 LED 指示灯是否在 10 秒左右后亮起，然后应该会收到一个来自客户端的数据包："DHCP/BOOTP，来自...的请求"。
+```
+IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP, Request from b8:27:eb...
+```
+现在需要修改 `dnsmasq` 配置，使 DHCP 能够回复设备。按 CTRL + C 退出 `tcpdump` 程序，然后键入以下内容：
+```sh
+echo | sudo tee /etc/dnsmasq.conf
+sudo nano /etc/dnsmasq.conf
+```
+然后将 `dnsmasq.conf` 的内容替换为
+```conf
+# 注意：如果希望为网络上的系统提供 DNS 服务，请注释掉端口。
+port=0
+dhcp-range=10.42.0.255,proxy
+log-dhcp
+enable-tftp
+tftp-root=/tftpboot
+pxe-service=0,"Raspberry Pi Boot"
+```
+在 `dhcp-range` 行的第一个地址处，使用你之前记下的广播地址。
+
+现在创建一个 `/tftpboot` 目录：
+```sh
+sudo mkdir /tftpboot
+sudo chmod 777 /tftpboot
+sudo systemctl enable dnsmasq.service
+sudo systemctl restart dnsmasq.service
+```
+现在监控 `dnsmasq` 日志
+```sh
+journalctl -f
+```
+你应该会看到如下内容
+```sh
+raspberrypi dnsmasq-tftp[1903]: file /tftpboot/bootcode.bin not found
+```
+接下来，您需要将启动文件夹的内容复制到 `/tftpboot` 目录中。
+
+首先，按 CTRL + C 键退出监控状态。然后键入以下内容：
+```sh
+cp -r /boot/firmware/* /tftpboot
+```
+由于 tftp 位置已更改，请重新启动 `dnsmasq`：
+```sh
+sudo systemctl restart dnsmasq
+```
+
+#### 设置NFS根目录
+这样，树莓派 客户端就可以尝试启动，直到尝试加载根文件系统（它没有根文件系统）。
+
+此时，导出之前创建的 `/nfs/client1` 文件系统和 TFTP 启动文件夹。
+```sh
+sudo apt install nfs-kernel-server
+echo "/nfs/client1 *(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+echo "/tftpboot *(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+```
+重启 RPC-Bind 和 NFS 服务器，让它们检测到新文件。
+```sh
+sudo systemctl enable rpcbind
+sudo systemctl restart rpcbind
+sudo systemctl enable nfs-kernel-server
+sudo systemctl restart nfs-kernel-server
+```
+编辑 `/tftpboot/cmdline.txt` 并从 `root=` 开始替换为
+```
+root=/dev/nfs nfsroot=10.42.0.211:/nfs/client1,vers=3 rw ip=dhcp rootwait
+```
+此处的 IP 地址应替换为您记下的 IP 地址。同时删除命令行中以 `init=` 开头的部分。
+
+最后，编辑 `/nfs/client1/etc/fstab`，删除 `/dev/mmcblk0p1` 和 `p2` 行（应只留下 `proc`）。然后，重新添加引导分区：
+
+```sh
+echo "10.42.0.211:/tftpboot /boot/firmware/ nfs defaults,vers=3 0 0" | sudo tee -a /nfs/client1/etc/fstab
+```
+如果第一次启动失败，请继续尝试。Raspberry Pi 可能需要一分钟左右才能启动，请耐心等待。
+
+## 使用IPv6进行网络启动
+通过网络启动树莓派计算机分为 4 个阶段：
+1. bootloader使用 DHCP 协商获取 IP 地址和 TFTP 服务器的详细信息。
+2. bootloader通过 TFTP 加载固件，并将启动过程交给固件，同时向其传递网络的详细信息。
+3. 固件通过 TFTP 加载内核和命令行。
+4. 内核启动系统的其他部分，通过 NFS 或其他机制加载根文件系统（rootfs）。
+
+bootloader和固件（第 1 至第 3 阶段）已得到增强，可支持通过 IPv6 启动。
+
+:::important[重要]
+IPv6 netboot 是一项**实验性的 alpha 功能**，根据反馈情况，我们可能需要更改其工作方式。该功能仅适用于 树莓派4 和 CM4。
+:::
+
+### 工作原理
+要通过 IPv6 启动，您需要更新版本的固件（例如 `start4.elf`）和bootloader。使用最新版本的 树莓派OS和最新的稳定bootloader就足够了。
+
+:::note[注意]
+常用的 `dnsmasq` DHCP 服务器目前不支持 IPv6 网络启动所需的网络启动参数，因此暂时必须使用不同的 DHCP 服务器，如 [ISC DHCP](https://www.isc.org/dhcp/)。
+:::
+要通过网络挂载 `rootfs`，[IPv4 netboot 教程](./raspberry-pi.mdx#网络启动)建议使用 `nfsroot`。它不支持 IPv6，因此需要另一种方法通过网络挂载 `rootfs`。
+
+如果你的 ISP 和路由器不支持 IPv6，你所能做的就会受到限制。
+
+#### 网络地址
+bootloader要做的第一件事就是发送路由器请求以获取网络的详细信息。如果 TFTP 服务器在不同的网络上，bootloader可能需要这个地址。
+
+路由器广告包含一个标志，告诉路由器其 IP 地址是使用有状态（受管理）配置还是无状态（非受管理）配置。无状态配置是指设备配置自己的 IP 地址。目前，bootloader会根据以太网 MAC 地址和路由器提供的网络前缀生成一个地址。
+
+如果路由器指示启用有状态配置，则使用 DHCP 获取设备的 IP 地址。这包括设备向 DHCP 服务器发送一个请求请求，DHCP 服务器则以广告形式作出回应。然后，客户端在收到服务器的回复确认之前请求地址。
+
+DHCP 服务器和客户端通过可变长度的 DUID（设备唯一 ID）来识别自己。在 树莓派 上，DUID 源自 MAC 地址 (DUID_LL)。
+
+#### TFTP 地址
+无论是使用无状态配置还是有状态配置，DHCP 服务器都用于获取 TFTP 服务器地址。该地址在 `BOOTFILE-URL` 参数中编码。我们发送客户端架构类型值 `0x29` 来标识设备。
+
+请参阅 [RFC 5970](https://datatracker.ietf.org/doc/html/rfc5970) 和 [IANA 动态主机配置协议 IPv6](https://www.iana.org/assignments/dhcpv6-parameters/dhcpv6-parameters.xhtml) 文档。
+
+#### 启动过程
+设备现在应该有一个 IP 地址和 TFTP 详情。它将从 TFTP 服务器下载固件二进制 `start4.elf`，然后继续运行。固件获得 IP 地址和 TFTP 服务器详细信息后，就可以下载内核并启动系统的其他部分。
+
+#### 内核启动
+IPv4 netboot 使用 `nfsroot` 通过网络挂载 `rootfs`。它不支持 IPv6，因此需要另一种解决方案。这可能需要一个小型 RAM 文件系统，它可以在切换到适当的 `rootfs` 内容之前挂载适当的网络位置。
+
+:::note[注意]
+通过 IPv6 使用 NFS 启动 Linux 内核的机制仍有待论证。
+:::
+
+### 测试设置
+#### 如果你想尝试一下，你需要另一个树莓派作为 TFTP 和 DHCP 服务器。
+
+理论上，TFTP 服务器可以位于任何可路由的网络上，但 DHCP 服务器必须与其服务的设备位于同一网络上。
+
+#### TFTP服务器
+如果你有一个正常工作的 IPv4 网络启动设置，你可以重复使用 dnsmasq 中的 TFTP 服务器来提供文件（它可以与 IPv4 和 IPv6 通信）。
+
+或者，你也可以使用独立的 TFTP 服务器，如 `tftpd-hpa`。
+```sh
+sudo apt install tftpd-hpa
+sudo systemctl start tftpd-hpa
+```
+
+#### DHCP服务器
+IPv6 中的 DHCP 变化很大。我们需要 DHCP 至少告诉我们 TFTP 服务器的地址，在本例中就是同一台机器。
+```sh
+sudo apt install isc-dhcp-server
+```
+修改 `/etc/default/isc-dhcp-server` 中的配置
+```ini
+DHCPDv6_CONF=/etc/dhcp/dhcpd6.conf
+INTERFACESv6="eth0"
+```
+在 `/etc/dhcp/dhcpd6.conf` 中，需要指定 TFTP 服务器地址并设置子网。在这里，DHCP 服务器被配置为提供一些编造的唯一本地地址（ULA）。`host test-rpi4` 这一行告诉 DHCP 给测试设备一个固定地址。
+```
+not authoritative;
+
+# 检查客户端是否像树莓派
+if option dhcp6.client-arch-type = 00:29 {
+        option dhcp6.bootfile-url "tftp://[fd49:869:6f93::1]/"；
+}
+
+subnet6 fd49:869:6f93::/64 {
+        host test-rpi4 {
+                host-identifier option dhcp6.client-id 00:03:00:01:e4:5f:01:20:24:0b；
+                fixed-address6 fd49:869:6f93::1000;
+        }
+}
+```
+必须在 `/etc/dhcpcd.conf` 中为服务器分配 IPv6 地址
+```
+interface eth0
+static ip6_address=fd49:869:6f93::1/64
+```
+现在启动 DHCP 服务器
+```sh
+sudo systemctl restart isc-dhcp-server.service
+```
+
+#### Bootloader
+修改配置，使其尝试通过 IPv6 而不是 IPv4 进行网络启动。
+```ini
+BOOT_ORDER=0xf21 # 2=网络启动
+USE_IPV6=1 # 启用 IPv6 网络启动
+BOOT_UART=1 # 调试
+```
+要恢复到 IPv4 网络引导，只需从 `boot.conf` 中删除 `USE_IPV6` 行。
+
+#### 路由器
+要使用 IPv6，你确实需要一个支持 IPv6 的路由器和 ISP。互联网上有一些网站可以帮你检查这一点，或者运行以下命令。
+```sh
+sudo apt install ndisc6
+rdisc6 -1 eth0
+```
+这会向路由器发送路由器请求，询问网络详细信息，如网络前缀、路由器以太网地址以及是否使用 DHCP 寻址。如果这条命令没有得到回应，很可能是你的网络和 ISP 只支持 IPv4。如果支持 IPv6，则很可能会配置为使用无状态配置，即客户端自行生成地址。
+```
+Soliciting ff02::2 (ff02::2) on eth0...
+Hop limit                 :           64 (      0x40)
+Stateful address conf.    :           No
+Stateful other conf.      :          Yes
+Mobile home agent         :           No
+Router preference         :       medium
+Neighbor discovery proxy  :           No
+Router lifetime           :          180 (0x000000b4) seconds
+Reachable time            :  unspecified (0x00000000)
+Retransmit time           :  unspecified (0x00000000)
+```
+
+您可以将路由器配置为有状态配置，即使用 DHCP 获取 IP 地址。
+```
+Hop limit                 :           64 (      0x40)
+Stateful address conf.    :          Yes
+Stateful other conf.      :          Yes
+Mobile home agent         :           No
+Router preference         :       medium
+Neighbor discovery proxy  :           No
+Router lifetime           :          180 (0x000000b4) seconds
+Reachable time            :  unspecified (0x00000000)
+Retransmit time           :  unspecified (0x00000000)
+```
+
+### 调试
+#### 日志和跟踪
+如果启用了启动 uart，你应该能从串行端口看到类似下面的内容。以 RX6 开头的行表示正在使用 IPv6。
+
+这里的 `dc:a6:32:6f:73:f4` 是 TFTP 服务器的 MAC 地址，它的 IPv6 地址是 `fd49:869:6f93::1`。设备本身的 MAC 地址为 `e4:5f:01:20:24:0b`，IPv6 地址为 `fd49:869:6f93::1000`
+```
+Boot mode: NETWORK (02) order f
+GENET: RESET_PHY
+PHY ID 600d 84a2
+NET_BOOT: e4:5f:01:20:24:0b wait for link TFTP6: (null)
+LINK STATUS: speed: 100 full duplex
+Link ready
+GENET START: 64 16 32
+GENET: UMAC_START 0xe45f0120 0x240b0000
+RX6: 12 IP: 1 MAC: 1 ICMP: 1/1 UDP: 0/0 ICMP_CSUM_ERR: 0 UDP_CSUM_ERR: 0
+NET fd49:869:6f93::1000 tftp fd49:869:6f93::1
+RX6: 17 IP: 4 MAC: 4 ICMP: 2/2 UDP: 2/2 ICMP_CSUM_ERR: 0 UDP_CSUM_ERR: 0
+TFTP_GET: dc:a6:32:6f:73:f4 fd49:869:6f93::1 ab5a4158/start4.elf
+
+RX6: 17 IP: 4 MAC: 4 ICMP: 2/2 UDP: 2/2 ICMP_CSUM_ERR: 0 UDP_CSUM_ERR: 0
+RX6: 18 IP: 5 MAC: 5 ICMP: 2/2 UDP: 3/3 ICMP_CSUM_ERR: 0 UDP_CSUM_ERR: 0
+TFTP_GET: dc:a6:32:6f:73:f4 fd49:869:6f93::1 ab5a4158/config.txt
+```
+最后，bootloader将加载内核交给固件。
+
+#### 有状态配置
+您可以使用 tcpdump 检查网络活动。
+```
+sudo tcpdump -i eth0 -e ip6 -XX -l -v -vv
+```
+下面是路由器配置为使用有状态（DHCP）网络配置的 TCP dump 摘录。
+
+设备发送路由器请求。
+```
+12:23:35.387046 e4:5f:01:20:24:0b (oui Unknown) > 33:33:00:00:00:02 (oui Unknown), ethertype IPv6 (0x86dd), length 70: (hlim 255, next-header ICMPv6 (58) payload length: 16) fe80::e65f:1ff:fe20:240b > ip6-allrouters: [icmp6 sum ok] ICMP6, router solicitation, length 16
+          source link-address option (1), length 8 (1): e4:5f:01:20:24:0b
+            0x0000:  e45f 0120 240b
+```
+
+路由器发送响应，告知设备使用有状态配置。
+```
+12:23:35.498902 60:8d:26:a7:c1:88 (oui Unknown) > 33:33:00:00:00:01 (oui Unknown), ethertype IPv6 (0x86dd), length 110: (hlim 255, next-header ICMPv6 (58) payload length: 56) bthub.home > ip6-allnodes: [icmp6 sum ok] ICMP6, router advertisement, length 56
+        hop limit 64, Flags [managed, other stateful], pref medium, router lifetime 180s, reachable time 0ms, retrans timer 0ms
+          rdnss option (25), length 24 (3):  lifetime 60s, addr: bthub.home
+            0x0000:  0000 0000 003c fe80 0000 0000 0000 628d
+            0x0010:  26ff fea7 c188
+          mtu option (5), length 8 (1):  1492
+            0x0000:  0000 0000 05d4
+          source link-address option (1), length 8 (1): 60:8d:26:a7:c1:88
+            0x0000:  608d 26a7 c188
+```
+
+设备发送 DHCP 请求。
+```
+12:23:35.502517 e4:5f:01:20:24:0b (oui Unknown) > 33:33:00:01:00:02 (oui Unknown), ethertype IPv6 (0x86dd), length 114: (hlim 255, next-header UDP (17) payload length: 60) fe80::e65f:1ff:fe20:240b.dhcpv6-client > ff02::1:2.dhcpv6-server: [udp sum ok] dhcp6 solicit (xid=8cdd56 (client-ID hwaddr type 1 e45f0120240b) (IA_NA IAID:0 T1:0 T2:0) (option-request opt_59) (opt_61) (elapsed-time 0))
+```
+
+DHCP 服务器回复一个宣告。
+```
+12:23:35.510478 dc:a6:32:6f:73:f4 (oui Unknown) > e4:5f:01:20:24:0b (oui Unknown), ethertype IPv6 (0x86dd), length 172: (flowlabel 0xad54d, hlim 64, next-header UDP (17) payload length: 118) fe80::537a:52c:c647:b184.dhcpv6-server > fe80::e65f:1ff:fe20:240b.dhcpv6-client: [bad udp cksum 0xd886 -> 0x6d26!] dhcp6 advertise (xid=8cdd56 (IA_NA IAID:0 T1:3600 T2:7200 (IA_ADDR fd49:869:6f93::1000 pltime:604800 vltime:2592000)) (client-ID hwaddr type 1 e45f0120240b) (server-ID hwaddr/time type 1 time 671211709 dca6326f73f4) (opt_59))
+```
+
+设备向 DHCP 服务器发送地址和 TFTP 详情请求。
+```
+12:23:35.510763 e4:5f:01:20:24:0b (oui Unknown) > 33:33:00:01:00:02 (oui Unknown), ethertype IPv6 (0x86dd), length 132: (hlim 255, next-header UDP (17) payload length: 78) fe80::e65f:1ff:fe20:240b.dhcpv6-client > ff02::1:2.dhcpv6-server: [udp sum ok] dhcp6 request (xid=8cdd56 (client-ID hwaddr type 1 e45f0120240b) (server-ID hwaddr/time type 1 time 671211709 dca6326f73f4) (IA_NA IAID:0 T1:0 T2:0) (option-request opt_59) (opt_61) (elapsed-time 1))
+```
+
+DHCP 服务器回复，`opt_59` 用于传递 TFTP 服务器的地址。
+```
+12:23:35.512122 dc:a6:32:6f:73:f4 (oui 未知) > e4:5f:01:20:24:0b (oui 未知), ethertype IPv6 (0x86dd), length 172: (flowlabel 0xad54d, hlim 64, next-header UDP (17) payload length: 118) fe80::537a:52c:c647:b184. dhcpv6-server > fe80::e65f:1ff:fe20:240b. dhcpv6-client: [bad udp cksum 0xd886 -> 0x6826！ ] dhcp6 reply (xid=8cdd56 (IA_NA IAID:0 T1:3600 T2:7200 (IA_ADDR fd49:869:6f93::1000 pltime:604800 vltime:2592000)) (client-ID hwaddr type 1 e45f0120240b) (server-ID hwaddr/time type 1 time 671211709 dca6326f73f4) (opt_59))
+```
+
+设备向 FTP 服务器发送邻居请求，因为它需要其 MAC 地址。
+```
+12:23:36.510768 e4:5f:01:20:24:0b (oui Unknown) > 33:33:ff:00:00:01 (oui Unknown), ethertype IPv6 (0x86dd), length 86: (hlim 255, next-header ICMPv6 (58) payload length: 32) fe80::e65f:1ff:fe20:240b > ff02::1:ff00:1: [icmp6 sum ok] ICMP6, neighbor solicitation, length 32, who has fd49:869:6f93::1
+          source link-address option (1), length 8 (1): e4:5f:01:20:24:0b
+            0x0000:  e45f 0120 240b
+```
+
+FTP 服务器回复其 MAC 地址。
+```
+12:23:36.510854 dc:a6:32:6f:73:f4 (oui Unknown) > e4:5f:01:20:24:0b (oui Unknown), ethertype IPv6 (0x86dd), length 86: (hlim 255, next-header ICMPv6 (58) payload length: 32) fd49:869:6f93::1 > fe80::e65f:1ff:fe20:240b: [icmp6 sum ok] ICMP6, neighbor advertisement, length 32, tgt is fd49:869:6f93::1, Flags [solicited, override]
+          destination link-address option (2), length 8 (1): dc:a6:32:6f:73:f4
+            0x0000:  dca6 326f 73f4
+```
+
+设备发出 TFTP 请求，现在应通过网络启动。
+```
+12:23:36.530820 e4:5f:01:20:24:0b (oui Unknown) > dc:a6:32:6f:73:f4 (oui Unknown), ethertype IPv6 (0x86dd), length 111: (hlim 255, next-header UDP (17) payload length: 57) fd49:869:6f93::1000.61785 > fd49:869:6f93::1.tftp: [udp sum ok]  49 RRQ "ab5a4158/start4.elf" octet tsize 0 blksize 1024
+```
+
+#### 无状态配置
+
+下面是无状态（非 DHCP）网络配置的 tcp dump 摘要。
+
+设备发送路由器请求。
+```
+12:55:27.541909 e4:5f:01:20:24:0b (oui Unknown) > 33:33:00:00:00:02 (oui Unknown), ethertype IPv6 (0x86dd), length 70: (hlim 255, next-header ICMPv6 (58) payload length: 16) fe80::e65f:1ff:fe20:240b > ip6-allrouters: [icmp6 sum ok] ICMP6, router solicitation, length 16
+          source link-address option (1), length 8 (1): e4:5f:01:20:24:0b
+            0x0000:  e45f 0120 240b
+```
+
+路由器回复网络详细信息。
+```
+12:55:27.834684 60:8d:26:a7:c1:88 (oui Unknown) > 33:33:00:00:00:01 (oui Unknown), ethertype IPv6 (0x86dd), length 174: (hlim 255, next-header ICMPv6 (58) payload length: 120) bthub.home > ip6-allnodes: [icmp6 sum ok] ICMP6, router advertisement, length 120
+        hop limit 64, Flags [other stateful], pref medium, router lifetime 180s, reachable time 0ms, retrans timer 0ms
+          prefix info option (3), length 32 (4): 2a00:23c5:ee00:5001::/64, Flags [onlink, auto, router], valid time 300s, pref. time 120s
+            0x0000:  40e0 0000 012c 0000 0078 0000 0000 2a00
+            0x0010:  23c5 ee00 5001 0000 0000 0000 0000
+          prefix info option (3), length 32 (4): fd4d:869:6f93::/64, Flags [onlink, auto, router], valid time 10080s, pref. time 2880s
+            0x0000:  40e0 0000 2760 0000 0b40 0000 0000 fd4d
+            0x0010:  0869 6f93 0000 0000 0000 0000 0000
+          rdnss option (25), length 24 (3):  lifetime 60s, addr: bthub.home
+            0x0000:  0000 0000 003c fe80 0000 0000 0000 628d
+            0x0010:  26ff fea7 c188
+          mtu option (5), length 8 (1):  1492
+            0x0000:  0000 0000 05d4
+          source link-address option (1), length 8 (1): 60:8d:26:a7:c1:88
+            0x0000:  608d 26a7 c188
+```
+
+设备向 DHCP 多播地址发送信息请求，询问 TFTP 详情。
+```
+12:55:27.838300 e4:5f:01:20:24:0b (oui Unknown) > 33:33:00:01:00:02 (oui Unknown), ethertype IPv6 (0x86dd), length 98: (hlim 255, next-header UDP (17) payload length: 44) fe80::e65f:1ff:fe20:240b.dhcpv6-client > ff02::1:2.dhcpv6-server: [udp sum ok] dhcp6 inf-req (xid=e5e0a4 (client-ID hwaddr type 1 e45f0120240b) (option-request opt_59) (opt_61) (elapsed-time 0))
+```
+
+DHCP 服务器回复 TFTP 服务器详细信息 (`opt_59`)。
+```
+12:55:27.838898 dc:a6:32:6f:73:f4 (oui Unknown) > e4:5f:01:20:24:0b (oui Unknown), ethertype IPv6 (0x86dd), length 150: (flowlabel 0xd1248, hlim 64, next-header UDP (17) payload length: 96) fe80::537a:52c:c647:b184.dhcpv6-server > fe80::e65f:1ff:fe20:240b.dhcpv6-client: [bad udp cksum 0xd870 -> 0x78bb!] dhcp6 reply (xid=e5e0a4 (client-ID hwaddr type 1 e45f0120240b) (server-ID hwaddr/time type 1 time 671211709 dca6326f73f4) (opt_59))
+```
+
+设备会询问 TFTP 服务器的 MAC 地址，因为它知道服务器在同一个网络中。
+```
+12:55:28.834796 e4:5f:01:20:24:0b (oui Unknown) > 33:33:ff:1d:fe:2a (oui Unknown), ethertype IPv6 (0x86dd), length 86: (hlim 255, next-header ICMPv6 (58) payload length: 32) fe80::e65f:1ff:fe20:240b > ff02::1:ff1d:fe2a: [icmp6 sum ok] ICMP6, neighbor solicitation, length 32, who has 2a00:23c5:ee00:5001:57f1:7523:2f1d:fe2a
+          source link-address option (1), length 8 (1): e4:5f:01:20:24:0b
+            0x0000:  e45f 0120 240b
+```
+
+FTP 服务器回复其 MAC 地址。
+```
+12:55:28.834875 dc:a6:32:6f:73:f4 (oui Unknown) > e4:5f:01:20:24:0b (oui Unknown), ethertype IPv6 (0x86dd), length 86: (hlim 255, next-header ICMPv6 (58) payload length: 32) 2a00:23c5:ee00:5001:57f1:7523:2f1d:fe2a > fe80::e65f:1ff:fe20:240b: [icmp6 sum ok] ICMP6, neighbor advertisement, length 32, tgt is 2a00:23c5:ee00:5001:57f1:7523:2f1d:fe2a, Flags [solicited, override]
+          destination link-address option (2), length 8 (1): dc:a6:32:6f:73:f4
+            0x0000:  dca6 326f 73f4
+```
+
+设备开始发出 TFTP 请求。
+```
+12:55:28.861097 e4:5f:01:20:24:0b (oui Unknown) > dc:a6:32:6f:73:f4 (oui Unknown), ethertype IPv6 (0x86dd), length 111: (hlim 255, next-header UDP (17) payload length: 57) 2a00:23c5:ee00:5001:e65f:1ff:fe20:240b.46930 > 2a00:23c5:ee00:5001:57f1:7523:2f1d:fe2a.tftp: [udp sum ok]  49 RRQ "ab5a4158/start4.elf" octet tsize 0 blksize 1024
+```
+
+<Normal />

@@ -1,0 +1,98 @@
+---
+sidebar_position: 13
+draft: false
+description: Raspberry Pi AI Kit 与 Raspberry Pi 5 相连接，提供 Hailo AI 神经网络加速器，支持摄像头内容的高速分析。
+keywords: [树莓派, Raspberry Pi, AI Kit, Hailo AI]
+last_update: 
+  date: 2024-12-20
+---
+import Normal from "../_normal.mdx";
+
+# AI Kit (人工智能套件/ 新品)
+
+## 关于 AI Kit
+
+<img src="/img/accessories/ai-kit/ai-kit.jpg" width="80%" alt="树莓派人工智能套件" />
+*树莓派人工智能套件*
+
+Raspberry Pi AI Kit 将 [Raspberry Pi M.2 HAT+](./m2-hat-plus.mdx#关于) 与 Hailo AI 加速模块捆绑在一起，供 Raspberry Pi 5 使用。套件包含以下内容：
+
+- 包含神经处理单元（NPU）的 Hailo AI 模块
+- Raspberry Pi M.2 HAT+，用于将 AI 模块连接到 Raspberry Pi 5
+- 预装在模块和 M.2 HAT+ 之间的散热垫
+- 安装硬件套件
+- 16 毫米堆叠 GPIO 接头
+
+## AI 模块功能
+
+- 围绕 Hailo-8L 芯片构建的每秒 13 TOPS 神经网络推理加速器。
+- M.2 2242 外形尺寸
+
+## 安装
+
+要使用人工智能套件，您需要
+
+- Raspberry Pi 5 （树莓派5）
+
+每个 AI 套件都预装了 AI 模块、带状电缆、GPIO 堆叠接头和安装硬件。完成以下操作即可安装 AI 套件：
+
+1. 首先，确保 Raspberry Pi 运行最新的软件。运行以下命令更新：
+```sh
+sudo apt update && sudo apt full-upgrade
+```
+
+2. 接下来，[确保你的 Raspberry Pi 固件是最新的](../computers/raspberry-pi.mdx#更新-bootloader-配置)。运行以下命令查看您正在运行的固件：
+```sh
+sudo rpi-eeprom-update
+```
+
+如果看到 2023 年 12 月 6 日或更晚的日期，请继续下一步。如果看到的日期早于 2023 年 12 月 6 日，运行以下命令打开 Raspberry Pi 配置 CLI：
+
+```sh
+sudo raspi-config
+```
+
+在 `Advanced Options` > `Bootloader Version` 下，选择 `Latest`。然后用 `Finish` 或 **Escape** 键退出 `raspi-config`。
+
+运行以下命令将固件更新到最新版本：
+```sh
+sudo rpi-eeprom-update -a
+```
+
+然后，使用 `sudo reboot` 重新启动。
+
+3. 开始安装前，断开 Raspberry Pi 的电源。
+
+4. 为获得最佳性能，我们建议将 AI 套件与 Raspberry Pi Active Cooler 搭配使用。如果您有主动冷却器，请在安装 AI 套件之前安装。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-01.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
+
+5. 使用提供的四颗螺丝安装垫片。将 GPIO 堆叠接头紧紧压在 Raspberry Pi GPIO 引脚上；只要所有引脚都能安装到位，方向并不重要。断开 AI 套件的带状电缆，将另一端插入 Raspberry Pi 的 PCIe 端口。从两侧提起带状电缆支架，然后将电缆的铜接触点朝内，朝向 USB 端口插入。将带状电缆完全均匀地插入 PCIe 端口后，从两侧向下推动电缆支架，将带状电缆牢牢固定到位。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-02.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
+
+6. 将 AI 套件放在垫片上，用剩余的四颗螺丝将其固定到位。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-03.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
+
+7. 将带状电缆插入 AI 套件的插槽。从两侧抬起带状电缆支架，然后将电缆插入，铜接触点朝上。将带状电缆完全均匀地插入端口后，从两侧向下推动电缆支架，将带状电缆固定到位。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-04.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
+
+8. 恭喜，您已成功安装 AI 套件。连接 Raspberry Pi 至电源；Raspberry Pi OS 将自动检测 AI 套件。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-05.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
+
+:::warning
+在从 M.2 插槽连接或断开设备之前，请务必断开 Raspberry Pi 的电源。
+:::
+
+## 在树莓派上开始使用人工智能
+
+要开始在 Raspberry Pi 上运行人工智能加速应用程序，请查看我们的 [开始使用 AI Kit 和 AI HAT+](../computers/ai.mdx) 指南。
+
+## 产品简介
+
+有关人工智能套件的更多信息，包括机械规格和工作环境限制，请参阅 [产品简介](https://datasheets.raspberrypi.com/ai-kit/raspberry-pi-ai-kit-product-brief.pdf)。
+
+<Normal />

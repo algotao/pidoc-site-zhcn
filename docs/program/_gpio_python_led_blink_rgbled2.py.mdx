@@ -1,0 +1,10 @@
+```py
+from gpiozero import RGBLED  # 导入LED模块
+from colorzero import Color  # 导入Color模块
+from signal import pause     # 导入pause模块
+
+led = RGBLED(1, 16, 20)      # 定义RGBLED引脚为 红色1,绿色16,蓝色20
+led.color = Color("yellow")  # 设置颜色为黄色
+
+pause()                      # 保持程序运行
+```

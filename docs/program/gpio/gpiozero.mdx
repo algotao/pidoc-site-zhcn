@@ -1,0 +1,79 @@
+---
+draft: false
+sidebar_position: 2
+title: GPIO Zero 介绍
+description: GPIO Zero 库是树莓派官方推荐的用于操作树莓派 GPIO 的 Python 库，这是当前在树莓派5及更早型号经过测试的 GPIO 库。它对常用外设的操作进行了封装，使用起来非常方便。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero]
+---
+
+# GPIO Zero 介绍
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+:::warning
+本页内容已不再更新，请至 [GPIO Zero](/gpiozero/) 专有页面查看。
+:::
+
+
+
+GPIO Zero 库是树莓派官方推荐的用于操作树莓派 GPIO 的 Python 库，这是当前在 `树莓派5 及 早期型号` 经过测试的 GPIO 库。它对常用外设的操作进行了封装，使用起来非常方便。由 [Ben Nuttall](https://github.com/bennuttall) 和 [Dave Jones](https://github.com/waveform80) 开发和维护。
+
+[官方文档(英文版)](https://gpiozero.readthedocs.io/en/stable/)
+
+## 在树莓派安装
+
+GPIO Zero **默认安装**在[Raspberry Pi OS Desktop](/downloads/)、 [Raspberry Pi OS Lite](/downloads/) 以及适用于 PC/Mac 的 Raspberry Pi Desktop 中，操作系统均可从 [软件下载](/downloads/) 获取。
+
+如默认安装被破坏，请使用以下方法重新安装。
+
+### apt
+
+GPIO Zero 已在 Raspberry Pi OS、Debian和 Ubuntu的 apt 存储库中。
+
+首先，更新您的存储库列表：
+
+```sh
+sudo apt update
+```
+
+然后安装 gpiozero Python 3 的包：
+
+```sh
+sudo apt install python3-gpiozero
+```
+
+### pip
+
+如果您在 Raspberry Pi 上使用其他操作系统，则可能需要使用 pip 来安装 gpiozero。使用 [get-pip](https://pip.pypa.io/en/stable/installing/) 安装 pip ，然后输入：
+```sh
+sudo pip3 install gpiozero
+```
+## 使用示例
+
++ [LED 亮灯](./led_blink.mdx)

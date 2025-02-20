@@ -1,0 +1,749 @@
+---
+sidebar_position: 11
+draft: false
+description: 树莓派Build HAT 是一块附加板，可连接到树莓派的 40 引脚 GPIO 接头，它是与乐高®教育合作设计的，可让您轻松地使用树莓派计算机控制乐高® Technic™ 电机和传感器。本文还提供了Python、C#使用Build HAT的示例。
+keywords: [树莓派, Raspberry Pi, Build HAT, 构建帽, 乐高, LEGO]
+last_update: 
+  date: 2024-12-20
+---
+import Normal from "../_normal.mdx";
+
+# Build HAT
+
+## 关于
+
+[树莓派Build HAT](https://raspberrypi.com/products/build-hat) 是一块附加板，可连接到树莓派的 40 引脚 GPIO 接头，它是与乐高®教育合作设计的，可让您轻松地使用树莓派计算机控制乐高® Technic™ 电机和传感器。
+
+<img src="/img/accessories/build-hat/build-hat.jpg" width="80%" alt="Build HAT" />
+
+:::note[注意]
+支持设备的完整列表请参阅 [设备兼容性](#设备兼容性) 部分。
+:::
+
+它为 SPIKE™ 产品组合中的 乐高® Technic™ 电机和传感器提供了四个连接器。可用的传感器包括距离传感器、颜色传感器和多功能力传感器。角度电机有各种尺寸，并集成了编码器，可通过查询找到其位置。
+
+Build HAT 适用于所有带有 40 引脚 GPIO 接头的 Raspberry Pi 计算机，包括使用带状电缆或其他扩展设备的键盘系列设备。除了摄像头模块等标准 Raspberry Pi 配件外，连接的乐高® Technic™ 设备也可以轻松地用 Python 进行控制。
+
+树莓派Build HAT 电源（PSU）[可单独购买](https://raspberrypi.com/products/build-hat-power-supply)，设计用于为 Build HAT 和树莓派计算机以及所有连接的乐高® Technic™ 设备供电。
+
+<img src="/img/accessories/build-hat/psu.jpg" width="80%" alt="电源" />
+
+乐高®教育 SPIKE™ Prime 45678 套装和 SPIKE™ Prime 45681 扩展套装（可从乐高®教育经销商处单独购买）包含一系列由 Build HAT 支持的有用元素。
+
+:::note[注意]
+HAT 可与所有 40 引脚 GPIO Raspberry Pi 电路板配合使用，包括 Zero 系列设备。通过添加带状电缆或其他扩展设备，它还可以与键盘系列设备一起使用。
+:::
+
+- 最多可控制 4 个 乐高® Technic™ 电机和 SPIKE™ 产品组合中的传感器
+- 易于使用的 [Python 库](https://buildhat.readthedocs.io/)，可控制您的 乐高® Technic™ 设备
+- 可安装在任何带有 40 针 GPIO 接头的树莓派计算机上
+- 板载 [RP2040](../microcontrollers/silicon.mdx) 微控制器管理 乐高® Technic™ 设备的底层控制
+- [可单独提供](https://raspberrypi.com/products/build-hat-power-supply)外部 8V PSU，为 Build HAT 和树莓派供电
+
+:::note[注意]
+Build HAT 无法为键盘系列设备供电，因为它们不支持通过 GPIO 头供电。
+:::
+
+## 准备您的Build HAT
+
+:::note[注意]
+在开始使用树莓派Build HAT 之前，您应该[设置](../computers/getting-started.mdx#设置你的树莓派)好树莓派，并使用 [树莓派Imager](/downloads/) [安装](../computers/getting-started.mdx#安装操作系统)最新版本的操作系统。
+:::
+
+在电路板底部安装 9 毫米垫片。将树莓派Build HAT 安装到树莓派上。确保安装的方向正确。与其他 HAT 不同的是，所有组件都在底部，顶部留出了放置面包板或 乐高® 元件的空间。
+
+
+<video controls src="/img/accessories/build-hat/fitting-build-hat.webm" width="80%" alt="安装Build HAT" />
+
+### 访问GPIO引脚
+如果要访问树莓派的 GPIO 引脚，可以添加一个可选的高针座，并使用 15 毫米垫片。
+
+<img src="/img/accessories/build-hat/tall-headers.png" width="80%" alt="高针座" />
+
+以下引脚由 Build HAT 本身使用，你不应该连接任何东西到它们。
+
+| GPIO | 使用 | 状态 |
+| -- | -- | -- |
+| GPIO0/1 | ID 提示 |  |
+| GPIO4 | 复位 |  |
+| GPIO14 | Tx |  |
+| GPIO15 | Rx |  |
+| GPIO16 | RTS | 未使用 |
+| GPIO17 | CTS | 未使用 |
+
+
+### 设置树莓派
+启动树莓派后，点击菜单按钮，然后选择 "首选项" 和 "树莓派配置"，打开树莓派配置工具。
+
+点击 "接口" 选项卡，调整串口设置，如下图所示：
+
+<img src="/img/accessories/build-hat/setting-up.png" width="50%" alt="设置" />
+
+#### 无显示器使用树莓派
+如果无显示器运行树莓派并使用 `raspi-config`，请从第一个菜单中选择 `Interface Options`(接口选项)。
+
+<img src="/img/accessories/build-hat/raspi-config-1.png" width="70%" alt="raspi config 1" />
+
+然后选择 `Serial Port`(串行端口)。
+
+<img src="/img/accessories/build-hat/raspi-config-2.png" width="70%" alt="raspi config 2" />
+
+禁用串行控制台，选择 `No`(否)：
+
+<img src="/img/accessories/build-hat/raspi-config-3.png" width="70%" alt="raspi config 3" />
+
+启用串行端口硬件，选择 `Yes`(是)。
+
+<img src="/img/accessories/build-hat/raspi-config-4.png" width="70%" alt="raspi config 4" />
+
+最终设置应如下所示，并选择 `Ok`。
+
+<img src="/img/accessories/build-hat/raspi-config-5.png" width="70%" alt="raspi config 5" />
+
+如果有任何更改，此时需要重新启动。
+
+### 为Build HAT供电
+
+连接外部电源--推荐使用 [Raspberry Pi Build HAT 官方电源](https://raspberrypi.com/products/build-hat-power-supply) --不过，任何能够通过 DC 5521 中心正极桶形连接器（5.5 毫米 × 2.1 毫米 × 11 毫米）提供 48W 电力的可靠 +8V±10% 电源都可以为 Build HAT 供电。除非使用键盘系列设备，否则无需为 Raspberry Pi 连接额外的 USB 电源。
+
+:::note[注意]
+Build HAT 无法为键盘系列设备供电，因为它们不支持通过 GPIO 头供电。
+:::
+
+<video controls  src="/img/accessories/build-hat/powering-build-hat.webm" width="80%" alt="为 Build HAT 供电" />
+
+:::note[注意]
+乐高® Technic™ 马达的功率非常大，因此需要外部 8V 电源才能驱动它们。如果要读取电机编码器和 SPIKE™ 力传感器的数据，可以通过树莓派的 USB 电源插座，以常规方式为树莓派和 Build HAT 供电。SPIKE™ 颜色和距离传感器与电机一样，需要[外部电源](https://raspberrypi.com/products/build-hat-power-supply)。
+:::
+
+您可以选择用 Python 或 .NET 来使用 Build HAT。
+
+## 在Python中使用Build HAT
+
+### 安装Python库
+安装 Build HAT Python 库。打开终端窗口并键入
+```sh
+sudo apt install python3-build-hat
+```
+
+_Bookworm_ 之前的树莓派操作系统版本无法使用 `apt` 访问该库。相反，请运行以下命令使用 `pip` 安装库：
+
+```sh
+sudo pip3 install buildhat
+```
+
+有关 Build HAT Python 库的更多信息，请参阅 [ReadTheDocs](https://buildhat.readthedocs.io/)。
+
+### Python使用电机
+
+有[许多电机](#设备兼容性)可以与 Build HAT 配合使用。
+
+#### 连接电机
+将电机连接到 Build HAT 的端口 A。LPF2 连接器需要以正确的方式向上插入。如果连接器不容易插入，请旋转 180 度再试一次。
+
+<video controls  src="/img/accessories/build-hat/connect-motor.webm" width="80%" alt="连接电机" />
+
+#### 使用电机
+启动 [Thonny IDE](https://thonny.org/)。添加以下程序代码：
+```py
+from buildhat import Motor
+
+motor_a = Motor('A')
+
+motor_a.run_for_seconds(5)
+```
+
+点击播放/运行按钮运行程序。如果这是树莓派启动后第一次运行 Build HAT 程序，在固件复制到电路板时会有几秒钟的停顿。这时红色 LED 熄灭，绿色 LED 亮起。随后执行 Python 程序将不需要此暂停。
+
+<video controls src="/img/accessories/build-hat/blinking-light.webm" width="80%" alt="指示灯闪烁" />
+
+电机应顺时针转动 5 秒钟。
+
+<video controls src="/img/accessories/build-hat/turning-motor.webm" width="80%" alt="电机转动" />
+
+更改程序的最后一行并重新运行。
+```py
+motor_a.run_for_seconds(5, speed=50)
+```
+
+现在电机应该转得更快了。再做一次修改：
+```py
+motor_a.run_for_seconds(5, speed=-50)
+```
+
+电机应该以相反（逆时针）方向转动
+
+点击 Thonny 中的加号按钮，创建一个新程序。添加以下代码：
+```py
+from buildhat import Motor
+
+motor_a = Motor('A')
+
+while True：
+    print("Position： ", motor_a.get_aposition())
+```
+
+运行程序。抓住电机并转动轴。您应该会看到 Thonny REPL 中打印的数字在变化。
+
+### Python使用传感器
+
+有[大量传感器](#设备兼容性)可与 Build HAT 配合使用。
+
+#### 使用传感器
+将颜色传感器连接到 Build HAT 的端口 B，将力传感器连接到端口 C。
+
+:::note[注意]
+如果你不打算驱动电机，那么就不需要外部电源，你可以使用树莓派的标准 USB 电源。
+:::
+
+创建另一个新程序
+```py
+from signal import pause
+from buildhat import ForceSensor, ColorSensor
+
+button = ForceSensor('C')
+cs = ColorSensor('B')
+
+def handle_pressed(force)：
+    cs.on()
+    print(cs.get_color())
+
+def handle_released(force)：
+    cs.off()
+
+button.when_pressed = handle_pressed
+button.when_released = handle_released
+pause()
+```
+
+运行该程序，在颜色传感器前放置一个彩色物体（乐高®元件最合适），然后按下力传感器活塞。传感器的 LED 灯应打开，最接近的颜色名称应显示在 thonny REPL 中。
+
+## 在.NET中使用Build HAT
+
+### 安装.NET框架
+在树莓派上无法通过 apt 安装微软的 .NET 框架。不过，您可以按照微软的[官方说明](https://docs.microsoft.com/en-us/dotnet/iot/deployment)安装 .NET 框架。此外，您还可以通过简化的[第三方途径](https://www.petecodes.co.uk/install-and-use-microsoft-dot-net-5-with-the-raspberry-pi/)将 .NET 工具链安装到树莓派上。
+
+:::warning[警告]
+安装脚本以 `root` 身份运行。您应该先阅读脚本，确保了解脚本的作用。如果您不确定，请按照[官方说明](https://docs.microsoft.com/en-us/dotnet/iot/deployment)手动操作。
+:::
+
+```sh
+wget -O - https://raw.githubusercontent.com/pjgpetecodes/dotnet5pi/master/install.sh | sudo bash
+```
+
+安装 .NET 框架后，您就可以创建项目了：
+
+```sh
+dotnet new console --name buildhat
+```
+
+这会在 `buildhat` 子目录下创建一个默认程序，我们需要进入该目录才能继续：
+
+```sh
+$ cd buildhat
+```
+
+现在，您需要安装以下 nuget 软件包：
+
+```sh
+dotnet add package System.Device.Gpio --version 2.1.0
+dotnet add package Iot.Device.Bindings --version 2.1.0
+```
+
+### 运行C#代码
+您可以使用 `dotnet run` 命令运行程序。现在让我们试一下，以确保一切正常。程序应打印 "Hello World!
+```
+$ dotnet run
+Hello World!
+```
+
+(在后面的说明中，当指示您 "运行程序 "时，您只需重新运行 `dotnet run` 命令即可）。
+
+### 编辑C#代码
+在下面的说明中，你将编辑 `buildhat/Program.cs` 文件，即运行上述命令时生成的 C# 程序。
+
+任何文本编辑器都可以编辑 C# 代码，包括预装的集成开发环境/文本编辑器 Geany。[Visual Studio Code](https://code.visualstudio.com/docs/setup/raspberry-pi/)（通常称为 "VS Code"）也是一种常用的替代方法。
+
+### .NET使用Build HAT
+树莓派Build HAT 在乐高®术语中称为 "Brick"(砖块)，您可以使用 [Build HAT 串行协议](https://datasheets.raspberrypi.com/build-hat/build-hat-serial-protocol.pdf)直接从 .NET 与它对话。
+
+您可以如下创建一个 `brick` 对象、
+
+```cs
+Brick brick = new("/dev/serial0")
+```
+
+但您需要记住在代码结束时处置 `brick` 对象。
+```cs
+brick.Dispose();
+```
+
+:::warning[警告]
+如果不调用` brick.Dispose()`，程序将无法终止。
+:::
+
+如果你想避免在最后调用 `brick.Dispose`，那么就用 `using` 语句创建你的砖块：
+```cs
+using Brick brick = new("/dev/serial0");
+```
+
+在这种情况下，当程序结束时，你的砖块将被自动处置。
+
+#### 显示 Build HAT 信息
+您可以收集各种软件版本、签名和输入电压：
+```cs
+var info = brick.BuildHatInformation;
+Console.WriteLine($"version: {info.Version}, firmware date: {info.FirmwareDate}, signature:");
+Console.WriteLine($"{BitConverter.ToString(info.Signature)}");
+Console.WriteLine($"Vin = {brick.InputVoltage.Volts} V");
+```
+
+:::note[注意]
+输入电压只在启动时读取一次，之后不会再读取。
+:::
+
+#### 获取传感器和电机详细信息
+使用函数 `GetSensorType` 和 `GetSensor` 可以获取所连接传感器的任何信息。
+```cs
+SensorType sensor = brick.GetSensorType((SensorPort)i);
+Console.Write($"Port: {i} {(Brick.IsMotor(sensor) ? "Sensor" : "Motor")} type: {sensor} Connected: ");
+```
+
+在此示例中，您也可以使用 `IsMotor` 静态函数来检查连接的元素是传感器还是电机。
+```cs
+if (Brick.IsActiveSensor(sensor))
+{
+    ActiveSensor activeSensor = brick.GetActiveSensor((SensorPort)i);
+}
+else
+{
+    var passive = (Sensor)brick.GetSensor((SensorPort)i);
+    Console.WriteLine(passive.IsConnected);
+}
+```
+
+`ActiveSensor` 拥有一系列高级属性和函数，可以了解传感器的每个元素。您还可以从中调用砖块的原始函数。这将允许您选择特定模式并执行高级方案。虽然这是可能的，但创建电机和传感器类是为了让您的生活更轻松。
+
+#### 事件
+大多数传感器都会在其特殊属性上实现事件。您可以简单地订阅 `PropertyChanged` 和 `PropertyUpdated` 事件。当属性值发生变化时，将触发 `PropertyChanged` 事件，而当属性更新成功时，将触发 `PropertyUpdated` 事件。根据所使用的模式，某些属性可能会一直在后台更新，而另一些属性则偶尔更新。
+
+您可能只对颜色变化或电机位置变化感兴趣，将其用作转速表。在这种情况下，您需要使用 `PropertyChanged`！
+
+```cs
+Console.WriteLine("Move motor on Port A to more than position 100 to stop this test.");
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var active = (ActiveMotor)brick.GetMotor(SensorPort.PortA);
+bool continueToRun = true;
+active.PropertyChanged += MotorPropertyEvent;
+while (continueToRun)
+{
+    Thread.Sleep(50);
+}
+
+active.PropertyChanged -= MotorPropertyEvent;
+Console.WriteLine($"Current position: {active.Position}, eventing stopped.");
+
+void MotorPropertyEvent(object? sender, PropertyChangedEventArgs e)
+{
+    Console.WriteLine($"Property changed: {e.PropertyName}");
+    if (e.PropertyName == nameof(ActiveMotor.Position))
+    {
+        if (((ActiveMotor)brick.GetMotor(SensorPort.PortA)).Position > 100)
+        {
+            continueToRun = false;
+        }
+    }
+}
+```
+
+#### 等待初始化
+砖块可能需要很长时间才能初始化。为此，我们实现了等待传感器连接的功能。
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortB);
+```
+
+如果您想实现一些高级功能，如在一段时间后警告用户并重试，也可以使用 `CancellationToken`。
+
+### .NET使用电机
+
+电机有两种类型：**被动**电机和**主动**电机。主动电机将提供详细位置、绝对位置和速度，而被动电机只能控制速度。
+
+有一套通用函数可以控制电机的速度。其中有两个重要函数： `SetPowerLimit` 和 `SetBias`：
+```cs
+train.SetPowerLimit(1.0);
+train.SetBias(0.2);
+```
+可接受的值只有 0.0 至 1.0。功率限制可以方便地按比例降低最大功率。
+
+偏置值是为电流端口设置的，它与正电机驱动值相加，与负电机驱动值相减。这可以用来补偿大多数直流电机在转动之前需要一定驱动力的事实。
+
+创建电机时的默认值为功率限制 0.7 和偏置 0.3。
+
+#### 被动电机
+
+<img src="/img/accessories/build-hat/train-motor.png" width="60%" alt="火车电机" />
+
+*火车电机，图片来自 Bricklink*
+
+典型的被动马达是火车马达和老式的通电马达。`速度`属性可以设置和读取。这是目标速度，同时也是测量速度，因为这些传感器无法测量它们。数值范围为 -100 至 +100。
+
+还提供控制`开始`、`停止`和`设置速度`的功能。下面是一个使用示例：
+
+```cs
+Console.WriteLine("This will run the motor for 20 secondes incrementing the PWM");
+train.SetPowerLimit(1.0);
+train.Start();
+for (int i = 0; i < 100; i++)
+{
+    train.SetSpeed(i);
+    Thread.Sleep(250);
+}
+
+Console.WriteLine("Stop the train for 2 seconds");
+train.Stop();
+Thread.Sleep(2000);
+Console.WriteLine("Full speed backward for 2 seconds");
+train.Start(-100);
+Thread.Sleep(2000);
+Console.WriteLine("Full speed forward for 2 seconds");
+train.Start(100);
+Thread.Sleep(2000);
+Console.WriteLine("Stop the train");
+train.Stop();
+```
+
+:::note[注意]
+列车启动后，您可以调整速度，电机也会相应调整。
+:::
+
+#### 主动电机
+<img src="/img/accessories/build-hat/active-motor.png" width="60%" alt="主动电机" />
+
+*主动电机，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?S=88014-1&name=Technic%20XL%20Motor&category=%5BPower%20Functions%5D%5BPowered%20Up%5D#T=S&O={%22iconly%22:0})*
+
+有源电机的特殊属性包括速度（`Speed`）、绝对位置（`AbsolutePosition`）、位置（`Position`）和目标速度（`TargetSpeed`）。即使在电机停止时，也会连续读取它们。
+
+代码片段展示了如何获取电机、启动电机和读取属性：
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+brick.WaitForSensorToConnect(SensorPort.PortD);
+var active = (ActiveMotor)brick.GetMotor(SensorPort.PortA);
+var active2 = (ActiveMotor)brick.GetMotor(SensorPort.PortD);
+active.Start(50);
+active2.Start(50);
+// Make sure you have an active motor plug in the port A and D
+while (!Console.KeyAvailable)
+{
+    Console.CursorTop = 1;
+    Console.CursorLeft = 0;
+    Console.WriteLine($"Absolute: {active.AbsolutePosition}     ");
+    Console.WriteLine($"Position: {active.Position}     ");
+    Console.WriteLine($"Speed: {active.Speed}     ");
+    Console.WriteLine();
+    Console.WriteLine($"Absolute: {active2.AbsolutePosition}     ");
+    Console.WriteLine($"Position: {active2.Position}     ");
+    Console.WriteLine($"Speed: {active2.Speed}     ");
+}
+
+active.Stop();
+active2.Stop();
+```
+
+:::note[注意]
+不要忘记在需要时启动和停止电机。
+:::
+
+主动电机具有高级功能。您可以要求移动几秒钟、移动到特定位置或特定绝对位置。下面是几个例子：
+
+```cs
+// 在上一个示例中，这将使电机回到初始位置：
+active.TargetSpeed = 100;
+active2.TargetSpeed = 100;
+// 首先启动该电机并阻塞线程
+active.MoveToPosition(0, true);
+// 然后是这个电机，也将阻塞线程
+active2.MoveToPosition(0, true);
+```
+
+每个函数都允许您在执行操作时阻塞或不阻塞线程。请注意，对于绝对位置和相对位置移动，存在几度的误差。
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var active = (ActiveMotor)brick.GetMotor(SensorPort.PortA);
+active.TargetSpeed = 70;
+Console.WriteLine("Moving motor to position 0");
+active.MoveToPosition(0, true);
+Console.WriteLine("Moving motor to position 3600 (10 turns)");
+active.MoveToPosition(3600, true);
+Console.WriteLine("Moving motor to position -3600 (so 20 turns the other way");
+active.MoveToPosition(-3600, true);
+Console.WriteLine("Moving motor to absolute position 0, should rotate by 90°");
+active.MoveToAbsolutePosition(0, PositionWay.Shortest, true);
+Console.WriteLine("Moving motor to position 90");
+active.MoveToAbsolutePosition(90, PositionWay.Shortest, true);
+Console.WriteLine("Moving motor to position 179");
+active.MoveToAbsolutePosition(179, PositionWay.Shortest, true);
+Console.WriteLine("Moving motor to position -180");
+active.MoveToAbsolutePosition(-180, PositionWay.Shortest, true);
+active.Float();
+```
+
+您可以将电机置于浮动位置，这意味着它不再受约束。在将电机用作转速计、移动电机并读取位置时，可以使用这种模式。如果电机上仍有约束，则可能无法移动电机。
+
+### .NET使用传感器
+与电机一样，传感器也有主动和被动之分。大多数最新的传感器都是主动的。被动传感器包括灯和简单的按钮。主动传感器是距离或颜色传感器，以及小型 3x3 像素显示器。
+
+#### 按钮/触摸式被动传感器
+按钮/触摸式被动传感器有一个特定属性 `IsPressed`。当按钮被按下时，该属性将被设置为 true。下面是一个包含事件的完整示例：
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var button = (ButtonSensor)brick.GetSensor(SensorPort.PortA);
+bool continueToRun = true;
+button.PropertyChanged += ButtonPropertyEvent;
+while (continueToRun)
+{
+    // You can do many other things here
+    Thread.Sleep(50);
+}
+
+button.PropertyChanged -= ButtonPropertyEvent;
+Console.WriteLine($"Button has been pressed, we're stopping the program.");
+brick.Dispose();
+
+void ButtonPropertyEvent(object? sender, PropertyChangedEventArgs e)
+{
+    Console.WriteLine($"Property changed: {e.PropertyName}");
+    if (e.PropertyName == nameof(ButtonSensor.IsPressed))
+    {
+        continueToRun = false;
+    }
+}
+```
+
+#### 被动灯
+<img src="/img/accessories/build-hat/passive-light.png" width="60%" alt="被动灯" />
+
+*被动灯，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?P=22168c01&name=Electric,%20Light%20Unit%20Powered%20Up%20Attachment&category=%5BElectric,%20Light%20&%20Sound%5D#T=C&C=11)*
+
+被动灯是火车灯。它们可以打开，您也可以控制它们的亮度。
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var light = (PassiveLight)brick.GetSensor(SensorPort.PortA);
+// Brightness 50%
+light.On(50);
+Thread.Sleep(2000);
+// 70% Brightness
+light.Brightness = 70;
+Thread.Sleep(2000);
+// Switch light off
+light.Off()
+```
+
+#### 主动传感器
+主动传感器类是所有主动传感器（包括主动电机）的通用类。它们包含一组属性，涉及如何连接到Build HAT、模式、详细的组合模式、硬件、软件版本以及一个名为 `ValueAsString` 的特定属性。作为字符串的值包含作为字符串集合的最后一次测量结果。如果测量结果为 `P0C0: +23 -42 0`，枚举将包含 `P0C0:`、`+23`、`-42` 和 `0`。
+
+所有主动的传感器都可以运行特定的测量模式或组合模式。您可以使用 `SelectModeAndRead` 和 `SelectCombiModesAndRead` 功能，通过预先模式设置您希望持续使用的特定模式。需要注意的是，更改模式或设置新模式将停止之前的模式。
+
+`CombiModes` 属性中列出了 Combi 模式中可组合的模式。当您设置其中一种模式时，传感器的所有属性都将自动更新。
+
+#### WeDo倾斜传感器
+<img src="/img/accessories/build-hat/wedo-tilt.png" width="60%" alt="WeDo 倾斜传感器" />
+
+*WeDo 倾斜传感器，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?S=45305-1&name=WeDo%202.0%20Tilt%20Sensor&category=%5BEducational%20&%20Dacta%5D%5BWeDo%5D#T=S&O={%22iconly%22:0})*
+
+WeDo 倾斜传感器具有特殊的倾斜(`Tilt`)属性。其类型是一个点，X 表示 X 倾斜，Y 表示 Y 倾斜。其数值范围为 -45 至 +45，它们的上限为这些数值，代表度数。
+
+您可以使用 `ContinuousMeasurement` 属性为该传感器设置连续测量。
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var tilt = (WeDoTiltSensor)brick.GetSensor(SensorPort.PortA);
+tilt.ContinuousMeasurement = true;
+Point tiltValue;
+while(!console.KeyAvailable)
+{
+    tiltValue = tilt.Tilt;
+    console.WriteLine($"Tilt X: {tiltValue.X}, Tilt Y: {tiltValue.Y}");
+    Thread.Sleep(200);
+}
+```
+
+#### WeDo距离传感器
+<img src="/img/accessories/build-hat/wedo-distance.png" width="60%" alt="WeDo 距离传感器" />
+
+*WeDo 距离传感器，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?S=45304-1&name=WeDo%202.0%20Motion%20Sensor&category=%5BEducational%20&%20Dacta%5D%5BWeDo%5D#T=S&O={%22iconly%22:0})*
+
+WeDo 距离传感器通过距离属性提供以毫米为单位的距离。
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var distance = (WeDoDistanceSensor)brick.GetSensor(SensorPort.PortA);
+distance.ContinuousMeasurement = true;
+while(!console.KeyAvailable)
+{
+    console.WriteLine($"Distance: {distance.Distance} mm");
+    Thread.Sleep(200);
+}
+```
+
+#### SPIKE Prime力传感器
+<img src="/img/accessories/build-hat/spike-force.png" width="60%" alt="尖峰力传感器" />
+
+*尖峰力传感器，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?P=37312c01&name=Electric%20Sensor,%20Force%20-%20Spike%20Prime&category=%5BElectric%5D#T=C&C=11)*
+
+该力传感器可测量施加在其上的压力以及是否被按压。这两个属性可通过 `Force` 和 `IsPressed` 属性访问。
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var force = (ForceSensor)brick.GetSensor(SensorPort.PortA);
+force.ContinuousMeasurement = true;
+while(!force.IsPressed)
+{
+    console.WriteLine($"Force: {force.Force} N");
+    Thread.Sleep(200);
+}
+```
+
+#### SPIKE Essential 3x3彩光矩阵
+<img src="/img/accessories/build-hat/3x3matrix.png" width="60%" alt="3x3 矩阵" />
+
+*3x3 矩阵，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?P=45608c01&name=Electric,%203%20x%203%20Color%20Light%20Matrix%20-%20SPIKE%20Prime&category=%5BElectric%5D#T=C)*
+
+这是一个小型 3x3 显示屏，有 9 个可单独控制的不同 LED。该类提供了控制屏幕的函数。下面是一个使用它们的示例：
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var matrix = (ColorLightMatrix)brick.GetSensor(SensorPort.PortA);
+for(byte i = 0; i < 10; i++)
+{
+    // Will light every led one after the other like a progress bar
+    matrix.DisplayProgressBar(i);
+    Thread.Sleep(1000);
+}
+
+for(byte i = 0; i < 11; i++)
+{
+    // Will display the matrix with the same color and go through all of them
+    matrix.DisplayColor((LedColor)i);
+    Thread.Sleep(1000);
+}
+
+Span<byte> brg = stackalloc byte[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+Span<LedColor> col = stackalloc LedColor[9] { LedColor.White, LedColor.White, LedColor.White,
+  LedColor.White, LedColor.White, LedColor.White, LedColor.White, LedColor.White, LedColor.White };
+// Shades of grey
+matrix.DisplayColorPerPixel(brg, col);
+```
+
+#### SPIKE Prime 色彩传感器和色彩与距离传感器
+
+SPIKE色彩传感器：
+
+<img src="/img/accessories/build-hat/spike-color.png" width="60%" alt="SPIKE 色彩传感器" />
+
+*SPIKE色彩传感器，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?P=37308c01&name=Electric%20Sensor,%20Color%20-%20Spike%20Prime&category=%5BElectric%5D#T=C&C=11)*
+
+色彩和距离传感器：
+
+<img src="/img/accessories/build-hat/color-distance.png" width="60%" alt="色彩距离传感器" />
+
+*彩色距离传感器，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?P=bb0891c01&name=Electric%20Sensor,%20Color%20and%20Distance%20-%20Boost&category=%5BElectric%5D#T=C&C=1)*
+
+这些颜色传感器具有多种属性和功能。您可以获得`颜色`、`反射光`和`环境光`。
+
+此外，颜色和距离传感器还可以测量`距离`，并具有一个物体`计数器`。它将自动计算进出该范围的物体数量。这样就可以对经过传感器前方的物体进行计数。距离限制为 0 至 10 厘米。
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortC);
+
+var colorSensor = (ColorAndDistanceSensor)brick.GetActiveSensor(SensorPort.PortC);
+while (!Console.KeyAvailable)
+{
+    var colorRead = colorSensor.GetColor();
+    Console.WriteLine($"Color:     {colorRead}");
+    var reflected = colorSensor.GetReflectedLight();
+    Console.WriteLine($"Reflected: {reflected}");
+    var ambiant = colorSensor.GetAmbiantLight();
+    Console.WriteLine($"Ambiant:   {ambiant}");
+    var distance = colorSensor.GetDistance();
+    Console.WriteLine($"Distance: {distance}");
+    var counter = colorSensor.GetCounter();
+    Console.WriteLine($"Counter:  {counter}");
+    Thread.Sleep(200);
+}
+```
+
+:::note[注意]
+为了更好地进行测量，不建议快速更改测量模式，否则可能无法正确进行色彩整合。本示例为您提供了传感器的全部功能。此外，该类没有实现连续测量模式。您可以使用 `SelectModeAndRead`（选择模式和读取）函数，通过高级模式设置一个您想要的连续模式。需要注意的是，更改模式或设置新模式将停止之前的模式。
+:::
+
+#### SPIKE Prime超声波距离传感器
+
+<img src="/img/accessories/build-hat/spike-distance.png" width="60%" alt="SPIKE 距离传感器" />
+
+*SPIKE距离传感器，[图片来自 Bricklink](https://www.bricklink.com/v2/catalog/catalogitem.page?P=37316c01&name=Electric%20Sensor,%20Distance%20-%20Spike%20Prime&category=%5BElectric%5D#T=C&C=11)*
+
+这是一个距离传感器，它实现了一个 距离(`Distance`) 属性，可以毫米为单位显示距离。该传感器还提供 持续测量（`ContinuousMeasurement`）模式。
+
+```cs
+brick.WaitForSensorToConnect(SensorPort.PortA);
+var distance = (UltrasonicDistanceSensor)brick.GetSensor(SensorPort.PortA);
+distance.ContinuousMeasurement = true;
+while(!console.KeyAvailable)
+{
+    console.WriteLine($"Distance: {distance.Distance} mm");
+    Thread.Sleep(200);
+}
+```
+
+## 更多资源
+
+您可以下载以下文档、
+- [树莓派 Build HAT 串行协议](https://datasheets.raspberrypi.com/build-hat/build-hat-serial-protocol.pdf)
+- [树莓派 Build HAT Python 库](https://datasheets.raspberrypi.com/build-hat/build-hat-python-library.pdf)
+
+以及 Python 库文档的完整详细信息，也可在 [ReadTheDocs](https://buildhat.readthedocs.io/) 上找到。您可以在 [.NET IoT](https://github.com/dotnet/iot/tree/main/src/devices/BuildHat) Github 存储库中找到有关 .NET 库的更多信息。
+
+您还可以关注树莓派基金会的项目、
+
+- [乐高® 游戏控制器](https://projects.raspberrypi.org/en/projects/lego-game-controller)
+- [乐高®机器人汽车](https://projects.raspberrypi.org/en/projects/lego-robot-car)
+- [乐高®绘图仪](https://projects.raspberrypi.org/en/projects/lego-plotter)
+- [乐高®机器人面部](https://projects.raspberrypi.org/en/projects/lego-robot-face)
+- [乐高®数据仪表盘](https://projects.raspberrypi.org/en/projects/lego-data-dash)
+
+## 设备兼容性
+Build HAT 库支持 SPIKE™ 产品组合中包含的所有 乐高® Technic™ 设备，以及 乐高® 头脑风暴：机器人发明家 套件中的设备和其他使用 PoweredUp 连接器的设备。
+
+:::important[重要]
+包含 Maker Plate 的 SPIKE™ Prime 扩展套装的产品代码为 45681。原始扩展套件的产品代码是 45680，不包括制作板。
+:::
+
+| 描述 | 颜色 | LEGO 项目编号 | FW支持 | Python支持 | Alt 编号 | BrickLink | 可用 | 套装编号 | 分类 | 型号 | 设备ID |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| 大角度电机 | 白色/青色 | 45602 | 是 | 是 | 45602 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=45602-1#T=S&O={%22iconly%22:0}) | SPIKE Prime 套件，SPIKE Prime 扩展套件 | 45678, 45680 | 电机 | 主动 | 31 |
+| 中角度电机 | 白色/青色 | 45603 | 是 | 是 | 45603 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=45603-1#T=S&O={%22iconly%22:0}) | SPIKE Prime 套件 | 45678 | 电机 | 主动 | 30 |
+| 中角度电机 | 白色/灰色 | 6299646, 6359216, 6386708 | 是 | 是 | 436655 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?P=54696c01&idColor=86#T=C&C=86) | 头脑风暴机器人发明家 | 51515 | 电机 | 主动 | 4B |
+| 小角度电机 | 白色/青色 | 45607, 6296520 | 是 | 是 |  | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?P=45607c01) | SPIKE基本套装 |  | 电机 | 主动 | 41 |
+| 光/颜色传感器 | 白色/黑色 | 6217705 | 是 | 是 |  | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?P=37308c01&idColor=11#T=C&C=11) | SPIKE Prime 套件，SPIKE Prime 扩展套件，头脑风暴机器人发明家，SPIKE 基本套装 | 45678, 45680, 51515 | 颜色传感器 | 主动 | 3D |
+| 距离传感器 | 白色/黑色 | 6302968 | 是 | 是 |  | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?P=37316c01&idColor=11#T=C&C=11) | SPIKE Prime 套件，头脑风暴机器人发明家 | 45678, 51515 | 距离传感器 | 主动 | 3E |
+| 系统中型电机 | 白色/灰色 | 45303, 6138854, 6290182, 6127110 | 是 | 是 |  |  | Wedo 2.0，乐高创意钢琴，应用程序控制蝙蝠车 | 76112 |  | 被动 | 1 |
+| 力传感器 | 白色/黑色 | 6254354 | 是 | 是 | 45606 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?P=37312c01&idColor=11#T=C&C=11) | SPIKE Prime 套件 | 45678 | 力传感器 | 主动 | 3F |
+| 3×3 LED | 白色/青色 | 45608, 6297023 | 是 | 是 |  | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?P=45608c01) | SPIKE 基本套装 |  | 矩阵 | 主动 | 40 |
+| 系统列车电机 | 黑色 | 88011 | 是 | 是 | 28740, 88011-1 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=88011-1#T=S&O={%22iconly%22:0}) | 货运列车, 迪斯尼列车和车站, 客运列车 |  |  | 被动 | 2 |
+| 供电 LED 灯 | 黑色 | 88005 | 是 |  | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=88005-1#T=S&O={%22iconly%22:0}) |  |  |  |  | 被动 | 8 |
+| 中型线性电机 | 白色/灰色 | 88008 | 是 | 是 | 26913, 88008-1 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=88008-1#T=S&O={%22iconly%22:0}) | 推进器，Droid Commander |  | 电机 | 主动 | 26 |
+| Technic 大型电机 | 灰色/灰色 | 88013 | 是 | 是 |  | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=88013-1#T=S&O={%22iconly%22:0}) |  |  |  | 主动 | 2E |
+| Technic XL 电机 | 灰色/灰色 | 88014 | 是 | 是 | 22172, 88014 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=88014-1#T=S&O={%22iconly%22:0}) |  |  |  | 主动 | 2F |
+| 颜色+距离传感器 | 白色/灰色 | 88007 | 部分 | ? | 26912 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=88007-1#T=S&O={%22iconly%22:0}) |  |  |  | 主动 | 25 |
+| WeDo 2.0 运动传感器 | 白色/灰色 | 45304, 6138855 |  |  | 5003423-1 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=9583-1#T=S&O={%22iconly%22:0}}) |  |  |  | 主动 | 35 |
+| WeDo 2.0 倾斜传感器 | 白色/灰色 | 45305, 6138856 |  |  | 5003423-1 | [链接](https://www.bricklink.com/v2/catalog/catalogitem.page?S=9584-1#T=S&O={%22iconly%22:0}) |  |  |  | 主动 | 34 |
+
+## 机械制图
+树莓派 Build HAT 的机械图纸。
+
+<img src="/img/accessories/build-hat/mech-build-hat.png" width="80%" alt="Build HAT 机械图" />
+
+<Normal />

@@ -1,0 +1,126 @@
+---
+sidebar_position: 14
+draft: false
+title: 14. 开发
+description: 对于任何希望参与该项目的人，我们建议首先熟悉一些简单的设备类。选取 LED 这样的类，然后按照其继承顺序回溯到 DigitalOutputDevice。然后再追溯到 OutputDevice，这样你就能很好地理解简单的输出设备，并掌握 GPIO Zero 如何在很大程度上依赖继承来完善设备的功能。输入设备以及更复杂的设备（复合设备和基于 SPI 的设备）也可以采用同样的方法。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 开发, 二次开发]
+last_update: 
+  date: 2024-06-14
+---
+import Normal from "./_normal.mdx";
+
+# 开发
+
+该项目的 GitHub 主仓库位于
+
+https://github.com/gpiozero/gpiozero
+
+对于任何希望参与该项目的人，我们建议首先熟悉一些简单的设备类。选取 `LED` 这样的类，然后按照其继承顺序回溯到 `DigitalOutputDevice`。然后再追溯到 `OutputDevice`，这样你就能很好地理解简单的输出设备，并掌握 GPIO Zero 如何在很大程度上依赖继承来完善设备的功能。输入设备以及更复杂的设备（复合设备和基于 SPI 的设备）也可以采用同样的方法。
+
+## 开发安装
+
+如果您希望自行开发 GPIO Zero，我们建议您通过克隆 GitHub 代码库获取源代码，然后使用 Makefile 的 "develop" 目标，该目标会将软件包安装为指向克隆代码库的链接，从而实现就地开发（它还会生成一个标签文件，以便与 vim/emacs 和 Exuberant 的 ctags 工具配合使用）。下面的示例在虚拟 Python 环境中演示了这种方法：
+
+```sh
+sudo apt install lsb-release build-essential git exuberant-ctags \
+    virtualenvwrapper python-virtualenv python3-virtualenv \
+    python-dev python3-dev
+```
+
+安装 `virtualenvwrapper` 后，你需要重启 shell 才能正确执行 `mkvirtualenv` 等命令。重启 shell 后，请继续：
+
+```sh
+cd
+mkvirtualenv -p /usr/bin/python3 gpiozero
+workon gpiozero
+git clone https://github.com/gpiozero/gpiozero.git
+cd gpiozero
+make develop
+```
+
+您可能希望在虚拟环境中安装一个或多个引脚实现（如果不安装，GPIO Zero 将使用 "原生" 引脚实现，该引脚在现阶段可用，但不支持 PWM 等功能）：
+
+```sh
+pip install rpi.gpio pigpio
+```
+
+如果您使用的是 SPI 设备，您可能还希望安装 `spidev` 软件包，以提供硬件 SPI 功能（同样，GPIO Zero 在不安装此软件包的情况下也能正常工作，但会使用一个会限制带宽的庞大软件 SPI 实现）：
+
+```sh
+pip install spidev
+```
+
+将 git 中的最新改动提取到克隆中并更新安装：
+
+```sh
+workon gpiozero
+cd ~/gpiozero
+git pull
+make develop
+```
+
+```sh
+deactivate
+rmvirtualenv gpiozero
+rm -rf ~/gpiozero
+```
+
+## 构建文档
+
+如果你想构建文档，还需要一些依赖项。Inkscape 用于将 SVG 转换为其他格式，Graphviz 用于渲染某些图表，而 TeX Live 则是构建 PDF 输出所必需的。以下命令应能安装所有需要的依赖项：
+
+```sh
+sudo apt install texlive-latex-recommended texlive-latex-extra \
+    texlive-fonts-recommended texlive-xetex graphviz inkscape \
+    python3-sphinx python3-sphinx-rtd-theme latexmk xindy
+```
+
+安装完成后，就可以使用 "doc" 目标来构建文档了：
+
+```sh
+workon gpiozero
+cd ~/gpiozero
+make doc
+```
+
+HTML 输出将写入 `build/html`，而 PDF 输出将写入 `build/latex`。
+
+## 测试套件
+如果要运行 GPIO Zero 测试套件，请按照上文 [开发安装](#开发安装) 中的说明进行操作，然后在沙盒中创建 "test" 目标。你还需要安装一些 pip 软件包：
+
+```sh
+workon gpiozero
+pip install coverage mock pytest
+cd ~/gpiozero
+make test
+```
+
+为了运行 "真正的" 引脚测试，测试套件需要将引脚 22 和 27（默认情况下）连在一起。测试套件使用的引脚可以通过环境变量 `GPIOZERO_TEST_PIN`（默认值为 22）和 `GPIOZERO_TEST_INPUT_PIN`（默认值为 27）来覆盖。
+
+:::warning
+将 GPIO 连接在一起时，确保在它们之间放置一个负载（如 1KΩ 电阻器）。否则可能会导致 GPIO 引脚烧毁（本人曾因偷懒而烧毁了 GPIO27，不过在多次运行测试套件后才出现这种情况！）。
+:::
+
+测试套件还可以与 `tox` 工具一起使用，在这种情况下，它会尝试使用所有支持的 Python 版本执行测试套件。如果您在 Ubuntu 下进行开发，您可能需要了解 [Dead Snakes PPA](https://launchpad.net/~deadsnakes/%2Barchive/ubuntu/ppa)，以便安装新旧版本的 Python；tox 设置应与 Ubuntu Xenial 随附的 tox 版本配合使用，但更多功能（如并行测试执行）可在后续版本中使用。
+
+关于并行测试执行，tox 设置也支持，包括 "真正的" 引脚测试（使用文件系统级锁确保不同解释器不会同时访问物理引脚）。
+
+例如，在 tox 下执行测试套件，跳过未安装的解释器版本：
+
+```sh
+tox -s
+```
+
+在所有已安装的解释器版本下并行执行测试套件，使用与 CPU 数量相同的并行任务，然后显示来自所有环境的覆盖率综合报告：
+
+```sh
+tox -p auto -s
+coverage combine --rcfile coverage.cfg
+coverage report --rcfile coverage.cfg
+```
+
+## 模拟pins
+
+测试套件在很大程度上依赖于模拟引脚工厂 `MockFactory` 的存在，它对于手动测试也很有用，例如在 Python shell 或其他 REPL 中。更多信息，请参阅 [API-引脚](./api-pins.mdx) 章节中的 [模拟引脚](./api-pins.mdx#todo) 部分。
+
+<Normal />

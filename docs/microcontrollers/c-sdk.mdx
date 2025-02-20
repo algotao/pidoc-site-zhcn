@@ -1,0 +1,165 @@
+---
+sidebar_position: 5
+draft: false
+description: 树莓派Pico C/C++ SDK。我们的官方 C SDK 可在命令行中使用，也可在常用的集成开发环境（如 Visual Studio Code、Eclipse 和 CLion）中使用。要开始使用，请下载我们的 C/C++ SDK 和示例，并查看我们的"入门"文档。如需快速安装，请参阅下一节。
+keywords: [树莓派, Raspberry Pi, C/C++ SDK, Pico]
+last_update: 
+  date: 2024-12-21
+---
+import Normal from "../_normal.mdx";
+
+# C/C++ SDK
+
+## SDK安装
+要全面了解如何使用 C/C++ SDK，请阅读我们的 ["Raspberry Pi Pico 系列入门"](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) 文档。不过，如果您打算在[树莓派OS](../computers/os.mdx)上为 Pico 进行开发，可以通过命令行运行我们的[安装脚本](https://raw.githubusercontent.com/raspberrypi/pico-setup/master/pico_setup.sh)来快速设置 C/C++ 工具链。
+
+:::note[注意]
+在运行设置脚本之前，应确保树莓派上的操作系统是[最新的](../computers/os.mdx#升级软件)。
+:::
+
+### 树莓派Pico C/C++ SDK
+
+我们的官方 C SDK 可在命令行中使用，也可在 Visual Studio Code、Eclipse 和 CLion 等流行的集成开发环境中使用。要开始使用，请下载我们的 C/C++ SDK 和示例，并查看我们的 [Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) 文档。如需快速设置，请参阅下一节。
+
+您可以在以下网址找到有关 C/C++ SDK 的文档：
+
+[Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)<br />
+&emsp;&emsp;使用 Raspberry Pi Pico、Pico 2 和其他基于 Raspberry Pi 微控制器的电路板进行 C/C++ 开发
+
+[使用树莓派Pico W连接互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)<br />
+&emsp;&emsp;使用 C/C++ 或 MicroPython 联机树莓派Pico W
+
+[Raspberry Pi Pico 系列 C/C++ SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf)<br />
+&emsp;&emsp;用于在 Raspberry Pi 微控制器上进行 C/C++ 开发的库和工具
+
+[API文档](https://www.raspberrypi.com/documentation/pico-sdk/index_doxygen.html)<br />
+&emsp;&emsp;树莓派co C/C++ SDK 文档
+
+[Pico示例代码库](https://github.com/raspberrypi/pico-examples)<br />
+&emsp;&emsp;示例项目
+
+SDK 源代码是开放源代码，可通过 https://github.com/raspberrypi/pico-sdk[pico-sdk Github 代码库]获取。
+
+:::note[注意]
+要使用 C/C++ SDK 为除 Raspberry Pi Pico 之外的电路板构建应用程序，请向 CMake 传递 `-DPICO_BOARD=boardname`，其中 `boardname` 是您的电路板名称。例如
+
+* 要为 Adafruit Feather RP2040 构建应用程序，请传递 `-DPICO_BOARD=adafruit_feather_rp2040` 。
+* 要为 Pico W 构建应用程序，请传递 `-DPICO_BOARD=pico_w`（如果希望连接到无线网络，还需传递 -DWIFI_SSID=“Your Network” -DWIFI_PASSWORD=“Your Password”）。
+
+更多信息，请参阅 Raspberry Pi Pico SDK 中的 [`boards/` 目录](https://github.com/raspberrypi/pico-sdk/tree/master/src/boards) 和 [论坛](https://forums.raspberrypi.com/viewtopic.php?f=147&t=304393)。
+:::
+
+## 你的第一个二进制文件
+
+### LED闪烁
+任何人在使用新微控制器时编写的第一个程序都是打开或关闭 LED。树莓派Pico 板载了一个 LED。Pico 的 LED 连接到树莓派 RP2040 板上的 `GP25`，而 Pico W 的 LED 则连接到英飞凌 43439 无线芯片上的 `WL_GPIO0`。
+
+<video controls src="/img/microcontrollers/c-sdk/Blink-an-LED.webm" alt="LED闪烁" width="80%" />
+
+您可以通过以下方式打开或关闭闪烁、
+1. 下载适用于[树莓派Pico](https://datasheets.raspberrypi.com/soft/blink.uf2)或[Pico W](https://datasheets.raspberrypi.com/soft/blink_picow.uf2)的 Blink UF2。
+2. 按住 BOOTSEL 按钮，将 Pico 插入树莓派或其他电脑的 USB 端口。
+3. 它将挂载为名为 RPI-RP2 的大容量存储设备。
+4. 将 Blink UF2 二进制文件拖放到 RPI-RP2 卷上。Pico 将重新启动。
+
+你会看到板载 LED 指示灯闪烁。
+
+您可以在 Github 上查看 [树莓派 Pico](https://github.com/raspberrypi/pico-examples/blob/master/blink/blink.c) 和 [Pico W](https://github.com/raspberrypi/pico-examples/blob/master/pico_w/wifi/blink/picow_blink.c) 版本的代码。
+
+### 说 "Hello World"
+任何人编写的下一个程序都是通过 USB 串行连接说 "Hello World"。
+
+<video controls src="/img/microcontrollers/c-sdk/Hello-World.webm" alt="Hello World" width="80%" />
+
+1. 载 ["Hello World" UF2](https://datasheets.raspberrypi.com/soft/hello_world.uf2)。
+2. 按住 BOOTSEL 按钮，将 Pico 插入树莓派或其他计算机的 USB 端口。
+3. 它将挂载为名为 RPI-RP2 的大容量存储设备。
+4. 将 "Hello World" UF2 二进制文件拖放到 RPI-RP2 卷上。Pico 将重新启动。
+5. 打开终端窗口并键入
+```sh
+sudo apt install minicom
+minicom -b 115200 -o -D /dev/ttyACM0
+```
+你应该会看到 "Hello, world!"打印到终端。
+
+您可以在 [Github](https://github.com/raspberrypi/pico-examples/blob/master/hello_world/usb/hello_usb.c) 上查看代码
+
+## 快速启动自己的项目
+:::note[注意]
+以下说明较为简短，且仅基于 Linux。有关其他平台的详细步骤和一般说明，我们建议您参阅[《Raspberry Pi Pico 系列入门》](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)和[《树莓派Pico C/C++ SDK》](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf)两本书。
+:::
+安装 CMake（至少 3.13 版）和 GCC 交叉编译器
+```sh
+sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+```
+在本地克隆树莓派Pico SDK，将项目设置为使用树莓派Pico SDK：
+```sh
+git clone https://github.com/raspberrypi/pico-sdk.git
+```
+
+将 SDK 中的 `external/pico_sdk_import.cmake` 复制到项目目录中
+
+将 `PICO_SDK_PATH` 设置为环境中的 SDK 位置，或稍后将其传递给 `cmake` (`-DPICO_SDK_PATH=`)。
+
+设置 `CMakeLists.txt`，如
+```cmake
+cmake_minimum_required(VERSION 3.13)
+
+# 根据 PICO_SDK_PATH 初始化 SDK
+# 注意：这必须在 project() 之前进行
+include(pico_sdk_import.cmake)
+
+project(my_project)
+
+# 初始化 树莓派Pico SDK
+pico_sdk_init()
+
+# 项目的其余部分
+```
+继续编写代码，有关如何编写代码的更多信息，请参阅 [pico-examples](https://github.com/raspberrypi/pico-examples) 或 [树莓派Pico C/C++ SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf) 一书。
+
+最简单的方法是编写一个源文件（例如 `hello_world.c`）
+```c
+#include <stdio.h> #include "pico/stdio.h
+#include "pico/stdlib.h"
+
+int main() {
+    setup_default_uart()；
+    printf("Hello, world!\n")；
+    return 0；
+}
+```
+并在 CMakeLists.txt 中添加以下内容：
+```cmake
+add_executable(hello_world
+    hello_world.c
+)
+
+# 添加聚合常用功能的 pico_stdlib 库
+target_link_libraries(hello_world pico_stdlib)
+
+# 除 ELF 文件外，创建 map/bin/hex/uf2 文件。
+pico_add_extra_outputs(hello_world)
+```
+:::note[注意]
+本示例使用默认 UART 作为 stdout；如果要使用默认 USB，请参阅 hello-usb 示例。
+:::
+设置 CMake 生成目录。例如，如果不使用集成开发环境：
+```sh
+mkdir build
+cd build
+cmake .
+```
+为树莓派Pico之外的其他板构建时，应在上述 cmake 命令中传递 `-DPICO_BOARD=board_name` ，例如 `cmake -DPICO_BOARD=pico_w ..`，以便为该特定板配置相应的 SDK 和构建选项。
+
+这样做可以设置各种编译器定义（例如 UART 和其他硬件的默认引脚编号），在某些情况下还可以使用额外的库（例如为 `PICO_BOARD=pico_w` 构建时的无线支持），如果没有提供必要功能的板，就无法构建这些库。
+
+有关 SDK 本身定义的板卡的列表，请查看[此目录](https://github.com/raspberrypi/pico-sdk/blob/master/src/boards/include/boards)，其中包含每个指定板卡的头文件。
+
+从创建的联编目录中制作目标程序。
+```sh
+make hello_world
+```
+现在，您可以通过调试器加载 `hello_world.elf`，也可以通过拖放方式在 树莓派Pico 上安装和运行 `hello_world.uf2`。
+
+<Normal />

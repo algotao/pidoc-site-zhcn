@@ -1,0 +1,758 @@
+---
+sidebar_position: 6
+draft: false
+title_meta: 从源码构建自定义树莓派Linux内核(官网24年12月)
+description: 树莓派内核介绍，内核本地构建，内核交叉编译，配置内核编译选项。将补丁或补丁集合（补丁集）应用到 Linux 内核。树莓派内核头文件的引用。
+keywords: [树莓派, Raspberry Pi, 内核, Kernel, 构建内核, 交叉编译, 更新内核, 配置内核]
+last_update: 
+  date: 2024-12-21
+---
+import Normal from "../_normal.mdx";
+
+# Linux内核
+
+## 介绍
+
+Raspberry Pi 内核 [托管在 GitHub 上](https://github.com/raspberrypi/linux)；更新滞后于上游 [Linux内核](https://github.com/torvalds/linux)。上游内核会持续更新，而 Raspberry Pi 会将 Linux 内核的**长期版本**整合到 Raspberry Pi 内核中。我们在 [raspberrypi/firmware](https://github.com/raspberrypi/firmware/)中为每个长期发布的 Linux 内核生成一个 `next` 分支。经过广泛的测试和讨论后，我们会将每个 `next` 分支合并到版本库的主分支中。
+
+### 升级
+
+通常的 Raspberry Pi OS [更新进程](./os.mdx#升级软件)会自动将内核更新到最新的稳定版本。如果你想尝试最新的不稳定测试内核，可以 [手动更新](./os.mdx#升级固件)。
+
+## 构建内核
+
+操作系统随附的默认编译器和链接器被配置为构建在该操作系统上运行的可执行文件。**原生编译**使用这些默认编译器和链接器。**交叉编译**是为运行编译过程的目标之外的目标编译代码的过程。
+
+Raspberry Pi 内核的交叉编译允许你从 32 位操作系统构建 64 位内核，反之亦然。或者，你也可以从 Raspberry Pi 以外的设备交叉编译 32 位或 64 位 Raspberry Pi 内核。
+
+下面的说明分为本地编译和交叉编译。选择适合你的情况的部分；虽然这两个过程有许多相同的步骤，但也有一些重要的区别。
+
+### 下载内核源代码
+
+在为任何目标编译之前，你都需要内核源代码。要获取内核源代码，你需要 Git。如果还没有 Git，请先在设备上安装：
+
+```sh
+sudo apt install git
+```
+
+接下来，下载最新 Raspberry Pi 内核的源代码：
+
+```sh
+git clone --depth=1 https://github.com/raspberrypi/linux
+```
+
+这可能需要几分钟时间。
+
+:::tip
+上面的 `git clone` 命令下载的是当前活动分支，我们就是从这个分支构建 Raspberry Pi 操作系统镜像的，没有任何历史记录。省略 `--depth=1`可以下载整个版本库，包括所有分支的完整历史。这需要更长的时间，占用的存储空间也更大。
+
+要下载不带历史记录的不同分支，请在上述命令中添加 `--branch` 选项，并将 `<branch>` 替换为要下载的分支名称：
+
+```sh
+git clone --depth=1 --branch <branch> https://github.com/raspberrypi/linux
+```
+
+有关可用分支的完整列表，请参阅 [Raspberry Pi 内核仓库](https://github.com/raspberrypi/linux)。
+:::
+
+现在你有了内核源代码，请通过 [原生构建内核](#原生构建内核) 或 [交叉编译](#交叉编译内核) 构建一个全新的内核。
+
+### 原生构建内核
+
+本指南假设你的 Raspberry Pi 运行最新版本的 [Raspberry Pi OS](./os.mdx)。
+
+首先，安装编译依赖项：
+
+```sh
+sudo apt install bc bison flex libssl-dev make
+```
+
+#### 构建配置
+
+本节介绍如何在构建内核时应用默认配置。你也可以通过以下方式配置内核：
+
+- [启用和禁用内核功能](#配置内核)
+- [应用其他来源的补丁](#内核补丁)
+
+要准备默认配置，请根据您的 Raspberry Pi 型号运行下表中的相应命令。
+
+<table>
+    <tr>
+        <td>架构</td>
+        <td>型号</td>
+        <td>命令</td>
+    </tr>
+    <tr>
+        <td rowspan="12">64位</td>
+        <td>Raspberry Pi 3</td>
+        <td rowspan="9">
+```sh
+cd linux
+KERNEL=kernel8
+make bcm2711_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 3</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 3+</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 3+</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi Zero 2 W</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 4</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 400</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 4</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 4S</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 5</td>
+        <td rowspan="3">
+```sh
+cd linux
+KERNEL=kernel_2712
+make bcm2712_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 500</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 5</td>
+    </tr>
+    <tr>
+        <td rowspan="14">32位</td>
+        <td>Raspberry Pi 1</td>
+        <td rowspan="4">
+```sh
+cd linux
+KERNEL=kernel
+make bcmrpi_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 1</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi Zero</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi Zero W</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 2</td>
+        <td rowspan="6">
+```sh
+cd linux
+KERNEL=kernel7
+make bcm2709_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 2</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 3</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 3</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 3+</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 3+</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 4</td>
+        <td rowspan="4">
+```sh
+cd linux
+KERNEL=kernel7l
+make bcm2711_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 400</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 4</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 4S</td>
+    </tr>
+</table>
+
+
+:::note[注意]
+4 系列设备上的 32 位 Raspberry Pi OS 发行版使用 32 位用户态域，但使用 *64* 位内核。要构建 32 位内核，请设置 `ARCH=arm`。要启动 32 位内核，请在 `config.txt` 中设置 `arm_64bit=0`。
+
+:::
+
+#### 使用 LOCALVERSION 自定义内核版本
+
+为防止内核覆盖 `/lib/modules` 中的现有模块，并在 `uname` 输出中说明运行的是自己的内核，请调整 `LOCALVERSION`。
+
+要调整 `LOCALVERSION`，请修改 `.config` 中的以下一行：
+
+```ini
+CONFIG_LOCALVERSION="-v7l-MY_CUSTOM_KERNEL"
+```
+
+:::tip
+您还可以在 **General setup** > **Local version - append to kernel release** 中使用 `menuconfig` 以图形方式更改此设置。有关 `menuconfig` 的更多信息，请参阅 [内核配置说明](#配置内核)。
+:::
+
+#### 构建
+
+接下来，构建内核。这一步可能需要很长时间，取决于你的 Raspberry Pi 型号。
+
+- 运行以下命令构建 64 位内核：
+```sh
+make -j6 Image.gz modules dtbs
+```
+
+- 运行以下命令构建 32 位内核：
+```sh
+make -j6 zImage modules dtbs
+```
+
+:::tip
+在多核 Raspberry Pi 型号上，`make -j<n>` 选项会在不同内核之间分配工作。这会大大加快编译速度。运行 `nproc` 查看你有多少个处理器；我们建议通过一个处理器数量 1.5 倍的数字。
+:::
+
+#### 安装内核
+
+接下来，将内核模块安装到启动媒体上：
+
+```sh
+sudo make -j6 modules_install
+```
+
+然后，将内核和设备树 blobs 安装到启动分区中，并备份原始内核。
+
+:::tip
+如果不想在运行此命令的 Raspberry Pi 上安装刚编译好的内核，可将编译好的内核复制到另一个启动介质的启动分区，而不是 `/boot/firmware/`。
+:::
+
+安装 64 位内核：
+
+- 运行以下命令创建当前内核的备份镜像，安装新的内核镜像、覆盖层、README，并卸载分区：
+
+```sh
+sudo cp /boot/firmware/$KERNEL.img /boot/firmware/$KERNEL-backup.img
+sudo cp arch/arm64/boot/Image.gz /boot/firmware/$KERNEL.img
+sudo cp arch/arm64/boot/dts/broadcom/*.dtb /boot/firmware/$KERNEL-backup.img
+sudo cp arch/arm64/boot/dts/overlays/*.dtb* /boot/firmware/overlays/
+sudo cp arch/arm64/boot/dts/overlays/README /boot/firmware/overlays/
+```
+
+安装 32 位内核：
+
+1. 创建当前内核的备份，然后安装新的内核映像：
+
+```sh
+sudo cp /boot/firmware/$KERNEL.img /boot/firmware/$KERNEL-backup.img
+sudo cp arch/arm/boot/zImage /boot/firmware/$KERNEL.img
+```
+
+2. 根据你的 [内核版本](#确定内核版本)，运行以下命令：
+  - 对于版本 6.4 以下的内核：
+```sh
+sudo cp arch/arm/boot/dts/*.dtb /boot/firmware/
+```
+
+  - 适用于 6.5 及以上版本的内核：
+```sh
+sudo cp arch/arm/boot/dts/broadcom/*.dtb /boot/firmware/
+```
+
+3. 最后，复制覆盖层和 README：
+
+```sh
+sudo cp arch/arm/boot/dts/overlays/*.dtb* /boot/firmware/overlays/
+sudo cp arch/arm/boot/dts/overlays/README /boot/firmware/overlays/
+```
+
+最后，运行以下命令重启 Raspberry Pi 并运行新编译的内核：
+
+```sh
+sudo reboot
+```
+
+:::tip
+或者，用不同的文件名复制内核（如 `kernel-myconfig.img`），而不是覆盖 `kernel.img` 文件。然后，编辑启动分区中的 `config.txt` 以选择内核：
+
+```ini
+kernel=kernel-myconfig.img
+```
+
+将此方法与自定义的 `LOCALVERSION` 结合使用，可将自定义内核与系统管理的现有内核映像分开。有了这种安排，当你的内核无法启动时，你就可以迅速恢复到库存内核。
+:::
+
+### 交叉编译内核
+
+首先，你需要一台合适的 Linux 交叉编译主机。我们倾向于使用 Ubuntu；因为 Raspberry Pi OS 也是 Debian 发行版，所以编译命令也类似。
+
+#### 安装所需的依赖项和工具链
+
+要构建用于交叉编译的源代码，请在设备上安装所需的依赖项。运行以下命令安装大部分依赖项：
+
+```sh
+sudo apt install bc bison flex libssl-dev make libc6-dev libncurses5-dev
+```
+
+然后，为要构建的内核架构安装适当的工具链：
+
+- 要安装 64 位工具链以构建 64 位内核，请运行以下命令：
+
+```sh
+sudo apt install crossbuild-essential-arm64
+```
+
+- 要安装 32 位工具链以构建 32 位内核，请运行以下命令：
+```sh
+sudo apt install crossbuild-essential-armhf
+```
+
+#### 编译配置
+
+本节介绍如何在构建内核时应用默认配置。你也可以通过以下方式配置内核：
+
+- [启用和禁用内核特性](#构建内核)
+- [应用来自其他源的补丁](#内核补丁)
+
+输入以下命令来构建源代码和设备树文件：
+
+<table>
+    <tr>
+        <td >架构</td>
+        <td>型号</td>
+        <td>命令</td>
+    </tr>
+    <tr>
+        <td rowspan="10">64位</td>
+        <td>Raspberry Pi 3</td>
+        <td rowspan="9">
+```sh
+cd linux
+KERNEL=kernel8
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2711_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 3</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 3+</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 3+</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi Zero 2 W</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 4</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 400</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 4</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 4S</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 5</td>
+        <td>
+```sh
+cd linux
+KERNEL=kernel_2712
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2712_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td rowspan="14">32位</td>
+        <td>Raspberry Pi 1</td>
+        <td rowspan="4">
+```sh
+cd linux
+KERNEL=kernel
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcmrpi_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 1</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi Zero</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi Zero W</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 2</td>
+        <td rowspan="6">
+```sh
+cd linux
+KERNEL=kernel7
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2709_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 2</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 3</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 3</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 3+</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 3+</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 4</td>
+        <td rowspan="4">
+```sh
+cd linux
+KERNEL=kernel7l
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2711_defconfig
+```
+        </td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi 400</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 4</td>
+    </tr>
+    <tr>
+        <td>Raspberry Pi CM 4S</td>
+    </tr>
+</table>
+
+#### 使用 LOCALVERSION 自定义内核版本
+
+为防止内核覆盖 `/lib/modules`中的现有模块，并在 `uname` 输出中说明运行的是自己的内核，请调整 `LOCALVERSION`。
+
+要调整 `LOCALVERSION`，请修改 `.config` 中的以下一行：
+
+```ini
+CONFIG_LOCALVERSION="-v7l-MY_CUSTOM_KERNEL"
+```
+
+:::tip
+您还可以在 *General setup* > *Local version - append to kernel release* 中使用 `menuconfig` 以图形方式更改此设置。有关 `menuconfig` 的更多信息，请参阅 [内核配置说明](#配置内核)。
+:::
+
+#### 构建
+
+- 运行以下命令构建 64 位内核：
+
+```sh
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 映像模块 dtbs
+```
+
+- 运行以下命令构建 32 位内核：
+```sh
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage 模块 dtbs
+```
+
+#### 安装内核
+
+构建内核后，您需要将其复制到 Raspberry Pi 的启动媒体（可能是 SD 卡或 SSD）上并安装模块。
+
+##### 查找启动媒体
+
+首先，运行 `lsblk`。然后，连接启动媒体。再次运行 `lsblk`；新设备代表启动媒体。你应该会看到类似下面的输出：
+
+```
+sdb
+   sdb1
+   sdb2
+```
+
+如果 `sdb` 代表启动媒体，则 `sdb1` 代表 `FAT32` 格式的 **启动分区**，而 `sdb2` 代表（可能是 `ext4` 格式的）**根分区**。
+
+首先，将这些分区挂载为 `mnt/boot` 和 `mnt/root`，调整分区代号以匹配启动媒体的位置：
+
+```sh
+mkdir mnt
+mkdir mnt/boot
+mkdir mnt/root
+sudo mount /dev/sdb1 mnt/boot
+sudo mount /dev/sdb2 mnt/root
+```
+
+##### 安装
+
+接下来，将内核模块安装到启动媒体上：
+
+- 对于 64 位内核：
+
+```sh
+sudo env PATH=$PATH make -j12 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=mnt/root modules_install
+```
+
+- 对于 32 位内核：
+
+```sh
+sudo env PATH=$PATH make -j12 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_PATH=mnt/root modules_install
+```
+
+:::tip
+在多核设备上，`make -j<n>` 选项可在各核之间分配工作。这会大大加快编译速度。运行 `nproc` 查看你有多少个处理器；我们建议使用处理器数量的 1.5 倍。
+:::
+
+接下来，将内核和设备树 blob 安装到启动分区，并备份原始内核。
+
+安装 64 位内核：
+
+- 运行以下命令创建当前内核的备份镜像，安装新的内核镜像、覆盖层、README，并卸载分区：
+
+```sh
+sudo cp mnt/boot/$KERNEL.img mnt/boot/$KERNEL-backup.img
+sudo cp arch/arm64/boot/Image mnt/boot/$KERNEL.img
+sudo cp arch/arm64/boot/dts/broadcom/*.dtb mnt/boot/
+sudo cp arch/arm64/boot/dts/overlays/*.dtb* mnt/boot/overlays/
+sudo cp arch/arm64/boot/dts/overlays/README mnt/boot/overlays/
+sudo umount mnt/boot
+sudo umount mnt/root
+```
+
+安装 32 位内核：
+
+1. 运行以下命令创建当前内核的备份镜像，并安装新的内核镜像：
+
+```sh
+sudo cp mnt/boot/$KERNEL.img mnt/boot/$KERNEL-backup.img
+sudo cp arch/arm/boot/zImage mnt/boot/$KERNEL.img
+```
+
+2. 根据你的 [内核版本](#确定内核版本)，运行以下命令安装设备树 blobs：
+  - 对于版本 6.4 以下的内核：
+
+```sh
+sudo cp arch/arm/boot/dts/*.dtb mnt/boot/
+```
+
+  - 适用于 6.5 及以上版本的内核：
+
+```sh
+sudo cp arch/arm/boot/dts/broadcom/*.dtb mnt/boot/
+```
+
+3. 最后，安装覆盖层和 README，并卸载分区：
+
+```sh
+sudo cp arch/arm/boot/dts/overlays/*.dtb* mnt/boot/overlays/
+sudo cp arch/arm/boot/dts/overlays/README mnt/boot/overlays/
+sudo umount mnt/boot
+sudo umount mnt/root
+```
+
+最后，将启动媒体连接到 Raspberry Pi 并接通电源，运行新编译的内核。
+
+:::tip
+或者，用不同的文件名复制内核（例如，`kernel-myconfig.img`），而不是覆盖`kernel.img`文件。然后，编辑启动分区中的 `config.txt` 以选择内核：
+
+```ini
+kernel=kernel-myconfig.img
+```
+
+将此方法与自定义的 `LOCALVERSION` 结合使用，可将自定义内核与系统管理的现有内核映像分开。有了这种安排，当你的内核无法启动时，你就可以迅速恢复到库存内核。
+:::
+
+## 配置内核
+
+Linux 内核是高度可配置的。高级用户可能希望修改默认配置，以便根据自己的需要进行定制，例如启用新的或试验性的网络协议，或启用对新硬件的支持。
+
+最常见的配置方法是通过 `make menuconfig` 界面完成。或者，你也可以手动修改你的 `.config` 文件，但这可能比较困难。
+
+### 准备配置
+
+`menuconfig` 工具需要 `ncurses` 开发头文件才能正常编译。要安装这些头文件，请运行以下命令：
+
+```sh
+sudo apt install libncurses5-dev
+```
+
+接下来，[下载内核源代码](#下载内核源代码)。尤其要确保你已经安装了 [默认本地配置](#原生构建内核) 或 [默认交叉编译配置](#交叉编译内核)。
+
+### menuconfig
+
+设置好一切后，就可以编译并运行 `menuconfig` 工具了，方法如下：
+
+```sh
+make menuconfig
+```
+
+交叉编译 64 位内核：
+
+```sh
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig
+```
+
+交叉编译 32 位内核：
+
+```sh
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+```
+
+要浏览 `menuconfig` 工具，请使用键盘：
+
+* 按方向导航，使用 **方向键**。
+* 要进入子菜单（用 `---->` 表示），请按 **Enter** 键
+* 要上一级或退出，按两次 **Escape** 键
+* 要切换二进制选项的状态，按 **空格** 键。
+* 选择多选选项的状态，按 **Enter** 键打开子菜单，按 **方向键** 浏览子菜单，再按 **Enter** 键选择状态
+* 要获得选项或菜单的帮助，请按 **H** 键
+
+简短编译后，`menuconfig` 将显示包含所有可配置选项的子菜单列表。选项很多，请慢慢阅读。第一次尝试时，不要轻易启用或禁用很多选项；这样很容易破坏配置，所以要从小处着手，熟悉配置和编译过程。
+
+### 保存更改
+
+完成更改后，按 **Escape** 直至提示保存新配置。默认情况下，会保存到 `.config` 文件中。您可以通过复制该文件来保存和加载配置。
+
+自定义配置后，你就可以 [构建内核](#构建内核)了。
+
+## 内核补丁
+
+在构建自定义内核时，你可能希望在 Linux 内核中应用补丁或补丁集（patchsets）。
+
+硬件制造商有时会提供补丁集，作为在补丁进入 Linux 内核和 Raspberry Pi 内核之前支持新硬件的临时措施。不过，也有用于其他目的的补丁集，例如，用于实时使用的完全抢占式内核。
+
+### 确定内核版本
+
+要查看设备上当前运行的内核版本，请运行以下命令：
+
+```sh
+uname -r
+```
+
+在打补丁之前，请务必检查内核版本。在内核源代码目录下，运行以下命令查看内核版本：
+
+```sh
+head Makefile -n n
+```
+
+你应该会看到类似下面的输出：
+
+```
+# SPDX-License-Identifier: GPL-2.0
+VERSION = 6
+PATCHLEVEL = 1
+SUBLEVEL = 38
+```
+
+在这个例子中，源代码是 6.1.38 内核的。
+
+### 应用补丁
+
+补丁的应用取决于补丁的发布格式。
+
+开发者会以单个文件的形式发布大多数补丁。使用 `patch` 工具来打补丁。以下命令将下载、解压缩并使用实时内核补丁为我们的示例内核版本打上补丁：
+
+```sh
+wget https://www.kernel.org/pub/linux/kernel/projects/rt/6.1/patch-6.1.38-rt13-rc1.patch.gz
+gunzip patch-6.1.38-rt13-rc1.patch.gz
+cat patch-6.1.38-rt13-rc1.patch | patch -p1
+```
+
+有些开发者会以 **邮箱格式** 发布补丁，即一个包含多个补丁文件的文件夹。使用 Git 可以打上这些补丁。
+
+:::note[注意]
+在使用 Git 应用邮箱补丁之前，请在本地 Git 安装中配置名称和电子邮件：
+
+```sh
+git config --global user.name "您的姓名"
+git config --global user.email "您的邮箱"
+```
+:::
+
+要使用 Git 应用邮箱格式的补丁，请运行以下命令：
+
+```sh
+git am -3 /path/to/patches/*
+```
+
+请务必遵循补丁分发者提供的说明。例如，有些补丁集要求针对特定提交打补丁。
+
+## 内核头文件
+
+要编译内核模块，你需要 Linux 内核头文件。这些头文件提供了编译与内核接口的代码所需的函数和结构定义。
+
+如果你从 GitHub 克隆了整个内核，那么源代码树中已经包含了头文件。如果你不需要所有额外的文件，可以使用 `apt` 只安装内核头文件。
+
+:::tip
+当新内核发布时，你需要与该内核版本相匹配的头文件。更新 `apt` 软件包以反映最新内核版本可能需要几周时间。有关最新的头文件版本，请参阅 [克隆内核](#构建内核)。
+:::
+
+如果使用 64 位版本的 Raspberry Pi OS，请运行以下命令安装内核头：
+
+```sh
+sudo apt install linux-headers-rpi-v8
+```
+
+如果使用 32 位版本的 Raspberry Pi OS，运行以下命令安装内核头：
+
+```sh
+sudo apt install linux-headers-rpi-{v6,v7,v7l}
+```
+
+:::note[注意]
+安装可能需要几分钟时间。没有进度指示器。
+:::
+
+## 贡献
+
+有很多原因让你想在内核中加入一些东西：
+
+* 您编写了一些树莓派专用代码，希望每个人都能从中受益
+* 你为某个设备编写了通用的 Linux 内核驱动程序，并希望每个人都能使用它
+* 你修复了一个通用内核错误
+* 你修复了一个树莓派特有的内核错误
+
+如果是针对 Raspberry Pi 的更改或错误修复，请向 Raspberry Pi 内核提交拉取请求。
+对于一般的 Linux 内核更改（如新驱动程序），请先向上游 Linux 内核提交拉取请求。一旦 Linux 内核接受了您的更改，我们就会收到。
+
+### 为 Raspberry Pi 内核做贡献
+
+首先，fork [Raspberry Pi 内核仓库](https://github.com/raspberrypi/linux)并克隆到你的开发设备上。然后，你可以进行修改、测试并提交到你的 fork 中。
+
+然后，向 [Raspberry Pi 内核资源库](https://github.com/raspberrypi/linux) 提交包含更改的拉取请求。Raspberry Pi 工程师将审核您的贡献并提出改进建议。一旦获得批准，我们就会合并你的改动，最终将它们添加到 Raspberry Pi 内核的稳定版本中。
+
+### 为 Linux 内核做贡献
+
+首先，将 [Linux 内核树](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git) 克隆到你的开发设备上。然后，你就可以进行修改、测试，并将它们提交到本地树中。
+
+修改完成后，你就可以提交给 Linux 内核社区了。Linux 内核开发是在邮件列表而非 GitHub 上进行的。为了让你的修改成为 Linux 的一部分，请将其作为补丁通过电子邮件发送给社区。请遵循 Linux 内核文档中的 [提交补丁：将代码加入内核的基本指南](https://www.kernel.org/doc/html/latest/process/submitting-patches.html) 和 [Linux 内核编码风格](https://www.kernel.org/doc/html/latest/process/coding-style.html)。
+Linux 内核贡献者会审查你的贡献并提出改进建议。一旦获得批准，他们就会合并你的修改。最终，这些改动将被纳入 Linux 内核的长期版本中。一旦我们测试了该长期版本与 Raspberry Pi 内核的兼容性，您的修改就会进入 Raspberry Pi 内核的稳定版本。
+
+<Normal />

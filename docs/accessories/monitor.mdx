@@ -1,0 +1,128 @@
+---
+sidebar_position: 6
+draft: false
+description: Raspberry Pi 显示器是一个 15.6 英寸 1920 × 1080p IPS LCD 显示器，使用 HDMI 线缆连接到计算机。显示器还需要一个 USB-C 电源。为获得完整的亮度和音量范围，必须使用电流至少为 1.5A 的 USB-PD 电源。
+keywords: [树莓派, Raspberry Pi, 显示器, monitor, hdmi]
+last_update: 
+  date: 2024-12-20
+---
+import Normal from "../_normal.mdx";
+
+# 显示器
+
+## Raspberry Pi 显示器
+
+ [Raspberry Pi 显示器](https://www.raspberrypi.com/products/raspberry-pi-monitor/) 是一个 15.6 英寸 1920 × 1080p IPS LCD 显示器，使用 HDMI 线缆连接到计算机。显示器还需要一个 USB-C 电源。为获得完整的亮度和音量范围，必须使用电流至少为 1.5A 的 USB-PD 电源。
+
+<img src="/img/accessories/monitor/monitor-hero.png" alt="Raspberry Pi 监视器" />
+*Raspberry Pi 显示器*
+
+监视器兼容所有支持 HDMI 输出的 Raspberry Pi 型号。
+
+### 控制
+
+监视器背面包括以下控件：
+
+* 进入和退出待机模式的按钮（用⏻（电源）符号表示）
+* 增加和减少显示亮度的按钮（用 🔆 （太阳）符号表示）
+* 增大和减小扬声器音量的按钮（用🔈（扬声器）符号表示）
+
+### 屏幕显示信息
+
+屏幕显示 (OSD) 可能会显示以下信息：
+
+| 信息 | 描述 |
+| -- | -- |
+| <img src="/img/accessories/monitor/no-hdmi.png" alt="未检测到 HDMI 信号" width="40%" /> | 未检测到 HDMI 信号。 |
+| <img src="/img/accessories/monitor/no-valid-hdmi-signal-standby.png" alt="待机模式" width="40%" /> | 显示器即将进入待机模式以节省电量。 |
+| <img src="/img/accessories/monitor/not-supported-resolution.png" alt="不支持的分辨率" width="40%" /> | 不支持所连接设备的输出显示分辨率。 |
+| <img src="/img/accessories/monitor/power-saving-mode.png" alt="省电模式" width="40%" /> | 由于显示器未连接能够提供 1.5A 或更大电流的电源，因此显示器在省电模式下运行，亮度和音量降低。 |
+
+
+此外，OSD 使用🔆（太阳）符号显示显示器亮度变化的信息，使用🔈（扬声器）符号显示扬声器音量变化的信息。亮度和音量都使用从 0 到 100 的刻度。
+
+:::tip
+如果在显示屏无法检测到 HDMI 信号时尝试退出待机模式，待机按钮下方的红色 LED 灯将短暂点亮，但显示屏仍将处于待机模式。
+:::
+
+### 显示器的定位
+
+使用以下方法定位显示器：
+
+* 在集成支架上调整显示器的角度。
+* 使用红色后塑料外壳背面的四个 VESA 安装孔将显示器安装在悬挂臂或支架上。
+:::important[重要]
+使用垫片确保显示器和电源线有足够的出口空间。
+:::
+
+* 将集成支架完全向上翻转，朝向显示器顶部。使用钻孔模板创建两个间隔为 55 毫米的安装点。使用集成支架背面的插槽悬挂显示器。
+
+<img src="/img/accessories/monitor/drill-hole-template.png" alt="钻孔模板" width="35%"/>
+*钻孔模板*
+
+### 为显示器供电
+
+Raspberry Pi 显示器从 5V [USB-PD](https://en.wikipedia.org/wiki/USB_hardware#USB_Power_Delivery)（USB-Power Delivery）电源供电。许多 USB-C 电源（包括 Raspberry Pi 4 和 Raspberry Pi 5 的官方电源）都支持这一标准。
+
+当使用通过 USB-PD 提供至少 1.5A 电流的电源时，显示器在**全功率模式**下运行。在全功率模式下，您可以使用全范围（0%-100%）的显示亮度和扬声器音量。
+
+当使用的电源不能通过 USB-PD 提供至少 1.5A 的电流时（包括所有 USB-A 电源），显示器将在**省电模式**下工作。省电模式限制最大显示亮度和最大扬声器音量，以确保可靠运行。在省电模式下，您可以使用有限范围（0-50%）的显示亮度和有限范围（0-60%）的扬声器音量。由 Raspberry Pi 供电时，由于 Raspberry Pi 设备无法通过 USB-A 连接提供 1.5A 的电流，因此显示器在省电模式下运行。
+
+要从省电模式切换到全功率模式，请按住*增加亮度*按钮 3 秒钟。
+
+:::tip
+
+如果显示器闪烁，说明 USB 电源无法提供足够的电流为显示器供电。如果您使用 Raspberry Pi 5 或 Pi 500 为显示器供电，而 Raspberry Pi 5 或 Pi 500 本身由 5V/3A 电源供电，则可能发生这种情况。请尝试以下修复方法，以阻止显示器闪亮和关闭：
+
+* 降低显示器亮度和音量（您可能需要将显示器连接到另一个电源上才能访问设置）
+* 换用其他电源或电缆
+
+:::
+
+### 规格
+
+对角线：15.6 英寸
+
+分辨率：1920 × 1080 1920 × 1080
+
+类型： IPS IPS LCD
+
+色域：45
+
+对比度：800:1
+
+亮度： 250cd/m^2^
+
+屏幕涂层 防眩光 3H 硬度
+
+显示区域 344 × 193 毫米
+
+尺寸：237 × 360 × 20 毫米 237 × 360 × 20 毫米
+
+重量：850 克
+
+支持的分辨率
+
+* 1920 × 1080p @ 50/60Hz
+* 1280 × 720p @ 50/60Hz
+* 720 × 576p @ 50/60Hz
+* 720 × 480p @ 50/60Hz
+* 640 × 480p @ 50/60Hz
+
+输入： HDMI 1.4；支持 DDC-CI
+
+电源输入： USB-C；全亮度和音量范围需要 5V 的 USB-PD 1.5A 电流
+
+功耗： 使用时 4.5-6.5W；闲置时 < 0.1W
+
+扬声器：2 × 1.2W（立体声）
+
+端口 3.5 毫米音频插孔
+
+
+### 机械图纸
+
+<img src="/img/accessories/monitor/mechanical-drawing.png" alt="机械图纸" width="80%"/>
+*机械图纸*
+
+<Normal />

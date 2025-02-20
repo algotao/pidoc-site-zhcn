@@ -1,0 +1,514 @@
+---
+sidebar_position: 2
+draft: false
+description: 通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的 Raspberry Pi。要使用 Connect，请在 Raspberry Pi 上安装 Connect 软件。然后访问 connect.raspberrypi.com，在浏览器窗口中通过屏幕共享访问你的 Raspberry Pi。您可以像将显示器插入 Raspberry Pi 一样使用桌面。
+keywords: [树莓派, Raspberry Pi, Connect, 远程登录]
+last_update: 
+  date: 2024-12-21
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Normal from "../_normal.mdx";
+
+# 树莓派 Connect
+
+## 介绍
+
+通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的 Raspberry Pi。
+<img src="/img/services/connect/hero.png" alt="Connect 使用示例" width="100%" />
+
+要使用 Connect，请在 Raspberry Pi 上 [安装 Connect 软件](#安装) 和 [将设备与账户连接](#将-raspberry-pi-设备与-connect-账户连接起来)。然后访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)，在浏览器窗口中访问 Raspberry Pi 上运行的桌面或 shell。
+
+Connect 使用安全的加密连接。默认情况下，Connect 会在 Raspberry Pi 和浏览器之间直接通信。但是，当 Connect 无法在 Raspberry Pi 和浏览器之间建立直接连接时，我们会使用中继服务器。在这种情况下，Raspberry Pi 只保留操作 Connect 所需的元数据。
+
+Connect 目前处于测试版开发阶段。
+
+:::tip
+要使用 Connect，您的树莓派必须运行 [Raspberry Pi OS Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/) 或更高版本。
+:::
+
+## 安装
+
+如果您的 Raspberry Pi 操作系统尚未安装 Connect，请打开终端窗口。运行以下命令更新系统和软件包：
+
+
+```sh
+sudo apt update
+sudo apt full-upgrade
+```
+
+在 Raspberry Pi 上运行以下命令安装 Connect：
+
+```sh
+sudo apt install rpi-connect
+```
+
+您也可以从 **推荐软件** 应用程序中安装 Connect。
+
+安装完成后，使用 `rpi-connect` 命令行界面为当前用户启动 Connect：
+
+```sh
+rpi-connect on
+```
+
+或者，点击菜单栏中的 Connect 图标打开下拉菜单，选择 **Turn On Raspberry Pi Connect**：
+
+下次登录 Raspberry Pi 时，Connect 将自动启动。
+
+<img src="/img/services/connect/turn-on-connect.png" alt="启用" width="80%" />
+
+### Lite连接
+
+我们发布了 Connect 的另一个 *Lite* 版本，它只支持远程 shell 访问，不支持屏幕共享。
+
+在 Raspberry Pi 上运行以下命令安装 Connect Lite：
+
+```sh
+sudo apt install rpi-connect-lite
+```
+
+安装完成后，使用 `rpi-connect` 命令行界面为当前用户启动 Connect：
+
+```sh
+rpi-connect on
+```
+
+[启用用户登录](#始终启用远程shell)，使你的设备在你的用户账户未登录时也能访问。
+
+:::tip
+精简版命令使用与完整版 Connect 相同的 `rpi-connect` 名称。`rpi-connect-lite` 只是一个软件包名称。
+:::
+
+### 手动启动和停止 Connect
+
+要从命令行启动 Connect，请运行以下命令：
+
+```sh
+rpi-connect on
+```
+
+要停止 Connect，请运行以下命令：
+
+```
+rpi-connect off
+```
+
+## 将 Raspberry Pi 设备与 Connect 账户连接起来
+
+在 Raspberry Pi 设备上安装并启动 Connect 后，必须将设备与 Connect 帐户关联。
+
+<Tabs>
+<TabItem value="desktop" label="桌面">
+
+如果您正在使用菜单栏的 Connect 插件，首次点击 **打开 Raspberry Pi Connect** 将打开浏览器，提示您使用 Raspberry Pi ID 登录：
+<img src="/img/services/connect/browser-sign-in.png" alt="浏览器登录" width="80%" />
+
+或者，你也可以从下拉菜单中选择 **登录...**：
+<img src="/img/services/connect/sign-in.png" alt="登录" width="80%" />
+
+如果你还没有 Raspberry Pi ID，请点击 **免费创建一个** 到 [创建一个](./id.mdx#创建一个-raspberry-pi-id)。
+
+</TabItem>
+<TabItem value="cli" label="终端">
+
+使用以下命令生成一个链接，将设备连接到 Connect 帐户：
+
+```sh
+rpi-connect signin
+```
+
+该命令应输出类似下面的内容：
+
+```
+Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
+```
+
+访问任何设备上的验证 URL 并使用您的 Raspberry Pi ID 登录，将您的设备与您的 Connect 帐户相链接。
+</TabItem>
+</Tabs>
+
+### 完成连接您的 Raspberry Pi
+
+验证后，为设备指定一个名称。选择一个能唯一标识设备的名称。单击**创建设备并登录**按钮继续。
+
+<img src="/img/services/connect/new-device.png" alt="新设备" width="80%" />
+
+现在您可以远程连接设备。菜单栏中的 **Connect** 图标将变为蓝色，表明您的设备已登录 **Connect** 服务。您应该会收到一封电子邮件通知，表明您的 Connect 帐户已连接了一台新设备。
+
+<img src="/img/services/connect/sign-in-email.png" alt="电子邮件提示" width="70%" />
+
+:::warning
+如果您收到一封电子邮件，显示您不认识的设备已登录 Connect，请立即更改您的 Raspberry Pi ID 密码。[从 Connect 中移除设备](#管理设备) 可将该设备与您的帐户永久脱离关系。考虑 [启用双因素身份验证](./id.mdx#启用双因素身份验证)，以确保账户安全。
+:::
+
+单击菜单栏中的 **Connect** 图标，打开 **Connect** 菜单。通过该菜单，您可以打开或关闭 **Connect**、登录和退出，以及允许或禁止远程访问方法。
+
+:::tip
+Connect 使用设备序列号登录通信。在设备之间移动 SD 卡将会退出 Connect。
+:::
+
+## 访问你的 Raspberry Pi 设备
+
+现在，您的设备已显示在 Connect 控制面板上，您只需使用浏览器即可随时随地访问您的设备。Connect 提供多种远程与设备交互的方式。
+
+### 屏幕共享
+
+Connect 包括在浏览器中共享设备屏幕的功能。使用以下说明共享设备屏幕。
+
+:::tip
+屏幕共享需要**Wayland**窗口服务器。Raspberry Pi OS _Bookworm_ 及其后续版本默认使用 Wayland。屏幕共享与 Raspberry Pi OS Lite 或使用 X 窗口服务器的系统**不兼容**。
+:::
+
+在任何电脑上访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)。
+
+Connect 会将您重定向到 Raspberry Pi ID 服务以登录。登录后，Connect 会显示链接设备的列表。可进行屏幕共享的设备名称下方会显示一个灰色的**Screen sharing**徽章。
+<img src="/img/services/connect/devices.png" alt="列出设备" width="80%" />
+
+单击要访问的设备右侧的**Connect via**连接按钮。从菜单中选择**Screen sharing**选项。这会打开一个浏览器窗口，显示设备的桌面。
+<img src="/img/services/connect/waiting-for-screen-sharing.png" alt="等待屏幕共享" width="80%" />
+
+现在你可以像在本地一样使用设备了。有关连接的更多信息，请将鼠标悬停在**Disconnect**按钮右侧的挂锁图标上。
+<img src="/img/services/connect/screen-sharing.png" alt="屏幕共享中" width="80%" />
+
+:::tip
+使用桌面上方的**Copy from remote**和**Paste to remote**按钮，在本地和远程剪贴板之间传输文本。
+:::
+
+连接后，连接仪表板中的**Screen sharing**徽章旁边会出现一个绿点。这表示正在进行屏幕共享会话。鼠标悬停可查看当前屏幕共享会话的数量。
+<img src="/img/services/connect/screen-sharing-in-progress.png" alt="屏幕共享进行中" width="80%" />
+
+当屏幕共享会话正在进行时，系统托盘中的 **Connect** 图标会变成紫色并显示一个封闭的圆圈。屏幕共享会话开始时，桌面会出现通知。
+<img src="/img/services/connect/screen-sharing-notification.png" alt="屏幕共享通知" width="80%" />
+
+#### 禁止屏幕共享
+
+要关闭屏幕共享会话，请单击桌面上方的**Disconnect**按钮。
+<img src="/img/services/connect/screen-sharing-ended.png" alt="结束屏幕共享" width="80%" />
+
+#### 禁止屏幕共享
+
+要关闭屏幕共享，请单击菜单栏中的 Connect 图标，然后取消选择 **Allow Screen Sharing**。 您的设备仍可登录 Connect，但您将无法从 Connect 面板创建屏幕共享会话。
+<img src="/img/services/connect/disallow-screen-sharing.png" alt="禁止屏幕共享" width="80%" />
+
+您也可以使用以下命令禁止屏幕共享：
+
+```sh
+rpi-connect vnc off
+```
+
+在连接仪表板中，**Screen sharing**徽章和**Connect via**连接菜单中的**Screen sharing**选项将被划掉。
+<img src="/img/services/connect/screen-sharing-disabled.png" alt="已禁用屏幕共享" width="80%" />
+
+要重新启用屏幕共享，请执行以下操作之一：
+
+- 单击菜单栏中的 Connect 图标，然后选择 **Allow screen sharing**。
+- 运行以下命令
+
+```sh
+rpi-connect vnc on
+```
+
+### 远程shell
+
+Connect 包括从浏览器启动在设备上运行的 shell 的功能。使用以下说明访问远程 shell。
+
+在任何计算机上访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)。
+
+Connect 会将你重定向到 Raspberry Pi ID 服务以登录。登录后，Connect 会显示链接设备的列表。可用于远程 shell 访问的设备会在设备名称下方显示一个灰色的 **Remote shell** 徽标。
+<img src="/img/services/connect/devices.png" alt="列出设备" width="80%" />
+
+单击要访问的设备右侧的 **Connect via** 按钮。从菜单中选择 **Remote shell** 选项。这将在设备上打开一个 shell 会话。
+<img src="/img/services/connect/waiting-for-remote-shell.png" alt="等待远程shell连接" width="80%" />
+
+现在您可以像在本地一样使用设备了。
+<img src="/img/services/connect/remote-shell.png" alt="远程shell" width="80%" />
+
+:::tip
+在某些操作系统上，浏览器会拦截**Ctrl+Shift+C**和**Ctrl+C**等组合键。相反，您可以使用右键菜单或**Ctrl+Insert**来复制，**Shift+Insert**来粘贴。
+:::
+
+连接后，连接仪表板中的**Remote shell**徽章旁边会出现一个绿点。这表示远程 shell 会话处于活动状态。鼠标悬停可查看当前远程 shell 会话的数量。
+<img src="/img/services/connect/remote-shell-in-progress.png" alt="远程shell激活" width="80%" />
+
+:::tip
+每个远程 shell 连接都会创建一个全新的连接，就像 SSH 一样。要在多个会话中持续执行后台命令和配置，请使用 `screen` 或 `tmux`。
+:::
+
+当远程 shell 会话正在进行时，菜单栏中的 **Connect** 图标会变成紫色，并显示一个封闭的圆圈。远程 shell 会话开始时，桌面会出现通知。
+<img src="/img/services/connect/remote-shell-notification.png" alt="远程shell提示" width="80%" />
+
+:::tip
+`CONNECT_TTY` 环境变量表示会话使用 Connect 提供的远程 shell。
+:::
+
+#### 结束远程shell会话
+
+要关闭远程 shell 会话，请运行 `exit` 命令或关闭窗口。
+<img src="/img/services/connect/remote-shell-ended.png" alt="结束远程shell" width="80%" />
+
+#### 禁止远程shell访问
+要关闭远程 shell 访问，请单击菜单栏中的 Connect 图标，然后取消选择 **Allow remote shell**。您的设备仍可登录 Connect，但无法从 Connect 面板创建远程 shell 会话。
+<img src="/img/services/connect/disallow-remote-shell.png" alt="禁用远程shell" width="80%" />
+
+或者，也可以使用以下命令禁止远程 shell 访问：
+
+```sh
+rpi-connect shell off
+```
+
+在 Connect 面板中，**Remote shell** 徽标和**Connect via** 菜单中的**Remote shell** 选项将被划掉。
+<img src="/img/services/connect/remote-shell-disabled.png" alt="已禁用远程shell" width="80%" />
+
+要重新启用远程 shell 访问，请执行以下操作之一
+
+- 单击 "连接 "系统托盘图标并选择**Allow Remote Shell Access**
+- 运行以下命令
+
+```sh
+rpi-connect shell on
+```
+
+## 始终启用远程shell
+
+Connect 以用户级服务而非 root 运行。因此，只有当你的用户账户当前登录设备时，Connect 才能工作。如果在禁用自动登录的情况下重启，这可能会导致无法访问设备。要在未登录设备时继续运行 Connect，请启用**user-lingering**。从您的用户账户运行以下命令启用用户登录：
+
+```sh
+loginctl enable-linger
+```
+
+:::tip
+我们建议在所有无头 Raspberry Pi OS Lite 设置中启用用户登录，以防止远程重启后无法访问设备。
+:::
+
+## 管理设备
+
+Connect 面板列出了与您的 Connect 账号关联的所有设备，并显示了访问这些设备的各种方法。
+<img src="/img/services/connect/devices.png" alt="列出设备" width="80%" />
+
+单击设备名称可打开设备详细信息页面。此页面提供有关设备的低级信息。您还可以编辑设备名称或从连接中删除设备。
+<img src="/img/services/connect/device.png" alt="设备明细" width="80%" />
+
+从 Connect 中删除设备会自动退出该设备上的连接。菜单栏中的 Connect 图标会变成灰色，菜单上只提供**Sign In...**选项。
+
+## 更新
+
+要更新到最新版本的 Connect，请运行以下命令：
+
+```sh
+sudo apt update
+sudo apt install --only-upgrade rpi-connect
+```
+
+```tip
+如果安装了 Connect Lite，请将上述命令中的 `rpi-connect` 替换为 `rpi-connect-lite`。
+```
+
+## 从 Connect 中断开设备连接
+
+在你的设备上运行以下命令退出你的 Raspberry Pi ID，这将在 Connect 屏幕上禁用你的设备：
+
+```sh
+rpi-connect signout
+```
+
+或者，点击菜单栏中的 Connect 图标，然后点击 **Sign Out**。
+
+:::tip
+要从 Connect 帐户中完全移除设备，请使用 [从 Connect 面板中移除](#管理设备)。
+:::
+
+## 卸载
+
+运行以下命令从设备上停止并删除 Connect 软件：
+
+```sh
+sudo apt remove --purge rpi-connect
+```
+
+:::tip
+如果安装了 Connect Lite，请将上述命令中的 `rpi-connect` 替换为 `rpi-connect-lite`。
+:::
+
+卸载后，设备的序列号仍与您的 Connect 账号相关联。设备仍会出现在 Connect 面板中，但不能用于远程访问。如果在同一台设备上再次安装 Connect，即使使用不同的 SD 卡，它也会重复使用 Connect 面板中现有的设备名称。
+
+要切断设备和 Connect 账号之间的联系，请从 Connect 面板的设备列表中删除设备。 
+
+## 故障排除
+
+### 已知问题
+
+* Connect 仅支持共享 Raspberry Pi 的单个主显示屏。当 Raspberry Pi 连接到多个 HDMI 屏幕时，Connect 有时会共享副屏幕的内容。您可以右键单击桌面，在 **桌面偏好设置...** 中更改任务栏的位置来解决这个问题。
+
+* Connect 不支持屏幕键盘。要实现全部功能，请使用实体键盘。
+
+* Connect 需要使用实现 [ECMAScript 2020](https://caniuse.com/?search=es2020) (ES11) 的浏览器，因为它使用了旧版浏览器无法使用的 [功能](https://caniuse.com/?feats=mdn-javascript_operators_optional_chaining,mdn-javascript_operators_nullish_coalescing,mdn-javascript_builtins_globalthis,es6-module-dynamic-import,bigint,mdn-javascript_builtins_promise_allsettled,mdn-javascript_builtins_string_matchall,mdn-javascript_statements_export_namespace,mdn-javascript_operators_import_meta)。
+
+* 浏览器会拦截某些按键和按键组合。因此，您无法在 Connect 窗口中输入这些按键。Connect 提供了一个工具栏来模拟一些最常用的拦截键。
+
+* 要从版本 1 升级到版本 2，必须先升级当前安装的软件包，然后再在 `rpi-connect` 和 `rpi-connect-lite` 之间切换。这将确保 Connect 服务正确迁移到版本 2 格式。如果您当前安装了 `rpi-connect`，请运行以下命令：
+
+```sh
+sudo apt install --only-upgrade rpi-connect
+```
+
+或者，如果您当前安装了 `rpi-connect-lite` ，请运行以下命令：
+
+```sh
+sudo apt install --only-upgrade rpi-connect-lite
+```
+
+在升级过程中，您应该会看到类似下面的输出，表明 Connect 的服务已迁移到版本 2 格式：
+
+```
+Replacing globally-enabled rpi-connect services with user-enabled ones...
+```
+
+### 常见问题
+
+#### 屏幕共享不可用
+
+如果 Connect 提示屏幕共享不可用，说明它无法连接到专用的 Connect WayVNC 服务。
+
+要进一步了解问题的原因，请运行以下命令检查 Connect WayVNC 服务的状态：
+
+```sh
+systemctl --user status rpi-connect-wayvnc
+journalctl --user --follow --unit rpi-connect-wayvnc
+```
+
+如果服务无法启动或不存在，请确保您的环境符合以下条件：
+
+* 使用 `rpi-connect` 1.1.0 或更高版本。
+* 未使用不支持屏幕共享的 `rpi-connect-lite`。
+* 您使用的是 Wayland 合成器，如 wayfire 或 labwc，而非 X。您可以通过 `raspi-config` 的高级选项控制此设置。
+* 使用 WayVNC 支持的桌面环境，如 Raspberry Pi Desktop。例如，使用 KDE 会将 Wayland 合成器切换为 kwin，而后者是不支持的。
+* 您有一个活动的图形桌面会话，与您登录的用户相同。对于大多数人来说，这意味着要通过 ``raspi-config`` 的系统选项启用 **Desktop Autologin**。
+
+#### 重启或结束 SSH 会话后无法连接
+
+Connect 以用户级服务的形式运行，因此只有在用户登录服务的会话处于活动状态时才能使用。如果您希望在不运行另一个登录会话的情况下进行远程 shell 访问，请为您的用户使用 [启用用户登录](#始终启用远程shell)，这将使 Connect 始终处于运行状态。
+
+对于屏幕共享，Connect 只能共享现有的图形桌面会话：不能创建全新的会话。必须已经有一个正在进行的桌面会话。要在启动时自动启动此类会话，请通过 `raspi-config` 的系统选项启用桌面自动登录。
+
+#### 网络和防火墙问题
+
+Connect 设备之间的通信通常不需要更改网络或防火墙。不过，限制性特别强的网络有时会阻止 Connect 通信。为帮助调试此类网络问题，`rpi-connect` 和 `rpi-connect-lite` 包含`rpi-connect doctor` 命令。`rpi-connect doctor` 会运行一系列测试，以检查 Connect 通信是否在网络上正常运行。
+
+要在设备上运行这些测试，请运行以下命令：
+
+```sh
+rpi-connect doctor
+```
+
+如果 Connect 可以在网络上正常通信，您应该可以看到类似下面的输出：
+
+```
+✓ Communication with Raspberry Pi Connect API
+✓ Authentication with Raspberry Pi Connect API
+✓ Peer-to-peer connection candidate via STUN
+✓ Peer-to-peer connection candidate via TURN
+```
+
+如果 Connect 无法在您的网络上正常通信，您会在失败的测试用例旁边看到一个 “x” 而不是复选框。请您的网络管理员在您的网络上启用以下连接：
+
+* 向 `api.connect.raspberrypi.com` 的 443 端口上的 Raspberry Pi Connect API 提出未经验证的 HTTPS 请求 
+* 通过`api.connect.raspberrypi.com`的 443 端口对 Raspberry Pi Connect API 的验证请求
+* 通过以下所有 UDP 端口 3478 向 Raspberry Pi Connect STUN 或 TURN 服务器发出请求：
+  * `stun.raspberrypi.com`
+  * `turn1.raspberrypi.com`
+  * `turn2.raspberrypi.com`
+  * `turn3.raspberrypi.com`
+* 向下列所有 TCP 端口 3478 或 443 上的 Raspberry Pi Connect TURN 服务器发出请求：
+  * `turn1.raspberrypi.com`
+  * `turn2.raspberrypi.com`
+  * `turn3.raspberrypi.com`
+* 通过 UDP 端口 3478、443 或 49152 -> 65535 向树莓派连接 TURN 服务器发出以下所有请求：
+  * `turn1.raspberrypi.com`
+  * `turn2.raspberrypi.com`
+  * `turn3.raspberrypi.com`
+
+### 查看连接状态
+
+要查看 Connect 服务的当前状态，请运行以下命令：
+
+```sh
+rpi-connect status
+```
+
+您应该会看到与下面类似的输出：
+
+```
+Signed in: yes
+Screen sharing: allowed (0 sessions active)
+Remote shell: allowed (0 sessions active)
+```
+
+此命令的输出会显示您当前是否已登录 Connect，以及 Raspberry Pi 上已启用的远程服务。
+
+如果看到的输出包括 “Raspberry Pi Connect is not running, run rpi-connect on”（Raspberry Pi 连接未运行，请运行 rpi-connect on），请运行 `rpi-connect on` 启动连接。
+
+### 启用增强日志记录
+
+你可以启用 `rpi-connect` 及其专用 WayVNC 服务器的调试日志，以详细记录 Raspberry Pi 上的本地操作。
+
+#### 在`rpi-connect`中启用增强日志功能
+
+使用以下命令覆盖 `rpi-connect` 服务定义：
+
+```sh
+systemctl --user edit rpi-connect
+```
+
+在注释之间输入以下配置行：
+
+```sh
+[Service]
+ExecStart=
+ExecStart=/usr/bin/rpi-connectd -socket %t/rpi-connect-wayvnc.sock -v
+```
+
+:::tip
+您需要**以 "ExecStart="开头的两**行。
+:::
+
+最后，使用以下命令重启 Connect：
+
+```sh
+rpi-connect restart
+```
+
+#### 在专用 wayvnc 服务器中启用增强日志记录功能
+
+使用以下命令覆盖 `rpi-connect-wayvnc` 服务定义：
+
+```sh
+systemctl --user edit rpi-connect-wayvnc
+```
+
+在注释之间输入以下配置行（包括 `-Ldebug` 标记）：
+
+```sh
+[Service]
+ExecStart=
+ExecStart=/usr/bin/rpi-connect-env /usr/bin/wayvnc --config /etc/rpi-connect/wayvnc.config --render-cursor --unix-socket --socket=%t/rpi-connect-wayvnc-ctl.sock -Ldebug %t/rpi-connect-wayvnc.sock
+```
+
+:::tip
+您需要**以 "ExecStart="开头** 的两行 **都需要**。
+:::
+
+最后，使用以下命令重启 Connect：
+
+```sh
+rpi-connect restart
+```
+
+### 查看 Connect 日志
+
+要查看 Connect 服务及其专用 WayVNC 服务器的日志，请运行以下命令：
+
+```sh
+journalctl --user --follow --unit rpi-connect --unit rpi-connect-wayvnc
+```
+
+<Normal />

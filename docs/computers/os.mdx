@@ -1,0 +1,725 @@
+---
+sidebar_position: 2
+draft: false
+title_meta: 在树莓派OS上使用音视频播放软件、安装Python(官网24年12月)
+description: 树莓派操作系统工具介绍。如何使用apt使系统状态保持最新，如何使用rpi-update更新系统固件，如何使用VLC播放视频和音频，以及GPIO和40针接头介绍。
+keywords: [树莓派, Raspberry Pi, 操作系统, OS, 刷入映像, 安装, 配置, 版本回退]
+last_update: 
+  date: 2024-12-21
+---
+import Normal from "../_normal.mdx";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# 树莓派OS
+
+## 介绍
+
+Raspberry Pi OS 是基于 Debian 的免费操作系统，针对 Raspberry Pi 硬件进行了优化。Raspberry Pi OS 支持超过 35,000 个 Debian 软件包。我们建议大多数 Raspberry Pi 使用 Raspberry Pi OS。
+
+由于 Raspberry Pi OS 源自 Debian，它遵循 [Debian发布周期](https://wiki.debian.org/DebianReleases) 的交错版本。大约每两年发布一次。
+
+最新版本的 Raspberry Pi OS 基于 [Debian Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/)。之前的版本基于 [Debian Bullseye](https://www.raspberrypi.com/news/raspberry-pi-os-debian-bullseye)。
+
+您可以在 [树莓派操作系统下载](/downloads/operating-systems/) 上找到 Raspberry Pi 操作系统的映像。
+
+## 升级软件
+
+始终将 Raspberry Pi 上运行的软件更新到最新版本。这将确保您的设备安全，避免 [漏洞](https://cve.mitre.org/index.html)，并确保您获得最新的错误修复。
+
+### 使用 APT 管理软件包
+
+[高级软件包工具（APT）](https://en.wikipedia.org/wiki/APT_(software)) 是在 Raspberry Pi 操作系统中安装、更新和删除软件的推荐方法。您可以通过 `apt` CLI 访问 APT。
+
+#### 安装更新
+
+`apt` 会在 `/etc/apt/sources.list` 文件中存储软件源列表。安装软件前，请运行以下命令，使用 `/etc/apt/sources.list` 更新*本地软件包列表：
+
+```sh
+sudo apt update
+```
+
+运行以下命令将所有已安装的软件包升级到最新版本：
+
+```sh
+sudo apt full-upgrade
+```
+:::tip
+与 Debian 不同，Raspberry Pi OS 正在持续开发中。因此，软件包依赖关系有时会发生变化，所以你应该始终使用 `full-upgrade` 而不是标准的 `upgrade`。
+:::
+
+定期运行这些命令以保持软件最新。使用 `apt` 保持 Raspberry Pi OS 的最新版本，也能保持 Linux 内核和固件的最新版本，因为 Raspberry Pi 将它们作为 Debian 软件包发布。
+
+当 Raspberry Pi 发布新的 Raspberry Pi OS 主版本时，上述命令不会将你的操作系统升级到新的主版本。要升级到新的主版本，请遵循我们的 [操作系统升级说明](#升级软件)。
+
+#### 搜索软件
+
+要在归档文件中搜索软件包，请向 `apt-cache search` 传递搜索关键字：
+
+```sh
+apt-cache search <关键字
+```
+
+例如，请看下面对关键字 "raspi "的搜索：
+
+```
+$ apt-cache search raspi
+raspi3-firmware - Raspberry Pi 2 and 3 GPU firmware and bootloaders
+libcamera-apps - libcamera-apps
+libcamera-apps-lite - libcamera-apps-lite
+python-picamera - Pure Python interface to the Raspberry Pi's camera module.
+python-picamera-docs - Documentation for the Python interface to the RPi's camera module.
+python3-picamera - Pure Python interface to the Raspberry Pi's camera module.
+raspi-config - Raspberry Pi configuration tool
+raspi-gpio - Dump the state of the BCM270x GPIOs
+raspi-gpio-dbgsym - debug symbols for raspi-gpio
+raspinfo - Dump information about the Pi
+rc-gui - raspi-config GUI
+raspi-copies-and-fills - ARM-accelerated versions of selected functions from string.h
+raspi-copies-and-fills-dbgsym - debug symbols for raspi-copies-and-fills
+```
+
+搜索返回了多个名称或描述包含关键字的软件包。
+
+使用以下命令查看软件包的详细信息：
+
+```sh
+apt-cache show <package-name>
+```
+
+例如，下面是对 `raspi-config` 软件包的查询：
+
+```
+$ apt-cache show raspi-config
+Package: raspi-config
+Version: 20210212
+Architecture: all
+Maintainer: Serge Schneider <serge@raspberrypi.org>
+Installed-Size: 121
+Depends: whiptail, parted, lua5.1, alsa-utils, psmisc, initramfs-tools
+Recommends: triggerhappy, iw
+Priority: optional
+Section: utils
+Filename: pool/main/r/raspi-config/raspi-config_20210212_all.deb
+Size: 27976
+SHA256: 772d4fd3c6d8c9da47ac56012b74e7828b53c8521ff1c47266bb38ec71750c10
+SHA1: 08254c976a8260bde914c2df72f92ffb9317fef6
+MD5sum: 80aaac13be6a9b455c822edb91cf8ea2
+Description: Raspberry Pi configuration tool
+ A simple configuration tool for common Raspberry Pi administrative tasks
+Description-md5: 19630c04463bfe7193152448b53d85a0
+```
+
+使用此命令验证软件包的维护者、版本和大小是否符合您的期望。
+
+#### 安装软件包
+
+要在 Raspberry Pi 上安装软件包，请将软件包的名称传递给以下命令：
+
+```
+sudo apt install <package-name>
+```
+
+`apt` 将显示软件包将占用的磁盘空间。输入 **Y**，然后按 **Enter** 确认安装软件包。在上述命令中添加 `-y` 标志，即可跳过确认步骤。
+
+#### 卸载软件包
+
+要从 Raspberry Pi 上卸载软件包，请将软件包名称传入以下命令：
+
+```sh
+sudo apt remove <package-name>
+```
+
+:::tip
+要完全删除软件包的所有痕迹，包括配置文件，请使用 `purge` 而不是 `remove` 。
+:::
+
+`apt` 将显示删除软件包将释放的磁盘空间。
+输入 **Y**，然后按 **Enter** 确认删除软件包。在上述命令中添加 `-y` 标志可跳过这一确认步骤。
+
+### 管理 apt 磁盘使用情况
+
+在运行之前，`sudo apt full-upgrade` 会显示为完成升级而需要下载并存储在磁盘上的数据量。要检查是否有足够的可用磁盘空间，请运行以下命令：
+
+```sh
+df -h
+```
+
+`apt` 将下载的软件包 (`.deb`) 文件存储在 `/var/cache/apt/archives` 中。在安装过程中，`apt` 会下载这些软件包，然后将软件包中的文件复制到正确的安装位置。根据所安装软件的不同，软件包文件可能会占用大量空间。要删除任何残留的软件包文件，请运行以下命令：
+
+```sh
+sudo apt clean
+```
+
+### 将操作系统升级到新的主版本
+
+:::warning
+在尝试主版本升级之前，请做好备份。
+:::
+
+要将 Raspberry Pi 上的操作系统升级到新的主版本，请将新版本映像到第二张 SD 卡上。使用 USB SD 读卡器或网络存储设备将当前安装的文件和配置复制到新的 SD 卡上。然后，将新的 SD 卡插入 Raspberry Pi 的插槽，启动。
+
+### 升级固件
+
+:::warning
+在尝试固件升级之前，请做好备份。
+:::
+
+:::warning
+预发布版本的软件不能保证正常工作。除非 Raspberry Pi 工程师建议，否则不要在任何系统上使用 `rpi-update`。这会导致系统不可靠或损坏。请勿将 `rpi-update` 用作任何定期更新过程的一部分。
+:::
+
+要将 Raspberry Pi 上的固件更新到最新版本，请使用 [`rpi-update`](https://github.com/raspberrypi/rpi-update)。
+
+`rpi-update` 会下载最新预发布版本的 Linux 内核、其匹配模块、设备树文件和最新版本的 VideoCore 固件。然后将这些文件安装到现有的 Raspberry Pi OS 安装中。
+
+`rpi-update` 使用的所有源数据都来自 [`rpi-firmware`资源库](https://github.com/raspberrypi/rpi-firmware)。该版本库包含 [官方固件版本库](https://github.com/raspberrypi/firmware)中数据的子集。
+
+以根用户身份运行 `rpi-update` 启动更新。更新完成后，重启 Raspberry Pi 以使更改生效：
+
+```sh
+sudo rpi-update
+sudo reboot
+```
+:::note[白皮书]
+[更新 Raspberry Pi 固件](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-003476-WP/Updating-Pi-firmware.pdf)。
+
+本白皮书记录了如何更新 Raspberry Pi OS 映像中的 VideoCore 固件。
+:::
+
+### 将固件降级到最新的稳定版本
+
+如果您将固件更新到最新版本并遇到问题，请使用以下命令返回到上一个稳定固件版本：
+
+```sh
+sudo apt update
+sudo apt install --reinstall raspi-firmware
+```
+
+
+:::note[注意]
+如果你仍在运行 Raspberry Pi OS Bullseye，则必须使用以下命令重新安装 `raspberrypi-kernel`：
+
+
+```sh
+sudo apt install --reinstall libraspberrypi0 libraspberrypi-{bin,dev,doc} raspberrypi-{kernel,bootloader}。
+```
+
+使用 `sudo reboot` 重启 Raspberry Pi，使这些更改生效。
+:::
+
+## 播放音频和视频
+
+Raspberry Pi OS 预装了 [VLC 媒体播放器](https://www.videolan.org/) 。您可以使用 VLC 播放视频和音频文件。VLC 在 Raspberry Pi OS 中使用硬件加速，支持许多流行的音频和视频文件格式。
+
+### VLC 媒体播放器
+
+#### VLC 界面
+
+要从 Raspberry Pi Desktop 播放音频或视频文件，请在文件管理器中双击文件。这会自动启动 VLC 播放该文件。或者，从 **声音和视频** 菜单，启动 **VLC 媒体播放器**。然后，从 **媒体** 菜单中选择 **打开文件...** ，并导航到要播放的文件。
+
+默认情况下，Raspberry Pi OS 通过 HDMI 将音频发送到显示器。要将音频输出到耳机插孔或 USB 扬声器等不同接口，请右键单击系统托盘中的扬声器图标并选择一个选项。
+
+### vlc 命令行
+
+您也可以通过命令行启动 VLC。在下面的示例中，我们使用了 Big Buck Bunny 的一个短片。要从 Raspberry Pi 下载该短片，请运行以下命令：
+
+```sh
+wget --trust-server-names http://rptl.io/big-buck-bunny
+```
+
+要在 VLC 中通过命令行播放片段，请运行以下命令：
+```sh
+vlc big-buck-bunny-1080p.mp4
+```
+
+如需要VLC GUI在文件播放完毕后自动关闭窗口，添加`--play-and-exit`标志：
+
+```sh
+vlc --play-and-exit big-buck-bunny-1080p.mp4
+```
+
+要以全屏模式播放视频（在某些情况下播放会更流畅），请添加 `--fullscreen` 标记：
+
+```sh
+vlc --play-and-exit --fullscreen big-buck-bunny-1080p.mp4
+```
+
+#### 使用 `cvlc` 在无图形界面的情况下播放媒体
+如果您使用`cvlc`代替`vlc`命令，则不会显示 VLC GUI：
+
+```sh
+cvlc --play-and-exit big-buck-bunny-1080p.mp4
+```
+
+#### 在 Raspberry Pi OS Lite 上播放音频和视频
+
+与完整版的 Raspberry Pi OS 不同，Raspberry Pi OS Lite 没有预装 VLC。要在 Raspberry Pi OS Lite 上使用 VLC 播放视频和音频，请安装所需的软件包，以便在没有桌面的情况下播放：
+
+```sh
+sudo apt install --no-install-recommends vlc-bin vlc-plugin-base
+```
+
+在下面的示例中，我们使用了一段简短的音频片段。要从 Raspberry Pi 下载该片段，请运行以下命令：
+
+```sh
+wget --trust-server-names http://rptl.io/startup-music
+```
+
+要在 VLC 中通过命令行播放该视频，请运行以下命令：
+
+```sh
+cvlc --play-and-exit computer-startup-music.mp3
+```
+
+### 指定音频输出设备
+
+要强制将音频输出到特定设备，可将 `alsa` 值传递给 `-A` 选项以使用 https://www.alsa-project.org/wiki/Main_Page[ALSA] 音频输出，并传递 `--alsa-audio-device` 选项以指定音频输出设备：
+
+```sh
+cvlc --play-and-exit -A alsa --alsa-audio-device <alsa-device> computer-startup-music.mp3
+```
+
+用以下选项之一替换`<alsa-device>`占位符：
+
+| ALSA设备 | 描述 |
+| -- | -- |
+| `sysdefault:CARD=Headphones` | 耳机插孔 |
+| `sysdefault:CARD=vc4hdmi` |  带有单 HDMI 端口的设备上的 HDMI 输出（Zero 型号、CM4S、CM4 之前的计算模块和 Raspberry Pi 4 之前的旗舰型号） |
+| `sysdefault:CARD=vc4hdmi0` | 自 Raspberry Pi 4B 开始的旗舰机型、自 CM4 开始的计算模块以及键盘机型上的 HDMI0 输出端 |
+| `sysdefault:CARD=vc4hdmi1` | 自 Raspberry Pi 4B 开始的旗舰机型、自 CM4 开始的计算模块以及键盘机型上的 HDMI1 输出端 |
+
+:::tip
+使用以下命令获取 Raspberry Pi 上所有 ALSA 设备的列表：
+```sh
+aplay -L | grep sysdefault
+```
+:::
+
+### 指定视频输出设备
+
+要强制将视频输出到特定设备，请使用 `--drm-vout-display` 选项指定视频输出设备：
+
+```sh
+cvlc --play-and-exit --drm-vout-display <drm-device> big-buck-bunny-1080p.mp4
+```
+
+用以下选项之一替换 `<drm-device>` 占位符：
+
+| DRM设备 | 描述 |
+| -- | -- |
+| `HDMI-A-1` | Raspberry Pi Zero 或 Raspberry Pi Model 1、2 或 3 上的 HDMI 输出；*或* Raspberry Pi 4、5 或 400 上的 HDMI0 输出 |
+| `HDMI-A-2` | 自 Raspberry Pi 4B 开始的旗舰机型、自 CM4 开始的计算模块（包括 CM4S）以及键盘机型上的 HDMI1 输出端 |
+| `DSI-1` | 树莓派触摸显示屏或树莓派触摸显示屏 2 |
+| `DSI-2` | 对于具有多个 DSI 端口的机型（Raspberry Pi 5 之后的旗舰机型和 CM5 之后的计算模块机型）的第二个 DSI 输出口 |
+
+
+
+:::tip
+使用以下命令获取 Raspberry Pi 上所有 DRM 设备的列表：
+
+```sh
+kmsprint | grep Connector
+```
+:::
+
+### 同时指定音频和视频输出设备
+
+你可以将音频和视频输出选项结合起来。例如，要将视频输出引向触摸屏，将音频输出引向耳机插孔，请使用上述命令的以下组合：
+
+```sh
+cvlc --play-and-exit --fullscreen --drm-vout-display DSI-1 -A alsa --alsa-audio-device sysdefault:CARD=Headphones your_video.mp4
+```
+
+### 提高流媒体播放性能
+
+如果你有一个原始的 H.264 数据流，比如从 Raspberry Pi 摄像头模块捕获的数据流，你可以通过将数据流封装在 MP4 等容器格式中来提高 VLC 的播放性能。你可以使用 `ffmpeg` 将流内容转换为容器文件。例如，下面的命令将名为 `video.h264` 的数据流以 30fps 的速度转换为名为 `video.mp4` 的 MP4 容器：
+
+```sh
+ffmpeg -r 30 -i video.h264 -c:v copy video.mp4
+```
+
+## 工具集
+树莓派OS中预装了几个有用的命令行实用程序。
+
+### kmsprint
+`kmsprint`工具可用于列出树莓派所连接的显示器支持的显示模式。使用`kmsprint`查看连接到树莓派的显示器的详细信息，`kmsprint -m`查看每个显示器支持的所有显示模式的列表。您可以在[Github](https://github.com/tomba/kmsxx)上找到`kmsprint`的源代码。
+
+### vclog
+`vclog` 可从 Arm 上运行的 Linux 中显示来自 VideoCore GPU 的日志信息。它需要以 root 用户身份运行。
+
+`sudo vclog --msg` 会打印信息日志，而 `sudo vclog --assert` 则会打印断言日志。
+
+### vcgencmd
+`vcgencmd`工具用于输出树莓派上的VideoCore GPU信息。您可以在[GitHub](https://github.com/raspberrypi/utils/tree/master/vcgencmd)上找到`vcgencmd`的源代码。
+
+要获取`vcgencmd`所支持的所有命令的列表，请使用`vcgencmd commands`。下面列出了一些有用的命令及其所需的参数。
+
+#### vcos
+`vcos`命令有两个有用的子命令：
+- `version`显示VideoCore上固件的构建日期和版本
+- `log status`显示各个VideoCore固件区域的错误日志状态
+
+#### version
+显示 VideoCore 固件的构建日期和版本。
+
+#### get_throttled
+返回系统的节流状态。这是一个位模式标记。被设置的位表示以下含义：
+
+| Bit位 | 十六进制值 | 含义 |
+| -- | -- | -- |
+| 0 | `0x1` | 检测到欠压 |
+| 1 | `0x2` | Arm频率限制激活 |
+| 2 | `0x4` | 节流模式激活 |
+| 3 | `0x8` | 软温度限制激活 |
+| 16 | `0x10000` | 发生过欠压 |
+| 17 | `0x20000` | 发生过Arm频率限制 |
+| 18 | `0x40000` | 发生过节流 |
+| 19 | `0x80000` | 发生过软温度限制 |
+
+#### measure_temp
+返回SoC的温度（由其内部温度传感器测量）。在树莓派4上，`measure_temp pmic`返回PMIC的温度。
+
+#### measure_clock [时钟]
+返回指定时钟的当前频率。接受以下时钟值：
+
+| 时钟 | 描述 |
+| -- | -- |
+| `arm` | ARM核心 |
+| `core` | GPU核心 |
+| `h264` | H.264模块 |
+| `isp` | 图像传感器管线 |
+| `v3d` | 3D模块 |
+| `uart` | UART串口 |
+| `pwm` | PWM模块(模拟音频输出) |
+| `emmc` | SD卡接口 |
+| `pixel` | 像素转换模块 |
+| `vec` | VEC模拟视频编码器 |
+| `hdmi` | HDMI |
+| `dpi` | DPI显示并行接口 |
+
+
+例如`vcgencmd measure_clock arm`
+
+#### measure_volts [模块]
+显示特定模块当前使用的电压，接受以下模块值：
+| 模块 | 十六进制值 |
+| -- | -- |
+| `core` | VC4核心电压 |
+| `sdram_c` | SDRAM核心电压 |
+| `sdram_i` | SDRAM I/O电压 |
+| `sdram_p` | SDRAM物理电压 |
+
+#### otp_dump
+显示SoC内部OTP（一次性可编程）存储器的内容。每个存贮器是32位值，索引范围为8到64。请参阅[OTP位](./raspberry-pi.mdx#otp寄存器和位定义)获得更多详细信息。
+
+#### get_config [配置项|int|str]
+
+显示指定配置设置的值：或者，指定 `int` （整数）或 `str`（字符串）以查看给定类型的所有配置项。例如，以下命令以 MB 为单位返回设备的总内存：
+
+```sh
+vcgencmd get_config total_mem
+```
+
+#### get_mem type
+
+报告 Arm 和 GPU 可寻址的内存量。要显示 Arm 可寻址的内存量，请使用 `vcgencmd get_mem arm`；要显示 GPU 可寻址的内存量，请使用 `vcgencmd get_mem gpu`。在内存超过 1GB 的设备上，`arm` 参数将始终返回 1GB 减去`gpu`内存值，因为 GPU 固件只知道前 1GB 内存。要获得设备总内存的准确报告，请参阅上文的 `total_mem` 配置项和 [get_config](#get_config-配置项intstr) 部分。
+
+#### codec_enabled [类型]
+
+报告是否启用了指定的编解码器类型。可能的类型选项有 AGIF、FLAC、H263、H264、MJPA、MJPB、MJPG、MPG2、MPG4、MVC0、PCM、THRA、VORB、VP6、VP8、WMV9 和 WVC1。由于 Raspberry Pi 4 和 Pi 400 上的 H.265 HW 块不是 VideoCore GPU 的一部分，因此无法通过此命令访问其状态。
+
+#### mem_oom
+显示VideoCore内存空间中发生的任何OOM（内存不足）事件的统计信息。
+
+#### mem_reloc_stats
+显示VideoCore上可重定位内存分配器的统计信息。
+
+#### read_ring_osc
+返回环形振荡器的当前速度、电压和温度。
+
+## 无障碍选项
+
+### 视觉辅助
+
+有视觉障碍的 Raspberry Pi 操作系统用户可以在**推荐软件**菜单中找到有用的工具。
+
+我们提供[Orca屏幕阅读器](https://help.gnome.org/users/orca/stable/introduction.html.en)以方便 Raspberry Pi 桌面的导航。此外，我们还提供屏幕放大镜，以提高用户界面和屏幕元素的可读性。
+
+#### Orca屏幕阅读器
+
+您可以从树莓派主菜单的**推荐软件**入口安装Orca屏幕阅读器。或者按**Ctrl** + **Alt** + **Space**自动安装 Orca。
+
+安装新映像后首次启动树莓派操作系统时，在30秒后将播放自动语音提醒。此提醒将提供有关如何安装Orca的说明。
+
+## 在树莓派上使用 Python
+
+Raspberry Pi OS 预装了 Python 3。干扰系统 Python 安装会给操作系统带来问题。安装第三方 Python 库时，请务必使用正确的软件包管理工具。
+
+在 Linux 上，您可以通过两种方式安装 `python` 依赖项：
+
+- 使用 `apt` 安装预配置的系统包
+- 使用 `pip` 在虚拟环境中使用 Python 的依赖关系管理器安装库。
+
+:::important[重要]
+从 Raspberry Pi OS _Bookworm_ 开始，您只能使用 `pip` 安装到 Python 虚拟环境 (`venv`)。此更改由 Python 社区引入，而非 Raspberry Pi：更多信息，请参见 [PEP668](https://peps.python.org/pep-0668/)。
+:::
+
+### 使用 apt 安装 Python 软件包
+
+通过 `apt` 安装的软件包是专为 Raspberry Pi 操作系统打包的。这些软件包通常经过预编译，因此安装速度更快。由于 `apt` 会管理所有软件包的依赖关系，因此使用此方法安装时会包含运行软件包所需的所有子依赖关系。而且 apt` 还能确保在卸载时不会破坏其他软件包。
+
+例如，要安装支持 Raspberry Pi 的 Python 3 库 [Build HAT](../accessories/build-hat.mdx)，请运行以下命令：
+
+```sh
+sudo apt install python3-build-hat
+```
+
+要查找使用 `apt` 发布的 Python 软件包，请使用 [使用 `apt search`](#搜索软件)。在大多数情况下，Python 软件包使用前缀 `python-` 或 `python3-`：例如，你可以用 `python3-numpy` 这个名字找到 `numpy` 软件包。
+
+### 使用 pip 安装 Python 库
+
+#### Bookworm 对 pip 安装的更改
+
+在旧版本的 Raspberry Pi OS 中，您可以使用 `pip` 直接将库安装到系统版本的 Python 中。从 Raspberry Pi OS _Bookworm_ 开始，用户不能直接将库安装到 Python 的系统版本中。
+
+取而代之的是 [将库安装到虚拟环境 (`venv`)](#在虚拟环境中使用-pip)。要在系统级别为所有用户安装库，请使用 [使用 `apt` 安装](#使用-apt-安装-python-软件包)。
+
+尝试在全系统安装 Python 包时，会输出类似下面的错误：
+
+```
+$ pip install buildhat
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+  python3-xyz, where xyz is the package you are trying to
+  install.
+
+  If you wish to install a non-Debian-packaged Python package,
+  create a virtual environment using python3 -m venv path/to/venv.
+  Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+  sure you have python3-full installed.
+
+  For more information visit http://rptl.io/venv
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+```
+
+长期以来，Python 用户一直在处理操作系统软件包管理器（如 apt）和 Python 特定软件包管理工具（如 ipip）之间的冲突。这些冲突包括 Python- 级 API 的不兼容性和文件所有权的冲突。
+
+从 Raspberry Pi OS _Bookworm_ 开始，通过 `pip` 安装的软件包_必须安装到 Python 虚拟环境_ (`venv``)。虚拟环境是一个容器，您可以在其中安全地安装第三方模块，这样它们就不会干扰您的系统 Python。
+
+#### 在虚拟环境中使用 pip
+
+要使用虚拟环境，需要创建一个容器来存储环境。根据您使用 Python 的方式，有几种方法可以做到这一点。
+
+<Tabs>
+
+<TabItem value="per-project" label="每项目环境">
+
+许多用户会为每个 Python 项目创建单独的虚拟环境。在每个项目的根文件夹中找到虚拟环境，通常使用共享名称，如 `env`。在每个项目的根目录下运行以下命令来创建虚拟环境配置文件夹：
+
+```sh
+$ python -m venv env
+```
+
+在处理项目之前，从项目根目录运行以下命令开始使用虚拟环境：
+
+```sh
+$ source env/bin/activate
+```
+
+然后您会看到类似下面的提示：
+
+```sh
+(env) $
+```
+
+完成项目工作后，从任意目录运行以下命令离开虚拟环境：
+```sh
+(env) $ deactivate
+```
+
+</TabItem>
+
+<TabItem value="per-user" label="每用户环境">
+
+与其为每个 Python 项目创建一个虚拟环境，不如为用户账户创建一个虚拟环境。** 在运行任何 Python 代码之前激活该虚拟环境。** 这种方法对于跨项目共享许多库的工作流来说更为方便。
+
+为整个用户账户的多个项目创建虚拟环境时，请考虑将虚拟环境配置文件放在主目录下。将配置文件存储在 [名称以句号开头的文件夹](https://en.wikipedia.org/wiki/Hidden_file_and_hidden_directory#Unix_and_Unix-like_environments) 中，默认情况下隐藏该文件夹，以防止主文件夹杂乱无章。
+
+使用以下命令在当前用户主目录下的隐藏文件夹中创建虚拟环境：
+
+```sh
+$ python -m venv ~/.env
+```
+
+从任意目录运行以下命令，开始使用虚拟环境：
+
+```sh
+$ source ~/.env/bin/activate
+```
+
+然后，您会看到类似下面的提示：
+```sh
+(.env) $
+```
+
+要离开虚拟环境，请在任何目录下运行以下命令：
+
+```sh
+(.env) $ deactivate
+```
+
+</TabItem>
+</Tabs>
+
+##### 创建虚拟环境
+
+运行以下命令创建虚拟环境配置文件夹，将 `<env-name>` 替换为您想用于虚拟环境的名称（例如 `env`）：
+
+```sh
+python -m venv <env-name>
+```
+
+:::tip
+在文件夹名称前加上 `--system-site-packages` 标志，可将系统中当前安装的所有 Python 软件包预加载到虚拟环境中。
+:::
+
+##### 进入虚拟环境
+
+然后，执行虚拟环境配置文件夹中的 `bin/activate` 脚本进入虚拟环境：
+
+```sh
+source <env-name>/bin/activate
+```
+
+然后，您会看到类似下面的提示：
+
+```
+(<env-name>) $
+```
+
+`(<env-name>)` 命令提示符前缀表示当前终端会话处于名为 `<env-name>` 的虚拟环境中。
+
+要检查是否处于虚拟环境中，可使用 `pip list` 查看已安装软件包的列表：
+
+```
+(<env-name>) $ pip list
+Package    Version
+---------- -------
+pip        23.0.1
+setuptools 66.1.1
+```
+
+该列表应该比系统 Python 中安装的软件包列表短得多。现在可以安全地使用 `pip` 安装软件包了。在虚拟环境中使用 `pip` 安装的软件包只能安装到该虚拟环境。在虚拟环境中，`python` 或 `python3` 命令会自动使用虚拟环境的 Python 版本和已安装的软件包，而不是系统 Python。
+
+##### 离开虚拟环境
+
+要离开虚拟环境，请运行以下命令：
+
+```
+(<env-name>) $ deactivate
+```
+
+### 使用 Thonny 编辑器
+
+我们推荐使用 [Thonny](https://thonny.org/) 在 Raspberry Pi 上编辑 Python 代码。
+
+默认情况下，Thonny 使用系统 Python。不过，您可以点击 Thonny 窗口右下角的**解释器菜单**，切换到使用 Python 虚拟环境。选择一个已配置的环境，或使用 "Configure interpreter... "配置一个新的虚拟环境。
+
+<img src="/img/computers/os/thonny-venv.jpg" alt="thonny-venv" />
+
+## 在 Python 中使用 GPIO
+使用[GPIO Zero](https://gpiozero.readthedocs.io/)库可以轻松地使用Python控制GPIO设备。该库的完整文档位于[gpiozero.readthedocs.io](https://gpiozero.readthedocs.io/)。
+
+有关 GPIO 硬件的信息，请参阅 [GPIO 硬件](./raspberry-pi.mdx#通用io-gpio)。
+
+#### LED控制
+
+以下示例代码可控制连接到 GPIO17 的 LED：
+
+```py
+from gpiozero import LED
+from time import sleep
+
+led = LED(17)
+
+while True:
+    led.on()
+    sleep(1)
+    led.off()
+    sleep(1)
+```
+
+在像Thonny这样的IDE中运行它，LED将反复闪烁。
+
+LED方法包括`on()`，`off()`，`toggle()`，`blink()`。
+
+#### 读取按钮状态
+
+以下示例代码可读取连接到 GPIO2 的按钮的状态：
+
+```py
+from gpiozero import Button
+from time import sleep
+
+button = Button(2)
+
+while True:
+    if button.is_pressed:
+        print("Pressed")
+    else:
+        print("Released")
+    sleep(1)
+```
+
+按钮功能包括属性`is_pressed`和`is_held`；回调`when_pressed`、`when_released和when_held`；方法`wait_for_press()`和`wait_for_release`。
+
+#### 用按钮控制LED
+
+以下示例代码读取连接到 GPIO2 的按钮的状态，并在按下按钮时点亮连接到 GPIO17 的 LED：
+
+```py
+from gpiozero import LED, Button
+
+led = LED(17)
+button = Button(2)
+
+while True:
+    if button.is_pressed:
+        led.on()
+    else:
+        led.off()
+```
+或者：
+```py
+from gpiozero import LED, Button
+
+led = LED(17)
+button = Button(2)
+
+while True:
+    button.wait_for_press()
+    led.on()
+    button.wait_for_release()
+    led.off()
+```
+或者：
+```py
+from gpiozero import LED, Button
+
+led = LED(17)
+button = Button(2)
+
+button.when_pressed = led.on
+button.when_released = led.off
+```
+
+#### 更进一步
+
+关于如何使用 GPIO Zero Python 库为连接到 Raspberry Pi 的电子设备编程，您可以在 Raspberry Pi 出版社的书籍 [Simple Electronics with GPIO Zero](https://github.com/raspberrypipress/released-pdfs/raw/main/simple-electronics-with-gpio-zero.pdf) 中找到更多信息。该书让您开始使用 GPIO Zero 库，并通过构建一系列项目指导您如何使用它。
+
+<Normal />

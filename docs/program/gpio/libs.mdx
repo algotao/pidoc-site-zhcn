@@ -1,0 +1,37 @@
+---
+draft: true
+sidebar_position: 1
+title: GPIO库介绍
+description: 在 Raspberry Pi 5 上可用的 C 和 Python GPIO 库，以及它们的优缺点。
+keywords: [树莓派, GPIO, C, C++, Python, Raspberry Pi]
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# 树莓派的 GPIO 库
+
+如果你在使用树莓派5时遇到GPIO库不能使用的问题，那么可以从本文中获取一些信息。
+
+## Python 
+
+### 可用库
+
+| 库 | 推荐度 | 介绍 | 网站 | 代码库 |
+| -- | -- | -- | -- | -- |
+| gpiozero | ★★★★ | [简介](#gpio-zero) | [访问](https://gpiozero.readthedocs.io/en/latest/) |  |
+| lgpio | ★★★☆ |  | [访问](https://abyz.me.uk/lg/py_lgpio.html) | [访问](https://github.com/joan2937/lg) |
+| libgpiod | ★★★ |  | -- | [访问](https://github.com/brgl/libgpiod) |
+
+## 废弃库
+
+| 库 | 废弃原因 | 地址 |
+| -- | -- | -- |
+| wiringPi | -- | -- |
+| RPi.GPIO | -- | -- |
+| pigpio | -- | -- |
+
+### GPIO Zero
+GPIO Zero 库是树莓派官方推荐的用于操作树莓派 GPIO 的 Python 库，这是当前在 树莓派5 及 早期型号 经过测试的 GPIO 库。它对常用外设的操作进行了封装，使用起来非常方便。2.0版本其底层GPIO库使用了lgpio，使得能最大可能兼容后续的树莓派的GPIO变化。
+
+

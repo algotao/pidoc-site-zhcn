@@ -1,0 +1,139 @@
+---
+sidebar_position: 5
+draft: false
+description: Raspberry Pi Touch Display 2 是一款纵向触摸液晶显示屏，专为平板电脑、娱乐系统和信息仪表盘等互动项目而设计。触摸显示屏 2 通过 DSI 连接器和 GPIO 连接器连接到 Raspberry Pi。Raspberry Pi OS 提供触摸屏驱动程序，支持五指多点触控和屏幕键盘，无需连接键盘或鼠标即可实现全部功能。
+keywords: [树莓派, Raspberry Pi, 显示, 显示屏, display, hdmi, touch display 2]
+last_update: 
+  date: 2024-12-20
+---
+import Normal from "../_normal.mdx";
+
+# 触摸显示屏2 (新品)
+
+## 关于
+
+[Raspberry Pi Touch Display 2](https://www.raspberrypi.com/products/touch-display-2/) 是一款纵向触摸液晶显示屏，专为平板电脑、娱乐系统和信息仪表盘等互动项目而设计。
+
+<img src="/img/accessories/touch-display-2/touch-display-2-hero.jpg" alt="树莓派触摸显示屏 2" width="80%" />
+*树莓派触摸显示屏 2*
+
+触摸显示屏 2 通过 DSI 连接器和 GPIO 连接器连接到 Raspberry Pi。Raspberry Pi OS 提供触摸屏驱动程序，支持五指多点触控和屏幕键盘，无需连接键盘或鼠标即可实现全部功能。
+
+## 规格
+
+* 1280×720px 分辨率，24 位 RGB 显示屏
+* 155×88 毫米活动区域
+* 7 英寸对角线
+* 由主机 Raspberry Pi 直接供电，无需单独电源
+* 支持多达五点同时多点触控
+
+Touch Display 2 兼容 Raspberry Pi 1B+ 及以后的所有型号，但缺少 DSI 接口的 Zero 系列和 Keyboard 系列除外。
+
+触摸显示屏 2 包装盒包含以下部件（如下图从左到右、从上到下的顺序）：
+
+* 触摸显示屏 2
+* 八个 M2.5 螺钉
+* 15路 至 15路 FFC
+* 用于 Raspberry Pi 5 的 22路 至 15路 FFC
+* GPIO 连接器电缆
+
+<img src="/img/accessories/touch-display-2/touch-display-2-whats-in-the-booooox.jpg" alt="触摸显示屏 2 包装盒中包含的部件" width="80%" />
+*触摸显示屏 2 包装盒中包含的部件*
+
+## 安装
+
+<img src="/img/accessories/touch-display-2/touch-display-2-installation-diagram.png" alt="连接并安装到触摸显示屏 2 的 Raspberry Pi 5" width="80%" />
+*连接并安装到触摸显示屏 2 的 Raspberry Pi 5*
+
+要将触摸显示屏 2 连接到 Raspberry Pi，需要使用扁平软电缆（FFC）和 GPIO 连接器。您使用的 FFC 取决于您的 Raspberry Pi 型号：
+
+* 对于 Raspberry Pi 5，使用附带的 22路 至 15路 FFC
+* 对于任何其他型号的 Raspberry Pi，使用附带的 15路 至 15路 FFC
+
+确定了适合您的 Raspberry Pi 型号的正确 FFC 后，请完成以下步骤将 Touch Display 2 与 Raspberry Pi 连接起来：
+
+1. 断开 Raspberry Pi 的电源。
+2. 提起触摸显示屏 2 上 FFC 连接器两侧的固定夹。
+3. 将 FFC 的 15 针一端插入触摸显示屏 2 的 FFC 连接器，金属触点朝上，远离触摸显示屏 2。
+:::tip
+如果使用 22 路至 15 路 FFC，22 路端是电缆的_较小_端。将电缆的_大_端插入触摸显示屏 2。
+:::
+4. 牢牢固定住 FFC，同时向下推动触摸显示屏 2 FFC 连接器上的两个固定夹。
+5. 提起 Raspberry Pi DSI 接口两侧的固定夹。该端口应标有 “DISPLAY ”或 “DISP ”字样。如果您的 Raspberry Pi 有多个 DSI 接口，请选择标有 “1 ”的接口。
+6. 将 FFC 的另一端插入 Raspberry Pi DSI 接口，金属触点朝向以太网和 USB-A 端口。
+7. 在牢牢固定 FFC 的同时，将两个固定夹同时向下按压 Raspberry Pi 的 DSI 连接器。
+8. 将 GPIO 连接器电缆插入触摸显示屏 2 上标有 “J1 ”的端口。
+9. 将 GPIO 连接线的另一端（三针）连接到 [Raspberry Pi 的 GPIO](../computers/raspberry-pi.mdx#gpio-引脚) 的针脚 2、4 和 6。将红色电缆（5V 电源）连接到第 2 针，黑色电缆（接地）连接到第 6 针。从上往下看，以太网和 USB-A 端口朝下，这些引脚位于电路板的右上方，其中引脚 2 位于最右上方的位置。
+
+<img src="/img/accessories/touch-display-2/touch-display-2-gpio-connection.png" alt="与触摸显示屏 2 的 GPIO 连接" width="40%" />
+*与触摸显示屏 2 的 GPIO 连接*
+
+:::tip
+如果没有第 6 针，可以使用任何其他开放的 “GND ”针连接黑线。如果针脚 2 不可用，可以使用任何其他 5V 针脚连接红线，例如针脚 4。
+:::
+
+10. 可选择使用随附的 M2.5 螺丝将 Raspberry Pi 安装到触摸显示屏 2 的背面。
+
+  - 将 Raspberry Pi 的四个角支座与触摸显示屏 2 背面 FFC 连接器和 `J1` 端口周围的四个安装点对齐，特别注意不要夹住 FFC。
+  - 将螺丝插入四个角支座并拧紧，直到 Raspberry Pi 固定。
+
+12. 重新连接 Raspberry Pi 的电源。初始化 Touch Display 2 连接并开始显示屏幕可能需要一分钟。
+
+
+### 使用屏幕键盘
+
+Raspberry Pi OS _Bookworm_ 及更高版本默认包含 Squeekboard 屏幕键盘。当连接触摸显示屏时，屏幕键盘应在可以输入文本时自动显示，在无法输入文本时自动隐藏。
+
+对于不支持文字输入检测的应用程序，可使用任务栏右端的键盘图标手动显示和隐藏键盘。
+
+您也可以在 Raspberry Pi 配置的显示选项卡或 `raspi-config` 的 "Display" 部分永久显示或隐藏屏幕键盘。
+
+:::tip
+在 _Bookworm_ 之前的 Raspberry Pi OS 版本中，请使用 `matchbox-keyboard` 代替。如果使用 wayfire 桌面合成器，请使用 `wvkbd` 代替。
+:::
+
+### 更改屏幕方向
+
+如果要旋转显示屏或将其安装在特定位置，请从 **首选项** 菜单中选择 **屏幕配置**。右键单击布局编辑器中的触摸显示矩形（可能是 DSI-1），选择 **方向**，然后选择最适合您需要的选项。
+
+#### 在没有桌面的情况下旋转屏幕
+
+要在没有桌面环境的设备上设置屏幕方向，请编辑 `/boot/firmware/cmdline.txt` 配置文件，将方向传递给系统。在 `cmdline.txt` 文件末尾添加以下条目：
+
+```ini
+video=DSI-1:720x1280@60,rotate=<rotation-value>
+```
+
+将 `<rotation-value>` 占位符替换为下列值之一，这些值与显示屏上默认的旋转程度相对应：
+
+* `0`
+* `90`
+* `180`
+* `270`
+
+例如，旋转值为 `90` 时，显示屏向右旋转 90 度。`180` 可将显示屏旋转 180 度或上下颠倒。
+
+:::note[注意]
+使用 `cmdline.txt` 无法将 DSI 显示屏与 HDMI 显示屏分开旋转。同时使用 DSI 和 HDMI 时，它们共享相同的旋转值。
+:::
+
+#### Touch Display 2 设备树选项参考
+
+`vc4-kms-dsi-ili9881-7inch` 叠加支持以下选项：
+
+| DT 参数 | 功能 |
+| -- | -- |
+| `sizex` | 设置 X 分辨率（默认为 720） |
+| `sizey` | 设置 Y 分辨率（默认为 1080） |
+| `invx` | 反转 X 坐标 |
+| `invy` | 反转 Y 坐标 |
+| `swapxy` | 交换 X 和 Y 坐标 |
+| `disable_touch` | 完全禁用触摸叠加 |
+
+要指定这些选项，请将它们添加到 `/boot/firmware/config.txt` 中的 `dtoverlay` 行，中间用逗号隔开。布尔值出现时默认为 true，但可以使用后缀 “=0” 将其设置为 false。整数值需要一个值，例如 `sizey=240`。例如，要将 X 分辨率设置为 400 像素并反转 X 和 Y 坐标，请使用下面一行：
+
+```ini
+dtoverlay=vc4-kms-dsi-ili9881-7inch,sizex=400,invx,invy
+```
+
+<Normal />

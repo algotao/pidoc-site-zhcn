@@ -1,0 +1,87 @@
+---
+sidebar_position: 1
+draft: false
+title: 2. 安装 GPIO Zero
+description: GPIO Zero 是 Raspberry Pi OS 的默认安装 GPIO 库，请按照以下指南在其他操作系统安装，包括 remote GPIO等。
+keywords: [GPIO Zero, gpiozero, Python, 树莓派, Raspberry Pi]
+last_update: 
+  date: 2024-06-12
+---
+import Normal from "./_normal.mdx";
+
+# 安装 GPIO Zero
+
+GPIO Zero 默认安装在 [Raspberry Pi OS](/downloads/) 桌面镜像、 [Raspberry Pi OS](/downloads/) Lite 镜像 和 [Raspberry Pi OS Desktop](https://www.raspberrypi.org/software/raspberry-pi-desktop/) PC/Mac 镜像中。请按照以下指南在其他操作系统上进行安装，包括使用 [remote GPIO](./remote-gpio.mdx) 功能的 PC。
+
+## 树莓派
+
+GPIO Zero 已打包在 Raspberry Pi OS、[Debian](https://packages.debian.org/buster/python3-gpiozero) 和 [Ubuntu](https://packages.ubuntu.com/hirsute/python3-gpiozero) 的 apt 仓库中。它也可在 [PyPI](ttps://pypi.org/project/gpiozero/) 上使用。
+
+### apt
+
+首先，更新软件源列表：
+
+```sh
+sudo apt update
+```
+
+然后安装 Python 3 的软件包：
+
+```sh
+sudo apt install python3-gpiozero
+```
+
+或 Python 2 的软件包：
+
+```sh
+sudo apt install python-gpiozero
+```
+
+### pip
+
+如果你在 Raspberry Pi 上使用的是其他操作系统，你可能需要安装 GPIO Zero。使用[get-pip](https://pip.pypa.io/en/stable/installing/)  安装 pip，然后键入：
+
+```sh
+sudo pip3 install gpiozero
+```
+
+或者对于 Python 2
+
+```sh
+sudo pip install gpiozero
+```
+
+要在虚拟环境中安装 GPIO Zero，请参阅 [开发](./development.mdx) 页面。
+
+## PC/Mac
+
+要在 PC 或 Mac 上使用 GPIO Zero 的远程 GPIO 功能，您需要使用 pip 在电脑上安装 GPIO Zero。更多信息，请参阅 [remote_gpio](./remote-gpio.mdx) 页面。
+页面获取更多信息。
+
+## 文档
+
+该文档也可用于离线安装，例如
+
+```sh
+sudo apt install python-gpiozero-doc
+```
+
+这将把 HTML 版本的文档安装到 `/usr/share/doc/python-gpiozero-doc/html` 路径下。要查看离线文档有几种选择：
+
+您可以直接通过浏览器打开文档访问 `file:///usr/share/doc/python-gpiozero-doc/html/index.html`。
+不过，请注意使用 `file://` URL 有时会破坏某些元素。
+为了避免这种情况，您可以通过 `http://` 样式的 URL 来查看文档，方法是用 Python 启动一个轻量 HTTP 服务器。
+用 Python 启动一个轻量 HTTP 服务器来查看文档：
+
+```sh
+python3 -m http.server -d /usr/share/doc/python-gpiozero-doc/html
+```
+
+然后在浏览器中访问 `http://localhost:8000/`。
+
+另外，该软件包还集成了 Debian 的 [doc-base](https://wiki.debian.org/doc-base) 系统，所以您可以安装 `doc-base` 客户端（`dochelp`、`dwww`、`dhelp`、`doc-central` 等），并使用其界面查找此文档。
+
+如果你想在不同的设备上离线查看文档，如电子阅读器等设备上离线查看文档，可从 `ReadTheer` 网站下载电子书和 PDF 版本的文档。
+可从 [ReadTheDocs](https://gpiozero.readthedocs.io/) 网站下载。只需点击页面左下角的 **阅读文档** 框，然后选择 **PDF** 或 **EPUB**。
+
+<Normal />

@@ -1,0 +1,263 @@
+---
+sidebar_position: 3
+draft: false
+description: 树莓派调试探针（Debug Probe）是一款 USB 设备，提供 UART 串行端口和标准 Arm 串行线调试 (SWD) 接口。该探针专为方便、无焊、即插即用的调试而设计。
+keywords: [树莓派, Raspberry Pi, 调试探针, Debug Probe, OpenOCD, 串行线调试, SWD]
+last_update: 
+  date: 2024-12-21
+---
+import Normal from "../_normal.mdx";
+
+# 调试探针Debug-Probe
+
+## 关于调试探针
+<img src="/img/microcontrollers/debug-probe/debug-probe.jpg" alt="调试探针" />
+树莓派调试探针（Debug Probe）是一款 USB 设备，提供 UART 串行端口和标准 Arm 串行线调试 (SWD) 接口。该探针专为方便、无焊、即插即用的调试而设计。它具有以下功能：
+- USB 至 ARM [串行线调试](https://developer.arm.com/documentation/ihi0031/a/The-Serial-Wire-Debug-Port--SW-DP-/Introduction-to-the-ARM-Serial-Wire-Debug--SWD--protocol) (SWD) 端口
+- USB 至 UART 桥接器
+- 兼容 [CMSIS-DAP](https://developer.arm.com/documentation/101451/0100/About-CMSIS-DAP) 标准
+- 可与 [OpenOCD](https://openocd.org/) 和其他支持 CMSIS-DAP 的工具配合使用
+- 开源、易于升级的固件
+
+:::note[注意]
+有关树莓派三针调试连接器的更多信息，请参阅规范。
+:::
+
+这样就可以在 Windows、macOS 和 Linux 等平台上轻松使用 Raspberry Pi Pico，这些平台缺乏 GPIO 头，无法直接连接到 Pico 的串行 UART 或 SWD 端口。
+
+### 调试探针
+该探针的标称 I/O 电压为 3.3V。
+
+<img src="/img/microcontrollers/debug-probe/the-probe.png" alt="探针" width="70%" />
+
+调试探针随附一条 USB 电源线和三条调试线：
+- 三针 JST-SH 连接器转 3 针 JST-SH 连接器电缆
+- 三针 JST-SH 连接器转 0.1 英寸接头（母头）
+- 三针 JST-SH 连接器转 0.1 英寸接头（公头）
+
+两根 0.1 英寸针座电缆的颜色如下--用于面包板（公）或直接连接到带针座针脚（母）的电路板：
+
+**橙色**<br />
+&emsp;&emsp;TX/SC（探针输出）
+
+**黑色**<br />
+&emsp;&emsp;接地
+
+**黄色**<br />
+&emsp;&emsp;RX/SD（探针或 I/O 输入）
+
+而带三针 JST-SH 连接器的电缆则用于 [标准三针连接器](https://rptl.io/debug-spec) ，较新的 Raspberry Pi 板使用这种连接器作为 SWD 调试端口和 UART 连接器。
+
+调试探针有五个 LED 灯，其中一个红色 LED 灯指示电源，另外四个指示活动的 LED 灯分别是
+
+<img src="/img/microcontrollers/debug-probe/debug-leds.png" alt="调试LED" width="70%" />
+
+:::note[注意]
+OpenOCD 会在目标连接时打开两个 DAP LED 指示灯，并在调用 `DAP_DISCONNECT` 时关闭它们。
+:::
+
+## 开始
+<img src="/img/microcontrollers/debug-probe/labelled-wiring.jpg" alt="标记接线" />
+
+根据您的设置，有几种方法可以将调试探针连接到 [Pico 系列设备](./pico-series.mdx)。下面，我们将调试探针连接到 Raspberry Pi Pico H，它有一个较新的用于 SWD 的三针 JST-SH 连接器。
+
+*译注：这里插入Youtube视频*
+
+连接以下设备
+- 调试探针 "D "连接器连接 Pico H SWD JST 连接器
+- 调试探针 "U "连接器的三针 JST 连接器与 0.1 英寸针座（公头）连接
+  - 调试探针 `RX` 连接到 Pico H `TX` 引脚
+  - 调试探针 `TX` 连接到 Pico H `RX` 引脚
+  - 调试探针 `GND` 连接至 Pico H `GND` 引脚
+
+:::note[注意]
+ 如果您拥有非 H 型 Pico 或 Pico W（无 JST-SH 连接器），仍可将其连接至调试探针。将一个公连接器焊接到电路板上的 `SWCLK`、`GND` 和 `SWDIO` 针座引脚上。使用调试探针随附的备用 3 针 JST-SH 连接器转 0.1 英寸接头（母头）电缆，连接至调试探针 "D "端口。将 Pico 或 Pico W 上的 `SWCLK`、`GND` 和 `SWDIO` 分别连接至调试探针的 `SC`、`GND` 和 `SD` 引脚。
+:::
+
+<img src="/img/microcontrollers/debug-probe/wiring.png" alt="标记接线" width="70%" />
+
+## 安装工具
+要使用调试探针，请安装以下工具。
+
+### 安装OpenOCD
+您需要安装 OpenOCD。
+
+要安装 OpenOCD，请在终端中运行以下命令：
+```sh
+$ sudo apt install openocd
+```
+
+#### 在 macOS 上安装 OpenOCD
+首先，安装 [Homebrew](https://brew.sh/) 软件包管理器：
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+```
+
+要在 macOS 上安装 OpenOCD，请运行以下命令：
+```sh
+brew install openocd
+```
+
+要运行 OpenOCD，请在终端中使用 `openocd` 命令。
+
+### 安装 GDB
+
+我们还需要安装 GNU 调试器 (GDB)。
+
+#### Linux
+
+安装 `gdb-multiarch`：
+
+```sh
+$ sudo apt install gdb-multiarch
+```
+
+#### macOS
+
+运行以下命令安装 `gdb`：
+
+```sh
+brew install arm-none-eabi-gdb
+```
+
+您可以放心地忽略安装时的 "特殊权限" 请求信息。
+
+#### MS Windows
+
+GDB 可作为 [Pico安装程序](https://github.com/raspberrypi/pico-setup-windows/releases/latest) 的一部分提供。它也包含在 [Arm GNU 工具链下载](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) 中。
+
+有关手动安装的其他信息，请参阅 [Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) 一书的第 9 章和附录 A。
+
+:::note[注意]
+不建议在 Windows 上手动安装 GDB。
+:::
+
+## 串行线调试（SWD）
+串行线调试（SWD）是一种双引脚接口（SWDIO 和 SWCLK），可替代 JTAG 四引脚或五引脚调试接口标准。
+
+### 向Pico上传新程序
+Pico 调试探针可让您通过 SWD 端口和 OpenOCD 加载二进制文件：每次向 Pico 推送新的二进制文件时，您无需拔下并按住 BOOTSEL 按钮。使用调试探针上传新的二进制文件完全不需要动手。
+
+构建二进制文件后
+```sh
+sudo openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5000" -c "program blink.elf verify reset exit"
+```
+
+:::note[注意]
+使用调试探针上传二进制文件时，使用的是 ELF 版本的文件，而不是拖放时使用的 UF2 文件。
+:::
+
+### 使用SWD调试
+它还允许你在服务器模式下使用 `openocd`，并连接 GDB，从而提供断点和 "正确的 "调试。
+
+:::important[重要]
+要进行调试，必须将二进制文件编译为 Debug 而非 Release 编译类型，例如
+```sh
+cd ~/pico/pico-examples/
+rm -rf build
+mkdir build
+cd build
+export PICO_SDK_PATH=.../../pico-sdk
+cmake -DCMAKE_BUILD_TYPE=Debug .
+cd blink
+make -j4
+```
+在调试编译中，当你在调试器下运行程序时会得到更多信息，因为编译器在编译程序时会告诉 GDB 你的程序在做什么。
+
+更多信息，请参阅[《Raspberry Pi Pico 系列入门》](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)第 6 章。
+:::
+
+要启动 OpenOCD 服务器，请运行以下命令：
+```sh
+sudo openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5000"
+```
+然后打开第二个终端窗口，切换到包含已构建二进制文件的目录，并启动调试器将其连接到 OpenOCD 服务器：
+```sh
+$ gdb blink.elf
+> target remote localhost:3333
+> monitor reset init
+> continue
+```
+
+GDB 并不适用于所有平台。请根据您的操作系统和设备，使用以下替代方案之一来代替 `gdb`：
+
+- 在 **非** Raspberry Pis 的 Linux 设备上，使用 `gdb-multiarch`。
+- 在 macOS 设备上，使用 `arm-none-eabi-gdb`。
+
+## 串行连接
+确保调试探针与树莓派Pico的 UART 引脚相连。
+
+<img src="/img/microcontrollers/debug-probe/wiring.png" alt="接线" width="70%" />
+
+树莓派Pico UART0 的默认引脚如下：
+
+| 默认 UART0 | 物理引脚 | GPIO 引脚 |
+| -- | -- | -- |
+| GND | 3 | N/A |
+| UART0_TX | 1 | GP0 |
+| UART0_RX | 2 | GP1 |
+
+连接后，树莓派Pico的 UART 通信将由调试探针转发到计算机，并显示为 CDC UART。在树莓派上，该串口显示为 `/dev/ttyACM0`；在其他平台上，该串口将以不同方式显示（例如，在 macOS 上显示为 `/dev/cu.usbmodemXXXX`）。
+
+如果尚未安装 minicom，则应安装：
+```sh
+sudo apt install minicom
+```
+
+并打开串行端口：
+```sh
+minicom -b 115200 -o -D /dev/ttyACM0
+```
+
+:::tip[提示]
+要退出 `minicom`，请使用 CTRL-A，然后按 X。
+:::
+
+要测试串行通信，您可以构建并上传 "Hello World "示例应用程序。
+
+将目录更改为 `pico-examples` 树中的 `hello_world` 目录，然后运行 `make`。然后，使用 `openocd` 将其上传到 树莓派Pico。有关构建 `hello_serial` 示例程序的完整步骤，请参阅[《树莓派Pico 入门》](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)第 4 章。
+
+```sh
+cd pico-examples
+mkdir build
+cd build
+export PICO_SDK_PATH=../../pico-sdk
+cmake ..
+cd hello_world/serial
+make -j4
+sudo openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5000" -c "program hello_serial.elf verify reset exit"
+minicom -b 115200 -o -D /dev/ttyACM0
+```
+打开 `minicom` 后，您将看到 "Hello, world!"打印到控制台。
+
+对于支持它的终端程序，USB 串行 UART 的描述会在 USB 设备描述中公布。
+
+<img src="/img/microcontrollers/debug-probe/description.jpg" alt="描述" width="70%" />
+
+该描述中的唯一序列号意味着在 Windows 系统中，每个设备的 COM 端口编号都是 "粘性 "的，这将允许您编写 `udev` 规则，将命名的设备节点与特定调试探针关联起来。
+
+## 更新调试探针的固件
+调试探针的固件是由 Raspberry Pi 发布的 UF2 文件。
+
+调试探头固件的最新版本是 2.2。如果您运行的是旧版本，或者不小心覆盖了调试探针上的固件，您可以在 [the debugprobe GitHub repository](https://github.com/raspberrypi/debugprobe/releases/latest) 中找到最新版本的固件。
+
+从最新版本中下载 `debugprobe.uf2`。
+
+捏住并取下调试探针外壳的顶部。
+
+将调试探针插入计算机时按住 BOOTSEL 按钮，挂载名为 "RPI-RP2 "的卷。
+
+将 `debugprobe.uf2` 复制到 "RPI-RP2" 卷上。文件复制到设备后，卷将自动卸载。
+
+调试探头将重新启动，并运行更新版的调试探头固件。现在可以进行调试了。
+
+## 示意图
+提供调试探针的原理图和机械图纸：
+- [原理图](https://datasheets.raspberrypi.com/debug/raspberry-pi-debug-probe-schematics.pdf) (PDF)
+- 机械图(https://datasheets.raspberrypi.com/debug/raspberry-pi-debug-probe-mechanical-drawing.pdf) (PDF)
+
+原理图上显示的测试点 (TP) 位置如下图所示。
+
+<img src="/img/microcontrollers/debug-probe/debug-probe-tps.jpg" alt="调试探针TP" width="70%" />
+
+<Normal />

@@ -1,0 +1,934 @@
+---
+sidebar_position: 4
+draft: false
+title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解(官网24年12月)
+description: 树莓派config.txt是树莓派OS在启动期间访问的配置文件，其作用可理解为类似BIOS中的配置，用于控制启动期间各项软硬件的行为。功能有：指定启动分区号、AB启动分区切换、故障安全操作系统升级、dtoverlay覆盖层设置。多种启动模式：SD卡启动，网络启动，USB启动，GPIO启动。超频：ARM核心超频、GPU核心超频、内存超频。
+keywords: [树莓派, Raspberry Pi, config.txt, boot分区, tryboot, SD卡启动, GPIO启动, 网络启动, USB启动, 超频, 许可证密钥]
+last_update: 
+  date: 2024-12-21
+---
+import Normal from "../_normal.mdx";
+
+# config.txt文件
+
+## 什么是config.txt？
+
+Raspberry Pi 设备使用名为 `config.txt` 的配置文件，而不是传统 PC 上的 [BIOS](https://en.wikipedia.org/wiki/BIOS)。在 Arm CPU 和 Linux 初始化之前，GPU 会读取`config.txt`。Raspberry Pi OS 会在 *boot 分区*（位于 `/boot/firmware/`）中查找该文件。
+
+:::note[注意]
+在 Raspberry Pi OS _Bookworm_ 之前，Raspberry Pi OS 将启动分区存储在 `/boot/`。
+:::
+
+您可以直接从 Raspberry Pi OS 安装中编辑 `config.txt`。也可以移除存储设备，在另一台电脑上编辑启动分区中的文件，包括 `config.txt`。
+
+对 `config.txt` 的更改仅在重启后生效。可以使用以下命令查看当前活动设置：
+
+`vcgencmd get_config <config>`：显示特定配置值，例如 `vcgencmd get_config arm_freq`.
+`vcgencmd get_config int`：列出所有非零整数配置选项（非零）
+`vcgencmd get_config str`：列出所有非空字符串配置选项
+
+:::note
+并非所有配置设置都能使用 `vcgencmd` 获取。
+:::
+
+### 文件格式
+
+`config.txt` 文件由早期启动固件读取，因此使用非常简单的文件格式： **每行只有一条 `property=value` 语句，其中 `value` 既可以是整数，也可以是字符串**。可以添加注释，也可以用 `#` 字符开头一行，注释掉并禁用现有的配置值。
+
+条目的行长限制为 98 个字符。Raspberry Pi OS 会忽略超过此限制的任何字符。
+
+下面是一个文件示例：
+```ini
+# 启用音频（加载 snd_bcm2835）
+dtparam=audio=on
+
+# 为检测到的摄像头自动加载覆盖层
+camera_auto_detect=1
+
+# 为检测到的 DSI 显示器自动加载覆盖层
+display_auto_detect=1
+
+# 启用 DRM VC4 V3D 驱动程序
+dtoverlay=vc4-kms-v3d
+```
+
+### 高级功能
+#### 包括
+将指定文件的内容插入当前文件。
+
+例如，在 `config.txt` 中添加 `include extraconfig.txt` 这一行，就会在 `config.tx`t 文件中包含 `extraconfig.txt` 文件的内容。
+
+:::note[注意]
+`bootcode.bin` 或 EEPROM 引导加载程序不支持 `include` 指令。
+
+由bootloader处理的设置只有在 `config.txt` 文件（而不是任何其他包含文件）中指定后才会生效：
+- `bootcode_delay`
+- `gpu_mem`、`gpu_mem_256`、`gpu_mem_512`、`gpu_mem_1024`
+- `total_mem`
+- `sdram_freq`
+- `start_x`、`start_debug`、`start_file`、`fixup_file`
+- `uart_2ndstage`
+:::
+
+#### 条件筛选
+[条件筛选器](#条件筛选器)在条件部分有所介绍。
+
+## autoboot.txt
+`autoboot.txt` 是一个可选配置文件，可用于指定 `boot_partition` 编号。
+
+它还可与 `tryboot` 功能结合使用，为操作系统升级实现 A/B 启动。
+
+`autoboot.txt` 的长度限制为 512 字节，支持 [`all`]、[`none`] 和 [`tryboot`] [条件](#条件筛选器)过滤器。
+
+另请参阅 [TRYBOOT](./raspberry-pi.mdx#故障安全操作系统更新-tryboot) 启动流程。
+
+### boot_partition
+指定用于启动的分区号，除非分区号已作为参数指定给 `reboot` 命令（如 `sudo reboot 2`）。
+
+分区号从 `1` 开始，MBR 分区为 `1` 至 `4`。 指定分区 `0` 意味着从`默认`分区（即第一个可启动的 FAT 分区）启动。
+
+可启动分区必须格式化为 FAT12、FAT16 或 FAT32，并包含 `start.elf `文件（或树莓派5上的 `config.txt` 文件），才能被bootloader归类为可启动分区。
+
+### \[tryboot\]过滤器
+如果系统启动时设置了 `tryboot` 标志，则此过滤器通过。
+```sh
+sudo reboot "0 tryboot"
+```
+
+### tryboot_a_b
+将此属性设为 `1`，可在设置 `tryboot` 标志时加载正常的 `config.txt` 和 `boot.img` 文件，而不是 `tryboot.txt` 和 `tryboot.img`。
+
+这样就能在分区级而非文件级进行 `tryboot` 切换，而无需修改 A/B 分区中的配置文件。
+
+### A/B启动更新流程示例
+下面的伪代码展示了假设的操作系统`更新服务`如何使用 `tryboot` + `autoboot.txt` 来执行故障安全操作系统升级。
+
+初始 `autoboot.txt`
+```ini
+[all]
+tryboot_a_b=1
+boot_partition=2
+[tryboot]
+boot_partition=3
+```
+
+#### 安装更新
+- 系统开机，默认启动到分区 2
+- `更新服务`将下一版本的操作系统下载到分区 3
+- 通过重启至 `tryboot` 模式 `reboot "0 tryboot"` 来测试更新，其中 `0` 表示默认分区
+
+#### 提交或取消更新
+- 系统从分区 3 启动，因为在 `tryboot模式` 下，`[tryboot]` 过滤器的值为 true
+- 如果 tryboot 处于活动状态（`/proc/device-tree/chosen/bootloader/tryboot == 1`）
+  - 如果当前启动分区（`/proc/device-tree/chosen/bootloader/partition`）与 autoboot.txt 中 `[tryboot]` 部分的 `boot_partition` 相匹配
+    - `更新服务`会验证系统是否更新成功
+    - 如果更新成功
+      - 替换 `autoboot.txt` 交换 `boot_partition` 配置
+      - 正常重启 - 分区 3 现在是默认启动分区
+    - 否则
+      - `更新服务`将更新标记为失败，例如删除更新文件。
+      - 正常重启 - 分区 2 仍是默认引导分区，因为 `tryboot` 标记已自动清除
+    - 结束如果
+  - 结束如果
+- 结束如果
+
+
+更新的 `autoboot.txt`
+```ini
+[all]
+tryboot_a_b=1
+boot_partition=3
+[tryboot]
+boot_partition=2
+```
+:::note[注意]
+更新 `autoboot.txt` 后不一定要重新启动。不过，`更新服务` 必须小心避免覆盖当前分区，因为 `autoboot.txt` 已被修改以提交上次更新。有关详细信息，请参阅 [设备树参数](./configuration.mdx#设备树覆盖和参数)。
+:::
+
+## 常用选项
+
+### 常用显示选项
+#### hdmi_enable_4kp60
+
+:::note
+此选项仅适用于 Raspberry Pi 4、Compute Module 4、Compute Module 4S 和 Pi 400。
+:::
+
+默认情况下，当连接到 4K 显示器时，某些型号会选择 30Hz 刷新率。使用此选项可选择 60Hz 刷新率。受此设置影响的型号不支持同时在两个微型 HDMI 端口上输出 4Kp60。启用此设置会增加功耗和温度。
+
+### 常见硬件配置选项
+
+#### camera_auto_detect
+
+默认情况下，Raspberry Pi OS 在 `/boot/firmware/config.txt` 中包含一行启用此设置的内容。
+
+启用后，固件将自动为识别到的 CSI 摄像头加载覆盖图。
+
+要禁用，请设置 `camera_auto_detect=0`。
+
+#### display_auto_detect
+
+默认已启用。
+
+启用后，固件将自动为识别到的 DSI 显示器加载覆盖层。
+
+若要禁用，请设置 `display_auto_detect=0`。
+
+#### dtoverlay
+`dtoverlay` 选项要求固件加载一个名为 "设备树"（Device Tree）的覆盖层，这是一个配置文件，可以启用内核对内置和外部硬件的支持。例如，`dtoverlay=vc4-kms-v3d` 会加载一个可启用内核图形驱动程序的覆盖层。
+
+作为一种特殊情况，如果调用时没有任何值 - `dtoverlay=` - 则该选项标志着覆盖参数列表的结束。如果在任何其他 `dtoverlay` 或 `dtparam` 设置之前使用，则会阻止加载任何 HAT 叠加。
+
+更多详情，请参阅 [DTB、覆盖和 config.txt](./configuration.mdx#dtb覆盖层和configtxt)。
+
+#### dtparam
+
+Raspberry Pi 设备的设备树配置文件支持各种参数，例如启用 I2C 和 SPI 接口。许多 DT 叠加都可以通过使用参数进行配置。这两种类型的参数都可以使用 `dtparam` 设置来提供。此外，覆盖参数还可以附加到 `dtoverlay` 选项中，用逗号分隔，但要注意行长限制为 98 个字符。
+
+更多详情，请参阅 [DTB、覆盖和 config.txt](./configuration.mdx#dtb覆盖层和configtxt)。
+
+#### arm_boost
+
+:::note
+此选项仅适用于包含两相供电的 Raspberry Pi 4B 后续版本以及 Pi 400 的所有版本。
+:::
+
+默认情况下，Raspberry Pi OS 在 `/boot/firmware/config.txt` 中包含一行，在支持的设备上启用此设置。
+
+某些 Raspberry Pi 设备为 SoC 电压轨配备了第二个开关模式电源。启用后，默认的 Turbo 模式时钟频率将从 1.5GHz 增至 1.8GHz。
+
+要禁用，请设置 `arm_boost=0`。
+
+#### power_force_3v3_pwm
+
+:::note
+该选项仅适用于 Raspberry Pi 5、Compute Module 5 和 Pi 500。
+:::
+
+强制对 GPIO 针座或 CSI 连接器的 3.3V 输出进行 PWM。
+
+若要禁用，请设置 `power_force_3v3_pwm=0`。
+
+## 板载模拟音频（3.5毫米插孔）
+板载音频输出使用配置选项来更改模拟音频的驱动方式，以及是否启用某些固件功能。
+
+### audio_pwm_mode
+`audio_pwm_mode=1` 从 3.5 毫米 AV 插孔选择传统的低质量模拟音频。
+
+`audio_pwm_mode=2`（默认值）选择使用高级调制方案的高质量模拟音频。
+
+:::note[注意]
+该选项使用更多 GPU 计算资源，可能会干扰某些机型上的某些用例。
+:::
+
+### disable_audio_dither
+默认情况下，如果音频流被路由到模拟音频输出，则会对其应用 1.0LSB 的抖动。在某些情况下，例如 ALSA 音量设置较低时，这可能会产生可听到的背景嘶嘶声。将 `disable_audio_dither `设置为 `1` 可禁用抖动应用。
+
+### enable_audio_dither
+当音频采样大于 16 位时，音频抖动（见上文 disable_audio_dither）通常会被禁用。将此选项设为 1 可强制在所有比特深度下使用抖动。
+
+### pwm_sample_bits
+`pwm_sample_bits` 命令调整模拟音频输出的比特深度。默认位深度为 `11`。选择低于 `8` 的位深度会导致音频无法正常工作，因为低于 `8` 的设置会导致 PLL 频率过低而无法支持。这通常只能作为比特深度如何影响量化噪声的演示。
+
+## HDMI 音频
+
+默认情况下，所有带 HDMI 输出的 Raspberry Pi 型号都启用了 HDMI 音频输出。
+
+要禁用 HDMI 音频输出，请在 [`/boot/firmware/config.txt`](#什么是configtxt) 中的 `dtoverlay=vc4-kms-v3d` 行末尾添加`,noaudio`：
+
+```sh
+dtoverlay=vc4-kms-v3d,noaudio
+```
+
+## 启动选项
+
+### start_file, fixup_file
+这些选项指定了启动前传输到 VideoCore GPU 的固件文件。
+
+`start_file` 指定要使用的 VideoCore 固件文件。 `fixup_file` 指定用于修复 `start_file` 中使用的内存位置以匹配 GPU 内存分割的文件。
+
+`start_file` 和 `fixup_file` 是一对匹配的文件，使用不匹配的文件将导致电路板无法启动。这是一个高级选项，因此我们建议您使用 `start_x` 和 `start_debug`，而不是此选项。
+
+:::note[注意]
+不能以这种方式选择降频固件（`start*cd.elf` 和 `fixup*cd.dat`），否则系统将无法启动。启用降频固件的唯一方法是指定 `gpu_mem=16`。降频固件删除了对编解码器、3D和调试日志 的支持，并将初始启动帧缓存限制为 1080p @16bpp - 尽管 KMS 可以在稍后阶段用最多 32bpp 的 4K 帧缓存替换它，就像使用任何固件一样。
+:::
+
+:::note[注意]
+Raspberry Pi 5、Compute Module 5 和 Raspberry Pi 500 固件自带引导加载器 EEPROM。
+:::
+
+### cmdline
+`cmdline` 是引导分区中读取内核命令行字符串的替代文件名；默认值为 `cmdline.txt`。
+
+### kernel
+
+`kernel` 是引导分区中用于加载内核的替代文件名。Raspberry Pi 1、Zero 和 Zero W 以及 Raspberry Pi 计算模块 1 的默认值是 `kernel.img`。Raspberry Pi 2、3、3+ 和 Zero 2 W 以及 Raspberry Pi 计算模块 3 和 3+ 的默认值是 `kernel7.img`。Raspberry Pi 4 和 400 以及 Raspberry Pi 计算模块 4 的默认值是 `kernel8.img`，如果 `arm_64bit` 设置为 0，则默认值是 `kernel7l.img`。
+
+Raspberry Pi 5、Compute Module 5 和 Raspberry Pi 500 固件默认加载 `kernel_2712.img`，因为该映像包含这些型号特有的优化（例如 16K 页面大小）。如果没有该文件，则将加载普通 64 位内核 (`kernel8.img`)。
+
+### arm_64bit
+如果设置为 1，内核将以 64 位模式启动。设置为 0 则选择 32 位模式。
+
+在 64 位模式下，固件将选择适当的内核（如 `kernel8.img`），除非定义了明确的 `kernel` 选项，在这种情况下将使用该选项。
+
+在 Raspberry Pi 4、400 和 CM 4、4S 平台上默认为 1。在所有其他平台上默认为 0。不过，如果在明确的 `kernel` 选项中给出的名称与已知内核之一相匹配，`arm_64bit` 也会相应设置。
+
+64 位内核有以下几种形式：
+
+* 未压缩的镜像文件
+* 镜像的 gzip 压缩包
+
+这两种形式都可以使用 `img` 文件扩展名；bootloader 使用文件开头的签名字节识别存档。
+
+以下 Raspberry Pi 型号支持此标记：
+
+* 2B rev 1.2
+* 3B
+* 3A+
+* 3B+
+* 4B
+* 400
+* 2 W
+* CM 3
+* CM 3+
+* CM 4
+* CM 4S
+
+自 Raspberry Pi 5 起的旗舰机型、自 CM5 起的计算模块以及自 Pi 500 起的键盘机型 *仅* 支持 64 位内核。仅支持 64 位内核的型号会忽略此标记。
+
+### ramfsfile
+`ramfsfile` 是要加载的 `ramfs` 引导分区上的可选文件名。
+
+:::note[注意]
+新固件支持加载多个 `ramfs` 文件。应使用逗号分隔多个文件名，注意不要超过 80 个字符的行长限制。所有加载的文件都会在内存中串联起来，并作为单个 `ramfs` blob 处理。更多信息请访问[论坛](https://forums.raspberrypi.com/viewtopic.php?f=63&t=10532)。
+:::
+
+### ramfsaddr
+`ramfsaddr` 是加载 `ramfsfile` 的内存地址。
+
+### initramfs
+`initramfs` 命令同时指定 ramfs 文件名**和**加载文件的内存地址。它在一个参数中同时执行 `ramfsfile` 和 `ramfsaddr` 的操作。地址也可以是 `followkernel`（或 `0`），以便将其放在内核映像之后的内存中。示例值为：`initramfs initramf.gz 0x00800000` 或 `initramfs init.gz followkernel`。与 `ramfsfile` 一样，较新的固件允许通过逗号分隔文件名来加载多个文件。
+
+:::note[注意]
+该选项使用的语法与其他选项不同，不应在此处使用 `=` 字符。
+:::
+
+### auto_initramfs
+如果 `auto_initramfs` 设置为 `1`，则会使用与内核选择相同的规则查找 `initramfs` 文件。
+
+### disable_poe_fan
+默认情况下，即使没有连接 PoE HAT，也会在启动时对 I2C 总线进行探测。将该选项设为 1 将禁止通过 I2C（ID_SD 和 ID_SC）针脚控制 PoE HAT 风扇。如果不打算使用 PoE HAT，这将有助于缩短启动时间。
+
+### disable_splash
+如果 `disable_splash` 设置为 `1`，则启动时不会显示彩虹闪屏。默认值为 `0`。
+
+### enable_uart
+`enable_uart=1`（与 `cmdline.txt` 中的 `console=serial0,115200` 结合使用）要求内核创建一个串行控制台，可通过 GPIO 14 和 15（40 针针座上的针脚 8 和 10）访问。编辑 `cmdline.txt` 删除 `quite` 行后，内核的启动信息也会出现在该行。另请参阅 `uart_2ndstage`。
+
+### force_eeprom_read
+将该选项设为 `0`，可防止固件在上电时尝试读取 I2C HAT EEPROM（连接到引脚 ID_SD 和 ID_SC）。另请参阅 [disable_poe_fan](#disable_poe_fan)。
+
+### os_prefix
+`os_prefix` 是一个可选设置，允许在安装在同一块卡上的多个内核和设备树文件版本之间进行选择。`os_prefix` 中的任何值都会被添加到固件加载的操作系统文件名前，这里的 `操作系统文件` 是指 `kernel`、`initramfs`、`cmdline.txt`、`.dtbs` 和 `overlays`。前缀通常是目录名，但也可以是文件名的一部分，如 "test-"。因此，目录前缀必须包括尾部的/字符。
+
+为了减少系统无法启动的几率，固件会首先测试提供的前缀值是否可行，除非能在新位置/名称中找到预期的内核和 .dtb，否则前缀将被忽略（设置为""）。这种可行性测试的一个特例是覆盖层，只能从 `${os_prefix}${overlay_prefix}` 加载。(如果存在 `${os_prefix}${overlay_prefix}README`，则只会从 `${os_prefix}${overlay_prefix}` 加载覆盖层（其中 [overlay_prefix](#overlay_prefix) 的默认值为 "overlay/"），否则将忽略 `os_prefix`，并将覆盖层视为共享。
+
+(在检查前缀时，固件会检查关键文件而不是目录是否存在，原因有二：前缀可能不是目录，而且并非所有启动方法都支持测试目录是否存在）。
+
+:::note[注意]
+任何用户指定的操作系统文件都可以通过使用绝对路径（相对于引导分区）绕过所有前缀，只需在文件路径开头加上 /，例如 `kernel=/my_common_kernel.img`。
+:::
+另请参阅 [overlay_prefix](#overlay_prefix) 和 [upstream_kernel](./legacy-config-txt.mdx#upstream_kernel)。
+
+### otg_mode（仅限树莓派4）
+USB On-The-Go（通常缩写为 OTG）是一项功能，允许使用适当 OTG 电缆的支持 USB 设备将自己配置为 USB 主机。在较早的树莓派上，USB 主机和设备模式均使用单个 USB 2 控制器。
+
+自 Raspberry Pi 4B 开始的旗舰机型和自 Pi 400 开始的键盘机型添加了高性能 USB 3 控制器，通过 PCIe 连接，以驱动主 USB 端口。传统的 USB 2 控制器仍可在 USB-C 电源连接器上作为设备使用（`otg_mode=0`，默认值）。CM5 之前的计算模块不包括这种高性能 USB 3 控制器。
+
+`otg_mode=1` 要求在 USB-C 连接器上使用功能更强的 XHCI USB 2 控制器作为替代主机控制器。
+
+:::note[注意]
+默认情况下，Raspberry Pi OS 在 `/boot/firmware/config.txt`中包含一行，用于在 CM4 上启用此设置。
+:::
+
+### overlay_prefix
+指定加载覆盖层的子目录/前缀，默认为 `overlays/`（注意尾部的/）。如果与 [os_prefix](#os_prefix) 结合使用，`os_prefix` 应位于 `overlay_prefix` 之前，例如 `dtoverlay=disable-bt` 将尝试加载 `${os_prefix}${overlay_prefix}disable-bt.dtbo`。
+
+:::note[注意]
+除非存在 `${os_prefix}${overlay_prefix}README`，否则覆盖层将与主操作系统共享（即忽略 `os_prefix`）。
+:::
+
+### 属性配置
+树莓派5 需要一个 `config.txt` 文件来表明分区是可启动的。
+
+#### boot_ramdisk
+如果该属性设置为 `1`，则bootloader将尝试加载一个名为 `boot.img` 的内存盘文件，其中包含[引导文件系统](./configuration.mdx#boot-文件夹)。后续文件（如 `start4.elf`）将从内存盘读取，而不是从原始引导文件系统读取。
+
+`boot_ramdisk` 的主要用途是支持`安全启动`，但未签名的 `boot.img` 文件对网络启动或 `RPIBOOT` 配置也很有用。
+- ramdisk 文件的最大大小为 96MB。
+- `boot.img` 文件是原始磁盘 `.img` 文件。建议使用无 MBR 的普通 FAT32 分区格式。
+- 内存盘文件系统的内存会在操作系统启动前释放。
+- 如果选择 [TRYBOOT](./raspberry-pi.mdx#故障安全操作系统更新-tryboot)，bootloader将搜索 `tryboot.img`，而不是 `boot.img`。
+- 另请参阅 [autoboot.txt](./config-txt.mdx#autoboottxt)
+
+有关`安全启动`和创建 `boot.img` 文件的更多信息，请参阅 [USBBOOT](https://github.com/raspberrypi/usbboot/blob/master/Readme.md)。
+
+默认值：`0`
+
+#### boot_load_flags
+自定义固件（裸机）的实验属性。
+
+位 0 (0x1) 表示 .elf 文件是定制固件。这将禁用任何兼容性检查（例如是否支持 USB MSD 启动），并在启动可执行文件前重置 PCIe。
+
+与树莓派5无关，因为没有 `start.elf` 文件。
+
+默认值：`0x0`
+
+#### pciex4_reset
+仅限 Raspberry Pi 5。
+
+默认情况下，`RP1` 使用的 PCIe x4 控制器会在启动操作系统前复位。如果将此参数设置为 `0`，则重置将被禁用，从而允许操作系统或裸机代码从引导加载程序继承 PCIe 配置设置。
+
+默认值：`1`
+
+#### uart_2ndstage
+如果 `uart_2ndstage` 为 `1`，则启用 UART 的调试记录。该选项也会自动启用 `start.elf` 中的 UART 日志记录。启动选项页面对此也有说明。
+
+`BOOT_UART` 属性也可启用引导加载器 UART 日志，但不会在 `start.elf` 中启用 UART 日志，除非同时设置了 `uart_2ndstage=1`。
+
+默认值：`0`
+
+#### erase_eeprom
+如果 `erase_eeprom` 设置为 `1`，那么 `recovery.bin` 将擦除整个 SPI EEPROM，而不是闪烁引导程序映像。该属性在正常启动时没有影响。
+
+默认值：`0`
+
+#### eeprom_write_protect
+配置 EEPROM `写入状态寄存器`。可将其设置为将整个 EEPROM 标记为写保护或清除写保护。
+
+该选项必须与控制 EEPROM `写状态寄存器`更新的 EEPROM `/WP` 引脚结合使用。将 `/WP` 拉低（CM4 `EEPROM_nWP` 或 树莓派4 上的 `TP5`）不会对 EEPROM 进行写保护，除非还配置了`写状态寄存器`。
+
+更多详情，请参阅 [Winbond W25x40cl](https://www.winbond.com/resource-files/w25x40cl_f%2020140325.pdf) 或 [Winbond W25Q16JV](https://www.winbond.com/hq/product/code-storage-flash-memory/serial-nor-flash/?__locale=en&partNo=W25Q16JV) 数据表。
+
+请参阅用于 `recovery.bin` 的 `config.txt` 文件中的 `eeprom_write_protect` 设置。
+
+| 价值 | 描述 |
+| -- | -- |
+| 1 | 配置写保护区域以覆盖整个 EEPROM。 |
+| 0 | 清除写保护区域。 |
+| -1 | 什么都不做。 |
+
+:::note[注意]
+`flashrom` 不支持清除写保护区域，如果定义了写保护区域，将无法更新 EEPROM。
+:::
+
+在树莓派5上，`/WP` 默认为低电平，因此一旦配置了`写状态寄存器`，就会启用写保护。要清除写保护，可通过连接 `TP14` 和 `TP1` 将 `/WP` 拉高。
+
+默认值：`-1`
+
+#### os_check
+在树莓派5 上，固件会在尝试从当前分区启动之前自动检查兼容的设备树文件。否则，旧的不兼容内核将被加载然后挂起。要禁用此检查（例如裸机开发），请os_check=0在 config.txt 中设置
+
+默认值：`1`
+
+#### bootloader_update
+在树莓派5上，固件会自动检查兼容的设备树文件，然后再尝试从当前分区启动。否则，不兼容的旧内核将被加载，然后挂起。要禁用这种检查（例如用于裸机开发），请在 config.txt 中设置 `os_check=0`
+
+默认值：`1`
+
+### 安全启动属性配置
+:::info[如何使用树莓派安全启动]
+本白皮书介绍如何在基于树莓派4的设备上实现安全启动。有关安全启动实施方法的概述，请参阅[树莓派4启动安全白皮书](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-004651-WP/Raspberry-Pi-4-Boot-Security.pdf)。安全启动系统适用于基于 buildroot 的操作系统映像；不建议或不支持将其用于树莓派OS。
+:::
+
+以下 `config.txt` 属性用于编程`安全启动` OTP 设置。这些更改不可逆转，只能在刷新引导加载程序 EEPROM 映像时通过 `RPIBOOT` 进行编程。这样可以确保无法远程设置`安全启动`或意外插入过期的 SD 卡映像。
+
+有关启用`安全启动`的更多信息，请参阅 [USBBOOT](https://github.com/raspberrypi/usbboot) 软件仓库中的[安全启动自述](https://github.com/raspberrypi/usbboot/blob/master/Readme.md#secure-boot)和[安全启动教程](https://github.com/raspberrypi/usbboot/blob/master/secure-boot-example/README.md)。
+
+#### program_pubkey
+如果该属性设置为 `1`，那么 `recovery.bin` 将把 EEPROM 映像中公钥的哈希值写入 OTP。设置后，引导加载程序将拒绝使用不同 RSA 密钥签名的 EEPROM 映像或未签名的映像。
+
+默认值：`0`
+
+#### revoke_devkey
+如果该属性设置为 `1`，`recovery.bin` 将向 OTP 写入一个值，防止 ROM 加载不支持`安全启动`的旧版本第二阶段bootloader。这样就可以防止`安全启动`被还原到旧版本的引导加载程序而关闭。
+
+默认值：`0`
+
+#### program_rpiboot_gpio
+
+计算模块有一个专用的 `nRPIBOOT` 跳线，用于选择 `RPIBOOT` 模式。带有 EEPROM 的旗舰版和键盘版 Raspberry Pi 设备没有专用的 `nRPIBOOT` 跳线。要在旗舰版和键盘版设备上选择 `RPIBOOT` 模式，请将下列 GPIO 引脚之一拉低：
+
+- `2`
+- `4`
+- `5`
+- `7`
+- `8`
+
+该属性不依赖于 `secure-boot`。不过，您应确认该 GPIO 配置不会与任何可能在启动期间将 GPIO 拉低的 HAT 冲突。
+
+为了安全起见，只能通过 `RPIBOOT` 对该属性进行编程。因此，必须首先使用 `erase_eeprom` 清除引导加载程序 EEPROM。这将导致 ROM 故障切换到 `RPIBOOT` 模式，从而允许设置该选项。
+
+在 BCM2712 上，您也可以通过按住电源按钮并同时连接 USB-C 电源来强制使用 `RPIBOOT` 模式。
+
+默认值：` `
+
+#### program_jtag_lock
+
+如果将此属性设置为 `1`，`recovery.bin` 将编程一个 OTP 值，阻止使用 VideoCore JTAG。此选项要求同时设置 `program_pubkey` 和 `revoke_devkey`。该选项可能会阻止故障分析，只有在设备经过全面测试后才可设置。
+
+默认值：`0`
+
+## GPIO控制
+
+### gpio
+
+通过 `gpio` 指令，可以在启动时将 GPIO 引脚设置为特定模式和值，而以前需要自定义 `dt-blob.bin` 文件。每一行都对一组引脚应用相同的设置（或至少进行相同的更改），可以是单个引脚（`3`）、引脚范围（`3-4`）或以逗号分隔的列表（`3-4,6,8`）。
+
+- `ip` - 输入
+- `op` - 输出
+- `a0-a5` - Alt0-Alt5
+- `dh` - 驱动高电平（用于输出）
+- `dl` - 驱动低电平（用于输出）
+- `pu` - 上拉
+- `pd` - 下拉
+- `pn/np` - 无拉
+
+`gpio` 设置按顺序应用，因此后面出现的设置优先于前面出现的设置。
+
+例如
+```ini
+# 为 GPIO 引脚 0 至 27 选择 Alt2（适用于 DPI24）
+gpio=0-27=A2
+
+# 将 GPIO12 设置为设置为 输出，1
+gpio=12=op,dh
+
+# 将 GPIO18 和 20 设置为 输入，上拉
+gpio=18,20=pu
+
+# 将 GPIO17 至 21 设置为输入
+gpio=17-21=ip
+```
+
+`gpio` 指令尊重 `config.txt` 中的 `[...]` 条件筛选器，因此可以根据型号、序列号和 EDID 使用不同的设置。
+
+通过这种机制更改 GPIO 不会对内核产生任何直接影响。它们不会导致 GPIO 引脚输出到 `sysfs` 接口，而且可以被设备树中的 `pinctrl` 条目以及 `pinctrl` 等实用程序覆盖。
+
+还需注意的是，从接通电源到更改生效之间会有几秒钟的延迟，如果通过网络或 USB 大容量存储设备启动，延迟时间会更长。
+
+## 超频选项
+内核有一个 [CPUFreq](https://www.kernel.org/doc/html/latest/admin-guide/pm/cpufreq.html) 驱动程序，默认情况下已启用省电调速器，安装 [raspi-config](./configuration.mdx#raspi-config) 后在启动过程中切换为按需调速器。使用按需调速器后，CPU 频率将随处理器负载而变化。您可以使用 `*_min` 配置选项调整最小值，或通过应用静态缩放调速器（powersave 或 performance）或 `force_turbo=1` 来禁用动态时钟。
+
+当 SoC 达到 `temp_limit`（见下文）（默认值为 85°C）时，超频和过压将在运行时被禁用，以冷却 SoC。树莓派1和树莓派2应该不会达到这一上限，但树莓派3及更新版本则更有可能达到这一上限。当检测到欠压情况时，超频和过压也会被禁用。
+
+:::note[注意]
+更多信息，请参阅[频率管理和热控制](./raspberry-pi.mdx#频率管理和热控制)部分。
+:::
+
+:::warning[警告]
+将任何超频参数设置为 [`raspi-config`](./configuration.mdx#超频) 所用值以外的值，可能会在 SoC 内设置一个永久位。这样就有可能检测到你的 Raspberry Pi 曾经超频。当 `force_turbo` 设置为 `1`，并且任何 `over_voltage_*` 选项设置为 `0` 以上时，超频位就会设置。更多信息，请参阅 [关于 Turbo 模式的博文](https://www.raspberrypi.com/news/introducing-turbo-mode-up-to-50-more-performance-for-free/)。
+:::
+
+### 超频
+| 选项 | 描述 |
+| -- | -- |
+| arm_freq | ARM CPU 频率（MHz）。 |
+| arm_boost | 将 `arm_freq` 提升至板卡类型和固件支持的最高频率。设置为 `1` 时启用。 |
+| gpu_freq | 同时设置 `core_freq`、`h264_freq`、`isp_freq`、`v3d_freq` 和 `hevc_freq`。 |
+| core_freq | GPU 处理器内核的频率（MHz）。影响 CPU 性能，因为它驱动二级缓存和内存总线；二级缓存仅对树莓派 Zero/树莓派 Zero W/树莓派 1 有利；SDRAM 对树莓派2和树莓派3有微小的好处。有关在树莓派4上的使用，请参阅下面的章节。 |
+| h264_freq | 硬件视频模块的频率（MHz）；可单独覆盖 `gpu_freq` 设置。 |
+| isp_freq | 图像传感器流水线模块的频率（MHz）；可单独覆盖 `gpu_freq` 设置。 |
+| v3d_freq | 3D 模块的频率（MHz）；可单独覆盖 `gpu_freq` 设置。在树莓派5上，V3D 独立于 `core_freq`、`isp_freq` 和 `hevc_freq`。 |
+| hevc_freq | 高效视频编解码器块的频率（MHz）；可单独覆盖 gpu_freq 设置。仅适用于树莓派4。 |
+| sdram_freq | SDRAM 频率（MHz）。不支持 树莓派 4 或更新版本的 SDRAM 超频。 |
+| over_voltage | CPU/GPU 内核电压上限。该值范围应为 \[-16,8\]，相当于 \[0.95V,1.55V\]（树莓派1 上为 \[0.8,1.4V\]），步长为 0.025V。换句话说，指定 -16 时，CPU/GPU 内核电压最大值为 0.95V（树莓派 1 为 0.8V）；指定 8 时，CPU/GPU 内核电压最大值为 1.55V（树莓派 1 为 1.4V）。有关默认值，请参见下表。只有指定 `force_turbo=1` 时，才允许电压值超过 6：如果同时设置 `over_voltage_*` > `0`，则会设置保修位。 |
+| over_voltage_sdram | 同时设置 `over_voltage_sdram_c`、`over_voltage_sdram_i` 和 `over_voltage_sdram_p`。 |
+| over_voltage_sdram_c | SDRAM 控制器电压调整。\[-16,8\]相当于 \[0.8V,1.4V\]，步长为 0.025V。不支持树莓派4或更高版本设备。 |
+| over_voltage_sdram_i | SDRAM I/O 电压调整。\[-16,8\] 相当于 \[0.8V,1.4V\]，步长为 0.025V。不支持树莓派4或更高版本设备。 |
+| over_voltage_sdram_p | SDRAM phy 电压调整。\[-16,8\] 相当于 \[0.8V,1.4V\]，步长为 0.025V。不支持树莓派4或更高版本设备。 |
+| force_turbo | 即使 ARM 内核不忙时也强制执行超频模式频率。如果同时设置了 `over_voltage_*`，则启用此功能可能会设置保修位。 |
+| initial_turbo | 在给定值（秒）或 `cpufreq` 设置频率之前，从启动开始启用[超频模式](https://forums.raspberrypi.com/viewtopic.php?f=29&t=6201&start=425)。最大值为 `60`。2024.11 的固件更新做出了以下更改：<br />* 将默认值从 `0` 改为 `60`，以缩短启动时间<br />* 将内核 CPU 性能管理器从 `powersave` 改为 `ondemand`|
+| arm_freq_min | 用于动态频率时钟的 `arm_freq` 最小值。请注意，将该值降至默认值以下并不会显著降低功耗，目前也不支持该功能。 |
+| core_freq_min | 用于动态频率时钟的 `core_freq` 最小值。 |
+| gpu_freq_min | 用于动态频率时钟的 `gpu_freq` 最小值。 |
+| h264_freq_min | 用于动态频率时钟的 `h264_freq` 最小值。 |
+| isp_freq_min | 用于动态频率时钟的 `isp_freq` 最小值。 |
+| v3d_freq_min | 用于动态频率时钟的 `v3d_freq` 最小值。 |
+| hevc_freq_min | 用于动态频率时钟的 `hevc_freq` 最小值。 |
+| sdram_freq_min | 用于动态频率时钟的 `sdram_freq` 最小值。 |
+| over_voltage_min | 用于动态频率时钟的 `over_voltage` 。该值范围应为 \[-16,8\]，相当于 \[0.8V,1.4V\]，步长为 0.025V。换句话说，指定 -16 时，CPU/GPU 内核空闲电压为 0.8V，指定 8 时，最低电压为 1.4V。此设置在树莓派4和树莓派5上已被弃用。 |
+| over_voltage_delta | 在 树莓派4和树莓派5上，over_voltage_delta 参数会在 DVFS 算法计算出的数值上添加以微伏为单位的偏移量。 |
+| temp_limit | 过热保护。当 SoC 达到该值（摄氏度）时，该参数会将时钟和电压设置为默认值。超过 85 的值将被箝位在 85。 |
+| temp_soft_limit | **仅限 3A+/3B+**。CPU 速度节流控制。该值用于设置 CPU 时钟速度节流系统启动时的温度。在此温度下，时钟速度将从 1400MHz 降至 1200MHz。默认值为 `60`，最大可升至 `70`，但可能导致不稳定。 |
+
+本表给出了不同型号树莓派上各选项的默认值，所有频率均以 MHz 为单位。
+| 选项 | Pi0/W | Pi1 | Pi2 | Pi3 | Pi3A+<br />Pi3B+ | CM4&Pi4B<br />⇐ R1.3 | Pi4B R1.4 | Pi400 | Pi Zero 2W | Pi5 |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | 
+| arm_freq | 1000 | 700 | 900 | 1200 | 1400 | 1500 | 1500 或 1800 如果 `arm_boost`=1 | 1800 | 1000 | 1400 |
+| core_freq | 400 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 400 | 910 |
+| h264_freq | 300 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 300 | N/A |
+| isp_freq | 300 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 300 | 910 |
+| v3d_freq | 300 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 300 | 910 |
+| hevc_freq | N/A | N/A | N/A | N/A | N/A | 500 | 500 | 500 | N/A | 910 |
+| sdram_freq | 450 | 400 | 450 | 450 | 500 | 3200 | 3200 | 3200 | 450 | 4267 |
+| arm_freq_min | 700 | 700 | 600 | 600 | 600 | 600 | 600 | 600 | 600 | 1500 |
+| core_freq_min | 250 | 250 | 250 | 250 | 250 | 200 | 200 | 200 | 250 | 500 |
+| gpu_freq_min | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 250 | N/A |
+| h264_freq_min | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 500 |
+| isp_freq_min | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 500 |
+| v3d_freq_min | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 250 | 500 |
+| sdram_freq_min | 400 | 400 | 400 | 400 | 400 | 3200 | 3200 | 3200 | 400 | 4267 |
+
+本表给出了所有型号相同选项的默认值。
+| 选项 | 默认值 |
+| -- | -- |
+| initial_turbo | 0（秒） |
+| temp_limit | 85 (°C) |
+| over_voltage | 0（1.35V，树莓派 1 为 1.2V） |
+| over_voltage_min | 0 (1.2V) |
+| over_voltage_sdram | 0 (1.2V) |
+| over_voltage_sdram_c | 0 (1.2V) |
+| over_voltage_sdram_i | 0 (1.2V) |
+| over_voltage_sdram_p | 0 (1.2V) |
+
+固件使用自适应电压扩展（AVS）在 `over_voltage` 和 `over_voltage_min` 所定义的范围内确定最佳 CPU/GPU 内核电压。
+
+#### 特定于树莓派4、树莓派400和CM4
+系统空闲时的最低核心频率必须足够快，以支持显示屏的最高像素时钟（忽略休眠）。因此，如果显示模式为 4Kp60，`core_freq` 将被提升到 500 MHz 以上。
+
+| 显示选项 | 最大核心频率 |
+| -- | -- |
+| 默认值 | 500 |
+| `hdmi_enable_4kp60` | 550 |
+
+:::note[注意]
+自 Raspberry Pi 5 起，旗舰机型无需使用 `hdmi_enable_4kp60`；自 CM5 起，计算模块无需使用 `hdmi_enable_4kp60`；自 Pi 500 起，键盘机型无需使用 `hdmi_enable_4kp60`；它们默认支持双 4Kp60 显示屏。
+:::
+
+- 超频需要最新发布的固件。
+- 如果系统超频，最新固件会自动调节电压。手动设置 `over_voltage` 会禁用超频时的自动电压调整。
+- 超频时建议使用单个频率设置（`isp_freq`、`v3d_freq` 等）而不是 `gpu_freq`，因为 ISP、V3D、HEVC 等的最大稳定频率不同。
+- 树莓派4或更高版本的设备无法配置 SDRAM 频率。
+
+#### force_turbo
+默认情况下（`force_turbo=0`），按需 CPU 频率驱动程序会在 ARM 内核繁忙时将时钟频率提高到最高频率，而在 ARM 内核空闲时将时钟频率降低到最低频率。
+
+`force_turbo=1` 可覆盖这种行为，即使 ARM 内核不忙时也会强制使用最高频率。
+
+### 时钟关系
+
+#### 树莓派4
+GPU 内核、CPU、SDRAM 和 GPU 都有各自的 PLL，频率可能互不相关。h264、v3d 和 ISP 块共享一个 PLL。
+
+要查看树莓派当前频率（KHz），请键入：`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq`。将结果除以 1000，得出以 MHz 为单位的值。请注意，该频率是内核要求的频率，任何节流（例如在高温下）都可能意味着 CPU 实际运行速度比报告的要慢。使用 `vcgencmd vcgencmd measure_clock arm` 可以获取实际 ARM CPU 频率的瞬时测量值。显示单位为赫兹。
+
+### 监控核心温度
+:::info[白皮书]
+[冷却树莓派设备](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-003608-WP/Cooling-a-Raspberry-Pi-device.pdf)
+
+本白皮书阐述了树莓派变热的原因，以及您可能希望将其冷却的原因，并提供了冷却过程中的各种选项。
+:::
+
+要查看 Raspberry Pi 的温度，请运行以下命令：
+
+```sh
+cat /sys/class/thermal/thermal_zone0/temp
+```
+
+将结果除以 1000 即可得出以摄氏度为单位的数值。或者，您也可以使用 `vcgencmd measure_temp` 来报告 GPU 温度。
+
+达到温度上限不会对 SoC 造成伤害，但会导致 CPU 节流。散热器有助于控制核心温度，从而提高性能。如果 Raspberry Pi 在机箱内运行，这一点尤其有用。散热片上的气流可提高冷却效率。
+
+树莓派3B+及之后PCB技术已发生变化，以提供更好的散热并增加散热效率。此外还引入了软温度限制，目的是最大限度地延长设备在达到85°C硬限制之前“冲刺”的时间。当达到软限制时，时钟速度从1.4GHz降低到1.2GHz，并且工作电压略有降低。这减缓了温度上升的速度：我们将1.4GHz限制到1.2GHz以换取更长的工作时间。默认情况下软限制为60°C，可以通过 config.txt 中的`temp_soft_limit`中的设置更改此值。
+
+### 监控电压
+为确保性能可靠，电源电压必须保持在 4.8V 以上。请注意，某些 USB 充电器/电源的电压可能低至 4.2V。这是因为它们通常是为 3.7V LiPo 电池充电而设计的，而不是为计算机提供 5V 电压。
+
+要监控树莓派的电源电压，您需要使用万用表测量 GPIO 上 VCC 和 GND 引脚之间的电压。更多信息请参阅文档的[电源](./raspberry-pi.mdx#电源)部分。
+
+如果电压降至 4.63V（±5%）以下，ARM 内核和 GPU 将被节流，内核日志中将添加一条显示低电压状态的信息。
+
+Raspberry Pi 5 PMIC 内置 ADC，可以测量电源电压。要查看当前电源电压，请运行以下命令：
+
+```sh
+vcgencmd pmic_read_adc EXT5V_V
+```
+
+### 超频问题
+
+大多数超频问题会立即表现为设备无法启动。如果由于超频配置更改导致设备无法启动，请使用以下步骤将设备恢复到可启动状态：
+
+1. 删除 `config.txt` 中的任何时钟频率超限。
+2. 使用 `over_voltage_delta` 提高核心电压。
+3. 重新应用超频参数，注意避免之前已知的不良超频参数。
+
+## 条件筛选器
+当单个 SD 卡（或卡映像）与一个树莓派和一个显示器一起使用时，很容易根据特定组合的需要设置 `config.txt`，并保持这种方式，只有在发生变化时才进行修改。
+
+但是，如果一台树莓派在不同显示器之间交换使用，或者 SD 卡（或卡映像）在多块板之间交换使用，那么单套设置可能就不够用了。条件过滤器允许你定义配置文件的某些部分，使其仅在特定情况下使用，从而让单个 `config.txt` 在不同硬件读取时创建不同的配置。
+
+### \[all\]过滤器
+\[all\] 过滤器是最基本的过滤器。它可重置所有先前设置的过滤器，并允许将其下方列出的任何设置应用于所有硬件。在过滤设置组的末尾添加 \[all\] 过滤器通常是个好主意，可避免无意中将过滤器合并（见下文）。
+
+### 型号过滤器
+条件模型筛选器的应用如下表所示。
+
+| 过滤器 | 适用型号 |
+| -- | -- |
+| `[pi1]` | 1A、1B、1A+、1B+、CM1 | 
+| `[pi2]` | 2B（基于 BCM2836 或 BCM2837） |
+| `[pi3]` | 3B、3B+、3A+、CM3、CM3+ |
+| `[pi3+]` | 3A+, 3B+。同时查看 `[pi3]` 内容） |
+| `[pi4]` | 4B、400、CM4、CM4S |
+| `[pi5]` | 5、CM 5、500 |
+| `[pi400]` | 400。同时查看 `[pi4]` 内容） |
+| `[pi500]` | 500。同时查看 `[pi5]` 内容） |
+| `[cm1]` | CM1。同时查看 `[pi1]` 内容） |
+| `[cm3]` | CM3。同时查看 `[pi3]` 内容） |
+| `[cm3s]` | CM3S。同时查看 `[pi3]` 内容） |
+| `[cm4]` | CM4。同时查看 `[pi4]` 内容） |
+| `[cm4s]` | CM4S。同时查看 `[pi4]` 内容） |
+| `[cm5]` | CM4。同时查看 `[pi5]` 内容） |
+| `[pi0]` | Zero, Zero W, Zero 2W |
+| `[pi0w]` | Zero W。同时查看 `[pi0]` 内容） |
+| `[pi02]` | Zero 2W。同时查看 `[pi0w]` 与 `[pi0]` 内容） |
+| `[board-type=Type]` | 按 `Type` (类型)编号筛选 - 参见[树莓派修订代码](./raspberry-pi.mdx#树莓派修订码)。例如，`[board-type=0x14]` 将匹配 CM4。 |
+
+这些对于定义不同的 `kernel`、`initramfs` 和 `cmdline` 设置特别有用，因为树莓派1和树莓派2需要不同的内核。它们还有助于定义不同的超频设置，因为树莓派1和树莓派2的默认速度不同。例如，为每台树莓派定义不同的 initramfs 映像：
+```ini
+[pi1]
+ initramfs initrd.img-3.18.7+ followkernel
+[pi2］
+ initramfs initrd.img-3.18.7-v7+ followkernel
+[all]
+```
+记住在最后使用 `[all]` 过滤器，这样任何后续设置都不会仅限于树莓派2硬件。
+
+:::note[注意]
+某些型号的 Raspberry Pi（包括 Zero、CM 和键盘型号）可从多个过滤器读取设置。要将设置仅应用于一种型号，请执行以下操作
+
+* 将设置应用于基本型号（例如 `[pi4]`），然后将设置还原到读取基本型号过滤器的所有型号（例如 `[pi400]`、`[cm4]`、`[cm4s]`）。
+* 使用带有修订代码的 `board-type` 过滤器来针对单一型号（例如 `[board-type=0x11]`）。
+:::
+
+### [none]过滤器
+`[none]`（无）过滤器可防止任何设置应用于任何硬件。虽然没有`[none]`也没有什么不可以，但它是一种有用的方法，可以在 config.txt 中保留一组未使用的设置，而不必注释掉每一行。
+
+### [tryboot]过滤器
+如果设置了 `tryboot` 重启标志，该过滤器就会成功。
+
+它用于在 [autoboot.txt](#autoboottxt) 中选择不同的 `tryboot` 模式 `boot_partition`，以实现故障安全操作系统更新。
+
+### [EDID=*]过滤器
+在树莓派中使用单张 SD 卡在多个显示器之间切换时，如果空白配置不足以自动为每个显示器选择所需的分辨率，则可根据显示器的 EDID 名称选择特定设置。
+
+要查看所连接显示器的 EDID 名称，需要遵循几个步骤。运行以下命令查看 树莓派 上有哪些输出设备：
+```sh
+ls -1 /sys/class/drm/card?-HDMI-A-?/edid
+```
+在 树莓派4上，这将打印出类似内容：
+```
+/sys/class/drm/card1-HDMI-A-1/edid
+/sys/class/drm/card1-HDMI-A-2/edid
+```
+然后需要针对每个文件名运行 `edid-decode`，例如
+```
+edid-decode /sys/class/drm/card1-HDMI-A-1/edid
+```
+如果没有显示器连接到特定的输出设备，它会告诉你 EDID 是空的；否则，它会为你提供有关显示器功能的**大量**信息。您需要查找指定 `Manufacturer` 和 `Display Product Name` 的行。这样，"EDID 名称 "就是 `<Manufacturer>-<Display Product Name>`，字符串中的空格用下划线代替。例如，如果您的 EDID 解码输出包括
+```
+....
+  Vendor & Product Identification:
+    Manufacturer: DEL
+....
+    Display Product Name: 'DELL U2422H'
+....
+```
+
+...那么该显示器的 EDID 名称就是 `DEL-DELL_U2422H`。
+
+然后，您可以将其用作条件筛选器，指定仅在连接该特定显示器时适用的设置：
+```ini
+[EDID=DEL-DELL_U2422H]
+cmdline=cmdline_U2422H.txt
+[all]
+```
+这些设置仅在启动时适用。显示器必须在启动时连接，并且树莓派必须能够读取其 EDID 信息以找到正确的名称。启动后将不同的显示器热插拔到树莓派不会选择不同的设置。
+
+在树莓派4上，如果两个 HDMI 端口都在使用，那么 EDID 过滤器将针对这两个端口进行检查，并应用所有匹配条件过滤器的配置。
+
+:::note[注意]
+此设置不适用于树莓派5。
+:::
+
+### 序列号过滤器
+有时，即使把 SD 卡换到不同的树莓派上，设置也只能应用于单个特定的树莓派。例如许可证密钥和超频设置（尽管许可证密钥已经支持以不同方式交换 SD 卡）。即使无法进行上述 EDID 识别，只要不在树莓派之间交换显示器，也可以用它来选择不同的显示设置。例如，如果你的显示器没有提供可用的 EDID 名称，或者你使用的是复合输出（无法读取 EDID）。
+
+要查看树莓派的序列号，请运行以下命令：
+```sh
+cat /proc/cpuinfo
+```
+输出的底部将显示一个 16 位十六进制值。树莓派的序列号是最后八位十六进制数字。例如，如果你看到
+```
+Serial          : 0000000012345678
+```
+序列号为 `12345678`。
+
+:::note[注意]
+在某些型号的 Raspberry Pi 上，前 8 个十六进制数字包含除 `0` 以外的值。即使在这种情况下，也只能使用后八位十六进制数字作为序列号。
+:::
+
+您可以定义仅适用于该特定 Raspberry Pi 的设置：
+```ini
+[0x12345678]
+# 这里的设置只适用于此序列号的 树莓派
+[all]
+# 这里的设置适用于所有硬件
+```
+
+### GPIO过滤器
+还可以根据 GPIO 的状态进行筛选。例如
+```ini
+[gpio4=1］
+# 如果 GPIO 4 为高电平，此处的设置将被应用
+
+[gpio2=0］
+# 这里的设置适用于 GPIO 2 为低电平的情况
+
+[all]
+# 这里的设置应用于所有硬件
+```
+
+### 组合条件过滤器
+相同类型的过滤器会相互替换，因此 `[pi2]` 会覆盖 `[pi1]`，因为不可能同时两个过滤器都为真。
+
+不同类型的过滤器可以通过一个接一个地排列组合，例如
+```ini
+# 这里的设置适用于所有硬件
+[EDID=VSC-TD2220]
+# 这里的设置仅适用于已连接监视器 VSC-TD2220 的情况
+[pi2］
+# 这里的设置仅在监视器 VSC-TD2220 已连接 * 和 * 树莓派 2 时应用
+[all]
+ # 此处的设置适用于所有硬件
+```
+使用 [all] 过滤器重置之前的所有过滤器，避免无意中将不同类型的过滤器组合在一起。
+
+## 内存选项
+
+### total_mem
+该参数可用于强制限制树莓派的内存容量：指定希望树莓派使用的内存总量（以兆字节为单位）。例如，要使 4GB 的树莓派4B 像 1GB 的型号一样运行，请使用以下参数：
+```ini
+total_mem=1024
+```
+该值 最低128MB 和 最高为板上总内存。
+
+## 许可证密钥和编解码器选项
+在树莓派3和早期型号上，可以通过购买与树莓派CPU序列号锁定的[许可证](https://codecs.raspberrypi.com/license-keys/)来启用附加编解码器的硬件解码。
+
+Raspberry Pi 4 已永久禁用 MPEG2 和 VC1 硬件解码器。这些编解码器无法启用，因此不需要硬件编解码器许可证密钥。MPEG2 和 VC1 文件的软件解码功能足以满足典型的使用要求。
+
+Raspberry Pi 5 具有 H.265 (HEVC) 硬件解码功能。该解码默认已启用，因此无需硬件编解码器许可证密钥。
+
+### decode_MPG2
+`decode_MPG2` 是允许进行硬件 MPEG-2 解码的许可密钥，例如 `decode_MPG2=0x12345678`。
+
+### decode_WVC1
+`decode_WVC1` 是允许硬件 VC-1 解码的许可证密钥，例如 `decode_WVC1=0x12345678`。
+
+如果你有多个树莓派，并为每个都购买了编解码器许可证，你可以在单个 `config.txt` 中列出多达八个许可证密钥，例如 `decode_MPG2=0x12345678,0xabcdabcd,0x87654321`。这样就可以在不同的树莓派之间交换同一张 SD 卡，而不必每次都编辑 `config.txt`。
+
+## 视频选项
+
+### HDMI 模式
+
+要控制 HDMI 设置，请使用 `cmdline.txt` 中的 [屏幕配置实用程序](./configuration.mdx#设置分辨率和旋转) 或 [KMS 视频设置](./configuration.mdx#设置kms显示模式)。
+
+#### 用于 4 系列设备的 HDMI 管线
+
+为了支持双显示器和高达 4Kp60 的模式，Raspberry Pi 4、Compute Module 4 和 Pi 400 在每个时钟周期生成 2 个输出像素。
+
+每种 HDMI 模式都有一个时序列表，用于控制同步脉冲持续时间周围的所有参数。这些参数通常通过像素时钟、活动像素数量、前廊、同步脉冲以及水平和垂直方向的后廊来定义。
+
+以每时钟 2 像素的速度运行所有设备意味着 4 系列设备不能支持任何水平时序不能被 2 整除的时序。
+
+在 CEA 和 DMT 标准中只有一种不兼容的模式： DMT 模式 81，1366x768 @ 60Hz。该模式的水平同步和后门廊时序值为奇数，宽度不能被 8 整除。
+
+如果显示器具有这种分辨率，4 系列设备会自动降到显示器所标示的下一模式，通常为 1280x720。
+
+#### 用于 5 系列设备的 HDMI 管线
+
+从 Raspberry Pi 5 开始的旗舰机型、从 CM5 开始的计算模块机型以及从 Pi 500 开始的键盘机型也都在每个时钟周期 2 个输出像素的情况下工作。这些型号对奇数时序有特殊处理，可以直接处理这些模式。
+
+### 复合视频模式
+复合视频输出可在每个型号的树莓派计算机上找到：
+| 型号 | 复合输出 |
+| -- | -- |
+| 树莓派 1A、B | RCA 插孔 |
+| 树莓派 Zero | 未填充的`电视`接口 |
+| 树莓派 Zero 2W | 电路板底部的测试焊盘 |
+| 树莓派 5 | HDMI 插座旁边的 J7 焊盘 |
+| 所有其他型号 | 3.5 毫米 AV 插孔 |
+
+:::note[注意]
+键盘型号不提供复合视频输出。
+:::
+
+#### enable_tvout
+
+设置为 `1` 可启用复合视频输出，设置为 `0` 则禁用。在 Raspberry Pi 4 之后的旗舰机型、CM4 之后的计算模块和 Zero 机型上，只有将此项设置为 `1` 才能启用复合输出，同时也会禁用 HDMI 输出。键盘型号不可用复合输出。
+
+| 型号 | 默认值 |
+| -- | -- |
+| 从 Raspberry Pi 4B 开始的旗舰机型、从 CM4 开始的计算模块、键盘机型 | 0 |
+| 所有其他型号 | 1 |
+
+在支持的型号上，必须禁用 HDMI 输出才能启用复合输出。检测不到 HDMI 显示器时，HDMI 输出将被禁用。设置 `enable_tvout=0` 可防止在禁用 HDMI 时启用复合输出。
+
+要启用复合输出，请在 [/boot/firmware/config.txt](#什么是configtxt) 中的 `dtoverlay=vc4-kms-v3d` 行末尾添加`,composite`：
+```ini
+dtoverlay=vc4-kms-v3d,composite
+```
+默认情况下，输出 NTSC 复合视频。要选择不同的模式，请在 `/boot/firmware/cmdline.txt` 中的单行后面添加以下内容：
+```ini
+vc4.tv_norm=<video_mode>
+```
+
+用以下值之一替换 `<video_mode>` 占位符：
+
+- `NTSC`
+- `NTSC-J`
+- `NTSC-443`
+- `PAL`
+- `PAL-M`
+- `PAL-N`
+- `PAL60`
+- `SECAM`
+
+### 液晶显示屏和触摸屏
+#### ignore_lcd
+默认情况下，在 I2C 总线上检测到 Raspberry Pi 触摸显示器时就会使用。`ignore_lcd=1` 跳过这一检测阶段。这样就不会使用 LCD 显示屏。
+
+#### disable_touchscreen
+启用/禁用触摸屏。
+
+`disable_touchscreen=1` 将禁用树莓派官方触摸显示屏上的触摸屏。
+
+### 通用显示选项
+#### disable_fw_kms_setup
+默认情况下，固件会解析任何连接的 HDMI 显示器的 EDID，选择合适的视频模式，然后通过内核命令行上的设置将该模式的分辨率和帧频（以及过扫描参数）传递给 Linux 内核。在极少数情况下，固件可能会选择与设备不兼容的 EDID 以外的模式。使用 `disable_fw_kms_setup=1` 禁用视频模式参数传递，可以避免这一问题。Linux 视频模式系统 (KMS) 会自行解析 EDID 并选择合适的模式。
+
+:::note[注意]
+在树莓派5上，该参数默认为 `1`
+:::
+
+## 摄像头设置
+
+### disable_camera_led
+将 `disable_camera_led` 设置为 `1`，可防止在录制视频或拍摄照片时打开红色摄像机 LED 灯。这对于防止反光非常有用，例如当摄像机面向窗户时。
+
+### awb_auto_is_greyworld
+将 `awb_auto_is_greyworld` 设置为 `1`，可让内部不支持 greyworld 选项的库或应用程序使用 NoIR 摄像头捕捉有效的图像和视频。它将自动 awb 模式切换为使用灰色世界算法。只有在无红外摄像头或高质量摄像头的[红外滤光片](../accessories/camera.mdx#摄像头滤镜)被移除时，才需要这样做。
+
+<Normal />

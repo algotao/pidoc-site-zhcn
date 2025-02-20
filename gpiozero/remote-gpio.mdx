@@ -1,0 +1,374 @@
+---
+sidebar_position: 5
+draft: false
+title: 5. 配置远程GPIO
+description: GPIO Zero 支持远程GPIO，通过网络远程控制 GPIO 引脚的功能，这意味着你可以使用 GPIO Zero 控制网络上连接到 Raspberry Pi 的设备。你可以从另一台 Raspberry Pi，甚至从 PC 来实现这一功能。
+keywords: [GPIO Zero, gpiozero, Python, 树莓派, Raspberry Pi, 远程, 远程GPIO, rgpio, pigpio]
+last_update: 
+  date: 2024-06-13
+---
+import Normal from "./_normal.mdx";
+
+# 配置远程GPIO
+
+GPIO Zero 支持多种不同的引脚实现（直接处理 GPIO 引脚的底层引脚库）。默认情况下会使用 [RPi.GPIO](https://pypi.python.org/pypi/RPi.GPIO) 库（假设系统中已安装），但也可选择指定一个库来使用。更多信息，请参阅 [API - 引脚文档页面](./api-pins.mdx)。
+
+支持的引脚库之一 [pigpio](http://abyz.me.uk/rpi/pigpio/python.html) 提供了通过网络远程控制 GPIO 引脚的功能，这意味着你可以使用 GPIO Zero 控制网络上连接到 Raspberry Pi 的设备。你可以从另一台 Raspberry Pi，甚至从 PC 来实现这一功能。
+
+有关如何使用远程引脚的示例，请参阅 [远程 GPIO 方案](./recipes-remote-gpio.mdx) 页面。
+
+## 准备Raspberry Pi
+如果您使用的是 Raspberry Pi OS（桌面版--非精简版），那么您已经拥有了使用远程 GPIO 功能所需的一切。如果使用的是 Raspberry Pi OS Lite 或其他发行版，则需要安装 pigpio：
+```py
+sudo apt install pigpio
+```
+
+或者，也可以从 [abyz.me.uk](http://abyz.me.uk/rpi/pigpio/download.html) 下载 pigpio。
+
+你需要启用远程连接，并在 Raspberry Pi 上启动 pigpio 守护进程。
+
+### 启用远程连接
+
+在 Raspberry Pi OS 桌面映像上，可以在 Raspberry Pi 配置工具中启用远程 GPIO：
+
+![远程GPIO配置](@site/static/gpiozeroimg/raspi-config.png)
+
+或者，在命令行输入 `sudo raspi-config` 并启用远程 GPIO。这在功能上等同于桌面方法。
+
+当使用 `systemctl`（见下文）启动 pigpio 守护进程时，它将允许远程连接（直至禁用）。它还将为当前会话启动 pigpio 守护进程。因此，当前会话不需要任何其他操作，但重启后则需要执行 `systemctl` 命令。
+
+### 命令行：systemctl
+
+要在启动时自动运行守护进程，请运行
+
+```sh
+sudo systemctl enable pigpiod
+```
+
+要使用 `systemctl` 运行一次守护进程，请运行
+
+```sh
+sudo systemctl start pigpiod
+```
+
+### 命令行： pigpiod
+
+另一种方法是手动启动 pigpio 守护进程：
+
+```sh
+sudo pigpiod
+```
+
+这是单次会话使用的方法，重启后不会继续运行。不过，可以使用 `-n` 标志来允许来自特定 IP 地址的连接。例如
+```sh
+sudo pigpiod -n localhost # 仅允许 localhost
+sudo pigpiod -n 192.168.1.65 # 仅允许 192.168.1.65
+sudo pigpiod -n localhost -n 192.168.1.65 # 仅允许 localhost 和 192.168.1.65
+```
+
+:::tip
+请注意，运行 `sudo pigpiod` 不会影响远程 GPIO 配置设置（也就是说，如果没有 `-n` 标志，即使远程设置被禁用，它也会允许远程连接）。但除非进行相应配置，否则 `sudo systemctl enable pigpiod` 或 `sudo systemctl start pigpiod` 将不允许远程连接。
+:::
+
+## 准备控制计算机
+
+如果控制计算机（运行 Python 代码的计算机）是运行 Raspberry Pi OS 的 Raspberry Pi（或运行 [Raspberry Pi Desktop x86](https://www.raspberrypi.org/downloads/raspberry-pi-desktop/) 的 PC），那么你就拥有了所需的一切。如果使用的是其他 Linux 发行版、Mac OS 或 Windows，则需要在 PC 上安装 pigpio Python 库。
+
+### 树莓派
+
+首先，更新软件源列表：
+
+```sh
+sudo apt update
+```
+
+然后为 Python 3 安装 GPIO Zero 和 pigpio 库：
+
+```sh
+sudo apt install python3-gpiozero python3-pigpio
+```
+
+或 Python 2
+
+```sh
+sudo apt install python-gpiozero python-pigpio
+```
+
+或者使用 pip 安装
+
+```sh
+sudo pip3 install gpiozero pigpio
+```
+
+或 Python 2
+```sh
+sudo pip install gpiozero pigpio
+```
+
+### Linux
+
+首先，更新发行版的软件源列表。例如
+
+```sh
+sudo apt update
+```
+
+然后为 Python 3 安装 pip：
+
+```sh
+sudo apt install python3-pip
+```
+
+或 Python 2
+
+```sh
+sudo apt install python-pip
+```
+（或者使用 [get-pip](https://pip.pypa.io/en/stable/installing/) 安装 pip）。
+
+接下来，为 Python 3 安装 GPIO Zero 和 pigpio：
+
+```sh
+sudo pip3 install gpiozero pigpio
+```
+
+或 Python 2
+
+```sh
+sudo pip install gpiozero pigpio
+```
+
+### Mac OS
+
+首先，安装 pip。如果使用 brew 安装了 Python 3，则已经安装了 pip。如果没有，请使用 [get-pip](https://pip.pypa.io/en/stable/installing/) 安装 pip。
+
+接下来，用 pip 安装 GPIO Zero 和 pigpio：
+
+```py
+pip3 install gpiozero pigpio
+```
+
+或者使用 Python 2
+
+```py
+pip install gpiozero pigpio
+```
+
+### Windows
+
+Windows 下的现代 Python 安装程序将 pip 与 Python 绑定。如果没有安装 pip，可以 [按照本指南](https://projects.raspberrypi.org/en/projects/using-pip-on-windows) 进行安装。接下来，用 pip 安装 GPIO Zero 和 pigpio：
+
+```sh
+pip install gpiozero pigpio
+```
+
+## 环境变量
+
+使用远程引脚设备的最简单方法是将 `PIGPIO_ADDR` 环境变量设置为所需 Raspberry Pi 的 IP 地址。您必须运行 Python 脚本，或在使用命令行设置环境变量的情况下启动开发环境。例如
+
+```sh
+PIGPIO_ADDR=192.168.1.3 python3 hello.py
+PIGPIO_ADDR=192.168.1.3 python3
+PIGPIO_ADDR=192.168.1.3 ipython3
+PIGPIO_ADDR=192.168.1.3 idle3 &
+```
+
+如果在安装了 gpiozero 和 [pigpio](http://abyz.me.uk/rpi/pigpio/python.html) Python 库的电脑（而非树莓派）上运行，则无需进一步配置即可运行。但是，如果通过 Raspberry Pi 运行，还需要确保将默认引脚工厂设置为 `PiGPIOFactory`。如果安装了 [RPi.GPIO](https://pypi.python.org/pypi/RPi.GPIO)，它将被选作默认引脚工厂，因此要么卸载它，要么使用 `GPIOZERO_PIN_FACTORY` 环境变量来覆盖它：
+
+```sh
+GPIOZERO_PIN_FACTORY=pigpio PIGPIO_ADDR=192.168.1.3 python3 hello.py
+```
+
+这种用法会将引脚工厂设置为 `PiGPIOFactory`，默认主机为 `192.168.1.3`。引脚工厂可在代码中内联更改，如以下章节所示。
+
+使用这种方法，你可以像在 Raspberry Pi 上一样编写 gpiozero 代码，无需进行任何修改。例如：
+
+```py
+from gpiozero import LED
+from time import sleep
+
+red = LED(17)
+
+while True：
+    red.on()
+    sleep(1)
+    red.off()
+    sleep(1)
+```
+
+运行时
+
+```sh
+PIGPIO_ADDR=192.168.1.3 python3 led.py
+```
+
+将连接到 IP 地址为 `192.168.1.3` 的 Raspberry Pi 第 17 针的 LED 并闪烁。还有
+
+```sh
+PIGPIO_ADDR=192.168.1.4 python3 led.py
+```
+
+将连接到 IP 地址为 `192.168.1.4` 的 Raspberry Pi 第 17 针的 LED 并闪烁，无需更改任何代码，只要 Raspberry Pi 运行着 pigpio 守护进程即可。
+
+:::tip
+直接在 Raspberry Pi 上运行代码时，可以使用任何引脚工厂（假设安装了相关库），但远程使用设备时，只能使用 `PiGPIOFactory`，因为 [pigpio](http://abyz.me.uk/rpi/pigpio/python.html) 是唯一支持远程 GPIO 的引脚库。 
+:::
+
+## 引脚工厂
+
+配置 gpiozero 对象以使用远程引脚的另一种（或附加）方法是创建 `PiGPIOFactory` 对象实例，并在实例化设备对象时使用它们。例如，在未设置环境变量的情况下：
+
+```py
+from gpiozero import LED
+from gpiozero.pins.pigpio import PiGPIOFactory
+from time import sleep
+
+factory = PiGPIOFactory(host='192.168.1.3')
+led = LED(17, pin_factory=factory)
+
+while True:
+    led.on()
+    sleep(1)
+    led.off()
+    sleep(1)
+```
+
+这样就可以在同一个脚本中使用多个 Raspberry Pis 上的设备：
+
+```py
+from gpiozero import LED
+from gpiozero.pins.pigpio import PiGPIOFactory
+from time import sleep
+
+factory3 = PiGPIOFactory(host='192.168.1.3')
+factory4 = PiGPIOFactory(host='192.168.1.4')
+led_1 = LED(17, pin_factory=factory3)
+led_2 = LED(17, pin_factory=factory4)
+
+while True:
+    led_1.on()
+    led_2.off()
+    sleep(1)
+    led_1.off()
+    led_2.on()
+    sleep(1)
+```
+
+当然，你也可以继续正常创建 gpiozero 设备对象，并使用远程引脚创建其他对象。例如，如果在 Raspberry Pi 上运行，下面的脚本将在控制器 Pi 和网络上的另一台 Pi 上闪烁 LED：
+
+```py
+from gpiozero import LED
+from gpiozero.pins.pigpio import PiGPIOFactory
+from time import sleep
+
+remote_factory = PiGPIOFactory(host='192.168.1.3')
+led_1 = LED(17)  # local pin
+led_2 = LED(17, pin_factory=remote_factory)  # remote pin
+
+while True:
+    led_1.on()
+    led_2.off()
+    sleep(1)
+    led_1.off()
+    led_2.on()
+    sleep(1)
+```
+
+或者，在运行时设置环境变量 `GPIOZERO_PIN_FACTORY=pigpio PIGPIO_ADDR=192.168.1.3` 后，下面的脚本将与前一个脚本完全相同：
+
+```py
+from gpiozero import LED
+from gpiozero.pins.rpigpio import RPiGPIOFactory
+from time import sleep
+
+local_factory = RPiGPIOFactory()
+led_1 = LED(17, pin_factory=local_factory)  # local pin
+led_2 = LED(17)  # remote pin
+
+while True:
+    led_1.on()
+    led_2.off()
+    sleep(1)
+    led_1.off()
+    led_2.on()
+    sleep(1)
+
+```
+
+当然，也可以使用多个 IP 地址：
+
+```py
+from gpiozero import LED
+from gpiozero.pins.pigpio import PiGPIOFactory
+from time import sleep
+
+factory3 = PiGPIOFactory(host='192.168.1.3')
+factory4 = PiGPIOFactory(host='192.168.1.4')
+
+led_1 = LED(17)  # local pin
+led_2 = LED(17, pin_factory=factory3)  # remote pin on one pi
+led_3 = LED(17, pin_factory=factory4)  # remote pin on another pi
+
+while True:
+    led_1.on()
+    led_2.off()
+    led_3.on()
+    sleep(1)
+    led_1.off()
+    led_2.on()
+    led_3.off()
+    sleep(1)
+```
+
+请注意，这些示例使用的是 `LED` 类，该类在初始化时需要一个引脚参数。有些类，尤其是代表 HAT 和其他附加板的类，不需要指定引脚编号。不过，仍可以使用环境变量或 pin_factory 关键字参数，在这些设备上使用远程引脚：
+
+```py
+import gpiozero
+from gpiozero import TrafficHat
+from gpiozero.pins.pigpio import PiGPIOFactory
+from time import sleep
+
+gpiozero.Device.pin_factory = PiGPIOFactory(host='192.168.1.3')
+th = TrafficHat()  # traffic hat on 192.168.1.3 using remote pins
+```
+
+这样还可以在两个 IP 地址之间交换，并创建连接到不同 Pis 的多个 HAT 实例：
+
+```py
+import gpiozero
+from gpiozero import TrafficHat
+from gpiozero.pins.pigpio import PiGPIOFactory
+from time import sleep
+
+remote_factory = PiGPIOFactory(host='192.168.1.3')
+
+th_1 = TrafficHat()  # traffic hat using local pins
+th_2 = TrafficHat(pin_factory=remote_factory)  # traffic hat on 192.168.1.3 using remote pins
+```
+
+您甚至可以在一台 Pi 上使用 GPIO Zero 不支持的 HAT（如 [Sense HAT](../docs/accessories/sense-hat)），并通过网络使用远程引脚控制另一台 Pi：
+
+```py
+from gpiozero import MotionSensor
+from gpiozero.pins.pigpio import PiGPIOFactory
+from sense_hat import SenseHat
+
+remote_factory = PiGPIOFactory(host='192.198.1.4')
+pir = MotionSensor(4, pin_factory=remote_factory)  # remote motion sensor
+sense = SenseHat()  # local sense hat
+
+while True:
+    pir.wait_for_motion()
+    sense.show_message(sense.temperature)
+```
+
+请注意，在这种情况下，必须在本地运行 Sense HAT 代码，远程运行 GPIO。
+
+## 远程GPIO用法
+
+继续阅读：
+
+- [远程GPIO用法](./recipes-remote-gpio.mdx)
+- [Pi Zero USB OTG](./pi-zero-otg.mdx)
+
+<Normal />

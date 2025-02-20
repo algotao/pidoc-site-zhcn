@@ -1,0 +1,315 @@
+---
+sidebar_position: 12
+draft: false
+title: 12. 从RPi.GPIO移植
+description: 在使用 GPIO Zero 时遇到的常见问题。gpiozero 适用于所有型号的 Raspberry Pi，而不仅仅是 Pi Zero。"Zero" 是 "zero-boilerplate" 教育友好库命名惯例的一部分，该命名惯例始于 Pygame Zero，之后又有 NetworkZero、guizero 等。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, FAQ, 常见问题]
+last_update: 
+  date: 2024-06-14
+---
+import Normal from "./_normal.mdx";
+
+# 从RPi.GPIO移植
+
+如果您熟悉 [RPi.GPIO](https://pypi.org/project/RPi.GPIO/) 库，就会习惯于编写处理引脚和引脚状态的代码。在本文档的示例中，您会发现我们通常使用的是 LED 和 Button，而不是输入引脚和输出引脚。
+
+GPIO Zero 提供了代表设备的类，因此，与其说有一个引脚编号并告诉它高电平，不如说有一个 LED 并告诉它亮起来；与其说有一个引脚编号并询问它是高电平还是低电平，不如说有一个按钮并询问它是否按下。此外，GPIO Zero 没有模板代码，只需导入需要的部分即可。
+
+GPIO Zero 提供了许多设备类，每个类都有专门针对该设备的特定方法和属性。例如，HC-SR04 距离传感器的功能可在 `DistanceSensor` 类中找到。
+
+除了特定的设备类，我们还提供基类 `InputDevice` 和 `OutputDevice`。这些类与 RPi.GPIO 中对应类的一个主要区别是，它们是类而不是函数，这意味着您需要初始化一个类，并提供其引脚编号，但之后您再也不需要使用该引脚编号，因为它已被对象存储。
+
+GPIO Zero 最初只是 RPi.GPIO 的顶层，但后来我们增加了对其他各种底层引脚库的支持。RPi.GPIO 目前是默认使用的引脚库。如需了解更多信息，请参阅 [更改引脚工厂](./api-pins.mdx)。
+
+## 输出设备
+
+在 [RPi.GPIO](https://pypi.org/project/RPi.GPIO/) 中打开 LED：
+
+```py
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+GPIO.setup(2, GPIO.OUT)
+
+GPIO.output(2, GPIO.HIGH)
+```
+
+在 GPIO Zero 中打开 LED：
+
+```py
+from gpiozero import LED
+
+led = LED(2)
+
+led.on()
+```
+
+`LED` 类还通过 `blink()` 方法支持线程闪烁。
+
+`OutputDevice` 是输出设备的基类，其使用方式与 RPi.GPIO 中的输出设备类似。
+
+请查看支持的 [输出设备](./api-output.mdx#todo) 的完整列表。其他输出设备也有类似的属性和方法名称。基类的命名有共性，如 `OutputDevice.is_active`，在设备类中有别名，如 `LED.is_lit`。
+
+## 输入设备
+
+在 [RPi.GPIO](https://pypi.org/project/RPi.GPIO/) 中读取按下的按钮：
+
+```py
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+GPIO.setup(4, GPIO.IN, GPIO.PUD_UP)
+
+if not GPIO.input(4):
+    print("button is pressed")
+```
+
+在 GPIO Zero 中读取按下的按钮：
+
+```py
+from gpiozero import Button
+
+btn = Button(4)
+
+if btn.is_pressed:
+    print("button is pressed")
+```
+
+请注意，在 RPi.GPIO 示例中，按钮的设置选项是 `GPIO.PUD_UP`，意思是 "上拉"，因此当按钮未按下时，引脚为高电平。当按钮被按下时，引脚变为低电平，因此需要否定条件（`if not`）。如果按钮配置为下拉，则逻辑相反，条件将变为 `if GPIO.input(4)`：
+
+```py
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+GPIO.setup(4, GPIO.IN, GPIO.PUD_DOWN)
+
+if GPIO.input(4):
+    print("button is pressed")
+```
+
+在 GPIO Zero 中，按钮的默认配置是上拉，但可以在初始化时进行配置，其余代码保持不变：
+
+```py
+from gpiozero import Button
+
+btn = Button(4, pull_up=False)
+
+if btn.is_pressed:
+    print("button is pressed")
+```
+
+RPi.GPIO 还支持阻塞边缘检测。
+
+在 RPi.GPIO 中等待上拉按钮被按下：
+
+```py
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+GPIO.setup(4, GPIO.IN, GPIO.PUD_UP)
+
+GPIO.wait_for_edge(4, GPIO.FALLING):
+print("button was pressed")
+```
+
+GPIO Zero 中的等效值：
+
+```py
+from gpiozero import Button
+
+btn = Button(4)
+
+btn.wait_for_press()
+print("button was pressed")
+```
+
+同样，如果按钮被下拉，逻辑就会颠倒。我们不再等待下降沿，而是等待上升沿：
+
+```py
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+GPIO.setup(4, GPIO.IN, GPIO.PUD_UP)
+
+GPIO.wait_for_edge(4, GPIO.FALLING):
+print("button was pressed")
+```
+
+同样，在 GPIO Zero 中，唯一的区别在于初始化：
+
+```py
+from gpiozero import Button
+
+btn = Button(4, pull_up=False)
+
+btn.wait_for_press()
+print("button was pressed")
+```
+
+RPi.GPIO 具有线程回调功能。您需要创建一个函数（必须包含一个参数），并将其与引脚编号和边缘方向一起传递给 `add_event_detect`：
+
+```py
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+def pressed(pin):
+    print("button was pressed")
+
+def released(pin):
+    print("button was released")
+
+GPIO.setup(4, GPIO.IN, GPIO.PUD_UP)
+
+GPIO.add_event_detect(4, GPIO.FALLING, pressed)
+GPIO.add_event_detect(4, GPIO.RISING, released)
+```
+
+在 GPIO Zero 中，通过分配 `when_pressed` 和 `when_release`d 属性，可以为这些操作设置回调：
+
+```py
+from gpiozero import Button
+
+def pressed():
+    print("button was pressed")
+
+def released():
+    print("button was released")
+
+btn = Button(4)
+
+btn.when_pressed = pressed
+btn.when_released = released
+```
+
+此外，还提供了 `when_held`，其中 "hold" 的时间长度是可配置的。
+
+回调函数不需要任何参数，但如果需要参数，则会传入按钮对象，以便确定是哪个按钮调用了函数。
+
+`InputDevice` 是输入设备的基类，其使用方式与 RPi.GPIO 中的输入设备类似。
+
+查看 [输入设备](./api-input.mdx) 的完整列表。其他输入设备也有类似的属性和方法名称。基类中的命名存在共性，如 `InputDevice.is_active`，在设备类中有别名，如 `Button.is_pressed` 和 `LightSensor.light_detected`。
+
+## 复合设备、电路板和附件
+
+有些设备需要连接多个引脚，例如距离传感器、LED 组合或 HAT。有些 GPIO Zero 设备在一个对象中包含多个设备连接，如 `RGBLED`、L`EDBoard`、`DistanceSensor`、`Motor` 和 `Robot`。
+
+使用 RPi.GPIO，您将有一个输出引脚用于触发，一个输入引脚用于回音。您将为回音计时并计算距离。使用 GPIO Zero，您只需创建一个 `DistanceSensor` 对象，指定触发器和回声引脚，然后读取 `DistanceSensor.distance` 属性，该属性会在类的实现过程中自动计算距离。
+
+电机()`Motor`) 类控制两个输出引脚，用于驱动电机前进或后退。机器人(`Robot`) 类控制四个输出引脚（两个电机）的正确组合，以驱动机器人前进或后退以及左右转动。
+
+`LEDBoard` 类可接受任意数量的引脚，每个引脚控制一个 LED。生成的 `LEDBoard` 对象可用于一起控制所有 LED（全部打开/全部关闭），或按索引单独控制。此外，还可以对该对象进行迭代，按顺序打开 LED。请参阅 [高阶用法](./recipes-advanced.mdx) 中的相关示例（包括切片）。
+
+## PWM(脉宽调制)
+
+这两个库都支持对任何引脚进行软件 PWM 控制。根据所使用的引脚库，GPIO Zero 也可以支持硬件 PWM（使用 `RPIOPin` 或 `PiGPIOPin`）。
+
+使用 PWM 的一个简单例子是控制 LED 的亮度。
+
+在 [RPi.GPIO](https://pypi.org/project/RPi.GPIO/)：
+
+```py
+import RPi.GPIO as GPIO
+from time import sleep
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+GPIO.setup(2, GPIO.OUT)
+pwm = GPIO.PWM(2, 100)
+pwm.start(0)
+
+for dc in range(101):
+    pwm.changeDutyCycle(dc)
+    sleep(0.01)
+```
+
+在 GPIO Zero 中：
+
+```py
+from gpiozero import PWMLED
+from time import sleep
+
+led = PWMLED(2)
+
+for b in range(101):
+    led.value = b / 100.0
+    sleep(0.01)
+```
+
+`PWMLED` 有一个 `blink()` 方法，其使用方法与 `LED` 的 `blink()` 方法相同，但其 PWM 功能允许提供 淡入(`fade_in`) 和 淡出(`fade_out`) 选项。此外，`pulse()` 方法还提供了一种让 LED 重复淡入淡出的巧妙方法。
+
+其他设备也可以使用 PWM，如电机（用于变速）和伺服。有关信息，请参阅电机(`Motor`)、伺服(`Servo`)和角伺服(`AngularServo`)类。电机和机器人默认使用 PWM，但可以在初始化时使用 `pwm=False` 将其禁用。如果没有 PWM，则无法使用伺服电机。包含 LED 的设备默认不使用 PWM，但可以指定 `pwm=True`，设备中的任何 LED 对象都将初始化为 `PWMLED` 对象。
+
+## 清理
+
+引脚状态清理在 RPi.GPIO 中是显式的，通过 `GPIO.cleanup()` 手动完成，但在 GPIO Zero 中，脚本结束时会自动对使用的每个引脚进行清理。手动清理可通过使用设备上的 `close()` 方法进行。
+
+请注意，只有在脚本正常终止时才会进行清理。如果脚本因程序错误而退出，则不会执行清理。为确保在出现异常后执行清理，必须对异常进行处理，例如
+
+```py
+from gpiozero import Button
+
+btn = Button(4)
+
+while True:
+    try:
+        if btn.is_pressed:
+            print("Pressed")
+    except KeyboardInterrupt:
+        print("Ending program")
+```
+
+请阅读相关常见问题： [与 GPIO.cleanup() 对应的 gpiozero 是什么？](./faq.mdx#与-gpiocleanup-对应的-gpiozero-是什么)
+
+## Pi信息
+
+RPi.GPIO 提供有关您正在使用的 Pi 的信息。GPIO Zero 中的对应函数是 `pi_info()`：
+
+```py
+>>> from gpiozero import pi_info
+>>> pi = pi_info()
+>>> pi
+PiBoardInfo(revision='a02082', model='3B', pcb_revision='1.2', released='2016Q1', soc='BCM2837', manufacturer='Sony', memory=1024, storage='MicroSD', usb=4, ethernet=1, wifi=True, bluetooth=True, csi=1, dsi=1, headers=..., board=...)
+>>> pi.soc
+'BCM2837'
+>>> pi.wifi
+True
+```
+
+进一步了解 `PiBoardInfo` 提供的功能。
+
+## 更多
+
+GPIO Zero 提供的不仅仅是 GPIO 设备支持，还包括对 [SPI设备](./api-spi.mdx) 的一些支持，包括一系列模数转换器。
+
+它还提供了与其他 GPIO 设备兼容但与 GPIO 引脚无关的设备类，如 `CPUTemperature`、`TimeOfDay`、`PingServer` 和 `LoadAverage`。
+
+GPIO Zero 支持多个引脚库。默认情况下使用 `RPi.GPIO` 控制引脚，但也可以选择使用其他库，如支持网络控制 GPIO 的 `pigpio`。更多信息，请参阅 [更改引脚工厂](./api-pins.mdx#todo) 和 [配置远程GPIO](./remote-gpio.mdx)。
+
+使用 [Mock引脚](./api-pins.mdx#todo) 可以在 PC 上运行 GPIO Zero，用于远程 GPIO 和测试目的。
+
+该库的另一个功能是以逻辑方式配置连接在一起的设备，例如，在一行中可以说 LED 和按钮 "配对"，即按下按钮会打开 LED。请参阅 [源与值](./source-values.mdx) 中的相关内容。
+
+## 常见问题
+
+请注意以下常见问题，它们可能会让过于熟悉 RPi.GPIO 的用户不知所措：
+
+- [如何保持脚本运行？](./faq.mdx#如何保持脚本运行)
+
+- [为什么导入 gpiozero 时会收到 PinFactoryFallback 警告？](./faq.mdx#导入-gpiozero-时为什么会收到-pinfactoryfallback-警告)
+
+- [与 GPIO.cleanup() 相对应的 gpiozero 是什么？](./faq.mdx#与-gpiocleanup-对应的-gpiozero-是什么)
+
+<Normal />

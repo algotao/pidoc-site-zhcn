@@ -1,0 +1,74 @@
+---
+draft: false
+title: Hello World
+description: 在 Raspberry Pi 上运行 OpenCV Hello World。
+keywords: [树莓派, OpenCV, 安装, Raspberry Pi, Hello World]
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import HelloWorldCpp from "../_opencv_c_cpp_hello_world_main.cc.mdx";
+import HelloWorldCmake from "../_opencv_c_cpp_hello_world_CMakeLists.txt.mdx";
+import HelloWorldPy from "../_opencv_python_hello_world_main.py.mdx";
+
+# Hello Word
+
+## 操作系统要求
+
+以下功能在 Raspberry Pi OS Bookworm 12 测试通过。
+
+## 安装
+
+下载体积较大，可将源[设置为国内镜像](../../pidoc/edit_apt_source.mdx)，可大大提升下载速度。
+
+如果对编译安装不熟练，尽量使用系统的 apt 命令安装模式，以避免编译时的各种异常。
+
+<Tabs>
+<TabItem value="cpp" label="C++安装">
+
+```sh
+sudo apt install libopencv-dev cmake
+```
+
+</TabItem>
+
+<TabItem value="python" label="Python安装">
+
+```sh
+sudo apt install libopencv-dev python3-opencv
+```
+
+</TabItem>
+</Tabs>
+
+## C++示例程序
+
+<Tabs>
+<TabItem value="main.cc" label="main.cc">
+
+<HelloWorldCpp />
+
+</TabItem>
+
+<TabItem value="CMakeLists.txt" label="CMakeLists.txt">
+
+<HelloWorldCmake />
+
+</TabItem>
+</Tabs>
+
+:::warning
+在C++中一定要添加 include 目录 `/usr/include/opencv4/`，或使用 cmake 的 `find_package( OpenCV REQUIRED )` 以及 `include_directories( ${OpenCV_INCLUDE_DIRS} )`，否则会出现大量的 opencv 引用头文件错误。
+:::
+
+## Python 示例程序
+
+<Tabs>
+<TabItem value="main.py" label="main.py">
+
+<HelloWorldPy />
+
+</TabItem>
+</Tabs>
+
+

@@ -1,0 +1,592 @@
+---
+sidebar_position: 15
+draft: false
+description: 树莓派音频板可为您现有的高保真音响或基于树莓派的设备和项目带来高品质音频，本文介绍了4种音频板：DAC Pro、DAC+、DigiAMP、Codec Zero。
+keywords: [树莓派, Raspberry Pi, 音频, 声卡, 声音, audio, DAC, DigiAMP, ]
+last_update: 
+  date: 2024-12-20
+---
+import Normal from "../_normal.mdx";
+
+# 树莓派音频
+
+## 概述
+树莓派音频板可为您现有的高保真音响或基于树莓派的设备和项目带来高品质音频。我们提供四种不同的顶部硬件连接 (HAT) 选项，适合任何使用 40 引脚 GPIO 接头的树莓派。
+
+每块电路板都有特定的用途和功能。我们的 DAC PRO、DAC+ 和 DigiAMP+ 板可提供最高音频质量的回放，最高支持全高清音频（192kHz）；而 Codec Zero 板最高支持高清音频（96kHz），并内置麦克风，是小型项目的理想选择。
+
+### 功能概览
+|  | 线路输出 | 平衡输出 | 立体声扬声器 | 单声道扬声器 | 耳机 | 辅助输入 | 辅助输出 | 外置麦克风 | 内置麦克风 |
+| -- | -- | -- | -- | -- | -- | --| -- | -- | -- |
+| DAC Pro | ✓ | ✓ |  |  | ✓ |  |  |  |  |
+| DAC+ | ✓ |  |  |  | ✓ |  |  |  |  |
+| DigiAMP+ |  |  | ✓ |  |  |  |  |  |  |
+| Zero编解码器 |  |  |  | ✓ |  | ✓ | ✓ | ✓ | ✓ |
+
+**线路输出**
+
+双声道/RCA 连接器，通常为红色和白色。该输出为可变模拟信号（0-2V RMS），可连接到现有的高保真音响（前置放大器或功放），也可用于驱动内置功放的有源音箱。
+
+**平衡输出**
+
+XLR 连接器，通常为三针公连接器。在录音室和某些高端高保真系统中使用。也可用于驱动有源监听扬声器，如俱乐部或舞台上面向 DJ 或表演者的有源监听扬声器。
+
+**立体声扬声器**
+
+两组螺丝端子，用于 2×25W 扬声器。这些用于没有内置放大器的传统高保真扬声器。这些扬声器被称为无源扬声器。
+
+**单声道扬声器**
+
+一个螺丝端子，用于单个 1.2 瓦扬声器，如晶体管收音机或类似设备。
+
+**耳机**
+
+为耳机提供立体声音频的 3.5 毫米插孔。树莓派DAC 板上的耳机放大器可驱动阻抗高达 80/90Ω 的耳机。
+
+**辅助输入**
+
+双 Phono/RCA 连接器或 3.5 毫米插座。可接收高达 1V RMS 的模拟音频。可用于录制来自可变模拟源（如手机、MP3 播放器或类似设备）的音频。
+
+**辅助输出**
+
+双 Phono/RCA 连接器或 3.5 毫米插座。可输出高达 1V RMS 的模拟音频。与线路输出相比，它可以用较小的音量将音频输入放大器。
+
+**扩展麦克风**
+
+用于外接驻极体麦克风的 3.5 毫米插座。使用外部麦克风输入接口时，Codec Zero 的内置 MEMS 麦克风会自动禁用。
+
+### 树莓派DAC Pro
+树莓派DAC Pro HAT 是我们保真度最高的数模转换器 (DAC)。
+
+<img src="/img/accessories/audio/DAC_Pro_Board_Diagram.jpg" width="80%" alt="DAC Pro 电路板图" />
+
+DAC Pro 采用德州仪器 PCM5242，具有出色的信噪比（SNR），支持平衡/差分输出与唱机/RCA 线路电平输出并行。它还包括一个专用耳机放大器。DAC Pro 由树莓派通过 GPIO 接口供电。
+
+作为 DAC Pro 的一部分，树莓派的 USB 和以太网端口上方有两个三针针座（P7/P9），供可选配的 XLR 板使用，允许差分/平衡输出。
+
+#### 引脚说明
+| PIN | 说明 |
+| -- | -- |
+| P1 | 模拟输出（0-2V RMS），携带 GPIO27、MUTE 信号（耳机检测）、左右音频和左右接地。 |
+| P6 | 耳机插座信号（1：左，2：接地，3：右，4：接地，5：检测）。 |
+| P7/9 | 差分（0-4V RMS）输出（P7：左，P9：右）。 |
+| P10 | 备用 5V 输入，并联为树莓派供电。 |
+
+#### 可选XLR板
+Pi-DAC PRO 上有一个 6 针接头，可用于选配 XLR 板，通过 Pi USB/以太网端口上方的 XLR 插座提供差分/平衡输出。
+
+<img src="/img/accessories/audio/optional_xlr_board.jpg" width="80%" alt="可选 XLR 板" />
+
+XLR 连接器用于工作室和某些高端高保真系统。它还可用于驱动迪斯科舞厅或舞台上使用的有源 "监听" 扬声器。
+
+### 树莓派DAC+
+树莓派DAC+ 是一款高分辨率音频输出 HAT，可提供 24 位 192kHz 数字音频输出。
+
+<img src="/img/accessories/audio/DAC+_Board_Diagram.jpg" width="80%" alt="DAC+ 电路板图" />
+
+DAC+ 中使用了德州仪器公司的 PCM5122，可将模拟音频传输到设备的唱头连接器。它还支持专用耳机放大器，并通过 GPIO 针座由树莓派供电。
+
+#### 引脚说明
+| PIN | 说明 |
+| -- | -- |
+| P1 | 模拟输出（0-2V RMS）、GPIO27、MUTE 信号（耳机检测）、左右音频和左右接地。 |
+| P6 | 耳机插座信号（引脚 1:左、2:接地、3:右、4:接地、5:检测）。 |
+
+### 树莓派DigiAMP+
+通过树莓派DigiAMP+，您可以连接 2 个输出功率高达 35W 的无源立体声扬声器，使其成为基于树莓派的高保真音响系统的理想之选。
+
+DigiAMP+ 使用德州仪器公司的 TAS5756M PowerDAC，必须由外部电源供电。它需要 12-24V 直流电源（推荐使用 XP Power VEC65US19 电源）。
+
+<img src="/img/accessories/audio/DigiAMP+_Board_Diagram.jpg" width="80%" alt="DigiAMP+ 电路板图" />
+
+DigiAMP+ 的电源桶形连接器为 5.5 毫米 x 2.5 毫米。
+
+开机时，放大器默认为静音（静音 LED 亮起）。软件负责静音状态和 LED 控制（树莓派GPIO22）。
+
+DigiAMP+ 可并联为树莓派和 DigiAMP+ 供电，通过 GPIO 接口为树莓派提供 2.5 安培的 5.1V 电压。
+
+:::warning[警告]
+使用 DigiAMP+ 时，请勿向树莓派自身的电源输入供电。
+:::
+
+#### 引脚说明
+| PIN | 说明 |
+| -- | -- |
+| P5 | 用于硬接线安装的备用电源输入（必须注意极性） |
+| P8 | TAS5756m 内部 GPIO1/2/3 |
+
+### 树莓派编解码器Zero
+树莓派Codec Zero 是一个树莓派Zero 大小的音频 HAT。它在树莓派和 Codec Zero 的板载 Dialog Semiconductor DA7212 编解码器之间传输双向数字音频信号（I2S）。Codec Zero 支持一系列输入和输出设备。
+- 高性能 24 位音频编解码器
+- 支持 8-96kHz 之间的常用音频采样率
+- 内置微型机电麦克风 (Mic2)
+- 单声道驻极体麦克风（麦克风 2 左侧）
+- 麦克风 2 插入检测时自动禁用 MEMS
+- 支持额外的（不适合）单声道驻极体麦克风（右 Mic1）
+- 立体声辅助输入通道（AUX IN）- PHONO/RCA 连接器
+- 立体声辅助输出通道（耳机/AUX OUT）
+- 灵活的模拟和数字混音路径
+- 用于自动电平控制（ALC）的数字信号处理器（DSP）
+- 五段均衡器
+- 单声道线路输出/微型扬声器驱动器：1.2W @ 5V，THD\<10%，R=8Ω
+
+<img src="/img/accessories/audio/Codec_Zero_Board_Diagram.jpg" width="80%" alt="Codec Zero 电路板图" />
+
+Codec Zero 包括一个 EEPROM，必要时可用于自动配置 Linux 环境。它集成了 MEMS 麦克风，可通过 3.5 毫米插座和单声道扬声器（1.2W/8Ω）使用立体声麦克风输入。
+
+除了绿色（GPIO23）和红色（GPIO24）LED 灯外，还提供了一个可编程触感按钮（GPIO27）。
+
+#### 引脚说明
+| PIN | 说明 |
+| -- | -- |
+| P1/2 | 必要时支持外部 PHONO/RCA 插口。P1：辅助输入，P2：辅助输出。 |
+| P1 | 针脚 1 为方形。 |
+
+<img src="/img/accessories/audio/CODEC_ZERO_ZOOMED_IN_DIAGRAM.jpg" width="80%" alt="编解码器零放大图" />
+Codec Zero 是对讲机、智能门铃、古董收音机或智能扬声器等小型项目的理想设计起点。
+
+## 配置
+所有树莓派音频板都包含一个预编程 EEPROM。树莓派音频板设计为即插即用；树莓派OS 能够自动检测和配置。在树莓派OS中，右键单击屏幕右上角的音频设置，可以在板载音频设置和 HAT 音频设置之间进行切换：
+
+<img src="/img/accessories/audio/gui.png"alt="用户界面" />
+
+有许多适用于树莓派的第三方音频软件应用程序支持我们音频板的即插即用功能。这些软件通常是无显示器使用。它们可以通过 PC 或 Mac 应用程序进行控制，也可以通过安装在树莓派上的网络服务器进行控制，并通过网页进行交互。
+
+如果您需要自己配置树莓派操作系统，也许您正在运行自己的无显示器系统，而且没有通过图形用户界面进行控制的选项，那么您需要将树莓派音频板作为树莓派操作系统中的主音频设备，禁用树莓派的板载音频设备。这可以通过编辑 [/boot/firmware/config.txt](../computers/config-txt.mdx#什么是configtxt) 文件来实现。使用通过 SSH 连接到树莓派的终端会话，运行以下命令编辑文件：
+
+```sh
+sudo nano /boot/firmware/config.txt
+```
+
+找到文件中的 `dtparam=audio=on` 行，在该行开头加上 `#` 号，将其注释掉。程序将忽略在 # 符号之后写入的任何内容。现在，你的 `/boot/firmware/config.txt` 文件应该包含以下条目：
+
+```ini
+#dtparam=audio=on
+```
+
+先按 `CTRL+X`、再按 `Y`，然后 **Enter** 保存，最后重启设备使设置生效。
+
+```sh
+sudo reboot
+```
+
+或者，也可以直接在插入电脑的树莓派microSD 卡上编辑 `/boot/firmware/config.txt` 文件。使用默认的文件管理器，打开卡上的 `/boot/firmware/` 卷，使用适当的文本编辑器编辑 `config.txt` 文件，然后保存文件，弹出 microSD 卡并重新插入树莓派。
+
+### 连接HAT
+树莓派音频板可连接到树莓派的 40 针接头。它们设计为使用随附的电路板支座和螺钉支撑在树莓派上。树莓派音频板无需焊接即可正常工作，除非您使用硬接线连接特定连接器，如 DAC Pro 上的 XLR（外部线路回传）连接。
+
+我们提供了所有必要的安装硬件，包括垫片、螺钉和连接器。在添加音频板之前，应将 PCB 垫片拧紧到树莓派上。然后将剩余的螺丝从上方拧入垫片。
+
+### 硬件版本
+
+音频卡有多个版本。具体版本决定了配置所需的操作。较旧的 IQaudIO 品牌板的 PCB 板为黑色。较新的树莓派品牌板采用绿色印刷电路板。这些电路板的电气性能相当，但 EEPROM 内容不同。
+
+连接 HAT 并接通电源后，检查音频卡上的电源 LED 是否亮起（如果有的话）。例如，Codec Zero 有一个标有 “PWR ”的 LED。
+
+确定音频卡有电后，使用以下命令检查电路板的版本：
+
+```sh
+grep -a . /proc/device-tree/hat/*
+```
+
+如果供应商字符串显示 "Raspberry Pi Ltd."，则无需采取进一步行动（但请参阅下文了解额外的 Codec Zero 配置）。如果显示 "IQaudIO Limited www.iqaudio.com"，则需要进行下文概述的额外 config.txt 设置。如果显示 "No such file or directory（无此类文件或目录）"，则表示 HAT 未被检测到，但这些 config.txt 设置仍可使其正常工作。
+
+```ini
+# 一些防止加载正常 HAT 覆盖层的神奇设置
+dtoverlay=
+# 然后根据机型选择以下设置之一：
+dtoverlay=rpi-codeczero
+dtoverlay=rpi-dacplus
+dtoverlay=rpi-dacpro
+dtoverlay=rpi-digiampplus
+```
+
+### 额外的Codec Zero配置
+树莓派Codec Zero 板使用 Dialog Semiconductor DA7212 编解码器。它可以通过内置 MEMS 麦克风、立体声唱机插座（AUX IN）或两个单声道外置驻极体麦克风录制音频。播放则通过立体声唱机插座（AUX OUT）或单声道扬声器连接器进行。
+
+每个输入和输出设备都有自己的混音器，可以独立调节音频电平和音量。编解码器本身还有其他混音器和开关，可将输出混合为单声道，用于单扬声器输出。信号还可以反转；有一个五段均衡器可以调整某些频段。这些设置可以使用 AlsaMixer 进行交互式控制，也可以通过编程进行控制。
+
+AUX IN 和 AUX OUT 均为 1V RMS。可能需要调整 AUX IN 的混频器，以确保输入信号不会使 ADC 饱和。同样，也可以调整输出混频器，以获得最佳输出。
+
+[GitHub](https://github.com/raspberrypi/Pi-Codec) 上提供预配置脚本（可加载 ALSA 设置），包括
+- 单声道 MEMS 麦克风录音、单声道扬声器回放
+- 单声道 MEMS 麦克风录音、单声道 AUX 输出回放
+- 立体声 AUX IN 录音、立体声 AUX OUT 回放
+- 立体声 MIC1/MIC2 录音，立体声 AUX 输出回放
+
+每次树莓派开机时，Codec Zero 都需要知道正在使用这些输入和输出设置中的哪一个。使用树莓派上的终端会话，运行以下命令下载脚本：
+```sh
+git clone https://github.com/raspberrypi/Pi-Codec.git
+```
+
+如果未安装 git，运行以下命令进行安装：
+
+```sh
+sudo apt install git
+```
+
+以下命令将设置设备使用板载 MEMS 麦克风和扬声器播放输出：
+
+```sh
+sudo alsactl restore -f /home/<username>/Pi-Codec/Codec_Zero_OnboardMIC_record_and_SPK_playback.state
+```
+
+该命令可能会导致错误信息，包括以下内容：
+
+* 导入 hw 失败
+* 卡没有状态
+
+在大多数情况下，这些警告是无害的，可以放心地忽略它们。
+
+不过，以下警告可能表示硬件故障：
+
+* 远程 I/O 错误
+
+在 Linux 中，以下警告表示内核无法与 I2C 设备通信：
+
+* 远程 I/O 错误 (`REMOTEIO`)
+
+为了使项目在开机时以所需设置运行，请编辑 `/etc/rc.local` 文件。该文件的内容在每次启动过程结束时运行，因此非常适合用于此目的。编辑文件
+
+```sh
+sudo nano /etc/rc.local
+```
+
+在 exit 0 行上方添加选定的脚本命令，然后按 Ctrl X、Y 和 Enter 保存。根据你选择的设置，文件现在应该类似于下面的样子：
+
+```sh
+#!/bin/sh
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+sudo alsactl restore -f /home/<username>/PiCodec/Codec_Zero_OnboardMIC_record_and_SPK_playback.state
+
+exit 0
+```
+
+先按 `Ctrl X`、再按 `Y`，然后 **Enter** 保存，最后重启设备使设置生效：
+```sh
+sudo reboot
+```
+
+如果您在无显示器环境中使用树莓派和 Codec Zero，还需要最后一步才能将 Codec Zero 设置为默认音频设备，而无需访问桌面上的图形用户界面音频设置。我们需要在主文件夹中创建一个小文件：
+```sh
+sudo nano .asoundrc
+```
+
+在文件中添加以下内容：
+```
+pcm.!default {
+        type hw
+        card Zero
+}
+```
+按住 Ctrl X、Y 和 Enter 保存，然后再次重启以完成配置：
+
+Raspberry Pi OS 等现代 Linux 发行版通常使用 PulseAudio 或 PipeWire 进行音频控制。这些框架能够混合和切换多个音源的音频。它们为音频应用程序提供了高级 API。许多音频应用程序默认使用这些框架。
+
+只有在音频应用程序需要时才创建 `~/.asoundrc` ：
+
+* 直接与 ALSA 通信
+* 在没有 PulseAudio 或 PipeWire 的环境中运行
+
+该文件会干扰用户界面对底层音频资源的查看。因此，我们不建议在运行 Raspberry Pi OS 桌面时创建 `~/.asoundrc`。
+如果该文件存在，用户界面可能会自动清理并删除。
+
+```sh
+sudo reboot
+```
+
+### 使DigiAMP+静音和解除静音
+DigiAMP+ 的静音状态由树莓派上的 GPIO22 切换。最新的音频设备树通过附加参数支持取消 DigiAMP+ 静音。
+
+首先是内核模块加载时的 "一次性" 静音。
+
+对于树莓派板
+```ini
+dtoverlay=rpi-digiampplus,unmute_amp
+```
+
+对于 IQaudIO 板
+```ini
+dtoverlay=iqaudio-digiampplus,unmute_amp
+```
+
+当客户端打开 ALSA 设备时，解除放大器静音。当 ALSA 设备关闭时，静音并延迟 5 秒。(在五秒关闭窗口内重新打开设备将取消静音）。
+
+适用于树莓派板：
+```ini
+dtoverlay=rpi-digiampplus,auto_mute_amp
+```
+
+对于 IQaudIO 板
+```ini
+dtoverlay=iqaudio-digiampplus,auto_mute_amp
+```
+
+如果不想通过设备树控制静音状态，也可以编写自己的解决方案。
+
+音箱启动时会静音。要解除音箱静音
+```sh
+sudo sh -c "echo 22 > /sys/class/gpio/export"
+sudo sh -c "echo out >/sys/class/gpio/gpio22/direction"
+sudo sh -c "echo 1 >/sys/class/gpio/gpio22/value"
+```
+
+再次将放大器静音：
+```sh
+sudo sh -c "echo 0 >/sys/class/gpio/gpio22/value"
+```
+
+## 开始
+
+### 创建一个玩具聊天框
+以树莓派音频板的功能为例，我们来制作一个玩具聊天盒。板载麦克风、可编程按钮和扬声器驱动器使 Codec Zero 成为该应用的理想选择。
+
+<img src="/img/accessories/audio/Chatter_Box.jpg" width="80%" alt="聊天盒" />
+
+按下按钮后，将随机播放一段预先录制的五秒钟音频片段。按住 10 秒钟后，会发出 "嗝" 的提示音，然后会录制新的 5 秒钟片段。按住按钮超过 20 秒，将播放第二次打嗝声，然后删除之前的所有录音。
+
+### 硬件和布线
+对于这个项目，任何小型无源扬声器都足够了。我们使用的是[这里](https://shop.pimoroni.com/products/3-speaker-4-3w?variant=380549926)提供的一款扬声器，在 4Ω 的条件下可承受 5W 的功率。我们还使用了一个发光瞬时按钮和一个激光切割盒来放置所有元件；但这两种方法都是完全可选的。本示例只需使用 Codec Zero 的板载按钮即可，该按钮已预先连接到 GPIO 27。(或者，您也可以使用任何瞬时按钮，如此处提供的按钮）。
+
+<img src="/img/accessories/audio/Chatterbox_Labels.png" width="80%" alt="Chatterbox 标签" />
+
+使用小号平头螺丝刀将扬声器安装到螺丝端子上。对于附加按钮，请将按钮线直接焊接到 Codec Zero 焊盘上，必要时使用 GPIO 针脚 27 和地线连接开关，并使用 +3.3V 和地线连接 LED。
+
+### 设置树莓派
+在本例中，我们使用的是树莓派OS Lite。更多详情，请参阅我们的 [树莓派OS安装](../computers/getting-started.mdx#安装操作系统)指南。
+
+确保在继续之前更新操作系统，并按照提供的说明进行 Codec Zero 配置，包括启用板载麦克风和扬声器输出的命令。
+
+### 为树莓派编程
+在树莓派上打开一个 shell（例如通过 SSH 连接），然后运行以下命令创建我们的 Python 脚本：
+```sh
+sudo nano chatter_box.py
+```
+
+在文件中添加以下内容，并使用您的登录用户名替换 `<username>`：
+
+```py
+#!/usr/bin/env python3
+from gpiozero import Button
+from signal import pause
+import time
+import random
+import os
+from datetime import datetime
+
+# Print current date
+
+date = datetime.now().strftime("%d_%m_%Y-%H:%M:%S")
+print(f"{date}")
+
+# Make sure that the 'sounds' folder exists, and if it does not, create it
+
+path = '/home/<username>/sounds'
+
+isExist = os.path.exists(path)
+
+if not isExist:
+  os.makedirs(path)
+  print("The new directory is created!")
+  os.system('chmod 777 -R /home/<username>/sounds')
+
+# Download a 'burp' sound if it does not already exist
+
+burp = '/home/<username>/burp.wav'
+
+isExist = os.path.exists(burp)
+if not isExist:
+  os.system('wget http://rpf.io/burp -O burp.wav')
+  print("Burp sound downloaded!")
+
+# Setup button functions - Pin 27 = Button hold time 10 seconds.
+
+button = Button(27, hold_time=10)
+
+def pressed():
+    global press_time
+    press_time = time.time()
+    print("Pressed at %s" % (press_time));
+
+def released():
+    release_time = time.time()
+    pressed_for = release_time - press_time
+    print("Released at %s after %.2f seconds" % (release_time, pressed_for))
+    if pressed_for < button.hold_time:
+        print("This is a short press")
+        randomfile = random.choice(os.listdir("/home/<username>/sounds/"))
+        file = '/home/<username>/sounds/' + randomfile
+        os.system('aplay ' + file)
+    elif pressed_for > 20:
+        os.system('aplay ' + burp)
+        print("Erasing all recorded sounds")
+        os.system('rm /home/<username>/sounds/*');
+
+def held():
+    print("This is a long press")
+    os.system('aplay ' + burp)
+    os.system('arecord --format S16_LE --duration=5 --rate 48000 -c2 /home/<username>/sounds/$(date +"%d_%m_%Y-%H_%M_%S")_voice.m4a');
+
+button.when_pressed = pressed
+button.when_released = released
+button.when_held = held
+
+pause()
+```
+
+先按 `Ctrl X`、再按 `Y`，然后 **Enter** 保存。要使脚本可执行，请键入以下内容：
+```sh
+sudo chmod +x chatter_box.py
+```
+
+接下来，我们需要创建一个 crontab 守护进程，它将在每次设备通电时自动启动脚本。运行以下命令打开 crontab 供编辑：
+
+```sh
+crontab -e
+```
+系统会要求你选择一个编辑器；我们建议你使用 `nano`。输入相应的数字选择编辑器，然后按 Enter 继续。文件底部应添加以下一行，并使用您的登录用户名替换 `<username>`：
+```
+@reboot python /home/<username>/chatter_box.py
+```
+
+按 **Ctrl X**，再 **Y**，最后 **Enter** 保存，然后运行 `sudo reboot` 重启设备。
+
+### 使用玩具聊天箱
+
+最后一步是确保一切运行符合预期。按下按钮，听到打嗝声后松开。录音将开始五秒钟。松开按钮后，再次短按按钮即可听到录音。请尽可能多次重复此过程，您的声音将随机播放。您可以通过按住按钮删除所有录音，在第一次打嗝和录音过程中保持按住按钮，至少 20 秒后松开按钮，此时您会听到另一声打嗝声，确认录音已被删除。
+
+**未能嵌入YOUTUBE视频**
+
+### 下一步
+升级！升级项目总是很有趣的，为什么不添加一些额外的功能呢？本项目包含制作自己版本的[谷歌智能扬声器系统](https://aiyprojects.withgoogle.com/)所需的所有部件，你也可以考虑制作第二个设备，用于创建一对对讲机，能够通过 SSH 在网络上传输音频文件。
+
+## 硬件信息
+
+硬件信息：
+- PCB 螺钉均为 M2.5。
+- PCB 支座（用于外壳）为 5 毫米公头/母头。
+- PCB 支座（用于树莓派与音频板连接）为 9 毫米公头/母头。
+- PCB 支座（用于 XLR 至 DAC PRO）为 8 毫米母头/公头。
+- PCB 支座（用于树莓派官方 7 英寸显示屏）为 5 毫米公头/母头。
+- 我们使用并测试过的旋转编码器有 Alpha 三针旋转编码器 RE160F-40E3-20A-24P、ALPS EC12E2430804（RS：729-5848）和 Bourns ECW0JB24-AC0006L（RS：263-2839）。
+- 用于为 DigiAMP+ 供电的桶形连接器规格为 2.5mmID、5.5mmOD、11mm。
+- DigiAMP+ 采用 12V 至 24V 3A 电源供电，如 XPPower VEC65US19 或类似产品。
+- DigiAMP+ 使用 CamdenBoss 两部分式连接器。安装在 PCB 上的是 CTBP9350/2AO。
+- Codec Zero 上使用的扬声器端子可接受 14~26 AWG 的导线（导线直径最大为 1.6 毫米）。
+
+### GPIO使用
+树莓派音频板需要利用 GPIO 针座上的许多引脚才能成功运行。其中有些引脚仅供电路板使用，有些可与其他外设、传感器等共享。
+
+音频板将使用以下树莓派GPIO 引脚：
+- 所有电源引脚
+- 所有接地引脚
+- GPIO 2/3 (I2C)
+- GPIO 18/19/20/21（I2C）
+
+如果合适，还将使用以下引脚：
+- GPIO 22（支持 DigiAMP+ 静音/静音）
+- GPIO 23/24，用于旋转编码器（物理音量控制）或状态 LED（编解码器为零）
+- GPIO 25 用于红外传感器的 
+- GPIO 27，用于旋转编码器按钮开关/编解码器Zero开关
+
+### DAC PRO、DAC+、DigiAMP+、Codec Zero
+
+<img src="/img/accessories/audio/pin_table_new.jpg" width="80%" alt="新引脚表" />
+
+DAC PRO、DAC+ 和 DigiAMP+ 重新暴露了树莓派的信号，可轻松添加额外的传感器和外设。请注意，有些信号（I2S 和 EEPROM）仅供我们的某些电路板使用；而其他信号（如 I2C）则可在多个电路板之间共享。
+
+<img src="/img/accessories/audio/pin_out_new.jpg" width="80%" alt="新引脚" />
+
+### 保存AlsaMixer设置
+要保存 AlsaMixer 设置，请在命令行添加以下内容：
+```sh
+sudo alsactl store
+```
+
+可以将当前状态保存到文件中，然后在启动时重新加载。
+
+运行以下命令保存，并使用您的登录用户名替换 `<username>`：
+
+```sh
+sudo alsactl store -f /home/<username>/usecase.state
+```
+
+运行以下命令恢复已保存的文件，，并使用您的登录用户名替换 `<username>`：
+```sh
+sudo alsactl restore -f /home/<username>/usecase.state
+```
+
+### 基于MPD的音量控制音频
+要让基于音乐播放器守护进程（MPD）的音频软件控制音频板的内置音量，可能需要修改 `/etc/mpd.conf` 文件以支持正确的 AlsaMixer 名称。
+
+要做到这一点，必须确保 `/etc/mpd.conf` 文件的 "音频输出 "部分包含 "mixer_control "行。下面是基于德州仪器电路板（DAC PRO/DAC+/DigiAMP+）的示例：
+
+```
+audio_output {
+    type "alsa"
+    name "ALSA Device"
+    mixer_control "Digital"
+}
+```
+
+## 更新固件
+树莓派音频板使用 EEPROM，其中包含树莓派主机设备在启动时用来选择适当驱动程序的信息。这些信息在生产过程中被编程到 EEPROM 中。在某些情况下，最终用户可能希望更新 EEPROM 的内容：这可以通过命令行完成。
+
+:::important[重要]
+在继续之前，请将 Raspberry Pi 上运行的 Raspberry Pi OS 版本更新到最新版本。
+:::
+
+### EEPROM写保护链接
+在编程过程中，您需要用导线连接红框所示的两个焊盘，以拉下 EEPROM 写保护链接。
+
+<img src="/img/accessories/audio/write_protect_tabs.jpg" width="80%" alt="写保护片" />
+
+:::note[注意]
+在某些情况下，这两个焊盘可能已经安装了一个 0Ω 电阻器来桥接写保护链路，如上图中的 Codec Zero 电路板所示。
+:::
+
+### 对EEPROM编程
+一旦写保护线被拉下，就可以对 EEPROM 进行编程。
+
+首先要安装实用程序，然后运行编程器。打开终端窗口并键入以下内容：
+```sh
+sudo apt update
+sudo apt install rpi-audio-utils
+sudo rpi-audio-flash
+```
+启动后，你将看到一个警告屏幕。
+
+<img src="/img/accessories/audio/firmware-update/warning.png" width="80%" alt="警告" />
+
+选择 `YES` 继续，会出现一个菜单，让你选择硬件。
+
+<img src="/img/accessories/audio/firmware-update/select.png" width="80%" alt="选择" />
+
+:::note[注意]
+如果没有 HAT，或者连接的 HAT 不是树莓派Audio 板，则会出现错误屏幕。如果电路板上的固件已经更新，则会显示一条信息通知您不必继续。
+:::
+
+选择正确的硬件后，将显示一个屏幕，同时将新固件烧录到 HAT 上。
+
+<img src="/img/accessories/audio/firmware-update/flashing.png" width="80%" alt="烧录" />
+
+然后屏幕将显示新固件已安装。
+
+<img src="/img/accessories/audio/firmware-update/flashed.png" width="80%" alt="烧录完成" />
+
+:::note[注意]
+如果固件无法正确安装，您将看到一个错误屏幕。请尝试移除并重新安装 HAT，然后重新闪存固件。
+:::
+
+<Normal />

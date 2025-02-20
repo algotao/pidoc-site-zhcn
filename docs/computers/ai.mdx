@@ -1,0 +1,217 @@
+---
+sidebar_position: 9
+draft: false
+title_meta: 使用树莓派 AI 人工智能神经网络加速器运行摄像头软件(官网24年12月)
+description: 本指南将帮助您在 Raspberry Pi 5 上安装 Hailo NPU。这将使您能够使用人工智能神经网络加速器运行 `rpicam-apps` 摄像头演示。
+keywords: [树莓派, AI软件, AI Software]
+last_update: 
+  date: 2024-12-20
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Normal from "../_normal.mdx";
+
+# AI Kit 与 AI HAT+ 软件
+
+## 入门
+
+本指南将帮助您在 Raspberry Pi 5 上安装 Hailo NPU。这将使您能够使用人工智能神经网络加速器运行 `rpicam-apps` 摄像头演示。
+
+### 先决条件
+
+本指南需要以下设备：
+
+* 树莓派 5
+* 下列 NPU 之一：
+  * [Raspberry Pi AI Kit](../accessories/ai-kit.mdx)，其中包括：
+    * 一个 M.2 HAT+
+    * 一个预装的 Hailo-8L 人工智能模块
+  * 一个 [Raspberry Pi AI HAT+](../accessories/ai-hat-plus.mdx)。
+* 安装 64 位 Raspberry Pi OS Bookworm
+* 任何 Raspberry Pi 官方摄像头（如摄像头模块 3 或高质量摄像头）
+
+### 硬件设置
+
+1. 按照 [安装 Raspberry Pi 摄像头](../accessories/camera.mdx#安装树莓派摄像头) 中的说明，将摄像头安装到 Raspberry Pi 5 板上。您可以跳过重新连接 Raspberry Pi 的电源，因为下一步需要断开 Raspberry Pi 的电源。
+
+2. 根据您的 NPU，按照 [AI Kit](../accessories/ai-kit.mdx#安装) 或 [AI HAT+](../accessories/ai-hat-plus.mdx#安装) 的安装说明，将您的硬件连接到 Raspberry Pi 5。
+
+3. 按照说明 [启用 PCIe Gen 3.0](./raspberry-pi.mdx#pcie-gen-30)。这一步是可选的，但强烈建议使用 NPU 达到最佳性能。
+
+4. 安装使用 NPU 所需的依赖项。在终端窗口运行以下命令
+
+```sh
+sudo apt install hailo-all
+```
+
+这会安装以下依赖项：
+
+* Hailo 内核设备驱动程序和固件
+* HailoRT 中间件软件
+* Hailo Tappas 核心后处理库
+* Hailo 后期处理软件的 `rpicam-apps` 演示阶段
+
+5. 最后，使用 `sudo reboot` 重启树莓派，使这些设置生效。
+
+6. 为确保一切运行正常，请运行以下命令：
+
+```sh
+hailortcli fw-control identify
+```
+
+如果您看到类似下面的输出，说明您已成功安装了 NPU 及其软件依赖项：
+
+```
+Executing on device: 0000:01:00.0
+Identifying board
+Control Protocol Version: 2
+Firmware Version: 4.17.0 (release,app,extended context switch buffer)
+Logger Version: 0
+Board Name: Hailo-8
+Device Architecture: HAILO8L
+Serial Number: HLDDLBB234500054
+Part Number: HM21LB1C2LAE
+Product Name: HAILO-8L AI ACC M.2 B+M KEY MODULE EXT TMP
+```
+
+:::note
+AI HAT+ 设备的 `Serial Number`、`Part Number` 和 `Product Name` 可能会显示 `<N/A>`。这是预料之中的，不会影响功能。
+:::
+
+此外，您还可以运行 `dmesg | grep -i hailo` 检查内核日志，其输出结果应类似于下面的内容：
+
+```
+[    3.049657] hailo: Init module. driver version 4.17.0
+[    3.051983] hailo 0000:01:00.0: Probing on: 1e60:2864...
+[    3.051989] hailo 0000:01:00.0: Probing: Allocate memory for device extension, 11600
+[    3.052006] hailo 0000:01:00.0: enabling device (0000 -> 0002)
+[    3.052011] hailo 0000:01:00.0: Probing: Device enabled
+[    3.052028] hailo 0000:01:00.0: Probing: mapped bar 0 - 000000000d8baaf1 16384
+[    3.052034] hailo 0000:01:00.0: Probing: mapped bar 2 - 000000009eeaa33c 4096
+[    3.052039] hailo 0000:01:00.0: Probing: mapped bar 4 - 00000000b9b3d17d 16384
+[    3.052044] hailo 0000:01:00.0: Probing: Force setting max_desc_page_size to 4096 (recommended value is 16384)
+[    3.052052] hailo 0000:01:00.0: Probing: Enabled 64 bit dma
+[    3.052055] hailo 0000:01:00.0: Probing: Using userspace allocated vdma buffers
+[    3.052059] hailo 0000:01:00.0: Disabling ASPM L0s
+[    3.052070] hailo 0000:01:00.0: Successfully disabled ASPM L0s
+[    3.221043] hailo 0000:01:00.0: Firmware was loaded successfully
+[    3.231845] hailo 0000:01:00.0: Probing: Added board 1e60-2864, /dev/hailo0
+```
+
+7. 要确保摄像机运行正常，请运行以下命令：
+
+```sh
+rpicam-hello -t 10s
+```
+
+这样就启动了摄像头，并显示十秒钟的预览窗口。确认一切安装正确后，就可以运行一些演示了。
+
+### 演示
+
+`rpicam-apps` 摄像头应用程序套件实现了 [后处理框架](./camera-software.mdx#使用-rpicam-apps-做后处理)。本节包含几个演示后处理阶段，重点介绍 NPU 的部分功能。
+
+以下演示使用默认显示预览窗口的 [`rpicam-hello`](./camera-software.mdx#rpicam-hello)。不过，您也可以使用其他 `rpicam-apps` 代替，包括 [`rpicam-vid`](./camera-software.mdx#rpicam-vid) 和 [`rpicam-still`](./camera-software.mdx#rpicam-still) 。您可能需要添加或修改一些命令行选项，以使演示命令与其他应用程序兼容。
+
+首先，运行以下命令安装最新的 `rpicam-apps` 软件包：
+
+```sh
+sudo apt update && sudo apt install rpicam-apps
+```
+
+:::tip
+后续章节中提供的命令将使用该版本库中的 JSON 文件。为了便于引用这些文件，此命令会在您的主文件夹中创建克隆的 `rpicam-apps` 目录。如果修改了该目录的位置，还必须修改下面的演示命令，以便引用 JSON 文件的新位置。
+:::
+
+#### 对象检测
+
+此演示将显示神经网络检测到的物体周围的边界框。要禁用取景器，请使用 [`-n`](./camera-software.mdx#nopreview) 标志。要返回纯文本输出来描述检测到的对象，请添加 `-v 2` 选项。运行以下命令在 Raspberry Pi 上尝试演示：
+
+```sh
+picam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov6_inference.json
+```
+
+或者，您也可以尝试另一种在性能和效率上有不同权衡的模型。
+
+要使用 Yolov8 模型运行演示，请运行以下命令：
+
+```sh
+rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov8_inference.json
+```
+
+要使用 YoloX 模型运行演示，请运行以下命令：
+
+```sh
+rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolox_inference.json
+```
+
+要使用 Yolov5 人脸模型运行演示，请运行以下命令：
+
+```sh
+rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov5_personface.json
+```
+
+#### 图像分割
+
+此演示通过在取景器图像上绘制彩色遮罩来执行物体检测和物体分割。运行以下命令在 Raspberry Pi 上试用该演示：
+
+```sh
+rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov5_segmentation.json --framerate 20
+```
+
+#### 姿势估计
+
+该演示执行 17 点人体姿态估计，并绘制连接检测点的线条。运行以下命令在 Raspberry Pi 上试用该演示：
+
+```sh
+rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov8_pose.json
+```
+
+### 替代软件包版本
+
+如果 Hailo 软件包和设备驱动程序的版本不匹配，AI Kit 和 AI HAT+ 将无法运行。此外，Hailo 的神经网络工具可能需要特定版本才能生成模型文件。如果需要特定版本，请完成以下步骤，安装所有依赖项的正确版本：
+
+1. 如果之前使用过 `apt-mark` 来保存任何相关软件包，则可能需要取消保存：
+
+```sh
+sudo apt-mark unhold hailo-tappas-core hailort hailo-dkms
+```
+
+2. 安装所需的软件包版本：
+
+<Tabs>
+<TabItem value="418" label="4.18">
+
+要安装 4.18 版 Hailo 神经网络工具，请运行以下命令：
+
+```sh
+sudo apt install hailo-tappas-core=3.29.1 hailort=4.18.0 hailo-dkms=4.18.0-2
+```
+
+```sh
+sudo apt-mark hold hailo-tappas-core hailort hailo-dkms
+```
+</TabItem>
+
+<TabItem value="417" label="4.17">
+
+要安装 4.17 版 Hailo 神经网络工具，请运行以下命令：
+
+```sh
+sudo apt install hailo-tappas-core=3.28.2 hailort=4.17.0 hailo-dkms=4.17.0-1
+```
+
+```sh
+sudo apt-mark hold hailo-tappas-core hailort hailo-dkms
+```
+</TabItem>
+</Tabs>
+
+### 更多资源
+
+Hailo 还创建了一套可以在 Raspberry Pi 5 上运行的演示程序，可在 [hailo-ai/hailo-rpi5-examples GitHub 存储库](https://github.com/hailo-ai/hailo-rpi5-examples) 中查看。
+
+你可以在 [hailo-ai/hailo_model_zoo GitHub 仓库](https://github.com/hailo-ai/hailo_model_zoo/tree/master/docs/public_models/HAILO8L)中找到 Hailo 丰富的模型动物园，其中包含大量神经网络。
+
+请访问 [Hailo社区论坛和开发者专区](https://community.hailo.ai/)，进一步了解有关Hailo硬件和工具的讨论。
+
+<Normal />

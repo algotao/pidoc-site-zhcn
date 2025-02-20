@@ -1,0 +1,291 @@
+---
+sidebar_position: 1
+draft: false
+description: Raspberry Pi 设计的芯片家族，本文介绍了RP2350、RP2040、RP1的芯片命名、技术规格、器件文档、及软件开发。
+keywords: [树莓派, Raspberry Pi, 自研芯片, silicon, RP2040, RP2350, RP1]
+last_update: 
+  date: 2024-12-01
+---
+import Normal from "../_normal.mdx";
+
+# 自研芯片
+
+## RP2350
+
+RP2350 是由 Raspberry Pi 设计的微控制器。
+
+<img src="/img/microcontrollers/silicon/rp2350.png" alt="RP2350" width="100%" />
+
+无论您使用的是 [Raspberry Pi Pico 2](./pico-series.mdx#引脚布局和设计文件) 还是其他基于 RP2350 的微控制器板，这里都有入门所需的一切。您可以在 Raspberry Pi Pico 2 上找到 [C/C++](./c-sdk.mdx#sdk安装) 或 [MicroPython](./micropython.mdx#什么是micropython) 的入门支持，以及使用 RP2350 的其他板的资源链接。还有 Raspberry Pi Pico 2 微控制器板和我们的 RP2350 微控制器芯片的技术文档链接。
+
+### 为什么芯片叫 RP2350？
+
+RP2350 的后缀数字来源于以下内容、
+
+<img src="/img/microcontrollers/silicon/rp2350_explanation.svg" alt="RP2350型号说明" width="70%" />
+
+1. 处理器内核数 (2)
+2. 处理器类型 (M33)
+3. floor(log2(RAM / 16KB))
+4. floor(log2(nonvolatile / 128KB)) 或 0 (如果没有板载非易失性存储器)
+
+### 技术规格
+
+RP2350 是 Raspberry Pi 推出的一款高性能、安全、低成本、易用型微控制器。
+
+它拥有大容量片上内存、对称双核处理器、确定性总线结构和丰富的外设集，并配备了我们独特的可编程 I/O (PIO) 子系统，为专业用户提供了无与伦比的强大功能和灵活性。RP2350 拥有详细的文档、完善的 MicroPython 移植和 ROM 中的 UF2 引导加载程序，为初学者和业余爱好者用户提供了最低的入门门槛。
+
+RP2350 是一款无状态设备，支持外部 QSPI 存储器的缓存就地执行。这一设计决定允许您为自己的应用选择适当密度的非易失性存储，并从商品闪存部件的低价格中获益。
+
+RP2350 采用现代 40nm 工艺节点制造，具有高性能、低动态功耗和低泄漏等特点，并提供多种低功耗模式，支持使用电池供电的长时间运行。
+
+主要功能包括
+
+* 双 Cortex-M33 或 Hazard3 处理器，频率高达 150MHz
+* 520KB 多组高性能 SRAM
+* 通过专用 QSPI 总线支持高达 16MB 的片外闪存
+* DMA 控制器
+* 完全连接的 AHB 交叉开关
+* 片上可编程 LDO 生成内核电压
+* 2 个片上 PLL，用于产生 USB 和内核时钟
+* 30 个 GPIO 引脚，其中 4 个可用作模拟输入
+* 外设
+  * 2 个 UART
+  * 2 个 SPI 控制器
+  * 2 个 I2C 控制器
+  * 24 个 PWM 通道
+  * USB 1.1 控制器和 PHY，支持主机和设备
+  * 3 个可编程 IO (PIO) 块，共 12 个状态机
+
+#### 安全性
+
+RP2350 具有全面的安全架构，围绕用于 Cortex-M 的 Arm TrustZone 构建，包括以下功能：
+
+* 支持签名启动
+* 8KB 片上反熔断一次性可编程 (OTP) 存储器
+* SHA-256 加速
+* 硬件真随机数生成器 (TRNG)
+
+#### 架构切换
+
+RP2350 包括一对开放硬件 Hazard3 RISC-V 内核，可在启动时替换 Cortex-M33 内核。我们的启动 ROM 甚至可以自动检测已构建第二阶段二进制文件的架构，并将芯片重新启动到相应的模式。除了少量安全功能和双精度浮点运算加速器外，芯片的所有功能都可在 RISC-V 模式下使用。
+
+### 基于 RP2350 的电路板
+
+[Raspberry Pi Pico 2](./pico-series.mdx#引脚布局和设计文件)既是 Raspberry Pi 设计的开发板，也是参考设计，它基于 RP2350。
+
+特此授权使用、复制、修改和/或分发本设计，无论是否收费。
+
+**本设计按 “原样” 提供，作者对本设计不作任何保证，包括对适销性和适用性的所有默示保证。在任何情况下，作者均不对因使用或执行本设计而造成的或与之相关的任何特殊、直接、间接或后果性损害，或因使用、数据或利润损失而造成的任何损害承担责任，无论是合同诉讼、疏忽还是其他侵权行为。**
+
+(原文：THE DESIGN IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS DESIGN INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS DESIGN.)
+
+#### 其他论坛
+
+您可以在 [Raspberry Pi 论坛](https://forums.raspberrypi.com/viewforum.php?f=147) 上找到有关基于 RP2350 的第三方电路板的讨论。
+
+#### USB PID
+
+许多基于 RP2350 的设备使用 Raspberry Pi 的 USB 供应商 ID 和产品 ID 组合。如果您构建基于 RP2350 的第三方电路板，您可能需要一个唯一的 USB 产品 ID (PID)。
+
+如果需要为 Windows 用户提供定制驱动程序，则可能需要唯一的 USB PID。
+
+USB-IF 已授权 Raspberry Pi 为其供应商 ID（`0x2E8A`）授权 USB 产品 ID 值，用于 RP2350 的常用硅组件。
+
+要保留与 Raspberry Pi 供应商 ID 相关联的 USB PID，请按照 [Raspberry Pi USB PID git 仓库](https://github.com/raspberrypi/usb-pid) 中的说明操作。
+
+:::note[注意]
+如果使用标准 RP2350 PID，则可以使用 `iManufacturer`、`iProduct` 和 `iSerial` 字符串来唯一标识设备。
+:::
+
+## RP2040
+
+RP2040 是由 Raspberry Pi 设计的微控制器。
+
+<img src="/img/microcontrollers/silicon/rp2040.jpg" alt="RP2040" width="100%" />
+
+无论您使用的是 [Raspberry Pi Pico 1](./pico-series.mdx#引脚布局和设计文件-1) 还是其他基于 RP2040 的微控制器板，这里都有入门所需的一切。您可以在 Raspberry Pi Pico 上找到 [C/C++](./c-sdk.mdx#sdk安装) 或 [MicroPython](./micropython.mdx#什么是micropython) 的入门支持，以及使用 RP2040 的其他电路板的资源链接。还有 Raspberry Pi Pico 微控制器板和我们的 RP2040 微控制器芯片的技术文档链接。
+
+### 为什么芯片叫 RP2040？
+
+RP2040 的后缀数字来源于以下内容、
+
+<img src="/img/microcontrollers/silicon/rp2040_explanation.svg" alt="RP2040型号说明" width="70%" />
+
+1. 处理器内核数 (2)
+2. 处理器类型（M0+） .
+3. floor(log2(RAM / 16k))
+4. floor(log2(nonvolatile / 16k)) 或 0（如果没有板载非易失性存储器）
+
+### 技术规格
+
+RP2040 是 Raspberry Pi 首次推出的微控制器。它为微控制器带来了标志性的高性能、低成本和易用性。
+
+它拥有大容量片上内存、对称双核处理器、确定性总线结构和丰富的外设集，再加上我们独特的可编程 I/O (PIO) 子系统，为专业用户提供了无与伦比的强大功能和灵活性。RP2040 拥有详细的文档、完善的 MicroPython 移植和 ROM 中的 UF2 引导加载程序，为初学者和业余爱好者用户提供了最低的入门门槛。
+
+RP2040 是一款无状态设备，支持从外部 QSPI 存储器缓存就地执行。这一设计决定允许您为自己的应用选择适当密度的非易失性存储，并从商品闪存部件的低价格中获益。
+
+RP2040 采用现代 40nm 工艺节点制造，具有高性能、低动态功耗和低泄漏等特点，并提供多种低功耗模式，支持在电池供电的情况下长时间运行。
+
+主要功能：
+
+* 双 ARM Cortex-M0+ @ 133MHz
+* 264kB 片上 SRAM，分六个独立的存储组
+* 通过专用 QSPI 总线支持高达 16MB 的片外闪存
+* DMA 控制器
+* 完全连接的 AHB 交叉开关
+* 内插器和整数除法器外设
+* 片上可编程 LDO 生成内核电压
+* 2 个片上 PLL，用于产生 USB 和内核时钟
+* 30 个 GPIO 引脚，其中 4 个可用作模拟输入
+* 外设
+  * 2 个 UART
+  * 2 个 SPI 控制器
+  * 2 个 I2C 控制器
+  * 16 个 PWM 通道
+  * USB 1.1 控制器和 PHY，支持主机和设备
+  * 8 个 PIO 状态机
+
+:::info[白皮书]
+[用于低待机电流应用的功率开关 RP2040](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-004339-WP/Power-switching-RP2040-for-low-standby-current-applications.pdf)
+
+即使在深度休眠状态，RP2040 也会消耗大约 180μA 的典型电流，而休眠电流与 PVT 有很大关系：工艺（电流因芯片而异）、电压（电流随电压线性变化）和温度（电流随温度非线性变化）。
+
+对于许多需要最小电流消耗的用例，最佳选择是尽可能完全关闭系统（或系统中的 RP2040 部分）。本应用说明提供了几种实现方法，这些电路非常简单，设计人员可以根据自己的使用情况进行调整。
+:::
+
+#### 设计文件
+
+* 下载 [最小可行电路板](https://datasheets.raspberrypi.com/rp2040/Minimal-KiCAD.zip) 设计文件 (KiCad)
+* 下载 [VGA 载板](https://datasheets.raspberrypi.com/rp2040/VGA-KiCAD.zip) 设计文件 (KiCad)
+
+### 基于 RP2040 的电路板
+
+[Raspberry Pi Pico 1](./pico-series.mdx#pico-1-系列)是 Raspberry Pi 设计的开发板和参考设计，是基于 RP2040 的开发板系列。
+
+Raspberry Pi Pico 和 Pico W 的设计文件可公开获取，没有任何限制。
+
+* 下载 [设计文件](https://datasheets.raspberrypi.com/pico/RPi-Pico-R3-PUBLIC-20200119.zip)，用于 Raspberry Pi Pico (Cadence Allegro)
+* 下载 [设计文件](https://datasheets.raspberrypi.com/picow/RPi-PicoW-PUBLIC-20220607.zip) for Raspberry Pi Pico W (Cadence Allegro)
+
+特此授权出于任何目的有偿或无偿使用、复制、修改和/或分发本设计。
+
+**本设计按 “原样” 提供，作者对本设计不作任何保证，包括对适销性和适用性的所有默示保证。在任何情况下，作者均不对因使用或执行本设计而造成的或与之相关的任何特殊、直接、间接或后果性损害，或因使用、数据或利润损失而造成的任何损害承担责任，无论是合同诉讼、疏忽还是其他侵权行为。**
+
+(原文：THE DESIGN IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS DESIGN INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS DESIGN.)
+
+#### 其他论坛
+
+您可以在 [Raspberry Pi 论坛](https://forums.raspberrypi.com/viewforum.php?f=147) 上找到有关基于 RP2040 的第三方电路板的讨论。
+
+#### USB PID
+
+许多基于 RP2040 的设备使用 Raspberry Pi 的 USB 供应商 ID 和产品 ID 组合。如果您构建基于 RP2040 的第三方电路板，您可能需要一个唯一的 USB 产品 ID (PID)。
+
+如果需要为 Windows 用户提供定制驱动程序，则可能需要唯一的 USB PID。
+
+USB-IF 已允许 Raspberry Pi 为其供应商 ID (`0x2E8A`)授权 USB 产品 ID 值，用于 RP2040 的常用硅组件。
+
+要保留与 Raspberry Pi 供应商 ID 相关联的 USB PID，请按照 https://github.com/raspberrypi/usb-pid[Raspberry Pi USB PID git 仓库]中的说明操作。
+
+:::note[注意]
+如果使用标准 RP2040 PID，可以使用 `iManufacturer`、`iProduct` 和 `iSerial` 字符串来唯一标识设备。
+:::
+
+### 内部温度传感器
+
+RP2040 封装中的内部温度传感器是一种低分辨率传感器，需要用户进行校准才能达到一定的精度。
+
+准确确定所测温度的关键是了解 ADC VREF 电压。转换公式意味着 ADC VREF 电压的微小误差都会导致计算出的温度出现相当大的差异。RP2040 没有可用于确定 VREF 电压的内部固定电压基准，因此需要手动测量 VREF 电压（注意它可能会发生变化）或提供外部固定电压基准。
+
+:::note[注意]
+RP2040 传感器电压会随着温度升高而下降。
+:::
+
+有关内部温度传感器的更多详情，请参阅 [RP2040 数据表](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf) 第 4 章第 4.9.5 节。
+
+## RP1
+
+<img src="/img/microcontrollers/silicon/rp1.jpg" alt="RP1" width="70%" />
+
+RP1 是一个 12×12 毫米、0.65 毫米间距的 BGA 南桥，为 Raspberry Pi 5 提供了大部分 I/O 功能。
+
+它提供
+
+- 4 通道 PCIe 2.0 端点
+- 千兆以太网 MAC
+- 2× USB 3 主机控制器
+  - 每个都有 1× USB 3 和 1× USB 2 端口
+  - 可用 USB 带宽是树莓派4的两倍多
+- 2× SDIO 端口/eMMC（树莓派5上未使用）
+- 2× MIPI 收发器（4 通道，支持 DSI 和 CSI-2）
+- 视频 DAC（3 通道，支持 PAL/NTSC 和 VGA）
+  - 树莓派5仅使用一个通道（复合通道）
+- 低速外设（SPI、UART、I2C、PWM、GPIO、I2S）
+- 三角积分 PWM 音频输出
+
+有关 RP1 的更多信息，请参阅[RP1 外设](https://datasheets.raspberrypi.com/rp1/rp1-peripherals.pdf)文档。
+
+## 文档
+
+Pico 系列和其他基于 Raspberry Pi 微控制器的电路板的文档。
+
+### RP2350
+
+[RP2350数据表](https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf)<br />
+&emsp;&emsp;Raspberry Pi 的微控制器
+
+[使用 RP2350 的硬件设计](https://datasheets.raspberrypi.com/rp2350/hardware-design-with-rp2350.pdf)<br />
+&emsp;&emsp;使用 RP2350 微控制器构建电路板和产品
+
+### RP2040
+
+[RP2040数据表](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)<br />
+&emsp;&emsp;Raspberry Pi 的微控制器
+
+[使用 RP2040 进行硬件设计](https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf)<br />
+&emsp;&emsp;使用 RP2040 微控制器构建电路板和产品
+
+### Raspberry Pi Pico 2
+
+[Raspberry Pi Pico 2 数据表](https://datasheets.raspberrypi.com/pico/pico-2-datasheet.pdf)<br />
+&emsp;&emsp;基于 RP2350 的微控制器电路板
+
+[Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)<br />
+&emsp;&emsp;使用 Raspberry Pi Pico 系列设备和其他基于 Raspberry Pi 微控制器的电路板进行 C/C++ 开发
+
+### Raspberry Pi Pico
+
+[Raspberry Pi Pico 数据表](https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf)<br />
+&emsp;&emsp;基于 RP2040 的微控制器板
+
+[Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)<br />
+&emsp;&emsp;使用 Raspberry Pico 和其他基于 RP2040 的微控制器板进行 C/C++ 开发
+
+### Raspberry Pi Pico 2 W
+
+[Raspberry Pi Pico 2 W 数据表](https://datasheets.raspberrypi.com/picow/pico-2-w-datasheet.pdf)<br />
+&emsp;&emsp;基于 RP2350 的无线微控制器板
+
+[用 Raspberry Pi Pico W 系列连接互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)<br />
+&emsp;&emsp;使用 C/C++ 或 MicroPython 让 Raspberry Pi Pico W 系列上网
+
+### Raspberry Pi Pico W
+
+[Raspberry Pi Pico W 数据表](https://datasheets.raspberrypi.com/picow/pico-w-datasheet.pdf)<br />
+&emsp;&emsp;基于 RP2040 的无线微控制器板
+
+[用 Raspberry Pi Pico W 系列连接互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)<br />
+&emsp;&emsp;使用 C/C++ 或 MicroPython 让 Raspberry Pi Pico W 系列上网
+
+### 软件开发
+
+[Raspberry Pico C/C++ SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf)<br />
+&emsp;&emsp;用于在 RP2040 微控制器上进行 C/C++ 开发的库和工具
+
+[Raspberry Pico Python SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-python-sdk.pdf)<br />
+&emsp;&emsp;用于 RP2040 微控制器的 MicroPython 环境
+
+Raspberry Pico C/C++的API级Doxygen文档 SDK 的 API 级 Doxygen 文档 [作为微型网站](https://rptl.io/pico-doxygen)。
+
+<Normal />

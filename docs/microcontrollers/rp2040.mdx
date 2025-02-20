@@ -1,0 +1,150 @@
+---
+sidebar_position: 100
+draft: false
+description: RP2040，这是树莓派设计的一款微控制器。本文介绍了RP2040的技术规格、器件文档、软件开发，及RP2040家族的电路板。
+keywords: [树莓派, Raspberry Pi, RP2040]
+---
+import Normal from "../_normal.mdx";
+
+# RP2040
+
+## 欢迎使用RP2040
+欢迎使用RP2040，这是树莓派设计的一款微控制器。
+
+<img src="/img/microcontrollers/silicon/rp2040.jpg" alt="rp2040" />
+
+无论您拥有的是[树莓派 Pico](./pico-series.mdx#raspberry-pi-pico-和-pico-h)还是其他基于 RP2040 的微控制器板，这里都有您入门所需的一切。您可以找到在树莓派 Pico 上开始使用 [C/C++](./c-sdk.mdx#sdk安装) 或 [MicroPython](./micropython.mdx#什么是micropython) 的支持，以及使用 RP2040 的其他电路板的资源链接。这里还有 树莓派 Pico 微控制器板和 RP2040 微控制器芯片技术文档的链接。
+
+## 技术规格
+RP2040 是树莓派首次推出的微控制器。它为微控制器领域带来了高性能、低成本和易用性的标志性价值。
+
+它拥有大容量片上内存、对称双核处理器、确定性总线结构和丰富的外设集，再加上我们独特的可编程 I/O (PIO) 子系统，为专业用户提供了无与伦比的强大功能和灵活性。RP2040 拥有详细的文档、完善的 MicroPython 移植和 ROM 中的 UF2 bootloader，为初学者和业余爱好者用户提供了最低的入门门槛。
+
+RP2040 是一款无状态设备，支持从外部 QSPI 存储器缓存就地执行。这一设计决定允许您为自己的应用选择适当密度的非易失性存储，并从商品闪存部件的低价格中获益。
+
+RP2040 采用现代 40nm 工艺节点制造，具有高性能、低动态功耗和低泄漏等特点，并提供多种低功耗模式，支持使用电池供电的长时间运行。
+
+主要功能：
+- 双 ARM Cortex-M0+ @ 133MHz
+- 264kB 片上 SRAM，分六个独立的存储组
+- 通过专用 QSPI 总线支持高达 16MB 的片外闪存
+- DMA 控制器
+- 完全连接的 AHB 交叉条
+- 插值器和整数除法器外设
+- 片内可编程 LDO，用于产生内核电压
+- 2 个片上 PLL，用于产生 USB 和内核时钟
+- 30 个 GPIO 引脚，其中 4 个可用作模拟输入
+- 外设
+  - 2 个 UART
+  - 2 个 SPI 控制器
+  - 2 个 I2C 控制器
+  - 16 个 PWM 通道
+  - USB 1.1 控制器和 PHY，支持主机和设备
+  - 8 个 PIO 状态机
+
+:::info[白皮书]
+[用于低待机电流应用的功率开关 RP2040](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-004339-WP/Power-switching-RP2040-for-low-standby-current-applications.pdf)
+
+即使处于深度睡眠状态，RP2040 也会消耗大约 180μA 的典型电流，而睡眠电流与 PVT 有很大关系：工艺（电流因芯片而异）、电压（电流随电压线性变化）和温度（电流随温度非线性变化）。
+
+对于许多需要最小电流消耗的用例，最佳选择是尽可能完全关闭系统（或系统中的 RP2040 部分）。本应用说明提供了几种实现方法，这些电路非常简单，设计人员可以根据自己的使用情况进行调整。
+:::
+
+### 为什么芯片叫RP2040？
+RP2040 的后缀数字来源于以下内容
+
+<img src="/img/microcontrollers/silicon/rp2040_explanation.svg" alt="rp2040" width="70%" />
+
+1. 处理器内核数量 (2)
+2. 大致属于哪种类型的处理器（M0+）
+3. floor(log2(ram / 16k))
+4. floor(log2(nonvolatile / 16k)) 或 0（如果没有板载非易失性存储器）
+
+### 设计文件
+- 下载[最小可行电路板](https://datasheets.raspberrypi.com/rp2040/Minimal-KiCAD.zip)设计文件 (KiCad)
+- 下载 [VGA 载板](https://datasheets.raspberrypi.com/rp2040/VGA-KiCAD.zip)设计文件 (KiCad)
+
+## 内部温度传感器
+RP2040 封装中的内部温度传感器是一种低分辨率传感器，需要经过用户校准才能达到一定的精度。
+
+准确确定所测温度的关键是了解 ADC VREF 电压。转换公式意味着 ADC VREF 电压的微小误差都会导致计算出的温度出现相当大的差异。RP2040 没有可用于确定 VREF 电压的内部固定电压基准，因此需要手动测量 VREF 电压（注意它可能会发生变化）或提供外部固定电压基准。
+
+:::note[注意]
+RP2040 传感器电压随温度升高而下降。
+:::
+有关内部温度传感器的更多详情，请参阅 [RP2040 数据表](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)第 4 章第 4.9.5 节。
+
+## 文档
+树莓派Pico 和其他基于 RP2040 的电路板的文档。
+
+### RP2040器件
+[RP2040 数据表](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)<br />
+&emsp;&emsp;树莓派的微控制器
+
+[使用 RP2040 进行硬件设计](https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf)<br />
+&emsp;&emsp;使用 RP2040 微控制器构建电路板和产品
+
+### 树莓派Pico
+[树莓派 Pico 数据表](https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf)<br />
+&emsp;&emsp;基于 RP2040 的微控制器电路板
+
+[Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)<br />
+&emsp;&emsp;使用 树莓派Pico 和其他基于 RP2040 的微控制器板进行 C/C++ 开发
+
+### 树莓派Pico W
+[树莓派 Pico W 数据表](https://datasheets.raspberrypi.com/picow/pico-w-datasheet.pdf)<br />
+&emsp;&emsp;基于 RP2040 的无线微控制器板
+
+[使用树莓派Pico W连接互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)<br />
+&emsp;&emsp;使用 C/C++ 或 MicroPython 联机 树莓派 Pico W
+
+:::note[提示]
+用 C/C++ 或 MicroPython 在 树莓派Pico W上使用 Wi-Fi 和蓝牙的文档介绍见[《用 树莓派 Pico W 连接到互联网》](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)一书。
+:::
+
+### 软件开发
+[树莓派Pico C/C++ SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf)<br />
+&emsp;&emsp;用于在 RP2040 微控制器上进行 C/C++ 开发的库和工具
+
+[树莓派Pico Python SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-python-sdk.pdf)<br />
+&emsp;&emsp;用于 RP2040 微控制器的 MicroPython 环境
+
+树莓派Pico C/C++ SDK 的 API 级 Doxygen 文档也以[微型网站](https://rptl.io/pico-doxygen)的形式提供。
+
+:::note[注意]
+提供适用于 Windows 10 和 Windows 11 的 Pico C/C++ SDK [一键安装程序](https://github.com/raspberrypi/pico-setup-windows/releases/latest/download/pico-setup-windows-x64-standalone.exe)。
+:::
+
+## 基于RP2040的电路板
+
+树莓派Pico 系列是基于 RP2040 的板卡系列，由树莓派设计，既可作为开发板，也可作为参考设计。[Pico 系列](./pico-series.mdx)目前包括 树莓派 Pico（最左）、Pico H（左中）、Pico W（右中）和 Pico WH（最右）。
+
+<img src="/img/microcontrollers/pico-series/pico-1s.png" alt="rp2040" width="70%" />
+
+树莓派 Pico 和 Pico W 的设计文件公开提供，没有任何限制。
+- 下载树莓派 Pico 的[设计文件](https://datasheets.raspberrypi.com/pico/RPi-Pico-R3-PUBLIC-20200119.zip) (Cadence Allegro)
+- 下载树莓派 Pico W 的[设计文件](https://datasheets.raspberrypi.com/picow/RPi-PicoW-PUBLIC-20220607.zip) (Cadence Allegro)
+
+特此授权出于任何目的有偿或无偿使用、复制、修改和/或分发本设计。
+
+**本设计按 "原样 "提供，作者对本设计不作任何保证，包括对适销性和适用性的所有默示保证。在任何情况下，作者均不对因使用或执行本设计而造成的或与之相关的任何特殊、直接、间接或后果性损害，或因使用、数据或利润损失而造成的任何损害承担责任，无论是合同诉讼、疏忽还是其他侵权行为。**
+
+(原文：THE DESIGN IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS DESIGN INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS DESIGN.)
+
+### 其他电路板
+您可以在[树莓派论坛](https://forums.raspberrypi.com/viewforum.php?f=147)上找到有关基于 RP2040 的第三方电路板的讨论。
+
+#### USB PID
+许多基于 RP2040 的设备使用树莓派的 USB 供应商 ID 和产品 ID 组合。如果您构建基于 RP2040 的第三方电路板，您可能需要一个唯一的USB产品ID (PID)。
+
+如果需要为Windows用户提供定制驱动程序，则可能需要唯一的 USB PID。
+
+USB-IF允许树莓派为其供应商ID (`0x2E8A`)授权USB产品ID值，用于 RP2040 的常用硅组件。
+
+要保留与树莓派供应商ID相关联的USB PID，请按照 [树莓派USB PID git仓库](https://github.com/raspberrypi/usb-pid)中的说明进行操作。
+
+:::note[注意]
+如果使用标准RP2040 PID，可以使用 `iManufacturer`、`iProduct` 和 `iSerial` 字符串来唯一标识您的设备。
+:::
+
+<Normal />

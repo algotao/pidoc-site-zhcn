@@ -1,0 +1,209 @@
+---
+sidebar_position: 12
+draft: false
+description: 树莓派Sense HAT 是一块附加板，可为您的树莓派提供一系列传感功能。通过板载传感器，您可以监控压力、湿度、温度、颜色、方向和移动。明亮的 8×8 RGB LED 矩阵可让您将来自传感器的数据可视化，五键操纵杆可让用户与您的项目互动。
+keywords: [树莓派, Raspberry Pi, 传感器帽, Sense HAT, 距离感应器, 温度计, 湿度计]
+last_update: 
+  date: 2024-12-01
+---
+import Normal from "../_normal.mdx";
+
+# Sense HAT
+
+## 关于
+
+[Raspberry Pi Sense HAT](https://www.raspberrypi.com/products/sense-hat/) 是一块附加板，可为 Raspberry Pi 提供一系列传感功能。通过板载传感器，您可以监测压力、湿度、温度、颜色、方向和移动。通过 8×8 RGB LED 矩阵，您可以将传感器的数据可视化。五键操纵杆可让用户与项目互动。
+
+<img src="/img/accessories/sense-hat/Sense-HAT.jpg" alt="Sense HAT" width="70%" />
+
+Sense HAT 最初是为在国际空间站上使用而开发的，是 [树莓派基金会](https://raspberrypi.org) 与 [欧洲航天局](https://www.esa.int/) 合作开展的教育 [Astro Pi](https://astro-pi.org/) 计划的一部分。它可以帮助任何需要位置、运动、方向或环境传感的项目。
+
+官方支持的 [Python 库](#python使用sense-hat) 提供了对板载传感器、LED 矩阵和操纵杆的访问。Sense HAT 兼容任何带有 40 引脚 GPIO 接头的 Raspberry Pi 设备。
+
+## 特性
+Sense HAT 有一个 8×8 RGB LED 矩阵和一个五键操纵杆，还包括以下传感器：
+- 陀螺仪
+- 加速计
+- 磁力计
+- 温度计
+- 气压
+- 湿度
+- 颜色和亮度
+
+可下载 Sense HAT 和 Sense HAT V2 的原理图和机械图纸。
+- [Sense HAT V1 原理图](https://datasheets.raspberrypi.com/sense-hat/sense-hat-schematics.pdf)。
+- [Sense HAT V2 原理图](https://datasheets.raspberrypi.com/sense-hat/sense-hat-v2-schematics.pdf)。
+- [Sense HAT 机械图纸](https://datasheets.raspberrypi.com/sense-hat/sense-hat-mechanical-drawing.pdf)。
+
+### LED矩阵
+LED 矩阵是一个 RGB565 [帧缓冲器](https://www.kernel.org/doc/Documentation/fb/framebuffer.txt)，id 为 `RPi-Sense FB`。相应的设备节点可作为标准文件或mmap文件写入。附带的 "snake" 示例展示了如何访问帧缓冲器。
+
+### 操纵杆
+操纵杆作为输入事件设备出现，名为 `Raspberry Pi Sense HAT Joystick`，映射到方向键和 **回车键**。任何能够处理输入的库都应支持它，或者直接通过 [evdev 接口](https://www.kernel.org/doc/Documentation/input/input.txt) 支持。合适的库包括 SDL、[pygame](http://www.pygame.org/docs/) 和 [python-evdev](https://python-evdev.readthedocs.org/en/latest/) 等。附带的 `snake` 示例展示了如何直接访问操纵杆。
+
+## 安装
+
+为了正常工作，Sense HAT 需要
+
+* 最新的内核
+* 在 Raspberry Pi 上启用 [I2C](https://en.wikipedia.org/wiki/I%C2%B2C)。
+* 一些依赖项
+
+完成以下步骤，让您的 Raspberry Pi 设备准备好连接到 Sense HAT：
+
+1. 首先，确保 Raspberry Pi 运行最新软件。运行以下命令更新：
+
+```sh
+sudo apt update
+```
+
+2. 接下来，安装 sense-hat 软件包，它将确保内核是最新的，启用 I2C 并安装必要的库和程序：
+```sh
+sudo apt install sense-hat
+```
+
+3. 最后，如果在安装之前禁用了 I2C 或内核不是最新的，可能需要重启：
+```sh
+sudo reboot
+```
+
+## 校准
+安装必要的软件并运行校准程序，如下所示：
+```sh
+sudo apt update
+sudo apt install octave -y
+cd
+cp /usr/share/librtimulib-utils/RTEllipsoidFit ./ -a
+cd RTEllipsoidFit
+RTIMULibCal
+```
+校准程序将显示以下菜单：
+```
+Options are:
+
+  m - calibrate magnetometer with min/max
+  e - calibrate magnetometer with ellipsoid (do min/max first)
+  a - calibrate accelerometers
+  x - exit
+
+Enter option:
+```
+
+按小写 `m`。按任意键开始。
+```
+    Magnetometer min/max calibration
+    --------------------------------
+    Waggle the IMU chip around, ensuring that all six axes
+    (+x, -x, +y, -y and +z, -z) go through their extrema.
+    When all extrema have been achieved, enter 's' to save, 'r' to reset
+    or 'x' to abort and discard the data.
+
+    Press any key to start...
+```
+
+启动后，你会看到类似下面的输出在屏幕上滚动：
+```
+ Min x:  51.60  min y:  69.39  min z:  65.91
+ Max x:  53.15  max y:  70.97  max z:  67.97
+```
+
+关注屏幕最下方的两行，因为这两行是程序最近发布的测量结果。
+
+现在，拿起树莓派和 Sense HAT，以你能想到的各种方式移动它。如果能拔掉所有非必要的电缆，就能避免杂乱无章。
+
+尝试在俯仰、滚动和偏航轴上各绕一圈。注意在此过程中不要意外弹出 SD 卡。花几分钟移动 Sense HAT，当发现数字不再变化时停止。
+
+现在按小写 `s`，然后按小写 `x` 退出程序。现在运行 `ls` 命令，你会看到一个新的 `RTIMULib.ini` 文件已经创建。
+
+除上述步骤外，您还可以按上述步骤进行椭圆拟合，但要按 `e` 而不是 `m`。
+
+完成后，将生成的 `RTIMULib.ini` 文件复制到 `/etc/`，并删除 `~/.config/sense_hat/` 中的本地副本：
+```
+rm ~/.config/sense_hat/RTIMULib.ini
+sudo cp RTIMULib.ini /etc
+```
+
+## 开始使用
+安装完成后，可在 `/usr/src/sense-hat/examples` 下找到示例代码。
+
+### Python使用Sense HAT
+`sense-hat` 是官方支持的 Sense HAT 库；它提供了对所有板载传感器和 LED 矩阵的访问。
+
+有关该库的完整文档，请访问 [sense-hat.readthedocs.io](https://sense-hat.readthedocs.io/en/latest/)。
+
+### C++使用Sense HAT
+[RTIMULib](https://github.com/RPi-Distro/RTIMULib) 是一个 C++ 和 Python 库，可在嵌入式 Linux 系统中轻松使用 9-dof 和 10-dof IMU。`/etc/RTIMULib.ini`中提供了一个预校准设置文件，`sense-hat`也可以复制并使用该文件。附带的示例会在当前工作目录下查找 `RTIMULib.ini`，因此您可以将该文件复制到该目录下，以获得更准确的数据。
+
+RTIMULibDrive11 示例已预编译，有助于确保一切按预期运行。运行 `RTIMULibDrive11` 即可启动该示例，按下 `Ctrl C` 关闭该示例。
+
+:::note[注意]
+C/C++ 示例可通过在相应目录下运行 make 进行编译。
+:::
+
+## 故障排除
+
+### 读写EEPROM数据
+
+这些步骤仅供调试之用。
+
+:::tip
+在 Raspberry Pi 2 Model B Rev 1.0 和 Raspberry Pi 3 Model B 板上，这些步骤可能不起作用。固件将控制 I2C0，使 ID 引脚配置为输入。
+:::
+
+在向 Sense HAT 读写 EEPROM 数据之前，必须完成以下步骤：
+
+1. 在 [/boot/firmware/config.txt](../computers/config-txt.mdx#什么是configtxt) 文件中添加以下一行，启用 I2C0 和 I2C1：
+```ini
+dtparam=i2c_vc=on
+dtparam=i2c_arm=on
+```
+
+2. 运行以下命令重新启动
+```sh
+sudo systemctl reboot
+```
+
+3. 下载并构建 flash 工具：
+```sh
+git clone https://github.com/raspberrypi/hats.git
+cd hats/eepromutils
+make
+```
+
+#### 读取
+
+要读取 EEPROM 数据，请运行以下命令：
+
+```sh
+sudo ./eepflash.sh -f=sense_read.eep -t=24c32 -r
+```
+
+#### 写入
+
+:::tip
+此操作不会损坏 Raspberry Pi 或 Sense HAT，但如果发生错误，Raspberry Pi 可能无法自动检测 HAT。
+:::
+
+1. 首先，下载 EEPROM 设置并构建 `.eep` 二进制文件：
+
+```sh
+wget https://github.com/raspberrypi/rpi-sense/raw/master/eeprom/eeprom_settings.txt -O sense_eeprom.txt
+./eepmake sense_eeprom.txt sense.eep /boot/firmware/overlays/rpi-sense-overlay.dtb
+```
+
+2. 下一步，禁用写保护：
+```sh
+i2cset -y -f 1 0x46 0xf3 1
+```
+
+3. 写入 EEPROM 数据：
+```sh
+sudo ./eepflash.sh -f=sense.eep -t=24c32 -w
+```
+
+4. 最后，重新启用写保护：
+```sh
+i2cset -y -f 1 0x46 0xf3 0
+```
+
+<Normal />

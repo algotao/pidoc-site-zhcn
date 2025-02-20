@@ -1,0 +1,83 @@
+---
+sidebar_position: 14
+draft: false
+description: Raspberry Pi AI HAT+ 附加板内置 Hailo AI 加速器，兼容Raspberry Pi 5。AI HAT+ 中的 NPU 可用于过程控制、安防、家庭自动化和机器人等应用。
+keywords: [树莓派, Raspberry Pi, AI HAT+, AI HAT plus]
+last_update: 
+  date: 2024-12-18
+---
+import Normal from "../_normal.mdx";
+
+# AI HAT+ (人工智能板/ 新品)
+
+## 关于
+
+<img src="/img/accessories/ai-hat-plus/ai-hat-plus-hero.jpg" width="80%" alt="树莓派人工智能板" />
+*26TOPS的 Raspberry Pi AI HAT+*
+
+Raspberry Pi AI HAT+ 附加板内置 Hailo AI 加速器，兼容Raspberry Pi 5。AI HAT+ 中的 NPU 可用于过程控制、安防、家庭自动化和机器人等应用。
+
+AI HAT+ 围绕 Hailo-8L 和 Hailo-8 神经网络推理加速器，提供 13 和 26 TOPS两种型号。13 TOPS 型号最适合中等工作量，性能与 [人工智能套件](./ai-kit.mdx) 类似。26 TOPS 型号可以运行更大的网络，运行网络的速度更快，并能更有效地同时运行多个网络。
+
+AI HAT+ 使用 Raspberry Pi 5 的 PCIe 接口进行通信。主机 Raspberry Pi 5 会自动检测板载 Hailo 加速器，并使用 NPU 执行支持的人工智能计算任务。Raspberry Pi OS 内置的 `rpicam-apps` 相机应用程序会自动使用 NPU 运行兼容的后处理任务。
+
+## 安装
+
+要使用 AI HAT+，您需要
+
+* 树莓派 5
+
+每个 AI HAT+ 都配有带状电缆、GPIO 堆叠接头和安装硬件。完成以下说明即可安装 AI HAT+：
+
+1. 首先，确保您的 Raspberry Pi 运行最新的软件。运行以下命令更新：
+
+```sh
+sudo apt update && sudo apt full-upgrade
+```
+
+2. 接下来，[确保你的 Raspberry Pi 固件是最新的](../computers/raspberry-pi.mdx#更新-bootloader-配置)。运行以下命令查看您正在运行的固件：
+
+```sh
+sudo rpi-eeprom-update
+```
+
+如果看到 2023 年 12 月 6 日或更晚的日期，请继续下一步。如果看到的日期早于 2023 年 12 月 6 日，运行以下命令打开 Raspberry Pi 配置 CLI：
+
+```sh
+sudo raspi-config
+```
+
+在 `Advanced Options` > `Bootloader Version` 下，选择 `Latest`。然后用 `Finish` 或 **Escape** 键退出 `raspi-config`。
+
+运行以下命令将固件更新到最新版本：
+
+```sh
+sudo rpi-eeprom-update -a
+```
+然后，使用 `sudo reboot` 重新启动。
+
+3. 开始安装前，断开 Raspberry Pi 的电源。
+
+4. 为获得最佳性能，我们建议将 AI HAT+ 与 Raspberry Pi Active Cooler 搭配使用。如果您有主动冷却器，请在安装 AI HAT+ 之前安装。
+
+<img src="/img/accessories/ai-hat-plus/ai-hat-plus-installation-01.png" width="60%" alt="安装散热器" />
+
+5. 使用提供的四颗螺丝安装垫片。将 GPIO 堆叠接头紧紧压在 Raspberry Pi GPIO 引脚上；只要所有引脚都能安装到位，方向并不重要。断开 AI HAT+ 的带状电缆，将另一端插入 Raspberry Pi 的 PCIe 端口。从两侧提起带状电缆支架，然后将电缆的铜接触点朝内，朝向 USB 端口插入。将带状电缆完全均匀地插入 PCIe 端口后，从两侧向下推动电缆固定器，将带状电缆牢牢固定到位。
+
+<img src="/img/accessories/ai-hat-plus/ai-hat-plus-installation-02.png" width="60%" alt="安装支架及线缆" />
+
+6. 将 AI HAT+ 固定在垫片上，用剩余的四个螺丝将其固定到位。
+
+7. 将带状电缆插入 AI HAT+ 的插槽。从两侧抬起带状电缆固定器，然后将电缆铜触点朝上插入。将带状电缆完全均匀地插入端口后，从两侧向下推动电缆支架，将带状电缆固定到位。
+
+8. 恭喜，您已成功安装 AI HAT+。连接树莓派电源；树莓派操作系统会自动检测到 AI HAT+。
+
+## 在 Raspberry Pi 上开始使用人工智能
+
+要开始在 Raspberry Pi 上运行人工智能加速应用程序，请查看我们的 [开始使用 AI Kit 和 AI HAT+](../computers/ai.mdx) 指南。
+
+## 产品简介
+
+有关 AI HAT+ 的更多信息，包括机械规格和工作环境限制，请参阅 [产品简介](https://datasheets.raspberrypi.com/ai-hat-plus/raspberry-pi-ai-hat-plus-product-brief.pdf)。
+
+<Normal />

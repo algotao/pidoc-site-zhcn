@@ -1,0 +1,129 @@
+---
+draft: false
+title: 随时掌握你的树莓派状态
+description: PiDoc远程指标监测工具，提供树莓派的CPU负载、网络、磁盘、温度等监测的一站式信息。同时还能提供局域网IP解析功能，解决校园网等环境不能设置静态IP的问题。
+keywords: [树莓派, 监测, PiDoc, grafana, 静态IP]
+---
+import Normal from "../_normal.mdx";
+
+# 随时掌握你的树莓派状态
+
+`PiDoc` 是由本站提供的树莓派CPU负载、网络、磁盘、温度等监测的一站式信息工具，还可以通过公网解析的方式获知树莓派的内网IP地址。适用于持续运行树莓派的用户或是使用树莓派的开发者。如您有一台或多台树莓派，通过监测工具可很好的随时掌握其运行状态。
+
+## 发布历史
+V 0.1.6（24.05.21）
+- 修正help描述缺失localdns的问题
+
+V 0.1.5（24.05.20）
+- 修正配置文件保存失败问题
+
+## 发布历史
+V 0.1.4（24.05.16）
+- 新增局域网IP动态指向功能，便于在校园网等无法设置静态IP的环境便捷访问您的树莓派
+
+V 0.1.3（24.03.08）
+- 支持树莓派CPU、内存、磁盘、温度等监测功能
+
+用之前可以先体验（有时因站长的树莓派断电可能数据未上报）：<br />
+账号：demo@pidoc.cn<br />
+密码：123456<br />
+监测网站：[https://stat.pidoc.cn](https://stat.pidoc.cn)
+
+
+交流QQ群：498908352 (反馈问题、提供建议等)
+
+<img src="/img/pidoc/pidoc.png" alt="PiDoc监控" />
+
+## 安装
+
+安装非常简单，只需要在树莓派的bash窗口执行以下命令即可：
+
+```sh
+curl https://pidoc.cn/deb/pidoc_install.sh | bash
+```
+
+检查是否安装成功，可执行下面的命令：
+```sh
+pidoc version
+```
+
+如安装正常，则会显示出pidoc的版本号，例如：
+```
+pidoc version 0.1.6 linux/arm64
+please visit https://pidoc.cn/ for more information.
+```
+
+## 注册
+
+如果您之前就已经注册过，则无需再注册。可在新的树莓派上使用原有邮箱及token[登录](#登录)
+
+新用户在安装后需要注册，注册信息极为简化，只需要提供您的邮箱即可，注册过程如下：
+```sh
+// highlight-next-line
+pidoc reg
+```
+
+输入两次邮箱地址，如果注册成功，则会返回您的登录token，同时显示服务启动命令：
+```sh
+Please enter your email address: xxxx@xxxx.com
+Please enter your email address again: xxxx@xxxx.com
+Reg OK. Your token is:  0123456789012345
+
+// highlight-next-line
+pidoc login -email xxx@xxx.com -token 0123456789012345 && sudo systemctl restart pidoc
+
+```
+
+## 登录
+
+输入命令（如果是首次注册，可直接复制注册时输出的命令行）
+```
+pidoc login -email xxx@xxx.com -token 0123456789012345 && sudo systemctl restart pidoc
+```
+
+成功后输出：
+```
+Auth success. config file saved.
+```
+
+## 查看指标监控
+令人兴奋的时刻来了，请打开[树莓派指标监测站](https://stat.pidoc.cn/)。使用注册时提供的邮箱和token登录即可。
+
+指标监控站提供的信息有：
+- 系统：运行时间
+- CPU：核心数、负载、温度
+- GPU：负载、温度
+- 内存：使用率、总量、使用量
+- 磁盘：使用率、读写速率
+- 网络：出入带宽、出入包数
+
+## 本地DNS功能
+
+为了解决树莓派在校园网等环境中不方便设置静态IP的问题，`PiDoc`工具开发了 `DDNS` 功能。通过为每个树莓派分配一个域名，并将域名通过DDNS的方式指向该设备拥有的内网IP，方便学生随时访问在同一局域网中的树莓派而无须每次查找树莓派的IP地址。
+
+### 启用功能
+```
+pidoc localdns on
+```
+启用后将看到您的内网域名，输出内容示例 "LocalDNS is ON. Domain is `12345.local.pidoc.cn`"。
+
+你可以使用 `12345.local.pidoc.cn` 的目标地址在同一内网中访问您的树莓派。
+
+### 关闭功能
+```
+pidoc localdns off
+```
+
+### 查询状态
+```
+pidoc localdns get
+```
+
+## 卸载
+
+请使用如下命令：
+```sh
+sudo apt remove pidoc
+```
+
+<Normal />

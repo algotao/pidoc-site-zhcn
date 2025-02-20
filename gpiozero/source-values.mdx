@@ -1,0 +1,415 @@
+---
+sidebar_position: 8
+draft: false
+title: 8. 源与值
+description: GPIO Zero 提供了一种使用声明式编程范例将设备连接在一起的方法：将一个设备的值输入到另一个设备，例如将按钮的值输入到 LED。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 源与值, source, value, values]
+last_update: 
+  date: 2024-06-13
+---
+import Normal from "./_normal.mdx";
+import LedButton from '@site/static/gpiozeroimg/source_values/led_button.svg';
+import SourceValues from '@site/static/gpiozeroimg/source_values/source_values.svg';
+import PWMLedPot from '@site/static/gpiozeroimg/source_values/pwmled_pot.svg';
+import MatchingLeds from '@site/static/gpiozeroimg/source_values/matching_leds.svg';
+import ValueProcessing from '@site/static/gpiozeroimg/source_values/value_processing.svg';
+import LedButtonOpposite from '@site/static/gpiozeroimg/source_values/led_button_opposite.svg';
+import CustomGenerator from '@site/static/gpiozeroimg/source_values/custom_generator.svg';
+import RandomLed from '@site/static/gpiozeroimg/source_values/random_led.svg';
+import SourceTool from '@site/static/gpiozeroimg/source_values/source_tool.svg';
+import SourceToolCandle from '@site/static/gpiozeroimg/source_values/source_tool_candle.svg';
+import SourceToolValueProcessor from '@site/static/gpiozeroimg/source_values/source_tool_value_processor.svg';
+import LedButtonNegated from '@site/static/gpiozeroimg/source_values/led_button_negated.svg';
+import CombiningSources from '@site/static/gpiozeroimg/source_values/combining_sources.svg';
+import CombiningSourcesLedButton from '@site/static/gpiozeroimg/source_values/combining_sources_led_buttons.svg';
+import SinValues from '@site/static/gpiozeroimg/source_values/sin_values.svg';
+import TimedHeatLamp from '@site/static/gpiozeroimg/source_values/timed_heat_lamp.svg';
+import DiskUsageBarGraph from '@site/static/gpiozeroimg/source_values/disk_usage_bar_graph.svg';
+import GardenLight from '@site/static/gpiozeroimg/source_values/garden_light.svg';
+import RobotPots1 from '@site/static/gpiozeroimg/source_values/robot_pots_1.svg';
+import RobotPots2 from '@site/static/gpiozeroimg/source_values/robot_pots_2.svg';
+
+# 源与值
+
+GPIO Zero 提供了一种使用声明式编程范例将设备连接在一起的方法：将一个设备的值输入到另一个设备，例如将按钮的值输入到 LED：
+
+<LedButton title="LED+按钮的源与值"/>
+<br /><br />
+
+```py
+from gpiozero import LED, Button
+from signal import pause
+
+led = LED(17)
+button = Button(2)
+
+led.source = button
+
+pause()
+```
+
+相当于
+
+```py
+from gpiozero import LED, Button
+from time import sleep
+
+led = LED(17)
+button = Button(2)
+
+while True:
+    led.value = button.value
+    sleep(0.01)
+```
+
+只不过前者是在后台线程中更新的，这样就可以同时做其他事情。
+
+每个设备都有一个 `value` 属性（设备的当前值）。输入设备（如按钮）只能读取其值，但输出设备（如 LED）也可以设置其值来改变设备的状态：
+
+```py
+>>> led = PWMLED(17)
+>>> led.value  # LED is initially off
+0.0
+>>> led.on()  # LED is now on
+>>> led.value
+1.0
+>>> led.value = 0  # LED is now off
+```
+
+每个设备都有一个 `value` 属性（持续 [生成](https://wiki.python.org/moin/Generators) 设备当前值的生成器）。所有输出设备都有一个 `source` 属性，可以设置为任何 [迭代器](https://wiki.python.org/moin/Iterator)。设备将遍历所提供设备的值，以 `source_delay` 属性中指定的速率（默认值为 0.01 秒）为每个元素设置设备值。
+
+<SourceValues title="源与值"/>
+<br /><br />
+
+最常见的用例是设置输出设备的源，使其与输入设备的值相匹配，如上面的例子。更有趣的例子是控制 LED 亮度的电位计：
+
+<PWMLedPot title="PWMLED+电位器 源与值"/>
+<br /><br />
+
+```py
+from gpiozero import PWMLED, MCP3008
+from signal import pause
+
+led = PWMLED(17)
+pot = MCP3008()
+
+led.source = pot
+
+pause()
+```
+
+其工作原理是，输入设备的 `value` 属性用于向输出设备输入值。在 v1.5 之前，`source` 必须直接设置为设备的 `value` 属性：
+
+```py
+from gpiozero import PWMLED, MCP3008
+from signal import pause
+
+led = PWMLED(17)
+pot = MCP3008()
+
+led.source = pot.values
+
+pause()
+```
+
+:::tip
+虽然这种方法仍受支持，但现在推荐的方法是将 `source` 设置为设备对象。
+:::
+
+也可以将一个输出设备的 `source` 设置为另一个输出设备，使它们保持匹配。在本例中，红色 LED 被设置为与按钮匹配，绿色 LED 被设置为与红色 LED 匹配，因此当按下按钮时，两个 LED 都会亮起：
+
+<MatchingLeds title="LED匹配 源与值"/>
+<br /><br />
+
+```py
+from gpiozero import LED, Button
+from signal import pause
+
+red = LED(14)
+green = LED(15)
+button = Button(17)
+
+red.source = button
+green.source = red
+
+pause()
+```
+
+## 处理数值
+
+设备的数值在传递给 `source` 之前也可以进行处理：
+
+<ValueProcessing title="处理数值"/>
+<br /><br />
+
+例如，编写一个生成器函数，将与 Button 值相反的值传入 LED：
+
+<LedButtonOpposite title="取反传入LED"/>
+<br /><br />
+
+```py
+from gpiozero import Button, LED
+from signal import pause
+
+def opposite(device):
+    for value in device.values:
+        yield not value
+
+led = LED(4)
+btn = Button(17)
+
+led.source = opposite(btn)
+
+pause()
+```
+
+另外，也可以使用自定义生成器从人工来源提供数值：
+
+<CustomGenerator title="人工传值LED"/>
+<br /><br />
+
+
+例如，编写一个生成器函数，随机生成 0 或 1：
+
+<RandomLed title="随机值LED"/>
+<br /><br />
+
+```py
+from gpiozero import LED
+from random import randint
+from signal import pause
+
+def rand():
+    while True:
+        yield randint(0, 1)
+
+led = LED(17)
+led.source = rand()
+
+pause()
+```
+
+如果迭代器是无限的（即无限生成器），则会一直处理元素，直到 `source` 被更改或设置为 `None` 为止。
+
+如果迭代器是有限的（例如一个列表），则会在处理完所有元素后终止（将设备值保留在最后一个元素上）：
+
+```py
+from gpiozero import LED
+from signal import pause
+
+led = LED(17)
+led.source_delay = 1
+led.source = [1, 0, 1, 1, 1, 0, 0, 1, 0, 1]
+
+pause()
+```
+
+## 源工具
+
+GPIO Zero 提供了一组现成的函数，用于处理 源/值，称为源工具。从 `gpiozero.tools` 中导入即可使用。
+
+其中一些源工具是无需输入的人造源：
+
+<SourceTool title="源/值 工具"/>
+<br /><br />
+
+在此示例中，0 和 1 之间的随机值被传递给 LED，使其产生闪烁的蜡烛效果：
+
+<SourceTool title="源/值 蜡烛"/>
+<br /><br />
+
+请注意，在上述示例中，`source_delay` 用于使 LED 对随机值的迭代速度稍慢一些。`source_delay` 可以设置为较大的数字（例如，1 表示延迟一秒），也可以设置为 0 以禁用任何延迟。
+
+有些工具会使用单个源并处理其值：
+
+<SourceToolValueProcessor title="源工具值处理"/>
+<br /><br />
+
+在此示例中，只有在未按下按钮时 LED 才会点亮：
+
+<LedButtonNegated title="按钮控制LED取反"/>
+<br /><br />
+
+```py
+from gpiozero import Button, LED
+from gpiozero.tools import negated
+from signal import pause
+
+led = LED(4)
+btn = Button(17)
+
+led.source = negated(btn)
+
+pause()
+```
+
+请注意，接收一个或多个 `value` 参数的源工具支持传递 `ValuesMixin` 衍生工具或迭代器，包括设备的 `values` 属性。
+
+有些工具会组合多个源的值：
+
+<CombiningSources title="组合多个源"/>
+<br /><br />
+
+在本例中，只有同时按下两个按钮，LED 才会点亮（就像一个 [AND](https://en.wikipedia.org/wiki/AND_gate) 门）：
+
+<CombiningSourcesLedButton title="组合多个按钮源控制LED"/>
+<br /><br />
+
+```py
+from gpiozero import Button, LED
+from gpiozero.tools import all_values
+from signal import pause
+
+button_a = Button(2)
+button_b = Button(3)
+led = LED(17)
+
+led.source = all_values(button_a, button_b)
+
+pause()
+```
+
+同样，带有两个按钮的 `any_values()` 将模拟一个 [OR](https://en.wikipedia.org/wiki/OR_gate) 门。
+
+虽然大多数设备的 `value` 范围在 0 和 1 之间，但也有一些设备的数值范围在 -1 和 1 之间（如 `Motor`、`Servo` 和 `TonalBuzzer`）。一些源工具会输出-1 和 1 之间的值，非常适合这些设备，例如通过 `sin_values()` 中的
+
+<SinValues title="sin值"/>
+<br /><br />
+
+```py
+from gpiozero import Motor, Servo, TonalBuzzer
+from gpiozero.tools import sin_values
+from signal import pause
+
+motor = Motor(2, 3)
+servo = Servo(4)
+buzzer = TonalBuzzer(5)
+
+motor.source = sin_values()
+servo.source = motor
+buzzer.source = motor
+
+pause()
+```
+
+在此示例中，所有三个设备都跟随 [正弦波](https://en.wikipedia.org/wiki/Sine_wave) 运行。电机值在一个周期内从 0（停止）上升到 1（全速前进），然后回落到 0，再上升到 -1 （全速后退）。同样，舵机从中间点向右移动，然后向左移动；蜂鸣器从中间音调开始，逐渐提高频率，达到最高音调，然后降至最低音调。请注意，设置 `source_delay` 会改变设备迭代数值的速度。或者，也可以使用 `cos_values()` 工具，从-1 开始，然后升至 1，以此类推。
+
+## 内部设备
+
+GPIO Zero 还提供了几个 [内部设备](./api-internal.mdx)，代表操作系统本身提供的设施。这些设备可用于对时间或网络上是否有服务器等信息做出反应。这些类包括一个 `value` 属性，可用于向设备 `source` 源输入值。例如，连接到 `Energenie` 插座的电灯可以由 `TimeOfDay` 对象控制，使其在上午 8 点到晚上 8 点之间开启：
+
+<TimedHeatLamp title="定时加热灯"/>
+<br /><br />
+
+```py
+from gpiozero import Energenie, TimeOfDay
+from datetime import time
+from signal import pause
+
+lamp = Energenie(1)
+daytime = TimeOfDay(time(8), time(20))
+
+daytime.when_activated = lamp.on
+daytime.when_deactivated = lamp.off
+
+pause()
+```
+
+使用 `DiskUsage` 类和 `LEDBarGraph` 可以在条形图上显示 Pi 的磁盘使用百分比：
+
+```py
+from gpiozero import DiskUsage, LEDBarGraph
+from signal import pause
+
+disk = DiskUsage()
+graph = LEDBarGraph(2, 3, 4, 5, 6, 7, 8)
+
+graph.source = disk
+
+pause()
+```
+
+<DiskUsageBarGraph title="磁盘使用率LED条形图"/>
+<br /><br />
+
+演示一个花园灯系统，如果天黑且有动静，灯就会亮起来，这很简单，但需要使用 `booleanized()` 源工具将光传感器从浮点值转换为布尔值：
+
+<GardenLight title="花园灯系统"/>
+<br /><br />
+
+```py
+from gpiozero import LED, MotionSensor, LightSensor
+from gpiozero.tools import booleanized, all_values
+from signal import pause
+
+garden = LED(2)
+motion = MotionSensor(4)
+light = LightSensor(5)
+
+garden.source = all_values(booleanized(light, 0, 0.1), motion)
+
+pause()
+```
+
+## 复合设备
+
+复合设备的 `value` 由其设备的嵌套值组成。例如，`Robot` 对象的值是一个包含左右电机值的 2 元组：
+
+```py
+>>> from gpiozero import Robot
+>>> robot = Robot(left=(14, 15), right=(17, 18))
+>>> robot.value
+RobotValue(left_motor=0.0, right_motor=0.0)
+>>> tuple(robot.value)
+(0.0, 0.0)
+>>> robot.forward()
+>>> tuple(robot.value)
+(1.0, 1.0)
+>>> robot.backward()
+>>> tuple(robot.value)
+(-1.0, -1.0)
+>>> robot.value = (1, 1)  # robot is now driven forwards
+```
+
+使用两个电位计控制机器人的左右电机速度：
+
+<RobotPots1 title="电位计控制机器人"/>
+<br /><br />
+
+```py
+from gpiozero import Robot, Motor, MCP3008
+from gpiozero.tools import zip_values
+from signal import pause
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+
+left_pot = MCP3008(0)
+right_pot = MCP3008(1)
+
+robot.source = zip_values(left_pot, right_pot)
+
+pause()
+```
+
+若要包含反方向，可将电位器数值从 0->1 缩放至 -1->1：
+
+<RobotPots2 title="电位计控制机器人"/>
+
+```py
+from gpiozero import Robot, Motor, MCP3008
+from gpiozero.tools import scaled
+from signal import pause
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+
+left_pot = MCP3008(0)
+right_pot = MCP3008(1)
+
+robot.source = zip(scaled(left_pot, -1, 1), scaled(right_pot, -1, 1))
+
+pause()
+```
+
+请注意，此示例使用的是内置的 `zip()` 而不是工具 `zip_values()`，因为 `scaled()` 工具产生的值无需转换，只需压缩即可。还要注意的是，在 Python 2 中使用 `zip()` 将无法正常工作，请使用 [izip](https://docs.python.org/2/library/itertools.html#itertools.izip)。
+
+<Normal />

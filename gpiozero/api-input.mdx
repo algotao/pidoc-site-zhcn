@@ -1,0 +1,68 @@
+---
+sidebar_position: 15
+draft: true
+title: 15. API-输入设备
+description: 对于任何希望参与该项目的人，我们建议首先熟悉一些简单的设备类。选取 LED 这样的类，然后按照其继承顺序回溯到 DigitalOutputDevice。然后再追溯到 OutputDevice，这样你就能很好地理解简单的输出设备，并掌握 GPIO Zero 如何在很大程度上依赖继承来完善设备的功能。输入设备以及更复杂的设备（复合设备和基于 SPI 的设备）也可以采用同样的方法。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 开发, 二次开发]
+---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-输入设备
+这些输入设备组件接口是为日常组件的简单使用而提供的。在代码中使用组件前，必须正确布线。
+
+:::tip
+所有 GPIO 引脚编号默认使用 Broadcom (BCM) 编号。更多信息，请参阅 [引脚编号](./recipes.mdx#引脚编号) 部分。
+:::
+
+## 常规类
+
+下列类用于它们所代表的设备。本节中的所有类都是具体类（非抽象类）。
+
+### Button(按钮)
+
+<SourceClass funname="gpiozero.Button" funargs="*args, **kwargs"></SourceClass>
+
+扩展 `DigitalInputDevice`，表示一个简单的按钮或开关。
+
+将按钮的一侧连接到接地引脚，另一侧连接到任何 GPIO 引脚。或者，将按钮的一侧连接到 3V3 引脚，另一侧连接到任何 GPIO 引脚，然后在 `Button` 构造函数中将 *pull_up* 设置为 `False`。
+
+下面的示例将在按下按钮时打印一行文本：
+
+```py
+from gpiozero import Button
+
+button = Button(4)
+button.wait_for_press()
+print("The button was pressed!")
+```
+
+ <table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 连接按钮的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。
+              - **pull_up** （`bool` 或 `None`）- 如果为 `True`（默认值），GPIO 引脚将被默认拉高。在这种情况下，请将按钮的另一端接地。如果为 `False`，GPIO 引脚默认为低电平。在这种情况下，将按钮的另一端连接至 3V3。如果为 `None`，该引脚将处于浮动状态，因此必须从外部将其上拉或下拉，并相应设置 **active_state** 参数。
+              - **active_state** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice` 下的说明。
+              - **bounce_time**（`float` 或 `None`）- 如果为 `None`（默认值），则不执行软件防抖动补偿。否则，这是组件在初始变化后忽略状态变化的时间长度（以秒为单位）。
+              - **hold_time** (`float`) - 按钮按下后，执行 `when_held` 处理程序前等待的时间长度（以秒为单位）。默认为 `1`。
+              - **hold_repeat** (`bool`) - 如果为 `True`，只要设备保持激活状态，就会每隔 *hold_time* 秒重复执行 `when_held` 处理程序。如果为 `False`（默认值），则每次保持时只执行一次 `when_held` 处理程序。
+              - **pin_factory**（`Factor` 或 `None`）- 请参阅 [API - Pins](./api-pins.mdx) 获取更多信息（这是一项高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+**参数:**
+
+
+    <SourceProp propname="wait_for_press" propargs="timeout=None"></SourceProp>
+
+        暂停脚本，直到设备被激活或超时。
+
+- 参数:
+
+    timeout（浮点数或无）- 继续前要等待的秒数。如果为 None（无）（默认值），则无限期等待，直到设备激活。
+
+<Normal />

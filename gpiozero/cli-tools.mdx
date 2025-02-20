@@ -1,0 +1,245 @@
+---
+sidebar_position: 9
+draft: false
+title: 9. 命令行工具
+description: gpiozero 软件包包含一个有关 Raspberry Pi 不同版本信息的数据库。引脚分配命令行工具可对此进行查询，以输出可用 GPIO 引脚的详细信息。还提供了 pintest 工具，用于测试电路板上 GPIO 引脚的运行情况。pintest 用于测试 Raspberry Pi 上的 GPIO 引脚。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 命令行工具, pinout, pintest]
+last_update: 
+  date: 2024-06-13
+---
+import Normal from "./_normal.mdx";
+
+# 命令行工具
+
+gpiozero 软件包包含一个有关 Raspberry Pi 不同版本信息的数据库。引脚分配命令行工具可对此进行查询，以输出可用 GPIO 引脚的详细信息。还提供了 `pintest` 工具，用于测试电路板上 GPIO 引脚的运行情况。
+
+## pinout
+
+用于查询 GPIO 引脚输出信息的实用程序。
+
+![引脚输出图](@site/static/gpiozeroimg/pinout_pi3.png)
+
+*在终端窗口中，顶部显示的是电路板的描述，其次是电路板的彩色 ASCII 图，最后是 GPIO 针座上的针脚颜色匹配列表。*
+
+### 简介
+```
+pinout [-h] [-r REVISION] [-c] [-m] [-x]
+```
+
+### 说明
+
+用于查询 Raspberry Pi GPIO 引脚输出信息的实用程序。单独运行 pinout 会输出当前 Raspberry Pi 的电路板图和 GPIO 接头图。还可以手动指定 Pi 的版本，或（通过 [配置远程GPIO](./remote-gpio.mdx)）输出远程 Pi 的信息。
+
+### 选项
+
+- -h，--help
+
+    显示帮助信息并退出
+
+- -r REVISION, --revision REVISION
+
+    指定特定的 Raspberry Pi 板修订代码。默认情况下，通过读取 `/proc/cpuinfo` 自动检测当前设备的修订版本。
+
+- -c, --color
+
+    强制彩色输出（默认情况下，如果在支持彩色的终端运行，输出将包括 ANSI 颜色代码）。另请参阅 `pinout --monochrome`
+
+- -m, --monochrome
+    强制单色输出。另请参阅 `pinout --color`
+
+- -x，--xyz
+
+    在默认网页浏览器中打开 [pinout.xyz](https://pinout.xyz/)
+
+### 示例
+
+输出当前 Raspberry Pi 的信息：
+
+```sh
+pinout
+```
+
+对于型号为 3B 的 Raspberry Pi，输出结果如下：
+
+```
+Description        : Raspberry Pi 3B rev 1.2
+Revision           : a02082
+SoC                : BCM2837
+RAM                : 1GB
+Storage            : MicroSD
+USB ports          : 4 (of which 0 USB3)
+Ethernet ports     : 1 (100Mbps max. speed)
+Wi-fi              : True
+Bluetooth          : True
+Camera ports (CSI) : 1
+Display ports (DSI): 1
+
+,--------------------------------.
+| oooooooooooooooooooo J8     +====
+| 1ooooooooooooooooooo        | USB
+|                             +====
+|      Pi Model 3B  V1.2         |
+| |D      +---+               +====
+| |S      |SoC|               | USB
+| |I      +---+               +====
+| |0               C|            |
+|                  S|       +======
+|                  I| |A|   |   Net
+| pwr      |HDMI|  0| |u|   +======
+`-| |------|    |-----|x|--------'
+
+J8:
+   3V3  (1) (2)  5V
+ GPIO2  (3) (4)  5V
+ GPIO3  (5) (6)  GND
+ GPIO4  (7) (8)  GPIO14
+   GND  (9) (10) GPIO15
+GPIO17 (11) (12) GPIO18
+GPIO27 (13) (14) GND
+GPIO22 (15) (16) GPIO23
+   3V3 (17) (18) GPIO24
+GPIO10 (19) (20) GND
+ GPIO9 (21) (22) GPIO25
+GPIO11 (23) (24) GPIO8
+   GND (25) (26) GPIO7
+ GPIO0 (27) (28) GPIO1
+ GPIO5 (29) (30) GND
+ GPIO6 (31) (32) GPIO12
+GPIO13 (33) (34) GND
+GPIO19 (35) (36) GPIO16
+GPIO26 (37) (38) GPIO20
+   GND (39) (40) GPIO21
+
+For further information, please refer to https://pinout.xyz/
+```
+
+默认情况下，如果 stdout 是支持彩色的控制台，将使用 ANSI 编码来生成彩色输出。可以强制输出为 `--monochrome`：
+
+```sh
+pinout --monochrome
+```
+
+或者强制输出为 `--color`，以防重定向到能够支持 ANSI 编码的地方：
+
+```sh
+pinout --color | less -SR
+```
+
+要手动指定要查询的 Pi 版本，请使用 `--revision`]。该工具可理解旧式 [修订代码](../docs/computers/raspberry-pi#旧格式修订码)（如 B 型）：
+
+```sh
+pinout -r 000d
+```
+
+或 [新式修订代码](../docs/computers/raspberry-pi.mdx#新格式修订代码)（如 Pi Zero W）：
+
+```sh
+pinout -r 9000c1
+```
+
+![Pi Zero W引脚输出图](@site/static/gpiozeroimg/pinout_pizero_w.png)
+
+你也可以使用 [配置远程GPIO](./remote-gpio.mdx) 的工具来查询远程 Raspberry Pi：
+
+```sh
+GPIOZERO_PIN_FACTORY=pigpio PIGPIO_ADDR=other_pi pinout
+```
+
+或者使用模拟引脚实现直接在 PC 上运行该工具（不过在这种情况下，您几乎肯定需要手动指定 Pi 的版本）：
+
+```sh
+GPIOZERO_PIN_FACTORY=mock pinout -r a22042
+```
+
+## pintest
+
+受 pigpio 的 gpiotest 示例脚本和 wiringPi 的 pintest 工具启发，用于测试 Raspberry Pi 上的 GPIO 引脚。
+
+在 2.0 版中添加： `pintest` 实用程序。
+
+![在终端窗口中，pintest 向用户提示了要测试的 GPIO 列表，并要求用户确认以继续测试。收到确认后，它将依次打印出每个 GPIO，并在后面加上 "ok"，表示测试成功。](@site/static/gpiozeroimg/pintest.png)
+
+
+### 简介
+
+```
+pintest [-h] [--version] [-p PINS] [-s SKIP] [-y] [-r REVISION]
+```
+
+### 说明
+
+用于测试 Raspberry Pi 上 GPIO 功能的实用程序。通过 Pi 上 GPIO 的电流（或输入端的电压）过大，可能会损坏 GPIO。`pintest` 实用程序可用于确定 Pi 上的任何 GPIO 是否损坏。
+
+该实用程序默认将测试所有物理暴露的 GPIO（主 GPIO 头上的那些），但您可能希望只测试一个子集，或排除某些 GPIO，这可以通过 `pintest --pins` 或 `pintest --skip` 选项来实现。
+
+:::warning
+必须确保打算测试的 GPIO 未连接任何设备。默认情况下，实用程序会在继续测试前提示您，并重复此警告。
+:::
+
+如果发现任何 GPIO 有问题，将在输出中报告，实用程序将以返回代码 `1` 退出。
+
+### 选项
+
+- -h，--help
+
+    显示帮助信息并退出
+
+- --version
+    显示程序的版本号并退出
+
+- -p PINS, --pins PINS
+
+    要测试的引脚。可指定为以逗号分隔的引脚列表。引脚编号可以是 gpiozero 接受的任何形式，例如 14、GPIO14、BOARD8。默认情况下测试所有引脚
+
+- -s SKIP, --skip SKIP
+
+    要跳过测试的引脚。可指定为以逗号分隔的引脚列表。引脚编号可以是 gpiozero 接受的任何形式，例如 14、GPIO14、BOARD8。默认情况下不跳过任何引脚
+
+- -y, --yes
+
+    无提示继续
+
+- -r REVISION, --revision REVISION
+
+    强制指定电路板修订代码。默认为自动检测当前设备的版本。除非您非常确定检测结果不正确，否则应避免使用此选项。
+
+### 示例
+
+测试电路板上所有物理暴露的 GPIO：
+
+```sh
+pintest
+```
+
+仅测试 I2C GPIO，不提示：
+
+```sh
+pintest --pins 2,3 --yes
+```
+
+不测试 SPI GPIO：
+
+```sh
+pintest --exclude GPIO7,GPIO8,GPIO9,GPIO10,GPIO11
+```
+
+请注意，引脚编号可以 GPIO Zero 接受的任何形式给出，例如 14、GPIO14 或 BOARD8。
+
+## 环境变量
+
+GPIO Zero 提供的所有实用程序都接受以下环境变量：
+
+- gpiozero_pin_factory
+
+    与 GPIO 引脚通信时使用的库。默认先尝试加载 lgpio，然后是 RPi.GPIO，最后是 pigpio，最后使用本地 Python 实现。有效值包括 `lgpio`、`rpigpio`、`pigpio`、`native` 和 `mock`。后者在非 Pi 平台上最有用，因为它模拟的是 Raspberry Pi 型号 3B（默认情况下）。
+
+- PIGPIO_ADDR
+
+    pigpio 库应尝试连接的 Raspberry Pi 的主机名（如果使用的是 pigpio 引脚工厂）。默认为 `localhost`。
+
+- PIGPIO_PORT
+
+    pigpio 库应尝试连接的端口号（如果使用了 pigpio 引脚工厂）。默认为 `8888`。
+
+
+<Normal />

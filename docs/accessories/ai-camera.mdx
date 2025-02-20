@@ -1,0 +1,475 @@
+---
+sidebar_position: 8
+draft: false
+description: Raspberry Pi AI 相机使用索尼 IMX500 成像传感器，可为任何相机应用提供低延迟、高性能的 AI 功能。与 Raspberry Pi 的相机软件栈的紧密集成使用户能够以最小的工作量部署自己的神经网络模型。
+keywords: [树莓派, Raspberry Pi, AI Camera, AI摄像头]
+last_update: 
+  date: 2024-11-20
+---
+import Normal from "../_normal.mdx";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# AI 摄像头 (新品)
+
+Raspberry Pi AI 相机使用索尼 IMX500 成像传感器，可为任何相机应用提供低延迟、高性能的 AI 功能。与 [Raspberry Pi 的相机软件栈](../computers/camera-software.mdx) 的紧密集成使用户能够以最小的工作量部署自己的神经网络模型。
+
+<img src="/img/accessories/ai-camera/ai-camera.png" alt="树莓派人工智能相机" width="80%" />
+*树莓派人工智能相机*
+
+本节演示如何在摄像头上运行预装或自定义神经网络模型。此外，本节还包括在 [`rpicam-apps`](https://github.com/raspberrypi/rpicam-apps) 和 [Picamera2](https://github.com/raspberrypi/picamera2) 中解释在 IMX500 上运行的神经网络生成的推理数据所需的步骤。
+
+## 入门
+
+以下说明介绍了如何在 Raspberry Pi AI 相机上运行预打包的 MobileNet SSD 和 PoseNet 神经网络模型。
+
+### 前提条件
+
+这些说明假定您使用的是连接到 Raspberry Pi 4 Model B 或 Raspberry Pi 5 板上的 AI 相机。只要稍作改动，您就可以在其他带有摄像头连接器的 Raspberry Pi 型号上使用这些说明，包括 Raspberry Pi Zero 2 W 和 Raspberry Pi 3 Model B+。
+
+首先，确保你的 Raspberry Pi 运行最新的软件。运行以下命令更新：
+
+```sh
+sudo apt update && sudo apt full-upgrade
+```
+
+### 安装 IMX500 固件
+
+在启动过程中，AI 摄像机必须将运行时固件下载到 IMX500 传感器上。要将这些固件文件安装到 Raspberry Pi 上，请运行以下命令：
+
+```sh
+sudo apt install imx500-all
+```
+
+此命令：
+
+* 安装运行 IMX500 传感器所需的 `/lib/firmware/imx500_loader.fpk` 和 `/lib/firmware/imx500_firmware.fpk` 固件文件
+* 在 `/usr/share/imx500-models/` 中放置大量神经网络模型固件文件
+* 在 `rpicam-apps` 中安装 IMX500 后期处理软件阶段
+* 安装索尼网络模型打包工具
+
+:::tip
+IMX500 内核设备驱动程序会在相机启动时加载所有固件文件。如果之前没有缓存神经网络模型固件，这可能需要几分钟时间。下面的演示会在控制台上显示一个进度条，以显示固件加载进度。
+:::
+
+### 重新启动
+
+现在您已经安装了先决条件，请重启 Raspberry Pi：
+
+```sh
+sudo reboot
+```
+
+## 运行示例应用程序
+
+更新所有系统软件包并安装固件文件后，我们就可以开始运行一些示例应用程序了。如前所述，Raspberry Pi AI 摄像头与 `libcamera`、`rpicam-apps` 和 `Picamera2` 完全集成。
+
+### `rpicam-apps`.
+
+[`rpicam-apps`相机应用程序](../computers/camera-software.mdx#rpicam-apps)包括 IMX500 物体检测和姿态估计阶段，可在后处理管道中运行。有关后处理管道的更多信息，请参阅 [后处理文档](../computers/camera-software.mdx#post-process-file)。
+
+本页的示例使用位于 `/usr/share/rpicam-assets/`中的后处理 JSON 文件。
+
+#### 对象检测
+
+MobileNet SSD 神经网络可执行基本的物体检测，为找到的每个物体提供边界框和置信度值。`imx500_mobilenet_ssd.json` 包含使用 MobileNet SSD 神经网络进行 IMX500 物体检测后处理阶段的配置参数。
+
+`imx500_mobilenet_ssd.json` 声明了包含两个阶段的后处理管道：
+
+1. `imx500_object_detection`，用于在输出张量中提取神经网络生成的边界框和置信度值。
+2. `object_detect_draw_cv` 在图像上绘制边界框和标签。
+
+MobileNet SSD 张量无需在 Raspberry Pi 上进行大量后处理即可生成边界框的最终输出。所有物体检测都直接在人工智能相机上运行。
+
+下面的命令运行带有物体检测后处理的 `rpicam-hello`：
+
+```sh
+rpicam-hello -t 0s --post-process-file /usr/share/rpi-camera-assets/imx500_mobilenet_ssd.json --viewfinder-width 1920 --viewfinder-height 1080 --framerate 30
+```
+
+运行该命令后，你会看到一个取景器，在神经网络识别的对象上叠加了边界框：
+
+<img src="/img/accessories/ai-camera/imx500-mobilenet.jpg" alt="IMX500 移动网络" />
+*IMX500 移动网络*
+
+要录制带有物体检测叠加的视频，请使用 `rpicam-vid` 代替：
+
+```sh
+rpicam-vid -t 10s -o output.264 --post-process-file /usr/share/rpi-camera-assets/imx500_mobilenet_ssd.json --width 1920 --height 1080 --framerate 30
+```
+
+您可以通过多种方式配置 `imx500_object_detection` 阶段。
+
+例如，`max_detections`（最大检测次数）定义了管道在任何给定时间内检测到的对象的最大数量。`threshold` 定义了管道将任何输入视为对象所需的最小置信度值。
+
+该网络的原始推理输出数据可能会有相当大的噪声，因此这一阶段也会执行一些时间过滤并应用滞后。要禁用这种过滤，请移除 `temporal_filter` 配置块。
+
+#### 姿态估计
+
+PoseNet 神经网络执行姿态估计，标记身体上与关节和四肢相关的关键点。`imx500_posenet.json` 包含使用 PoseNet 神经网络进行 IMX500 姿势估计后处理阶段的配置参数。
+
+`imx500_posenet.json` 声明了包含两个阶段的后处理流水线：
+
+* `imx500_posenet` 从 PoseNet 神经网络获取的原始输出张量
+* `plot_pose_cv` 在图像上绘制线条叠加图
+
+AI摄像头可执行基本的检测，但输出张量需要在 Raspberry Pi 主机上进行额外的后处理，以产生最终输出。
+
+下面的命令运行带有姿态估计后处理的 `rpicam-hello`：
+
+```sh
+rpicam-hello -t 0s --post-process-file /usr/share/rpi-camera-assets/imx500_posenet.json --viewfinder-width 1920 --viewfinder-height 1080 --framerate 30
+```
+
+<img src="/img/accessories/ai-camera/imx500-posenet.jpg" alt="IMX500 PoseNet" />
+*IMX500 PoseNet*
+
+您可以通过多种方式配置 `imx500_posenet` 阶段。
+
+例如，`max_detections`（最大检测次数）定义了管道在任何给定时间内检测到的最大物体数量。`threshold` 定义管道将输入视为体所需的最小置信度值。
+
+### Picamera2
+
+有关使用 Picamera2 进行图像分类、物体检测、物体分割和姿态估计的示例，请参阅 [`picamera2` GitHub 代码仓库](https://github.com/raspberrypi/picamera2/blob/main/examples/imx500/)。
+
+大多数示例都使用 OpenCV 进行了一些额外处理。要安装运行 OpenCV 所需的依赖项，请运行以下命令：
+
+```sh
+sudo apt install python3-opencv python3-munkres
+```
+
+现在下载 [`picamera2` 资源库](https://github.com/raspberrypi/picamera2)  到你的 Raspberry Pi 上运行示例。你会在根目录中找到示例文件，并在 `README.md` 文件中找到更多信息。
+
+从软件源运行以下脚本来运行 YOLOv8 对象检测：
+
+```sh
+python imx500_object_detection_demo.py --model /usr/share/imx500-models/imx500_network_ssd_mobilenetv2_fpnlite_320x320_pp.rpk
+```
+
+要尝试在 Picamera2 中进行姿势估计，请运行软件源中的以下脚本：
+
+```sh
+python imx500_pose_estimation_higherhrnet_demo.py
+```
+
+## 工作原理
+
+### 概览
+
+如下图所示，Raspberry Pi AI 相机的工作原理与传统的基于 AI 的相机图像处理系统不同：
+
+<img src="/img/accessories/ai-camera/imx500-comparison.svg" alt="传统与 IMX500 AI 相机系统对比" />
+*传统与 IMX500 AI 相机系统对比*
+
+左侧展示的是传统人工智能相机系统的架构。在这种系统中，摄像头向树莓派（Raspberry Pi）发送图像。树莓派处理图像，然后执行人工智能推理。传统系统可能使用外部人工智能加速器（如图所示），也可能完全依赖于 CPU。
+
+右侧展示了使用 IMX500 的系统架构。摄像头模块包含一个小型图像信号处理器（ISP），可将原始摄像头图像数据转化为**输入张量**。摄像头模块将张量直接发送到摄像头内的人工智能加速器，该加速器产生包含推理结果的**输出张量**。人工智能加速器将这些张量发送到 Raspberry Pi。无需外部加速器，Raspberry Pi 也无需在 CPU 上运行神经网络软件。
+
+要充分理解这个系统，请先熟悉以下概念：
+
+**输入张量**<br />
+&emsp;&emsp;传感器图像中传递给人工智能引擎进行推理的部分。由一个小型的板载 ISP 生成，该 ISP 还将摄像头图像裁剪并缩放至已加载的神经网络所期望的尺寸。输入张量通常不向应用程序提供，但可以为调试目的进行访问。
+
+**感兴趣区域（ROI）**<br />
+&emsp;&emsp;精确指定传感器图像在重新缩放为神经网络所需的大小之前被裁剪掉的部分。可由应用程序查询和设置。使用的单位始终是全分辨率传感器输出中的像素。默认 ROI 设置使用从传感器接收到的完整图像，不裁剪任何数据。
+
+**输出张量**<br />
+&emsp;&emsp;神经网络执行推理的结果。输出的精确数量和形状取决于神经网络。应用代码必须了解如何处理张量。
+
+### 系统结构
+
+下图显示了在我们的成像/推理用例中使用的各种相机软件组件（绿色）和 Raspberry Pi AI 相机模块硬件（红色）：
+
+<img src="/img/accessories/ai-camera/imx500-block-diagram.svg" alt="IMX500 框图" />
+*IMX500 框图*
+
+启动时，IMX500 传感器模块加载固件以运行特定的神经网络模型。在流式传输过程中，IMX500 同时生成图像流和推理流。推理流包含神经网络模型的输入和输出，也称为输入/输出 **传感器**。
+
+### 设备驱动程序
+
+在最底层，IMX500 传感器内核驱动程序通过 I2C 总线配置摄像头模块。CSI2 驱动程序（在 Pi 5 上为 `CFE`，在所有其他 Pi 平台上为 `Unicam`）设置接收器，将图像数据流写入帧缓冲区，同时将嵌入式数据和推理数据流写入内存中的另一个缓冲区。
+
+固件文件也通过 I2C 总线传输。大多数设备使用标准的 I2C 协议，但 Raspberry Pi 5 使用定制的高速协议。内核中的 RP2040 SPI 驱动程序负责处理固件文件传输，因为传输使用的是 RP2040 微控制器。微控制器通过 SPI 总线连接内核与 IMX500 之间的 I2C 传输。此外，RP2040 还将固件文件缓存在板载存储器中。这就避免了通过 I2C 总线传输整个固件包的需要，大大加快了已使用固件的加载速度。
+
+### `libcamera`
+
+一旦 `libcamera` 从内核中卸载图像和推理数据缓冲区，IMX500 专用的 `cam-helper` 库（`libcamera` 中 Raspberry Pi IPA 的一部分）就会解析推理缓冲区，以访问输入/输出张量。这些张量打包为特定于 Raspberry Pi 供应商的 [`libcamera`控件](https://libcamera.org/api-html/namespacelibcamera_1_1controls.html)。`libcamera` 返回以下控件：
+
+<table>
+  <tr>
+    <td>控制</td>
+    <td>说明</td>
+  </tr>
+  <tr>
+    <td>`CnnOutputTensor`</td>
+    <td>存储输出张量的浮点数组。 </td>
+  </tr>
+  <tr>
+    <td>`CnnInputTensor`</td>
+    <td>存储输入张量的浮点数组。 </td>
+  </tr>
+  <tr>
+    <td>`CnnOutputTensorInfo`</td>
+    <td>
+        描述输出张量结构的网络特定参数： 
+        ```c
+        struct OutputTensorInfo {
+            uint32_t tensorDataNum;
+            uint32_t numDimensions;
+            uint16_t size[MaxNumDimensions];
+        };
+
+        struct CnnOutputTensorInfo {
+            char networkName[NetworkNameLen];
+            uint32_t numTensors;
+            OutputTensorInfo info[MaxNumTensors];
+        };
+        ```
+    </td>
+  </tr>
+  <tr>
+    <td>`CnnInputTensorInfo`</td>
+    <td>
+        描述输入张量结构的网络特定参数：
+        ```c
+        struct CnnInputTensorInfo {
+            char networkName[NetworkNameLen];
+            uint32_t width;
+            uint32_t height;
+            uint32_t numChannels;
+        };
+        ```
+    </td>
+  </tr>
+</table>
+
+### `rpicam-apps`
+
+`rpicam-apps` 提供了一个 IMX500 后处理阶段基类，用于实现 IMX500 后处理阶段的帮助程序：[`IMX500PostProcessingStage`](https://github.com/raspberrypi/rpicam-apps/blob/main/post_processing_stages/imx500/imx500_post_processing_stage.hpp)。使用该基类可为在 IMX500 上运行的任何神经网络模型派生一个新的后处理阶段。有关示例，请参阅 [`imx500_object_detection.cpp`](https://github.com/raspberrypi/rpicam-apps/blob/main/post_processing_stages/imx500/imx500_object_detection.cpp)：
+
+```cpp
+class ObjectDetection : public IMX500PostProcessingStage
+{
+public:
+	ObjectDetection(RPiCamApp *app) : IMX500PostProcessingStage(app) {}
+
+	char const *Name() const override;
+
+	void Read(boost::property_tree::ptree const &params) override;
+
+	void Configure() override;
+
+	bool Process(CompletedRequestPtr &completed_request) override;
+};
+```
+
+应用程序接收到的每一帧图像都会调用 `Process()` 函数（上述情况中为 `ObjectDetection::Process()`）。在此函数中，您可以提取输出张量，以便进一步处理或分析：
+
+```cpp
+auto output = completed_request->metadata.get(controls::rpi::CnnOutputTensor);
+if (!output)
+{
+  LOG_ERROR("No output tensor found in metadata!");
+  return false;
+}
+
+std::vector<float> output_tensor(output->data(), output->data() + output->size());
+```
+
+一旦完成，最终结果可以可视化或保存在元数据中，由另一个下游阶段或顶层应用程序本身使用。在对象推理案例中：
+
+```cpp
+if (objects.size())
+  completed_request->post_process_metadata.Set("object_detect.results", objects);
+```
+
+下游运行的 `object_detect_draw_cv` 后处理阶段会从元数据中获取这些结果，并在 `ObjectDetectDrawCvStage::Process()` 函数中将边框绘制到图像上：
+
+```cpp
+std::vector<Detection> detections;
+completed_request->post_process_metadata.Get("object_detect.results", detections);
+```
+
+下表列出了 `IMX500PostProcessingStage` 提供的全部辅助函数：
+
+| 功能 | 说明 |
+| -- | -- |
+| `Read()` | 通常从 `<派生类>::Read()`调用，该函数读取配置参数，用于输入张量解析和保存。此函数还读取神经网络模型文件字符串（`network_file`），并设置固件，以便在相机打开时加载。 |
+| `Process()` | 通常从 `<派生类>::Process()` 调用，如果 JSON 配置文件需要，该函数会处理并将输入张量保存到文件中。 |
+| `SetInferenceRoiAbs()` | 设置传感器图像上的绝对感兴趣区（ROI）裁剪矩形，用于 IMX500 的推断。 |
+| `SetInferenceRoiAuto()` | 自动计算传感器图像上的感兴趣区域 (ROI) 裁剪矩形，以保持给定神经网络的输入张量宽高比。 |
+| `ShowFwProgressBar()` | 在控制台上显示一个进度条，显示神经网络固件上传到 IMX500 的进度。 |
+| `ConvertInferenceCoordinates()` | 从输入张量坐标空间转换到最终的 ISP 输出图像空间。 从原始传感器图像到完全处理后的 ISP 输出图像之间会发生许多缩放/剪切/平移操作。此函数将输出张量提供的坐标转换为执行这些操作后的等效坐标。 |
+
+### Picamera2
+
+Picamera2 中的 IMX500 集成与 `rpicam-apps` 中的集成非常相似。Picamera2 有一个 IMX500 辅助类，提供与 `rpicam-apps``IMX500PostProcessingStage` 基类相同的功能。该类可通过以下方式导入到任何 Python 脚本中：
+
+```py
+from picamera2.devices.imx500 import IMX500
+
+# This must be called before instantiation of Picamera2
+imx500 = IMX500(model_file)
+```
+
+要检索输出张量，可从控件中获取。然后，您可以在 Python 脚本中进行额外处理。
+
+例如，在对象推理用例（如 [imx500_object_detection_demo.py](https://github.com/raspberrypi/picamera2/tree/main/examples/imx500/imx500_object_detection_demo.py)）中，对象包围盒和置信度值在 `parse_detections()` 中提取，并在 `draw_detections()` 中在图像上绘制包围盒：
+
+```py
+class Detection:
+    def __init__(self, coords, category, conf, metadata):
+        """Create a Detection object, recording the bounding box, category and confidence."""
+        self.category = category
+        self.conf = conf
+        obj_scaled = imx500.convert_inference_coords(coords, metadata, picam2)
+        self.box = (obj_scaled.x, obj_scaled.y, obj_scaled.width, obj_scaled.height)
+
+def draw_detections(request, detections, stream="main"):
+    """Draw the detections for this request onto the ISP output."""
+    labels = get_labels()
+    with MappedArray(request, stream) as m:
+        for detection in detections:
+            x, y, w, h = detection.box
+            label = f"{labels[int(detection.category)]} ({detection.conf:.2f})"
+            cv2.putText(m.array, label, (x + 5, y + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+            cv2.rectangle(m.array, (x, y), (x + w, y + h), (0, 0, 255, 0))
+        if args.preserve_aspect_ratio:
+            b = imx500.get_roi_scaled(request)
+            cv2.putText(m.array, "ROI", (b.x + 5, b.y + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+            cv2.rectangle(m.array, (b.x, b.y), (b.x + b.width, b.y + b.height), (255, 0, 0, 0))
+
+def parse_detections(request, stream='main'):
+    """Parse the output tensor into a number of detected objects, scaled to the ISP output."""
+    outputs = imx500.get_outputs(request.get_metadata())
+    boxes, scores, classes = outputs[0][0], outputs[1][0], outputs[2][0]
+    detections = [ Detection(box, category, score, metadata)
+                   for box, score, category in zip(boxes, scores, classes) if score > threshold]
+    draw_detections(request, detections, stream)
+```
+
+与 `rpicam-apps` 示例不同的是，本示例不应用额外的滞后或时间过滤。
+
+Picamera2 中的 IMX500 类提供了以下辅助函数：
+
+| 功能 | 说明 |
+| -- | -- |
+|`IMX500.get_full_sensor_resolution()` | 返回 IMX500 的完整传感器分辨率。|
+| `IMX500.config` | 返回神经网络配置字典。 |
+| `IMX500.convert_inference_coords(coords, metadata, picamera2)` | 将坐标 _coords_ 从输入的张量坐标空间转换到最终的 ISP 输出图像空间。必须传递 Picamera2 的图像元数据和 Picamera2 对象。 从原始传感器图像到经过完全处理的 ISP 输出图像之间会发生许多缩放/裁剪/平移操作。该函数将输出张量提供的坐标转换为执行这些操作后的等效坐标。 |
+| `IMX500.show_network_fw_progress_bar()` | 在控制台显示一个进度条，显示神经网络固件上传到 IMX500 的进度。|
+| `IMX500.get_roi_scaled(request)` | 返回 ISP 输出图像坐标空间中的感兴趣区域（ROI）。|
+| `IMX500.get_isp_output_size(picamera2)` | 返回 ISP 输出图像的大小。|
+| `IMX5000.get_input_size()` | 根据使用的神经网络模型返回输入张量大小。|
+| `IMX500.get_outputs(metadata)` | 根据 Picamera2 图像元数据返回输出张量。|
+| `IMX500.get_output_shapes(metadata)` | 从 Picamera2 图像元数据中返回所用神经网络模型的输出张量形状。|
+| `IMX500.set_inference_roi_abs(rectangle)` | 设置感兴趣区域（ROI）裁剪矩形，该矩形决定传感器图像的哪一部分被转换为输入张量，用于 IMX500 的推理。感兴趣区域应以传感器全分辨率下的像素为单位，指定为 `(x_offset、y_offset、width、height）` 元组。|
+| `IMX500.set_inference_aspect_ratio(aspect_ratio)` | 自动计算传感器图像上的感兴趣区域（ROI）裁剪矩形，以保持给定的宽高比。要使 ROI 长宽比与该网络的输入张量完全匹配，请使用 `imx500.set_inference_aspect_ratio(imx500.get_input_size())`。|
+| `IMX500.get_kpi_info(metadata)` | 返回 IMX500 针对给定图像元数据记录的帧级性能指标。|
+
+## 模型部署
+
+要在 Raspberry Pi AI 摄像头上部署新的神经网络模型，请完成以下步骤：
+
+1. 提供神经网络模型。
+2. 量化并压缩模型，使其能够利用 IMX500 摄像头模块上的可用资源运行。
+3. 将压缩模型转换为 IMX500 格式。
+4. 将模型打包成固件文件，以便在运行时加载到相机上。
+
+前三个步骤通常在台式机或服务器等功能更强大的计算机上执行。您必须在 Raspberry Pi 上运行最后的打包步骤。
+
+### 创建模型
+
+神经网络模型的创建超出了本指南的范围。现有模型可以重复使用，也可以使用 TensorFlow 或 PyTorch 等流行框架创建新模型。
+
+更多信息，请参阅 [AITRIOS开发者官方网站](https://developer.aitrios.sony-semicon.com/en/raspberrypi-ai-camera)。
+
+### 量化和压缩
+
+使用索尼的模型压缩工具包对模型进行量化和压缩。要安装该工具包，请运行以下命令：
+
+```sh
+pip install model_compression_toolkit
+```
+
+更多信息，请参阅 [索尼模型优化 GitHub 代码库](https://github.com/sony/model_optimization)。
+
+模型压缩工具包以下列格式生成量化模型：
+
+* Keras (TensorFlow)
+* ONNX (PyTorch)
+
+### 转换
+
+要转换模型，首先安装转换工具：
+
+<Tabs groupId="language">
+<TabItem value="tf">
+
+```sh
+pip install imx500-converter[tf]
+```
+
+</TabItem>
+
+<TabItem value="pt">
+
+```sh
+pip install imx500-converter[pt]
+```
+
+</TabItem>
+</Tabs>
+
+如果需要安装这两个软件包，请使用两个独立的 Python 虚拟环境。这样可以防止 TensorFlow 和 PyTorch 相互冲突。
+
+接下来，转换模型：
+
+<Tabs groupId="language">
+<TabItem value="tf">
+
+```sh
+imxconv-tf -i <compressed Keras model> -o <output folder>
+```
+
+</TabItem>
+
+<TabItem value="pt">
+
+```sh
+imxconv-pt -i <compressed ONNX model> -o <output folder>
+```
+
+</TabItem>
+</Tabs>
+
+
+这两条命令都会创建一个输出文件夹，其中包含一份内存使用报告和一个 `packerOut.zip` 文件。
+
+为优化使用 IMX500 传感器加速器的可用内存，请在上述命令中添加 `--no-input-persistency`。不过，这将禁用输入张量生成，并返回应用程序进行调试。
+
+有关模型转换过程的更多信息，请参阅 [索尼 IMX500 转换器官方文档](https://developer.aitrios.sony-semicon.com/en/raspberrypi-ai-camera/documentation/imx500-converter)。
+
+### 打包
+
+:::important[重要]
+必须在 Raspberry Pi 上运行此步骤。
+:::
+
+最后一步是将模型打包成 RPK 文件。运行神经网络模型时，我们将把该文件上传到 AI 相机。在继续之前，请运行以下命令安装必要的工具：
+
+```sh
+sudo apt install imx500-tools
+```
+
+要将模型打包成 RPK 文件，请运行以下命令：
+
+```sh
+imx500-package -i <path to packerOut.zip> -o <output folder>
+```
+
+该命令将在输出文件夹中创建一个名为 `network.rpk` 的文件。你将把该文件的名称传递给你的 IMX500 相机应用程序。
+
+有关更全面的说明和所用工具的更多细节，请参阅 [索尼 IMX500 包装器文档](https://developer.aitrios.sony-semicon.com/en/raspberrypi-ai-camera/documentation/imx500-packager)。
+
+<Normal />

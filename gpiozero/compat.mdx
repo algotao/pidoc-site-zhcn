@@ -1,0 +1,227 @@
+---
+sidebar_position: 11
+draft: false
+title: 11. 向后兼容性
+description: GPIO Zero 2.x 是一个新的主要版本，因此向后不兼容的更改是可以预期的。我们试图将这些变化保持在合理的最小范围内，同时利用这个机会来进行清理。本章记录了从 GPIO Zero 1.x 版本到 2.x 版本的重大变化，以及所有在 2.0 版本中仍可正常工作但计划在未来 2.x 版本中删除的过时功能。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 兼容性, 向后兼容性]
+last_update: 
+  date: 2024-06-14
+---
+import Normal from "./_normal.mdx";
+
+# 向后兼容性
+
+GPIO Zero 2.x 是一个新的主要版本，因此向后不兼容的更改是可以预期的。我们试图将这些变化保持在合理的最小范围内，同时利用这个机会来进行清理。本章记录了从 GPIO Zero 1.x 版本到 2.x 版本的重大变化，以及所有在 2.0 版本中仍可正常工作但计划在未来 2.x 版本中删除的过时功能。
+
+## 查找并修复被弃用的用法
+
+从 2.0 版开始，所有被弃用的功能在使用时都会引发 `DeprecationWarning`。默认情况下，Python 解释器会抑制这些警告（因为它们只对开发者有意义，而不是用户），但您可以很容易地配置不同的行为。
+
+下面的示例脚本使用了一些已废弃的函数：
+
+```py
+import gpiozero
+
+board = gpiozero.pi_info()
+for header in board.headers.values():
+    for pin in header.pins.values():
+        if pin.pull_up:
+            print(pin.function, 'is pulled up')
+```
+
+尽管使用了过时的功能，脚本仍能在 gpiozero 2.0 中正常（无声）运行。为了发现使用了哪些已废弃的函数，我们添加了几行文字，告诉警告模块我们希望 "默认" 处理 `DeprecationWarning`；"默认" 处理意味着，第一次尝试在特定位置引发警告时，警告的详细信息将被打印到控制台。以后从同一位置发出的所有调用都将被忽略。这样可以避免在控制台中充斥来自紧密循环的警告细节。这样，脚本看起来就像这样了：
+
+```py
+import gpiozero
+
+import warnings
+warnings.filterwarnings('default', category=DeprecationWarning)
+
+board = gpiozero.pi_info()
+for header in board.headers.values():
+    for pin in header.pins.values():
+        if pin.pull_up:
+            print(pin.function, 'is pulled up')
+```
+
+运行时，控制台会产生以下输出：
+
+```
+/home/dave/projects/home/gpiozero/gpio-zero/gpiozero/pins/__init__.py:899:
+DeprecationWarning: PinInfo.pull_up is deprecated; please use PinInfo.pull
+  warnings.warn(
+/home/dave/projects/home/gpiozero/gpio-zero/gpiozero/pins/__init__.py:889:
+DeprecationWarning: PinInfo.function is deprecated; please use PinInfo.name
+  warnings.warn(
+GPIO2 is pulled up
+GPIO3 is pulled up
+```
+
+这告诉我们脚本中使用了哪些已废弃的功能，但并没有告诉我们在脚本的哪个位置使用了这些功能。为此，将警告转换为完整的异常更为有用。有了这一改动，每次打印 `DeprecationWarning` 时，脚本都会以未处理异常和完整的堆栈跟踪结束：
+
+```py
+import gpiozero
+
+import warnings
+warnings.filterwarnings('error', category=DeprecationWarning)
+
+board = gpiozero.pi_info()
+for header in board.headers.values():
+    for pin in header.pins.values():
+        if pin.pull_up:
+            print(pin.function, 'is pulled up')
+```
+
+现在运行脚本，结果如下：
+
+```py
+Traceback (most recent call last):
+  File "/home/dave/projects/home/gpiozero/gpio-zero/foo.py", line 9, in <module>
+    if pin.pull_up:
+  File "/home/dave/projects/home/gpiozero/gpio-zero/gpiozero/pins/__init__.py", line 899, in pull_up
+    warnings.warn(
+DeprecationWarning: PinInfo.pull_up is deprecated; please use PinInfo.pull
+```
+
+这告诉我们脚本的第 9 行使用了已废弃的功能，并提示我们如何修复。我们将第 9 行改为使用 "pull" 属性。现在我们再次运行，这次得到的结果如下：
+
+```py
+Traceback (most recent call last):
+  File "/home/dave/projects/home/gpiozero/gpio-zero/foo.py", line 10, in <module>
+    print(pin.function, 'is pulled up')
+  File "/home/dave/projects/home/gpiozero/gpio-zero/gpiozero/pins/__init__.py", line 889, in function
+    warnings.warn(
+DeprecationWarning: PinInfo.function is deprecated; please use PinInfo.name
+```
+
+现在我们可以看出第 10 行有问题，异常再次告诉我们如何修复。我们继续这样做，直到脚本看起来像这样：
+
+```py
+import gpiozero
+
+import warnings
+warnings.filterwarnings('error', category=DeprecationWarning)
+
+board = gpiozero.pi_info()
+for header in board.headers.values():
+    for pin in header.pins.values():
+        if pin.pull == 'up':
+            print(pin.name, 'is pulled up')
+```
+
+现在脚本运行完成，因此我们可以确信它不再使用任何过时的功能，即使在未来的 2.x 版本中删除了这些功能，它也能正常运行。此时，你也可以删除 `filterwarnings` 一行（或至少将其注释掉）。
+
+## 不再支持 Python 2.x
+
+到目前为止，最大、最重要的变化是不再支持 Python 2.x 系列（实际上，这意味着不再支持 Python 2.7）。如果您的代码与 Python 3 不兼容，则应遵循 [Python 文档](https://docs.python.org/3/) 中的 [移植指南](https://docs.python.org/3/howto/pyporting.html)。
+
+GPIO Zero 2.0 支持的最低 Python 版本为 3.5。这个基础版本可能会随着小版本的发布而提高，但我们会尽最大努力不破坏与旧 Python 3.x 版本的兼容性，并确保 GPIO Zero 能在发布时 Debian oldstable 中的 Python 版本上运行。
+
+## 删除 RPIO 引脚工厂
+
+RPIO 引脚在 Raspberry Pi 2 以后的版本中已不支持，因此目前几乎没有实际用途。建议仍然依赖 RPIO 稳定 PWM 实现的用户尝试使用 pigpio 引脚实现（GPIO Zero 也支持）。
+
+## 删除已废弃的引脚工厂别名
+
+`GPIOZERO_PIN_FACTORY` 环境变量指定的引脚工厂别名已被删除：
+
+- 删除了 "PiGPIOPin"，代之以 "pigpio"。
+
+- 删除 "RPiGPIOPin"，代之以 "rpigpio"。
+
+- 删除 "NativePin"，使用 "native"。
+
+换句话说，在调用脚本时，你不能再使用以下内容：
+
+```sh
+GPIOZERO_PIN_FACTORY=PiGPIOPin python3 my_script.py
+```
+
+取而代之的是
+
+```sh
+GPIOZERO_PIN_FACTORY=pigpio python3 my_script.py
+```
+
+## 关键字参数
+
+GPIO Zero 1.x 中的许多类在其构造函数和方法中都有只包含关键字的参数。例如，PiLiter 在文档中的构造函数为 `PiLiter(*, pwm=False, initial_value=False, pin_factory=None)` 意味着其所有参数都只有关键字。
+
+然而，尽管有这样的文档说明，这一点却很少被执行，因为在 Python 2.x 下要做到这一点而又不使代码库变得相当复杂是非常困难的（Python 2.x 缺乏声明仅关键字参数的 "*" 语法；它们只能通过 "**kwargs" 参数和字典操作来实现）。
+
+在 GPIO Zero 2.0 中，所有此类参数现在实际上都是关键字参数。如果您的代码符合 1.x 版文档的要求，您应该不会注意到有什么不同。换句话说，下面的代码仍然没有问题：
+
+```py
+from gpiozero import PiLiter
+
+l = PiLiter(pwm=True)
+```
+
+但是，如果省略了关键字，则需要修改代码：
+
+```py
+from gpiozero import PiLiter
+
+l = PiLiter(True)  # this will no longer work
+```
+
+## 机器人使用电机，PhaseEnableRobot 已被弃用
+
+GPIO Zero 1.x 应用程序接口规定，机器人(`Robot`) 由两个元组构成，而这两个元组又用于构成两个 电机(`Motor`) 实例。在 2.x API 中，只需传递您希望用作左轮和右轮的 电机(`Motor`) 或 `PhaseEnableMotor()` 实例即可。
+
+如果您当前的代码使用针脚 4 和 14 作为左轮，使用针脚 17 和 18 作为右轮，那么它可能看起来像这样：
+
+```py
+from gpiozero import Robot
+
+r = Robot(left=(4, 14), right=(17, 18))
+```
+
+应将其改为
+
+```py
+from gpiozero import Robot, Motor
+
+r = Robot(left=Motor(4, 14), right=Motor(17, 18))
+```
+
+同样，如果您目前使用的是 `PhaseEnableRobot()`，您的代码可以如下所示：
+
+```
+from gpiozero import PhaseEnableRobot
+
+r = PhaseEnableRobot(left=(4, 14), right=(17, 18))
+```
+
+应将其改为
+
+```py
+from gpiozero import Robot, PhaseEnableMotor
+
+r = Robot(left=PhaseEnableMotor(4, 14),
+          right=PhaseEnableMotor(17, 18))
+```
+
+之所以做出这一修改，是因为 电机(`Motor`) 类在文档中也有两个必选参数（前进和后退）和几个关键字参数，包括使能引脚。然而，为了构造 机器人(`Robot`)，enable 被视为位置参数，这是不一致的。此外，`PhaseEnableRobot()` 或多或少是 机器人(`Robot`) 的多余重复，但却缺少后来添加到 机器人(`Robot`) 中的一些功能（特别是 "曲线" 转弯）。
+
+虽然新的应用程序接口需要更多的键入，但它确实意味着相位启用机器人板现在继承了机器人的所有功能，因为它们只使用 机器人(`Robot`)的功能。理论上，您也可以混合使用普通电机和相位启用电机，不过这样做意义不大。
+
+在 gpiozero 2.0 中，前一种功能（向 机器人(`Robot`) 构造函数传递图元）将作为废弃功能保留，但会在未来的 2.x 版本中删除。`PhaseEnableRobot()` 仍是一个存根函数，仅返回一个 机器人(`Robot`) 实例，但将在未来的 2.x 版本中删除。
+
+## PiBoardInfo、HeaderInfo、PinInfo
+
+`PiBoardInfo` 类以及相关的 `HeaderInfo` 和 `PinInfo` 类进行了重大重组。这一方面是因为之前的一些术语令人困惑（例如 `PinInfo.function` 和 `Pin.function` 的含义相冲突），另一方面是因为添加了 "lgpio" 工厂后，在非 Pi 板上使用 gpiozero 完全是可能的（尽管目前 `pins.lgpio.LGPIOFactory` 的编写仍然假定它只用于 `Pi`）。
+
+因此，以下类、方法和属性已被弃用（尚未删除，但将在 2.x 系列的未来版本中删除）：
+
+- `Factory.pi_info` 已被弃用，取而代之的是 `Factory.board_info`，它返回的是 `BoardInfo` 而不是 `PiBoardInfo`（后者现在是前者的子类）。
+
+- `PinInfo.pull_up` 已被弃用，取而代之的是 `PinInfo.pull`。
+
+- `PinInfo.function` 已被弃用，取而代之的是 `PinInfo.name`。
+
+- `BoardInfo.physical_pins()`、`BoardInfo.physical_pin()` 和 `BoardInfo.pulled_up()` 均已废弃，取而代之的是新的 `BoardInfo.find_pin()` 和上述属性的组合。
+
+- `PiPin.number` 已被弃用，取而代之的是 `Pin.info.name`。
+
+<Normal />

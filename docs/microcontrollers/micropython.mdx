@@ -1,0 +1,79 @@
+---
+sidebar_position: 4
+draft: false
+description: MicroPython 是 Python 3 编程语言的完整实现，可直接在树莓派Pico等嵌入式硬件上运行。您可以通过 USB 串行接口获得交互式提示（REPL）来立即执行命令，并获得一个内置文件系统。MicroPython 的 Pico 端口包括用于访问低级芯片特定硬件的模块。
+keywords: [树莓派, Raspberry Pi, Python, MicroPython]
+last_update: 
+  date: 2024-12-21
+---
+import Normal from "../_normal.mdx";
+
+# MicroPython
+
+## 什么是MicroPython？
+MicroPython 是 Python 3 编程语言的完整实现，可直接在树莓派Pico等嵌入式硬件上运行。您可以通过 USB 串行接口获得交互式提示（REPL）来立即执行命令，并获得一个内置文件系统。MicroPython 的 Pico 端口包括用于访问低级芯片特定硬件的模块。
+- [MicroPython 维基](https://github.com/micropython/micropython/wiki)
+- [MicroPython 论坛](https://forum.micropython.org/)
+
+## 拖放MicroPython
+您可以通过 USB 将 Pico 连接到电脑，然后将文件拖放到 Pico 上对其进行编程，因此我们提供了一个可下载的 UF2 文件，让您可以更轻松地安装 MicroPython。
+
+<video controls src="/img/microcontrollers/micropython/MicroPython.webm" alt="MicroPython" width="80%" />
+
+为你的电路板下载正确的 MicroPython UF2 文件：
+
+* [Pico](https://micropython.org/download/rp2-pico/rp2-pico-latest.uf2)
+* [Pico W](https://micropython.org/download/rp2-pico-w/rp2-pico-w-latest.uf2)
+* [Pico 2](https://micropython.org/download/RPI_PICO2/RPI_PICO2-latest.uf2)
+* [Pico 2 W](https://downloads.raspberrypi.com/micropython/mp_firmware_unofficial_latest.uf2)
+
+有关使用 C/C++ 或 MicroPython 在 Raspberry Pi Pico W 系列设备上使用 Wi-Fi 和蓝牙的更多信息，请参阅 [使用 Raspberry Pi Pico W 系列连接到互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)。
+
+有关 [支持的蓝牙协议和配置文件](https://github.com/bluekitchen/btstack#supported-protocols-and-profiles) 的更多信息，请参阅 Blue Kitchen [BTStack](https://github.com/bluekitchen/btstack) Github 代码库。
+
+:::tip
+[MicroPython 下载页面](https://micropython.org/download/) 上有其他基于 RP2040 和 RP2350 的板的 MicroPython 分发版。
+:::
+
+要对设备进行编程，请按照以下步骤操作：
+
+1. 用 USB 电缆将 Pico 与电脑连接时，按住 BOOTSEL 按钮。当 Pico 显示为名为 RPI-RP2 的大容量存储设备时，松开 BOOTSEL 按钮。
+2. 将 MicroPython UF2 文件拖放到 RPI-RP2 卷上。Pico 将重新启动。现在您正在运行 MicroPython。
+3. 通过 USB 串口访问 REPL。
+
+[《树莓派 Pico 系列 Python SDK》](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-python-sdk.pdf) 一书包含连接 Pico 并使用命令行和 [Thonny](https://thonny.org/) IDE 在 MicroPython 中编程的分步说明。
+
+## 在哪里可以找到文档？
+有关 RP2040 的 MicroPython 移植信息，请访问；
+
+[树莓派Pico Python SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-python-sdk.pdf)<br />
+&emsp;&emsp;用于 RP2040 微控制器的 MicroPython 环境
+
+[使用树莓派Pico W 连接互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)<br />
+&emsp;&emsp;使用 C/C++ 或 MicroPython 让 树莓派 Pico W 上网
+
+[RP2快速参考](https://docs.micropython.org/en/latest/rp2/quickref.html)<br />
+&emsp;&emsp;有关 MicroPython RP2040 移植的官方文档
+
+[RP2库](https://docs.micropython.org/en/latest/library/rp2.html)<br />
+&emsp;&emsp;有关 MicroPython 中 rp2 模块的官方文档
+
+## 我在哪个硬件上运行？
+
+对于用 MicroPython 编写的软件，没有直接的方法可以通过查看硬件来确定它是运行在树莓派 Pico还是Pico W上。不过，您可以通过查看特定 MicroPython 固件中是否包含网络功能来间接判断：
+
+```py
+import network
+if hasattr(network, "WLAN"):
+   # 电路板具有 WLAN 功能
+```
+另外，您也可以使用 `sys` 模块检查 MicroPython 固件版本，以查看它是针对树莓派Pico还是Pico W编译的。
+```py
+>>> import sys
+>>> sys.implementation
+(name='micropython', version=(1, 19, 1), _machine='Raspberry Pi Pico W with RP2040', _mpy=4102)
+```
+
+如果 `Pico W` 字符串出现在 `sys.implement._machine` 中，则固件是为 Pico W 编译的。
+
+<Normal />
