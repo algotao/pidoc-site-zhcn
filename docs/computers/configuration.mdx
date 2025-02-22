@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解(官网25年2月)
 description: 树莓派系统配置介绍，以图示的方式介绍使用raspi-config工具配置有线网络、配置无线WiFi网络、配置热点、设置代理服务器、设置显示器的分辨率及方向。挂载外部USB存贮设备，更改默认引脚设置，配置UART。LED警告闪烁代码的含义。增加或删除用户，安装防火墙等。
 keywords: [树莓派, Raspberry Pi, 系统配置, raspi-config, LAN, WiFI, 无线, 代理服务器, UART, LED, 闪烁]
 last_update: 
-  date: 2025-02-06
+  date: 2025-02-22
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -233,7 +233,7 @@ sudo raspi-config nonint do_wifi_ssid_passphrase <ssid> <passphrase> [hidden] [p
 
 `<hidden>` 选项表示 SSID 的可见性。如果网络广播的是开放的 SSID，则通过 `0` 或省略该选项。如果您的 SSID 是隐藏的则设置为 `1`。默认为 `0`。
 
-`<plain>` 选项表示要以明文形式传递口令。如果口令包含空格或特殊字符（如 `!` ），则必须输入 `0` ，并在口令周围使用引号。否则，可以输入 `1` 或省略该选项。默认为 `1`。 要传递该选项，必须为 `<hidden>` 指定一个值。
+`<plain>`选项表示是否用额外的引号来封装给定的口令。大多数用户可以忽略该选项：作为一个实现细节，`raspi-config` 可能需要在将口令传递给系统其他部分之前添加引号，`<plain>` 值为`0` 表示已经存在引号。如果值为 `1`，则表示不存在引号，实施时应根据需要添加引号。默认值为 `1`。要传递此选项，必须指定 `<hidden>`的值。
 
 例如，运行以下命令连接一个
 
@@ -249,7 +249,12 @@ sudo raspi-config nonint do_wifi_ssid_passphrase myssid mypassphrase 1
 
 - 使用密码 `my passphrase` 连接到名为 `myssid` 的非隐藏网络：
 ```sh
-sudo raspi-config nonint do_wifi_ssid_passphrase myssid "my passphrase" 0 0
+sudo raspi-config nonint do_wifi_ssid_passphrase myssid 'my passphrase' 0 0
+```
+
+- 使用密码 `mypassphrase` 连接到名为 `myssid` 的非隐藏网络，您已经在密码中添加了额外的引号：
+```sh
+sudo raspi-config nonint do_wifi_ssid_passphrase myssid '"mypassphrase"' 0 0
 ```
 
 #### 音频

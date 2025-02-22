@@ -4,7 +4,7 @@ draft: false
 description: 通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的 Raspberry Pi。要使用 Connect，请在 Raspberry Pi 上安装 Connect 软件。然后访问 connect.raspberrypi.com，在浏览器窗口中通过屏幕共享访问你的 Raspberry Pi。您可以像将显示器插入 Raspberry Pi 一样使用桌面。
 keywords: [树莓派, Raspberry Pi, Connect, 远程登录]
 last_update: 
-  date: 2024-12-21
+  date: 2025-02-22
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -367,13 +367,45 @@ Replacing globally-enabled rpi-connect services with user-enabled ones...
 
 #### 屏幕共享不可用
 
-如果 Connect 提示屏幕共享不可用，说明它无法连接到专用的 Connect WayVNC 服务。
+如果 Connect 提示屏幕共享不可用，则表明不符合屏幕共享支持的一个或多个要求。为帮助调试问题，`rpi-connect` 和 `rpi-connect-lite` 包含`doctor`命令。使用 `rpi-connect doctor` 找出屏幕共享的问题。
 
-要进一步了解问题的原因，请运行以下命令检查 Connect WayVNC 服务的状态：
+运行以下命令
 
 ```sh
-systemctl --user status rpi-connect-wayvnc
-journalctl --user --follow --unit rpi-connect-wayvnc
+rpi-connect doctor
+```
+
+如果一切正常，您应该会看到类似下面的输出：
+
+```
+Screen sharing is supported by this version of rpi-connect（此版本的 rpi-connect 支持屏幕共享）
+✓ Wayland compositor available （Wayland 合成器可用）
+✓ Screen sharing services enabled and active （屏幕共享服务已启用并处于活动状态）
+✓ Communication with Raspberry Pi Connect API （与 Raspberry Pi Connect API 通信）
+✓ Authentication with Raspberry Pi Connect API （使用 Raspberry Pi Connect API 进行身份验证）
+✓ Peer-to-peer connection candidate via STUN （通过 STUN 候选点对点连接）
+✓ Peer-to-peer connection candidate via TURN （通过 TURN 进行点对点连接的候选程序）
+```
+
+如果出现问题，您将看到类似下面的内容：
+
+```
+Screen sharing is supported by this version of rpi-connect （此版本的 rpi-connect 支持屏幕共享）
+✓ Wayland compositor available （可用的 Wayland 合成器）
+✗ Screen sharing services enabled and active - Please run rpi-connect on to enable and start all required services （屏幕共享服务已启用并处于活动状态 - 请运行 rpi-connect 以启用并启动所有必需的服务）
+✓ Communication with Raspberry Pi Connect API （与 Raspberry Pi Connect API 通信）
+✓ Authentication with Raspberry Pi Connect API （使用 Raspberry Pi Connect API 进行身份验证）
+✓ Peer-to-peer connection candidate via STUN （通过 STUN 候选点对点连接）
+✓ Peer-to-peer connection candidate via TURN （通过 TURN 进行点对点连接的候选程序）
+
+✗ Some checks failed （某些检查失败）
+```
+
+如果在尝试运行 Connect 所需服务时反复出现问题，请运行以下命令详细检查它们的状态：
+
+```sh
+systemctl --user status rpi-connect-wayvnc.service rpi-connect-wayvnc-watcher.path
+journalctl --user --follow --unit rpi-connect-wayvnc.service --unit rpi-connect-wayvnc-watcher.path
 ```
 
 如果服务无法启动或不存在，请确保您的环境符合以下条件：
@@ -403,6 +435,9 @@ rpi-connect doctor
 如果 Connect 可以在网络上正常通信，您应该可以看到类似下面的输出：
 
 ```
+Screen sharing is supported by this version of rpi-connect
+✓ Wayland compositor available
+✓ Screen sharing services enabled and active
 ✓ Communication with Raspberry Pi Connect API
 ✓ Authentication with Raspberry Pi Connect API
 ✓ Peer-to-peer connection candidate via STUN
@@ -411,8 +446,7 @@ rpi-connect doctor
 
 如果 Connect 无法在您的网络上正常通信，您会在失败的测试用例旁边看到一个 “x” 而不是复选框。请您的网络管理员在您的网络上启用以下连接：
 
-* 向 `api.connect.raspberrypi.com` 的 443 端口上的 Raspberry Pi Connect API 提出未经验证的 HTTPS 请求 
-* 通过`api.connect.raspberrypi.com`的 443 端口对 Raspberry Pi Connect API 的验证请求
+* 通过 `api.connect.raspberrypi.com` 的 443 端口向 Raspberry Pi Connect API 发送 HTTPS 请求
 * 通过以下所有 UDP 端口 3478 向 Raspberry Pi Connect STUN 或 TURN 服务器发出请求：
   * `stun.raspberrypi.com`
   * `turn1.raspberrypi.com`

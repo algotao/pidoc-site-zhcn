@@ -1,41 +1,19 @@
-# Website
+# Raspberry Pi 文档中文版
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+[【树莓派文档中文版网站】](https://pidoc.cn)
 
-### Installation
+本项目提供了 Raspberry Pi 文档中文版，原始英文版来自 [Raspberry Pi Document](https://github.com/raspberrypi/documentation/)。
 
-```
-$ yarn
-```
+中文版更新频率约为每1-2月一次。
 
-### Local Development
+## 构建
 
-```
-$ yarn start
-```
+本项目使用 [Docusaurus](https://docusaurus.io/) 作为构建工具。
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+## 许可
 
-### Build
+中文版遵循官方的授权模式，使用 [CC-BY-SA 4.0协议](LICENSE)（署名-相同方式共享 4.0）。
 
-```
-$ yarn build
-```
+## 交流
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-### Deployment
-
-Using SSH:
-
-```
-$ USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```
-$ GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+Q群：498908352
