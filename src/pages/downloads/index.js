@@ -23,9 +23,9 @@ const DownloadConfig = {
   desktop_text: "适用于 PC 和 Mac 的 Raspberry Pi 桌面",
   desktop_content: 'Debian with Raspberry Pi Desktop 是我们的 PC 和 Mac 操作系统。它为任何 PC 或苹果 Mac 电脑提供 Raspberry Pi OS 桌面以及 Raspberry Pi OS 附带的大多数推荐软件。',
   imager_url: [
-    { os: "Windows", downloadurl: "https://pidoc.cn/imager/imager_latest.exe", title: "下载Windows版", showButton: false, },
-    { os: "MacOS", downloadurl: "https://pidoc.cn/imager/imager_latest.dmg", title: "下载macOS版", showButton: false, },
-    { os: "Linux", downloadurl: "https://pidoc.cn/imager/imager_latest_amd64.deb", title: "下载适用于x64的Ubuntu版", showButton: false, }
+    { os: "Windows", downloadurl: "https://dl.pidoc.cn/imager/imager_1.8.5.exe", title: "下载Windows版", showButton: false, },
+    { os: "MacOS", downloadurl: "https://dl.pidoc.cn/imager/imager_1.8.5.dmg", title: "下载macOS版", showButton: false, },
+    { os: "Linux", downloadurl: "https://dl.pidoc.cn/imager/imager_1.8.5_amd64.deb", title: "下载适用于x64的Ubuntu版", showButton: false, }
   ],
   manually_url: [
     { os: "All", downloadurl: "/downloads/operating-systems/", title: "查看所有下载选项", showButton: true, },
