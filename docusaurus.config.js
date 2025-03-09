@@ -35,8 +35,7 @@ const config = {
     locales: ['zh-Hans'],
   },
   scripts: [
-    { src: '/js/bing.js', async: true },
-    { src: 'https://sdk.51.la/js-sdk-pro.min.js', async: false },
+    { src: '/js-sdk-pro.min.js', async: false },
     { src: '/js/51la.js', async: false }
   ],
   presets: [
@@ -49,7 +48,7 @@ const config = {
         pages: { exclude: ['/imager/**', '**/dl/**'] },
         theme: { customCss: './src/css/custom.css' },
         sitemap: { lastmod: 'date' },
-        gtag: { trackingID: 'G-CYBRYL8W2Y', anonymizeIP: false },
+        //gtag: { trackingID: 'G-CYBRYL8W2Y', anonymizeIP: false },
       }),
     ],
   ],

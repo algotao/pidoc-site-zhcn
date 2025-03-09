@@ -5,4 +5,3 @@ rm -rf ./build
 npm run build
 
 rsync -avz ./build/ pidoc.cn:/data/docker/nginx/web/pidoc.cn/
-rsync -avz ./build/ pi5.pidoc.cn:/data/docker/nginx/web/pidoc.cn/
