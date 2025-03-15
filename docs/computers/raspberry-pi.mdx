@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 树莓派1至树莓派5硬件的完整介绍，章节包括：原理图和机械图、产品合规性与安全性、频率管理与热控制、启动EEPROM的更新与故障诊断、系统启动顺序、第一阶段与第二阶段bootloader、USB启动、网络启动、GPIO启动、NVMe SSD启动、HTTP启动、OTP寄存器及位定义、工业应用、SPI软硬件、修订码识别
 keywords: [树莓派, Raspberry Pi, GPIO, 电源, 电压, 输入, 输出, 散热, 驱动强度, 修订码, SPI, OTP]
 last_update: 
-  date: 2025-02-22
+  date: 2025-03-15
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -1379,19 +1379,13 @@ sudo apt update && sudo apt full-upgrade
 
 ### 编辑 bootloader 启动顺序
 
-使用 Raspberry Pi 配置 CLI 更新引导加载程序：
+使用 Raspberry Pi 软件配置工具更新引导加载程序：
 
 ```sh
 sudo raspi-config
 ```
 
-在 `Advanced Options`>`Bootloader Order` 下，指定引导程序应首先尝试从 `NVMe` 启动：
-
-```sh
-sudo rpi-eeprom-update -a
-```
-
-然后，使用 `sudo reboot` 重新启动。Raspberry Pi 将从 NVMe 启动。
+在 `Advanced Options`>`Bootloader Order` 下，指定一个包含 NVMe 的选项。 然后，它会将这些更改写入引导加载程序，并返回配置工具，你可以在其中 `Finish` 并重新启动。 现在，您的 Raspberry Pi 将使用新的启动顺序。
 
 对于 CM4，使用 `rpiboot` 更新引导加载程序。你可以在 [USB boot GitHub 存储库](https://github.com/raspberrypi/usbboot) 中找到构建 `rpiboot` 和配置 IO 板以将 ROM 切换到 usbboot 模式的说明。
 
@@ -1743,7 +1737,8 @@ sudo -E rpi-eeprom-config --edit
 默认值：`0`
 
 #### UART_BAUD
-仅限树莓派5。
+
+仅限 Raspberry Pi 5 之后的旗舰机型。
 
 更改bootloader UART的波特率。
 支持的值为`9600`, `19200`, `38400`, `57600`, `115200`, `230400`, `460800`, `921600`
@@ -1765,6 +1760,14 @@ sudo -E rpi-eeprom-config --edit
 在 Raspberry Pi 5 之后的旗舰型号和 Pi 500 之后的键盘型号上，这会将 PMIC 置于 `STANDBY`（待机）模式，关闭所有输出。无需设置 `WAKE_ON_GPIO`，按下 [专用电源按钮](#电源按钮) 即可启动设备。
 
 默认值：自 CM5 起，计算模块和键盘型号为 `1`；否则为 `0`。
+
+#### WAIT_FOR_POWER_BUTTON
+
+仅限 Raspberry Pi 5 之后的旗舰型号。
+
+如果该属性和 `POWER_OFF_ON_HALT` 都设置为 `1`，那么引导加载程序将立即断电，并在电源移除后第一次启动时等待按下电源键。这意味着系统不会在断电后立即启动，而是等待按下电源按钮。
+
+默认值：`0`
 
 #### BOOT_ORDER
 `BOOT_ORDER` 设置允许灵活配置不同启动模式的优先级。它表示为一个32位无符号整数，其中每个位代表一种启动模式。启动模式按从最低有效位到最高有效位的顺序尝试。
@@ -1803,6 +1806,18 @@ sudo -E rpi-eeprom-config --edit
 #### SD_BOOT_MAX_RETRIES
 SD 启动失败后，在转到 `BOOT_ORDER` 定义的下一种启动模式前重试的次数。
 `-1`表示无限次重试。
+
+默认值：`0`
+
+#### SD_QURIKS
+
+`SD_QUIRKS` 属性提供了一组选项，用于支持设备调用和解决互操作性问题。
+
+这些标志以位字段的形式实现。未定义的位保留供将来使用，并应设置为零。
+
+| 值 | 行为 |
+| -- | -- |
+| 0x1 | 禁用 SD 高速模式。卡时钟频率限制为 12.5 MHz |
 
 默认值：`0`
 
@@ -2042,11 +2057,30 @@ NETCONSOLE=6665@169.254.1.1/,6666@/
 #### PARTITION
 如果重启命令（如 `sudo reboot N`）或 `autoboot.txt` 中的 `boot_partition=N` 未明确设置引导分区号，则可使用 `PARTITION` 选项指定引导分区号。如果用户按下按钮，该选项可用于从应急分区启动。
 
+最新固件还允许覆盖高分区号（> 31）。这允许对系统硬件看门狗进行自定义设置，以特殊的高分区号（如 62）触发重启，引导加载程序可检测到该分区号（使用条件过滤器）并重新映射到恢复分区。
+
+例如
+```ini
+# 系统看门狗已启动 - 使用附加选项启动救援分区
+# 禁用 SD 高速模式并立即启用 HDMI 诊断。
+[partition=62]
+PARTITION=2
+HDMI_DELAY=0
+SD_QUIRKS=1
 ```
+
+```ini
 # 如果GPIO7拉低，则从分区2启动
 [gpio7=0]
 PARTITION=2
 ```
+
+默认值：`0`
+
+#### PARTITION_WALK
+此属性旨在提高使用 `autoboot.txt` 的 `A/B` 启动方案的可靠性，方法是在指定分区似乎不可启动时搜索可启动分区。如果 `PARTITION_WALK=1`，且所请求的分区不可启动且没有有效的 `autoboot.txt`，那么引导加载程序将依次检查每个分区（最多 8 个），看其是否可启动（在 Pi4 上包含 `start4.elf`，或在 Pi 5 或更新版本上包含 `config.txt` 和合适的设备树）。
+
+在 `分区行走` 过程中，不会处理 `autoboot.txt` 文件，以避免循环依赖。假定请求的启动分区已失败，系统正在尝试恢复。
 
 默认值：`0`
 
@@ -2911,6 +2945,7 @@ vcgencmd otp_dump
       - 1 - 无 EMMC（精简版）
   - 树莓派400
     - 第 0-7 位：[piwiz](https://github.com/raspberrypi-ui/piwiz) 使用的默认键盘国家代码
+- `35` - 64 位序列号的高 32 位
 - `36-43` - [客户 OTP 值](#树莓派的工业用途)
 - `45` - MPG2 解码键
 - `46`- WVC1 解码密钥

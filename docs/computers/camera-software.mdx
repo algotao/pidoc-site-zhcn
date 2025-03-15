@@ -5,7 +5,7 @@ title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照�
 description: 树莓派摄像头系列工具介绍。通过libcamera及rpicam系列工具实现拍照、延时摄影、记录视频。使用opencv进行人脸检测等后期处理。使用Tensor Flow Lite进行分类识别。使用Gstreamer与rpicam-vid组成网络传输视频流。
 keywords: [树莓派, Raspberry Pi, 摄像头, 相机, 摄像头模块, camera, 摄像头软件, libcamera, rpicam, opencv, tensor flow lite]
 last_update: 
-  date: 2024-12-20
+  date: 2025-03-15
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -28,10 +28,14 @@ Raspberry Pi 生产多种官方摄像头模块，包括
 
 首先，[安装摄像头模块](../accessories/camera.mdx#安装树莓派摄像头)。然后，按照本节中的指南使用你的摄像头模块。
 
+:::warning
+本指南不再涵盖在 Bullseye 和早期 Raspberry Pi OS 版本中可用的*传统相机栈*。传统的相机栈使用 `raspivid`、`raspistill` 等应用程序和原始的 `Picamera`（*而不是* `Picamera2`）Python 库，多年来已被弃用，现在已不再支持。如果您使用的是传统的相机栈，它将只支持 摄像头模块 1、摄像头模块 2 和 高质量摄像头，而不会支持任何更新的相机模块。
+:::
+
 ## rpicam-apps
 
 :::tip[提示]
-Raspberry Pi OS *Bookworm* 将摄像头捕捉应用程序从 `libcamera-\*` 更名为 `rpicam-*`。符号链接允许用户暂时使用旧名称。** 尽快采用新的应用程序名称。** *Bookworm*之前的 Raspberry Pi OS 版本仍使用 `libcamera-*` 名称。
+Raspberry Pi OS *Bookworm* 将摄像头捕捉应用程序从 `libcamera-\*` 更名为 `rpicam-*`。符号链接允许用户暂时使用旧名称。**尽快采用新的应用程序名称**。 *Bookworm*之前的 Raspberry Pi OS 版本仍使用 `libcamera-*` 名称。
 :::
 
 Raspberry Pi 提供了一小套示例 `rpicam-apps`。这些建立在 `libcamera` 基础上的 CLI 应用程序可以从摄像头捕捉图像和视频。这些应用程序包括
@@ -347,17 +351,28 @@ ffmpeg -r 10 -f image2 -pattern_type glob -i 'timelapse/*.jpg' -s 1280x720 -vcod
 rpicam-vid -t 10s -o test.h264
 ```
 
-您可以用 VLC 和其他视频播放器播放生成的文件：
+您可以用 ffplay 和其他视频播放器播放生成的文件：
 
 ```sh
-$ vlc test.h264
+ffplay test.h264
 ```
+
+:::warning
+旧版本的 vlc 可以正确播放 H.264 文件，但最近的版本却不行，只能显示几帧，甚至可能是乱码。您应使用不同的媒体播放器，或将文件保存为更广泛支持的容器格式，如 MP4（见下文）。
+:::
 
 在 Raspberry Pi 5 上，您可以为输出文件指定 `mp4` 文件扩展名，直接输出为 MP4 容器格式：
 
 ```sh
 rpicam-vid -t 10s -o test.mp4
 ```
+
+在 Raspberry Pi 4 或更早的型号上，你可以用下面命令保存为 MP4 文件：
+
+```sh
+rpicam-vid -t 10s --codec libav -o test.mp4
+```
+
 
 #### 编码器
 
@@ -405,6 +420,14 @@ rpicam-vid --level 4.2 --framerate 120 --width 1280 --height 720 --save-pts time
 ```sh
 rpicam-vid --codec libav --libav-format avi --libav-audio --output example.avi
 ```
+
+#### 在 Pi 5 实现低延迟视频
+
+Pi 5 使用软件视频编码器。与旧式硬件编码器相比，这些编码器输出帧的延迟时间通常较长，这有时会成为实时流媒体应用的一个问题。
+
+在这种情况下，请在 `rpicam-vid` 命令中添加 `--low-latency` 选项。这将改变某些编码器选项，以更快地输出编码帧。
+
+这样做的缺点是编码效率会（略微）降低，处理器多核的使用效率也可能（略微）降低。可编码的最大帧频可能会略有降低（但仍能轻松达到 1080p30）。
 
 ### rpicam-raw
 
@@ -468,6 +491,8 @@ Raspberry Pi OS 可在 `/boot/firmware/config.txt` 中识别以下覆盖层。
 
 要使用这些覆盖层之一，必须禁用摄像头自动检测功能。要禁用自动检测，请在 `/boot/firmware/config.txt` 中设置 `camera_auto_detect=0`。如果 `config.txt` 中已经有一行指定了 `camera_auto_detect` 值，请将该值改为 `0`。使用 `sudo reboot` 重启 Raspberry Pi，加载所作更改。
 
+如果您的 Raspberry Pi 有两个摄像头连接器（例如 Raspberry Pi 5 或其中一个计算模块），那么您可以通过在上表中使用的 `dtoverlay` 中添加 `,cam0` 或 `,cam1`（不要添加任何空格）来指定您所指的是哪一个。如果不添加其中任何一个，它将默认检查摄像头连接器 1 (`cam1`)。但请注意，对于正式的 Raspberry Pi 摄像头模块，自动检测将正确识别连接到设备的所有摄像头。
+
 #### 使用调谐文件调整摄像头行为
 
 Raspberry Pi 的 `libcamera` 实现为每个摄像头都包含一个**调谐文件**。该文件控制算法和硬件，以生成最佳图像质量。`libcamera` 只能确定使用的传感器，而不能确定模块。因此，某些模块需要覆盖调校文件。[`tuning-file`](#tuning-file) 选项指定覆盖。您也可以复制和更改现有的调谐文件来定制摄像机的行为。
@@ -495,8 +520,64 @@ Raspberry Pi 5 之前的 Raspberry Pi 型号使用不同的调谐文件。在这
 要列出平台上所有可用的摄像头，请使用 [`list-cameras`](#list-cameras) 选项。要选择使用哪台摄像机，请向 [`camera`](#camera) 选项传递所请求摄像机的索引值。
 
 :::tip[注意]
-`libcamera` 尚不支持立体摄像机。同时运行两台摄像机时，它们必须在不同的进程中运行。这意味着无法在它们之间同步传感器取景或 3A 操作。 作为一种变通方法，您可以通过 HQ (IMX477) 摄像机的外部同步信号来同步摄像机，并在必要时将 3A 切换为手动模式。
+`libcamera` 尚不支持立体摄像机。同时运行两台摄像机时，它们必须在不同的进程中运行，这意味着无法在它们之间同步 3A 操作。 作为一种变通方法，您可以通过 HQ (IMX477) 摄像机的外部同步信号来同步摄像机，或者使用下面介绍的软件摄像机同步支持，必要时将 3A 切换为手动模式。
 :::
+
+
+### 软件摄像头同步
+
+Raspberry Pi 的 `libcamera` 实现能够仅使用软件同步不同摄像头的帧。这将使一个摄像头调整其帧计时，以便尽可能与另一个摄像头的帧同步。无需焊接或硬件连接，它可以与 Raspberry Pi 的所有摄像头模块配合使用，甚至可以与第三方模块配合使用，只要它们的驱动程序能正确实现帧时长控制。
+
+**工作原理**
+
+该方案的工作原理是指定一台摄像头作为_服务器。服务器将定时（如每秒一次）向网络广播定时信息。与此同时，其他被称为*客户机*的摄像头可以收听到这些信息，从而稍微延长或缩短帧时间，使其与服务器同步。这个过程是持续进行的，不过在第一次调整之后，后续的调整通常都很小。
+
+客户端摄像头可以连接到与服务器相同的 Raspberry Pi 设备上，也可以连接到同一网络上的不同 Raspberry Pi 上。客户端的摄像头型号可能与服务器一致，也可能不同。
+
+客户端和服务器需要以相同的标称帧率（如 30fps）运行。请注意，客户端与服务器之间没有后向通道。完全由客户端负责及时启动和运行，以与服务器保持一致，服务器完全不知道客户端是否已成功同步，或者是否存在任何客户端。
+
+在正常运行情况下，在同一台 Raspberry Pi 上运行同一型号的摄像头，我们希望摄像头图像的帧开始时间能在 "几十微秒 "内匹配。当摄像机型号不同时，这个范围可能会大得多，因为摄像机的帧频可能无法完全匹配，因此会不断偏离（每一条定时信息都会使其重合）。
+
+当摄像机安装在不同的设备上时，应使用 NTP（Raspberry Pi OS 默认情况下通常使用 NTP）来同步系统时钟，如果不够精确，也可以使用 PTP 等其他协议。系统时钟之间的任何差异都会直接导致帧开始时间的额外误差，尽管帧上的广告时间戳不会告诉你。
+
+**服务器**
+
+如前所述，服务器向网络广播定时信息，默认情况下每秒一次。服务器将运行固定帧数（默认为 100 帧），然后通知设备上的摄像机应用程序已达到 **同步点**。此时，应用程序将开始使用帧，因此在使用 `rpicam-vid` 的情况下，将开始对帧进行编码和记录。请注意，客户端的行为甚至存在与此无关。
+
+如果需要，同一网络上可以有多个服务器，只要它们向不同的网络地址广播定时信息即可。当然，客户端必须配置为监听正确的地址。
+
+**客户端**
+
+客户端会侦听服务器的定时信息，收到信息后会按要求缩短或延长摄像机帧的持续时间，以便后续帧尽可能与服务器帧在同一时刻开始。
+
+客户端从服务器的信息中了解到正确的 **同步点**，并像服务器一样，在同一时刻向摄像机应用程序发出信号，提示它开始使用帧。因此，在使用 `rpicam-vid` 的情况下，这也是开始记录帧的时刻。
+
+通常情况下，先于服务器启动客户端是合理的，因为客户端只需等待（**同步点**尚未到达），直到看到服务器向网络广播。这显然可以避免服务器在所有客户端都启动之前就到达 **同步点** 的时间问题！
+
+**在 `rpicam-vid` 中的应用**
+
+我们可以使用软件摄像机同步与 `rpicam-vid` 来录制逐帧同步的视频。我们假设连接了两台摄像机，将摄像机 0 用作服务器，摄像机 1 用作客户端。`rpicam-vid` 默认为每秒 30 帧，可以按如下操作。
+
+首先，我们应该启动客户端：
+```sh
+rpicam-vid -n -t 20s --camera 1 --codec libav -o client.mp4 --sync client
+```
+
+注意 `-sync client` 参数。在**仅有**一次触发同步点后，录制 20 秒。如有必要，它会无限期等待第一条服务器信息。
+
+启动服务器：
+```sh
+rpicam-vid -n -t 20s --camera 0 --codec libav -o server.mp4 --sync server
+```
+
+这也将录制 20 秒，从到达同步点开始计时，然后开始录像。按照默认的同步设置（100 帧，30fps），这意味着客户端只需 3 秒钟多一点的时间就能完成同步。
+
+服务器的广播地址和端口、定时信息的频率以及等待客户端同步的帧数都可以在摄像机调整文件中更改。客户端只需注意广播地址，该地址应与服务器地址一致；其他信息将被忽略。更多信息请参阅 [Raspberry Pi 摄像机调谐指南](https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf)。
+
+在实际操作中，最后有几点需要注意：
+
+* 固定帧频必须低于摄像机可运行的最大帧频（在使用的摄像机模式下）。这是因为同步算法可能需要缩短摄像机帧，以便客户端能赶上服务器，如果服务器已经以最快速度运行，同步算法就会失败。
+* 虽然摄像机帧应正确同步，但在帧频较高或系统负载较大的情况下，客户端或服务器上的帧都有可能丢失。在这种情况下，帧时间戳会帮助应用程序找出发生了什么，不过通常更简单的方法是尽量避免丢帧--也许可以通过降低帧频、增加分配给摄像机队列的缓冲区数量（参见 [`--buffer-count`选项](#buffer-count)）或减少系统负载来避免。
 
 ### 安装 libcamera 和 rpicam-apps
 
@@ -516,66 +597,74 @@ Raspberry Pi 提供两个 `rpicam-apps` 软件包：
 
 ## 使用 rpicam-apps 通过网络串流视频
 
-本节介绍从 `rpicam-vid` 进行本机流式传输。您也可以使用 [`libav`](#libav-选项) 后端进行网络流式传输。
+本节介绍如何使用 `rpicam-vid` 通过网络传输视频流。虽然不使用 `libav` 也可以流式传输非常简单的格式，但对于大多数应用，我们建议使用 [`libav` 后端](#libav-与-rpicam-vid-的集成)。
 
 ### UDP
 
 要使用 Raspberry Pi 作为服务器通过 UDP 传输视频流，请使用以下命令，用客户端的 IP 地址或组播地址替换`<ip-addr>`占位符，用您希望用于流媒体传输的端口替换`<port>`占位符：
 
 ```sh
-rpicam-vid -t 0 --inline -o udp://<ip-addr>:<port>
+rpicam-vid -t 0 -n --inline -o udp://<ip-addr>:<port>
 ```
 
 要使用 Raspberry Pi 作为客户端查看通过 UDP 传输的视频流，请使用以下命令，将`<port>`占位符替换为您希望从其传输流的端口：
 
 ```sh
-vlc udp://@:<port> :demux=h264
+ffplay udp://@:<port> -fflags nobuffer -flags low_delay -framedrop
 ```
 
-或者，在客户端上使用以下命令，使用 `ffplay` 进行流式传输：
+如前所述，`vlc` 不再处理未封装的 H.264 流。
+
+事实上，对未封装 H.264 的支持通常很差，因此最好还是发送 MPEG-2 传输流。通过使用 `libav`，可以做到这一点：
 
 ```sh
-ffplay udp://<ip-addr-of-server>:<port> -fflags nobuffer -flags low_delay -framedrop
+rpicam-vid -t 0 -n --codec libav --libav-format mpegts -o udp://<ip-addr>:<port>
+```
+
+在这种情况下，我们也可以使用 `vlc` 成功播放数据流：
+
+```sh
+vlc udp://@:<port>
 ```
 
 ### TCP
 
-您还可以通过 TCP 传输视频流。将 Raspberry Pi 用作服务器：
+您还可以通过 TCP 传输视频流。和以前一样，我们可以通过网络发送未封装的 H.264 视频流。将 Raspberry Pi 用作服务器：
 
 ```sh
-rpicam-vid -t 0 --inline --listen -o tcp://0.0.0.0:<port>
+rpicam-vid -t 0 -n --inline --listen -o tcp://0.0.0.0:<port>
 ```
 
-要使用 Raspberry Pi 作为客户端查看通过 TCP 流传输的视频，请使用以下命令：
-
-```sh
-vlc tcp/h264://<ip-addr-of-server>:<port>
-```
-
-或者，在客户端上使用以下命令，以每秒 30 帧的速度使用 `ffplay` 进行流式传输：
+要使用 Raspberry Pi 作为客户端查看通过 TCP 传输的视频流，假设服务器以每秒 30 帧的速度运行，请使用以下命令：
 
 ```sh
 ffplay tcp://<ip-addr-of-server>:<port> -vf "setpts=N/30" -fflags nobuffer -flags low_delay -framedrop
 ```
 
-### RTSP
-
-要使用 VLC 通过 RTSP 以 Raspberry Pi 作为服务器串流视频，请使用以下命令：
+但与 UDP 示例一样，通常最好发送 MPEG-2 传输流，因为 MPEG-2 传输流通常支持得更好。为此，请使用
 
 ```sh
-rpicam-vid -t 0 --inline -o - | cvlc stream:///dev/stdin --sout '#rtp{sdp=rtsp://:8554/stream1}' :demux=h264
+rpicam-vid -t 0 -n --codec libav --libav-format mpegts -o tcp://0.0.0.0:<port>?listen=1
 ```
 
-要在 Raspberry Pi 5 上获得最佳性能，请使用以下命令，该命令会添加 libav 以强制使用 H264 格式：
+现在我们可以使用各种媒体播放器（包括`vlc`）回放这段视频：
 
 ```sh
-rpicam-vid -t 0 --inline --libav-format h264 -o - | cvlc stream:///dev/stdin --sout '#rtp{sdp=rtsp://:8554/stream1}' :demux=h264
+vlc tcp://<ip-addr-of-server>:<port>
+```
+
+### RTSP
+
+我们可以将 VLC 用作 RTSP 服务器，但必须向其发送 MPEG-2 传输流，因为它不再能理解未封装的 H.264：
+
+```sh
+rpicam-vid -t 0 -n --codec libav --libav-format mpegts -o - | cvlc stream:///dev/stdin --sout '#rtp{sdp=rtsp://:8554/stream1}'
 ```
 
 要使用 Raspberry Pi 作为客户端查看通过 RTSP 传输的视频流，请使用以下命令：
 
 ```sh
-ffplay rtsp://<ip-addr-of-server>:8554/stream1 -vf "setpts=N/30" -fflags nobuffer -flags low_delay -framedrop
+ffplay rtsp://<ip-addr-of-server>:8554/stream1 -fflags nobuffer -flags low_delay -framedrop
 ```
 
 或者，在客户端上使用以下命令使用 VLC 进行流式传输：
@@ -584,14 +673,14 @@ ffplay rtsp://<ip-addr-of-server>:8554/stream1 -vf "setpts=N/30" -fflags nobuffe
 vlc rtsp://<ip-addr-of-server>:8554/stream1
 ```
 
-要在服务器上抑制预览窗口，请使用 [`nopreview`](#nopreview)。
+如果想在服务器上看到预览窗口，只需去掉 `-n` 选项（请参阅 [`nopreview`](#nopreview)）。
 
-使用 [`inline`](#inline) 标志可强制在每帧内包含流标题信息，这有助于客户端在错过开头时理解流。
+### libav 和 音频
 
-### libav
+我们已经使用 `libav` 作为网络流媒体的后端。只要我们使用的格式（如 MPEG-2 传输流）允许音频数据，`libav` 就允许我们添加音频流。
 
-您可以将 `libav` 后端用作音频/视频的网络流媒体源。
-要使用 Raspberry Pi 作为服务器通过 TCP 串流视频，请使用以下命令，用客户端的 IP 地址或组播地址替换 `<ip-addr>` 占位符，用您希望用于串流的端口替换 `<port>` 占位符：
+我们可以使用之前的命令，比如通过 TCP 传输 MPEG-2 传输流的命令，然后简单地添加 `--libav-audio` 选项：
+
 
 ```sh
 rpicam-vid -t 0 --codec libav --libav-format mpegts --libav-audio -o "tcp://<ip-addr>:<port>?listen=1"
@@ -605,53 +694,107 @@ rpicam-vid -t 0 --codec libav --libav-format mpegts --libav-audio -o "udp://<ip-
 
 ### GStreamer
 
-[GStreamer](https://gstreamer.freedesktop.org/) 是一个用于读取、处理和播放多媒体文件的 Linux 框架。本节介绍如何使用 `rpicam-vid` 通过网络串流视频。
+[GStreamer](https://gstreamer.freedesktop.org/)是一个用于读取、处理和播放多媒体文件的 Linux 框架。我们还可以将其与 `rpicam-vid` 结合使用，进行网络流媒体播放。
 
-此设置使用 `rpicam-vid` 将已编码的 h.264 比特流输出到 stdout。然后，我们使用 GStreamer `fdsrc` 元素接收比特流，并使用额外的 GStreamer 元素通过网络发送比特流。在服务器上，运行以下命令启动流，用客户端的 IP 地址或组播地址替换占位符 `<ip-addr>`，用您希望用于流媒体的端口替换占位符 `<port>`：
+这个设置使用 `rpicam-vid` 将 H.264 比特流输出到 stdout，不过正如我们之前所做的那样，我们将把它封装到 MPEG-2 传输流中，以获得更好的下游兼容性。
 
-```sh
-rpicam-vid -t 0 -n --inline -o - | gst-launch-1.0 fdsrc fd=0 ! udpsink host=<ip-addr> port=<port>
-```
-
-在客户端上运行以下命令接收流媒体，用客户端的 IP 地址或组播地址替换 `<ip-addr>` 占位符，用希望用于流媒体的端口替换 `<port>` 占位符：
+然后，我们使用 GStreamer `fdsrc` 元素接收比特流，并使用额外的 GStreamer 元素通过网络发送比特流。在服务器上，运行以下命令启动流，将 `<ip-addr>` 占位符替换为客户端的 IP 地址或组播地址，并将 `<port>` 占位符替换为用于流媒体的端口：
 
 ```sh
-gst-launch-1.0 udpsrc address=<ip-addr> port=<port> ! h264parse ! v4l2h264dec ! autovideosink
+rpicam-vid -t 0 -n --codec libav --libav-format mpegts -o - | gst-launch-1.0 fdsrc fd=0 ! udpsink host=<ip-addr> port=<port>
 ```
+
+当然，我们可以使用任何东西（如 vlc）作为客户端，而播放效果最好的 GStreamer 客户端超出了本文档的范围。不过，我们注意到，以下流水线（有明显的替换）可以在 Pi 4 或更早的设备上运行：
+
+```sh
+gst-launch-1.0 udpsrc address=<ip-addr> port=<port> ! tsparse ! tsdemux ! h264parse ! queue ! v4l2h264dec ! autovideosink
+```
+
+对于 Pi 5，将 `v4l2h264dec` 替换为 `avdec_h264`。
 
 :::tip
 要测试此配置，请使用 `localhost` 作为地址，在同一设备上的不同终端运行服务器和客户端命令。
 :::
 
-#### RTP
-
-要使用 RTP 进行流式传输，请在服务器上运行以下命令，用客户端的 IP 地址或组播地址替换 `<ip-addr>`占位符，并用您希望用于流式传输的端口替换 `<port>` 占位符：
-
-```sh
-rpicam-vid -t 0 -n --inline -o - | gst-launch-1.0 fdsrc fd=0 ! h264parse ! rtph264pay ! udpsink host=<ip-addr> port=<port>
-```
-
-要通过 RTP 接收，请在客户端运行以下命令，将 `<ip-addr>` 占位符替换为客户端的 IP 地址或组播地址，并将 `<port>` 占位符替换为您希望用于流式传输的端口：
-
-```sh
-gst-launch-1.0 udpsrc address=<ip-addr> port=<port> caps=application/x-rtp ! rtph264depay ! h264parse ! v4l2h264dec ! autovideosink
-```
-
-如果客户端不是 Raspberry Pi，则可能有不同的 GStreamer 元素可用。在运行 Linux 的 x86 设备上，可以运行以下命令来代替：
-
-```sh
-gst-launch-1.0 udpsrc address=<ip-addr> port=<port> caps=application/x-rtp ! rtph264depay ! h264parse ! avdec_h264 ! autovideosink
-```
-
 #### libcamerasrc GStreamer 元素
 
-`libcamera` 提供了一个 `libcamerasrc` GStreamer 元素，可以直接使用它来代替 `rpicam-vid`。要使用该元素，请在服务器上运行以下命令，用客户端的 IP 地址或组播地址替换占位符 `<ip-addr>`，并用希望用于流媒体的端口替换占位符 `<port>`：
+`libcamera` 提供了一个 `libcamerasrc` 元素，可直接用于替代 `rpicam-vid`。要使用该元素，请在服务器上运行以下命令，用客户端的 IP 地址或组播地址替换 `<ip-addr>` 占位符，用希望用于流媒体的端口替换 `<port>` 占位符。在 Pi 4 或更早的设备上，请使用
 
 ```sh
-gst-launch-1.0 libcamerasrc ! capsfilter caps=video/x-raw,width=1280,height=720,format=NV12 ! v4l2convert ! v4l2h264enc extra-controls="controls,repeat_sequence_header=1" ! 'video/x-h264,level=(string)4.1' ! h264parse ! rtph264pay ! udpsink host=<ip-addr> port=<port>
+gst-launch-1.0 libcamerasrc ! capsfilter caps=video/x-raw,width=640,height=360,format=NV12,interlace-mode=progressive ! v4l2h264enc extra-controls="controls,repeat_sequence_header=1" ! 'video/x-h264,level=(string)4' ! h264parse ! mpegtsmux ! udpsink host=<ip-addr> port=<port>
 ```
 
-在客户端，我们使用与之前相同的播放管道。
+在 Pi 5 上，必须将 `v4l2h264enc extra-controls="controls,repeat_sequence_header=1"` 替换为 `x264enc speed-preset=1 threads=1`。
+
+在客户端，我们可以使用与上文相同的播放管道，或其他流媒体播放器。
+
+### WebRTC
+
+通过 WebRTC 进行流媒体传输（例如，传输到网络浏览器）最好使用第三方软件。例如，[MediaMTX](https://github.com/bluenviron/mediamtx)包含对 Raspberry Pi 摄像头的本地支持，使用起来非常方便。
+
+要安装该软件，请从 [release](https://github.com/bluenviron/mediamtx/releases)页面下载最新版本。Raspberry Pi OS 64 位用户需要 **linux_arm64v8** 压缩 tar 文件（结尾为`.tar.gz`）。解压后会得到一个 `mediamtx` 可执行文件和一个名为 `mediamtx.yml` 的配置文件。
+
+值得备份 `mediamtx.yml` 文件，因为它记录了许多 Raspberry Pi 摄像头选项，你以后可能要研究这些选项。
+
+要流式传输摄像头，请用以下内容替换 `mediamtx.yml` 中的内容：
+
+```yml
+paths:
+  cam:
+    source: rpiCamera
+```
+
+并启动 `mediamtx` 可执行文件。在浏览器的地址栏中输入 `http://<ip-addr>:8889/cam`。
+
+如果希望 MediaMTX 仅在请求流时才获取摄像机，请在之前的 `mediamtx.yml` 中添加以下一行：
+```yml
+    sourceOnDemand: yes
+```
+
+请查阅原始的 `mediamtx.yml` 以获取更多配置参数，这些参数可让您选择图像大小、摄像机模式、比特率等 - 只需搜索 `rpi`。
+
+### 使用 WebRTC 定制图像流
+
+如果只想流式传输摄像机图像，MediaMTX 是个不错的选择。但如果我们想添加一些额外的信息或叠加，或对图像进行一些额外的处理，该怎么办呢？
+
+在开始之前，请确保您已构建了包含 OpenCV 支持的 `rpicam-apps` 版本。请运行
+
+```sh
+rpicam-hello --post-process-file rpicam-apps/assets/annotate_cv.json
+```
+
+并查看图像顶部的覆盖文本信息。
+
+然后，将以下内容粘贴到 `mediamtx.yml` 文件中：
+
+```yml
+paths:
+  cam:
+    source: udp://127.0.0.1:1234
+```
+
+现在，启动 `mediamtx` ，然后，如果使用的是 Pi 5，在新的终端窗口中输入：
+
+```sh
+rpicam-vid -t 0 -n --codec libav --libav-video-codec-opts "profile=baseline" --libav-format mpegts -o udp://127.0.0.1:1234?pkt_size=1316 --post-process-file rpicam-apps/assets/annotate_cv.json
+```
+
+（在 Pi 4 或更早的设备上，请省略命令中的 `--libav-video-codec-opts "profile=baseline"` 部分。）
+
+在另一台电脑上，现在可以访问与之前相同的地址，即 `http://<ip-addr-of-pi>:8889/cam`。
+
+在 Pi 5 上指定 `baseline` 配置文件的原因是 MediaMTX 不支持 B 帧，因此我们需要阻止编码器生成 B 帧。在使用硬件编码器的早期设备上，从不生成 B 帧，因此不存在这个问题。在 Pi 5 上，你也可以去掉这个选项，代之以 `--low-latency`（低延迟），这样也能阻止 B 帧，并产生一个（压缩效果稍差）延迟更低的流。
+
+:::note
+如果你注意到视频流中偶尔出现停顿，这可能是因为 Pi 上的 UDP 接收缓冲区（从 `rpicam-vid` 向 MediaMTX 传输数据）太小。要永久增加缓冲区，请在 `/etc/sysctl.conf`文件中添加
+
+```ini
+net.core.rmem_default=1000000
+net.core.rmem_max=1000000
+```
+
+（并重新启动或运行 `sudo sysctl -p`）。
+:::
 
 ## rpicam-apps 选项参考
 
@@ -745,9 +888,19 @@ rpicam-hello --config example_configuration.txt
 
 默认值：5000 毫秒（5 秒）
 
-指定应用程序运行多长时间后关闭。这适用于视频录制和预览窗口。捕捉静态图像时，应用程序会在捕捉输出图像前显示预览窗口 `timeout` 毫秒。
+指定应用程序关闭前的运行时间。除非使用可选后缀更改单位，否则该值将被解释为毫秒数。后缀可以是
 
-要无限期运行应用程序，请指定`0`值。
+* `min` - 分钟
+* `s` 或 `sec` - 秒
+* `ms` - 毫秒（未使用后缀时为默认值）
+* `us` - 微秒
+* `ns` - 纳秒。
+
+该时间适用于视频录制和预览窗口。捕捉静态图像时，应用程序会在捕捉输出图像前显示预览窗口，时间长度由 `timeout` 参数指定。
+
+要无限期运行应用程序，请指定`0`值。也允许使用浮点数值。
+
+例如：`rpicam-hello -t 0.5min` 将运行 30 秒。
 
 #### preview
 
@@ -1163,6 +1316,14 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 后处理是一个大课题，需要使用 OpenCV 和 TensorFlowLite 等第三方软件来分析和处理图像。更多信息，请参阅 [后处理](#使用-rpicam-apps-做后处理)。 
 
+#### buffer-count
+
+为静态图像捕捉或视频录制分配的缓冲区数量。默认值 0 可为每个应用程序根据自己的使用情况选择合理的数量（静态图像捕捉为 1，视频录制为 6），。增加该数目有时有助于减少掉帧次数，尤其是在较高帧频下。
+
+#### viewfinder-buffer-count
+
+与 `buffer-count` 选项相同，但适用于在预览模式下运行（即 `rpicam-hello` 或 `rpicam-still` 的预览阶段，而非捕捉阶段）。
+
 ### 图像选项
 
 本节中指定的命令行选项仅适用于静态图像输出。
@@ -1421,6 +1582,14 @@ mkvmerge -o test.mkv --timecodes 0:timestamps.txt test.h264
 #### framerate
 
 精确记录指定帧频。接受一个非零整数。 
+
+#### low-latency
+
+在 Pi 5 上，`--low-latency` 选项将减少编码延迟，这可能有利于实时流媒体应用，但代价是（略微）降低编码效率（例如，将不再使用 B 帧和算术编码）。
+
+#### sync
+
+在软件同步模式下运行摄像机，即多台摄像机将帧同步到同一时刻。同步模式可设置为 `client`（客户端） 或 `server`（服务端）。有关详细信息，请参阅 [软件同步工作原理](#软件摄像头同步)的详细说明。
 
 ### libav 选项
 

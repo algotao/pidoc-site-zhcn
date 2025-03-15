@@ -5,7 +5,7 @@ title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解(官网2
 description: 树莓派config.txt是树莓派OS在启动期间访问的配置文件，其作用可理解为类似BIOS中的配置，用于控制启动期间各项软硬件的行为。功能有：指定启动分区号、AB启动分区切换、故障安全操作系统升级、dtoverlay覆盖层设置。多种启动模式：SD卡启动，网络启动，USB启动，GPIO启动。超频：ARM核心超频、GPU核心超频、内存超频。
 keywords: [树莓派, Raspberry Pi, config.txt, boot分区, tryboot, SD卡启动, GPIO启动, 网络启动, USB启动, 超频, 许可证密钥]
 last_update: 
-  date: 2024-12-21
+  date: 2025-03-15
 ---
 import Normal from "../_normal.mdx";
 
@@ -714,6 +714,31 @@ vcgencmd pmic_read_adc EXT5V_V
 
 ### [none]过滤器
 `[none]`（无）过滤器可防止任何设置应用于任何硬件。虽然没有`[none]`也没有什么不可以，但它是一种有用的方法，可以在 config.txt 中保留一组未使用的设置，而不必注释掉每一行。
+
+### [partition=N]过滤器
+该 `partition` 过滤器可用于根据请求的分区号（`sudo reboot N`）或通过直接使用 `PM_RSTS` 看门狗寄存器来选择备用启动流。
+
+```ini
+# 引导加载程序 EEPROM 配置。
+# 如果 PM_RSTS 为分区 62，则设置引导加载器属性以禁用
+# 标清高速并显示 HDMI 诊断
+# 使用调试选项从分区 2 启动。
+[partition=62]
+# 只有高分区（>31）可以重新映射。
+PARTITION=2
+SD_QUIRKS=0x1
+HDMI_DELAY=0
+```
+
+示例 `config.txt` - （目前使用 Raspberry Pi 5 以上版本）
+```ini
+# config.txt - 如果 PM_RSTS 中最初请求的分区编号是
+# 特殊编号，则使用备用 cmdline.txt
+[partition=62]
+cmdline=cmdline-recovery.txt
+```
+
+启动时 `PM_RSTS` 寄存器的原始值可通过 `/proc/device-tree/chosen/bootloader/rsts` 获取，启动时使用的最终分区号可通过 `/proc/device-tree/chosen/bootloader/partition` 获取。这些都是大端（big-endian）二进制值。
 
 ### [tryboot]过滤器
 如果设置了 `tryboot` 重启标志，该过滤器就会成功。

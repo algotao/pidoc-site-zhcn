@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解(官网25年2月)
 description: 树莓派系统配置介绍，以图示的方式介绍使用raspi-config工具配置有线网络、配置无线WiFi网络、配置热点、设置代理服务器、设置显示器的分辨率及方向。挂载外部USB存贮设备，更改默认引脚设置，配置UART。LED警告闪烁代码的含义。增加或删除用户，安装防火墙等。
 keywords: [树莓派, Raspberry Pi, 系统配置, raspi-config, LAN, WiFI, 无线, 代理服务器, UART, LED, 闪烁]
 last_update: 
-  date: 2025-02-22
+  date: 2025-03-15
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -2691,6 +2691,8 @@ ALSA 不会阻止其编解码器和其他组件在使用中被卸载。如果删
 `rpi-country-code` - 32 位整数。[PiWiz](https://github.com/raspberrypi-ui/piwiz) 使用的国家代码，仅限键盘型号。
 
 `rpi-duid` - 字符串。仅限树莓派5。PCB 上 QR 码的字符串表示。
+
+`rpi-serial64` - 字符串。64 位序列号的字符串表示。在 Raspberry Pi 5 之后的旗舰型号上，这与普通序列号（`/proc/device-tree/serial-number`）相同。在早期型号上，默认序列号仍然是 32 位，但在更新的固件中，现在可以使用 64 位序列号，并可通过此节点查看。
 
 #### 常用引导加载器属性/chosen/bootloader
 
