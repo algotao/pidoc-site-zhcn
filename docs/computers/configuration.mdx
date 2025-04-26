@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解(官网25年2月)
 description: 树莓派系统配置介绍，以图示的方式介绍使用raspi-config工具配置有线网络、配置无线WiFi网络、配置热点、设置代理服务器、设置显示器的分辨率及方向。挂载外部USB存贮设备，更改默认引脚设置，配置UART。LED警告闪烁代码的含义。增加或删除用户，安装防火墙等。
 keywords: [树莓派, Raspberry Pi, 系统配置, raspi-config, LAN, WiFI, 无线, 代理服务器, UART, LED, 闪烁]
 last_update: 
-  date: 2025-03-15
+  date: 2025-04-26
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -1298,10 +1298,10 @@ video=HDMI-A-1:1920x1080M@60,rotate=90,reflect_x`
 
 以 `sudo` 为前缀的命令以超级用户身份运行。默认情况下，超级用户不需要密码。不过，您可以要求所有以 `sudo` 运行的命令都输入密码，从而提高 Raspberry Pi 的安全性。
 
-要强制 `sudo` 要求输入密码，请为你的用户账户编辑 `nopasswd sudoers` 文件，用你的用户名替换文件名中的 `<username>` 占位符：
+要强制 `sudo` 要求输入密码，编辑 `010_pi-nopasswd` sudoers 文件：
 
 ```sh
-sudo visudo /etc/sudoers.d/010_<username>-nopasswd
+sudo visudo /etc/sudoers.d/010_pi-nopasswd
 ```
 
 将 `<username>` 项更改为以下内容，用您的用户名替换 `<username> `：

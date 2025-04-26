@@ -5,7 +5,7 @@ title_meta: 使用树莓派 AI 人工智能神经网络加速器运行摄像头�
 description: 本指南将帮助您在 Raspberry Pi 5 上安装 Hailo NPU。这将使您能够使用人工智能神经网络加速器运行 `rpicam-apps` 摄像头演示。
 keywords: [树莓派, AI软件, AI Software]
 last_update: 
-  date: 2024-12-20
+  date: 2025-04-26
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -179,6 +179,19 @@ sudo apt-mark unhold hailo-tappas-core hailort hailo-dkms
 2. 安装所需的软件包版本：
 
 <Tabs>
+<TabItem value="419" label="4.1">
+
+要安装 4.19 版 Hailo 神经网络工具，请运行以下命令：
+
+```sh
+sudo apt install hailo-tappas-core=3.30.0-1 hailort=4.19.0-3 hailo-dkms=4.19.0-1 python3-hailort=4.19.0-2
+```
+
+```sh
+sudo apt-mark hold hailo-tappas-core hailort hailo-dkms python3-hailort
+```
+</TabItem>
+
 <TabItem value="418" label="4.18">
 
 要安装 4.18 版 Hailo 神经网络工具，请运行以下命令：

@@ -8,7 +8,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Raspberry Pi 树莓派 (官网25年2月更新)',
+  title: 'Raspberry Pi 树莓派 (官网25年4月更新)',
   tagline: '中文版文档',
   favicon: 'img/pi.svg',
 

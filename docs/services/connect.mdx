@@ -4,7 +4,7 @@ draft: false
 description: 通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的 Raspberry Pi。要使用 Connect，请在 Raspberry Pi 上安装 Connect 软件。然后访问 connect.raspberrypi.com，在浏览器窗口中通过屏幕共享访问你的 Raspberry Pi。您可以像将显示器插入 Raspberry Pi 一样使用桌面。
 keywords: [树莓派, Raspberry Pi, Connect, 远程登录]
 last_update: 
-  date: 2025-02-22
+  date: 2025-04-26
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -345,6 +345,8 @@ sudo apt remove --purge rpi-connect
 
 * 浏览器会拦截某些按键和按键组合。因此，您无法在 Connect 窗口中输入这些按键。Connect 提供了一个工具栏来模拟一些最常用的拦截键。
 
+* 不支持使用 Connect 的远程 shell 升级 `rpi-connect` 和 `rpi-connect-lite` 。升级过程将终止所有远程 shell 会话并放弃所有连接。要在远程 shell 会话中升级 Connect，请使用 `screen` 或 `tmux` 等工具，以确保连接关闭后升级过程不会中断。
+
 * 要从版本 1 升级到版本 2，必须先升级当前安装的软件包，然后再在 `rpi-connect` 和 `rpi-connect-lite` 之间切换。这将确保 Connect 服务正确迁移到版本 2 格式。如果您当前安装了 `rpi-connect`，请运行以下命令：
 
 ```sh
@@ -381,6 +383,7 @@ rpi-connect doctor
 Screen sharing is supported by this version of rpi-connect（此版本的 rpi-connect 支持屏幕共享）
 ✓ Wayland compositor available （Wayland 合成器可用）
 ✓ Screen sharing services enabled and active （屏幕共享服务已启用并处于活动状态）
+✓ Communication with Raspberry Pi Connect WebSocket server （与 Raspberry Pi Connect WebSocket 服务器通信）
 ✓ Communication with Raspberry Pi Connect API （与 Raspberry Pi Connect API 通信）
 ✓ Authentication with Raspberry Pi Connect API （使用 Raspberry Pi Connect API 进行身份验证）
 ✓ Peer-to-peer connection candidate via STUN （通过 STUN 候选点对点连接）
@@ -393,6 +396,7 @@ Screen sharing is supported by this version of rpi-connect（此版本的 rpi-co
 Screen sharing is supported by this version of rpi-connect （此版本的 rpi-connect 支持屏幕共享）
 ✓ Wayland compositor available （可用的 Wayland 合成器）
 ✗ Screen sharing services enabled and active - Please run rpi-connect on to enable and start all required services （屏幕共享服务已启用并处于活动状态 - 请运行 rpi-connect 以启用并启动所有必需的服务）
+✓ Communication with Raspberry Pi Connect WebSocket server （与 Raspberry Pi Connect WebSocket 服务器通信）
 ✓ Communication with Raspberry Pi Connect API （与 Raspberry Pi Connect API 通信）
 ✓ Authentication with Raspberry Pi Connect API （使用 Raspberry Pi Connect API 进行身份验证）
 ✓ Peer-to-peer connection candidate via STUN （通过 STUN 候选点对点连接）
@@ -438,6 +442,7 @@ rpi-connect doctor
 Screen sharing is supported by this version of rpi-connect
 ✓ Wayland compositor available
 ✓ Screen sharing services enabled and active
+✓ Communication with Raspberry Pi Connect WebSocket server
 ✓ Communication with Raspberry Pi Connect API
 ✓ Authentication with Raspberry Pi Connect API
 ✓ Peer-to-peer connection candidate via STUN
@@ -446,7 +451,7 @@ Screen sharing is supported by this version of rpi-connect
 
 如果 Connect 无法在您的网络上正常通信，您会在失败的测试用例旁边看到一个 “x” 而不是复选框。请您的网络管理员在您的网络上启用以下连接：
 
-* 通过 `api.connect.raspberrypi.com` 的 443 端口向 Raspberry Pi Connect API 发送 HTTPS 请求
+* 通过 `api.connect.raspberrypi.com` 与 `ws.connect.raspberrypi.com` 的 443 端口向 Raspberry Pi Connect API 与 WebSocket 服务 发送 HTTPS 请求
 * 通过以下所有 UDP 端口 3478 向 Raspberry Pi Connect STUN 或 TURN 服务器发出请求：
   * `stun.raspberrypi.com`
   * `turn1.raspberrypi.com`
@@ -473,6 +478,7 @@ rpi-connect status
 
 ```
 Signed in: yes
+Subscribed to events: yes
 Screen sharing: allowed (0 sessions active)
 Remote shell: allowed (0 sessions active)
 ```

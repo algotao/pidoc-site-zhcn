@@ -5,7 +5,7 @@ title_meta: 在树莓派计算模块(CM)进行烧录、连接与启用外设(官
 description: 提供树莓派计算模块(Compute Module)数据表及原理图。介绍烧录eMMC的步骤，连接和启用外设，连接和启动摄像头，连接官方7英寸触摸显示屏。
 keywords: [树莓派, Raspberry Pi, 计算模块, Compute Module, CM1, CM2, CM3, CM4]
 last_update: 
-  date: 2025-01-10
+  date: 2025-04-26
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -667,13 +667,8 @@ dtoverlay=enc28j60
 
 使用 `sudo reboot` 重新启动。
 
-现在你应该能在 `/dev`中看到一个 `rtc0` 条目。运行以下命令查看硬件时钟时间：
+如果现在运行 `ifconfig`，您应该会看到 ENC28J60 网卡的附加 `eth<n>` 条目。您也应该可以连接以太网。运行以下命令测试连接性：
 
-```sh
-sudo hwclock
-```
-
-您还应该有以太网连接。运行以下命令测试连接性：
 
 ```sh
 ping 8.8.8.8

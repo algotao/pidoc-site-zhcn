@@ -5,7 +5,7 @@ title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解(官网2
 description: 树莓派config.txt是树莓派OS在启动期间访问的配置文件，其作用可理解为类似BIOS中的配置，用于控制启动期间各项软硬件的行为。功能有：指定启动分区号、AB启动分区切换、故障安全操作系统升级、dtoverlay覆盖层设置。多种启动模式：SD卡启动，网络启动，USB启动，GPIO启动。超频：ARM核心超频、GPU核心超频、内存超频。
 keywords: [树莓派, Raspberry Pi, config.txt, boot分区, tryboot, SD卡启动, GPIO启动, 网络启动, USB启动, 超频, 许可证密钥]
 last_update: 
-  date: 2025-03-15
+  date: 2025-04-26
 ---
 import Normal from "../_normal.mdx";
 
@@ -561,6 +561,7 @@ gpio=17-21=ip
 | over_voltage_delta | 在 树莓派4和树莓派5上，over_voltage_delta 参数会在 DVFS 算法计算出的数值上添加以微伏为单位的偏移量。 |
 | temp_limit | 过热保护。当 SoC 达到该值（摄氏度）时，该参数会将时钟和电压设置为默认值。超过 85 的值将被箝位在 85。 |
 | temp_soft_limit | **仅限 3A+/3B+**。CPU 速度节流控制。该值用于设置 CPU 时钟速度节流系统启动时的温度。在此温度下，时钟速度将从 1400MHz 降至 1200MHz。默认值为 `60`，最大可升至 `70`，但可能导致不稳定。 |
+| core_freq_fixed | 设置为 1 将禁用内核时钟频率的主动缩放，确保使用内核时钟的外设保持一致的速度。固定时钟速度是所用平台的较高/turbo频率。与设置特定的 core_clock 频率相比，使用该频率可提供不同平台间配置文件的可移植性。 |
 
 本表给出了不同型号树莓派上各选项的默认值，所有频率均以 MHz 为单位。
 | 选项 | Pi0/W | Pi1 | Pi2 | Pi3 | Pi3A+<br />Pi3B+ | CM4&Pi4B<br />⇐ R1.3 | Pi4B R1.4 | Pi400 | Pi Zero 2W | Pi5 |
