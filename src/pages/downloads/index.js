@@ -12,7 +12,7 @@ const DownloadConfig = {
   rpios: '/img/downloads/rpi_os_bg.svg',
   rpiimager: '/img/downloads/rpi_imager.png',
   rpimanually: '/img/downloads/rpi_manually.svg',
-  rpidesktop: '/img/downloads/rpi_desktop.png',
+  rpiubuntu: '/img/downloads/ubuntu.jpg',
   header_text: "Raspberry Pi OS 下载",
   header_content: '您的 Raspberry Pi 需要一个操作系统才能工作。这就是它。Raspberry Pi OS（以前称为 Raspbian）是我们官方支持的操作系统。',
   imager_text: "使用 Raspberry Pi Imager 安装树莓派操作系统",
@@ -20,8 +20,8 @@ const DownloadConfig = {
   imager_content2: '将 Raspberry Pi Imager 下载并安装到带有 SD 卡阅读器的电脑上。将与 Raspberry Pi 一起使用的 SD 卡放入读卡器，然后运行 Raspberry Pi Imager。',
   manually_text: "手动安装树莓派操作系统",
   manually_content: '如果您不想使用 Raspberry Pi Imager，您可以手动安装树莓派操作系统。请参阅我们的安装指南。',
-  desktop_text: "适用于 PC 和 Mac 的 Raspberry Pi 桌面",
-  desktop_content: 'Debian with Raspberry Pi Desktop 是我们的 PC 和 Mac 操作系统。它为任何 PC 或苹果 Mac 电脑提供 Raspberry Pi OS 桌面以及 Raspberry Pi OS 附带的大多数推荐软件。',
+  ubuntu_text: "适用于 Raspberry Pi 的 Ubuntu 操作系统",
+  ubuntu_content: 'Raspberry Pi 支持 Ubuntu，开源开发人员可以快速、安全地启动和运行 Raspberry Pi。',
   imager_url: [
     { os: "Windows", downloadurl: "https://dl.pidoc.cn/imager/imager_1.8.5.exe", title: "下载Windows版", showButton: false, },
     { os: "MacOS", downloadurl: "https://dl.pidoc.cn/imager/imager_1.8.5.dmg", title: "下载macOS版", showButton: false, },
@@ -30,8 +30,8 @@ const DownloadConfig = {
   manually_url: [
     { os: "All", downloadurl: "/downloads/operating-systems/", title: "查看所有下载选项", showButton: true, },
   ],
-  desktop_url: [
-    { os: "All", downloadurl: "/downloads/operating-systems/#raspberry-pi-desktop", title: "下载选项Raspberry Pi Desktop", showButton: true, },
+  ubuntu_url: [
+    { os: "All", downloadurl: "/downloads/ubuntu/", title: "下载适用于 Raspberry Pi 的 Ubuntu", showButton: true, },
   ],
 }
 
@@ -164,19 +164,19 @@ function Manually() {
   );
 }
 
-function Desktop() {
+function Ubuntu() {
   return (
     <header className={clsx('hero')}>
       <div className="row">
         <div className="col col--6">
           <Heading as="h2" className={clsx('hero__heading')}>
-            {DownloadConfig.desktop_text}
+            {DownloadConfig.ubuntu_text}
           </Heading>
-          <p className={clsx("hero__context", styles.all_content)}>&emsp;&emsp;{DownloadConfig.desktop_content}</p>
-          <Downloads urls={DownloadConfig.desktop_url} />
+          <p className={clsx("hero__context", styles.all_content)}>&emsp;&emsp;{DownloadConfig.ubuntu_content}</p>
+          <Downloads urls={DownloadConfig.ubuntu_url} />
         </div>
         <div className="col col--6" align="center">
-          <div><img src={DownloadConfig.rpidesktop} width="419" /></div>
+          <div><img src={DownloadConfig.rpiubuntu} width="419" /></div>
         </div>
       </div>
     </header >
@@ -193,7 +193,7 @@ export default function Home() {
         <SoftwareHeader />
         <Imager />
         <Manually />
-        <Desktop />
+        <Ubuntu />
       </div>
     </Layout>
   );

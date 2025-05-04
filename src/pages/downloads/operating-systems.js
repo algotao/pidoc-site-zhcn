@@ -33,6 +33,7 @@ const OSConfig = {
                 { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
                 { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
                 { name: "5", url: "https://www.raspberrypi.com/products/raspberry-pi-5/" },
+                { name: "500", url: "https://www.raspberrypi.com/products/raspberry-pi-500/" },
                 { name: "CM3", url: "https://www.raspberrypi.com/products/compute-module-io-board-v3/" },
                 { name: "CM3+", url: "https://www.raspberrypi.com/products/compute-module-3-plus/" },
                 { name: "CM4", url: "https://www.raspberrypi.com/products/compute-module-4/" },
