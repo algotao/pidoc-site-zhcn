@@ -47,7 +47,7 @@ const config = {
         blog: { showReadingTime: true },
         pages: { exclude: ['/imager/**', '**/dl/**'] },
         theme: { customCss: './src/css/custom.css' },
-        sitemap: { lastmod: 'date' },
+        sitemap: { lastmod: 'date', ignorePatterns: ['/blog/**'] },
         //gtag: { trackingID: 'G-CYBRYL8W2Y', anonymizeIP: false },
       }),
     ],
