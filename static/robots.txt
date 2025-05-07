@@ -1,3 +1,2 @@
 User-agent: *
-Disallow: /dl/
-Disallow: /imager/
+Disallow: /blog/
