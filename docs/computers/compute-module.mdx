@@ -5,7 +5,7 @@ title_meta: 在树莓派计算模块(CM)进行烧录、连接与启用外设(官
 description: 提供树莓派计算模块(Compute Module)数据表及原理图。介绍烧录eMMC的步骤，连接和启用外设，连接和启动摄像头，连接官方7英寸触摸显示屏。
 keywords: [树莓派, Raspberry Pi, 计算模块, Compute Module, CM1, CM2, CM3, CM4]
 last_update: 
-  date: 2025-04-26
+  date: 2025-05-10
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -732,11 +732,11 @@ dtparam=cam1_reg
 
 | 摄像头型号 | 指令 |
 | -- | -- |
-| v1 摄像头 | `dtoverlay=ov5647,cam1` |
-| v2 摄像头 | `dtoverlay=imx219,cam1` |
-| v3 摄像头 | `dtoverlay=imx708,cam1` |
-| HQ 摄像头 | `dtoverlay=imx477,cam1` |
-| GS 摄像头 | `dtoverlay=imx296,cam1` |
+| v1 摄像头 | `dtoverlay=ov5647` |
+| v2 摄像头 | `dtoverlay=imx219` |
+| v3 摄像头 | `dtoverlay=imx708` |
+| HQ 摄像头 | `dtoverlay=imx477` |
+| GS 摄像头 | `dtoverlay=imx296` |
 
 9. 使用 `sudo reboot` 重启计算模块。
 10. 运行以下命令检查检测到的摄像头列表：

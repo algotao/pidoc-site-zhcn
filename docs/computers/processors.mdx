@@ -92,6 +92,26 @@ Broadcom BCM2712 是用于 Raspberry Pi 5、Compute Module 5 和 Pi 500 的 16nm
 
 总的来说，BCM2712 的新功能在普通 CPU 或 I/O 密集型用例中的性能比树莓派4提升了 2-3 倍。
 
+### 漏洞和缓解措施
+
+BCM2712 SoC 中使用的 Cortex-A76 CPU 存在已知漏洞，这些漏洞已在 Raspberry Pi OS 中得到缓解。
+
+要确定漏洞和缓解措施的完整列表，您可以使用以下命令行，它将列出所有存在的漏洞。
+
+```bash
+$ lscpu | grep Vulnerability | grep -v "Not affected"
+Vulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:             Mitigation; __user pointer sanitization
+Vulnerability Spectre v2:             Mitigation; CSV2, BHB
+```
+
+:::warning
+上述列表截至 2025 年 4 月是正确的，但可能已被取代。您应在 Raspberry Pi 上使用 `lscpu` 获取最新信息。在使用第三方操作系统时，这一点尤为重要，因为这些操作系统的 Linux 内核构建中可能不包含所有最新的缓解措施。Raspberry Pi Ltd 使用的 Arm 处理器不使用微码，因此所有缓解措施都在内核级别。
+:::
+
+`lscpu` 报告的漏洞信息基于当前执行的内核检测方案。它可能无法准确反映硬件的真实漏洞状态，尤其是在操作系统缺乏最新内核更新的情况下。有关 CPU 供应商公告的更多漏洞信息，可参考 `lscpu` 报告的供应商 ID 和型号名称，从 https://developer.arm.com/Arm%20Security%20Center/Speculative%20Processor%20Vulnerability 获取。
+
+
 ## RP3A0
 树莓派 RP3A0 是我们的第一个系统级封装 (SiP)，由 Broadcom BCM2710A1（封装在[树莓派3](./raspberry-pi.mdx#树莓派3b)上使用的 Broadcom [BCM2837](#bcm2837) 芯片内的硅芯片）和 512MB DRAM 组成。
 

@@ -5,7 +5,7 @@ title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照�
 description: 树莓派摄像头系列工具介绍。通过libcamera及rpicam系列工具实现拍照、延时摄影、记录视频。使用opencv进行人脸检测等后期处理。使用Tensor Flow Lite进行分类识别。使用Gstreamer与rpicam-vid组成网络传输视频流。
 keywords: [树莓派, Raspberry Pi, 摄像头, 相机, 摄像头模块, camera, 摄像头软件, libcamera, rpicam, opencv, tensor flow lite]
 last_update: 
-  date: 2025-03-15
+  date: 2025-05-10
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -491,7 +491,7 @@ Raspberry Pi OS 可在 `/boot/firmware/config.txt` 中识别以下覆盖层。
 
 要使用这些覆盖层之一，必须禁用摄像头自动检测功能。要禁用自动检测，请在 `/boot/firmware/config.txt` 中设置 `camera_auto_detect=0`。如果 `config.txt` 中已经有一行指定了 `camera_auto_detect` 值，请将该值改为 `0`。使用 `sudo reboot` 重启 Raspberry Pi，加载所作更改。
 
-如果您的 Raspberry Pi 有两个摄像头连接器（例如 Raspberry Pi 5 或其中一个计算模块），那么您可以通过在上表中使用的 `dtoverlay` 中添加 `,cam0` 或 `,cam1`（不要添加任何空格）来指定您所指的是哪一个。如果不添加其中任何一个，它将默认检查摄像头连接器 1 (`cam1`)。但请注意，对于正式的 Raspberry Pi 摄像头模块，自动检测将正确识别连接到设备的所有摄像头。
+如果您的 Raspberry Pi 有两个摄像头连接器（例如 Raspberry Pi 5 或其中一个计算模块），那么您可以在上表中使用的 `dtoverlay` 中添加 `,cam0`，指定使用摄像头连接器 0。如果不添加，将默认检查摄像头连接器 1。请注意，对于连接到 SBC（非计算模块）的 Raspberry Pi 官方摄像头模块，自动检测将正确识别连接到设备的所有摄像头。
 
 #### 使用调谐文件调整摄像头行为
 
