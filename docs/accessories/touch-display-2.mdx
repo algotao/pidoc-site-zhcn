@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Touch Display 2 是一款纵向触摸液晶显示屏，专为平板电脑、娱乐系统和信息仪表盘等互动项目而设计。触摸显示屏 2 通过 DSI 连接器和 GPIO 连接器连接到 Raspberry Pi。Raspberry Pi OS 提供触摸屏驱动程序，支持五指多点触控和屏幕键盘，无需连接键盘或鼠标即可实现全部功能。
 keywords: [树莓派, Raspberry Pi, 显示, 显示屏, display, hdmi, touch display 2]
 last_update: 
-  date: 2024-12-20
+  date: 2025-06-02
 ---
 import Normal from "../_normal.mdx";
 
@@ -135,5 +135,11 @@ video=DSI-1:720x1280@60,rotate=<rotation-value>
 ```ini
 dtoverlay=vc4-kms-dsi-ili9881-7inch,sizex=400,invx,invy
 ```
+
+### 计算模块设备上的安装和软件设置。
+
+所有树莓派单板计算机（SBC）均可自动检测官方触摸显示屏，因为连接到树莓派主板DSI接口的电路是固定的；此自动检测功能确保正确的设备树条目被传递给内核。然而，计算模块旨在用于工业应用，其中集成商可以根据需要使用任何和所有GPIO和接口。因此，自动检测在计算模块设备上不可行，且已被禁用。这意味着设置显示屏所需的设备树片段必须通过其他机制加载，具体方式可包括在 config.txt 中添加 dtoverlay 条目、使用自定义基础设备树文件，或若存在 HAT EEPROM 时通过该 EEPROM 实现。
+
+创建自定义基础设备树文件超出本文档范围，但通过 `config.txt` 添加适当的设备树条目非常简单。请参阅此 [页面](../computers/compute-module.mdx#安装触摸显示屏2-lcd-面板) 以获取配置详细信息。
 
 <Normal />

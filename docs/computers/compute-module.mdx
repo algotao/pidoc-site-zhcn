@@ -5,7 +5,7 @@ title_meta: 在树莓派计算模块(CM)进行烧录、连接与启用外设(官
 description: 提供树莓派计算模块(Compute Module)数据表及原理图。介绍烧录eMMC的步骤，连接和启用外设，连接和启动摄像头，连接官方7英寸触摸显示屏。
 keywords: [树莓派, Raspberry Pi, 计算模块, Compute Module, CM1, CM2, CM3, CM4]
 last_update: 
-  date: 2025-05-10
+  date: 2025-06-02
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -877,41 +877,43 @@ CM1、CM3、CM3+ 和 CM4S I/O 板没有为 `cam1_reg` 和 `cam0_reg` 提供 GPIO
 
 这些指令仅适用于直接连接到 SoC 的 GPIO 引脚，不适用于 GPIO 扩展引脚。
 
-## 连接官方7英寸显示屏
+## 安装触摸屏LCD面板
 
 开始之前，请将系统软件和固件更新到最新版本。计算模块大多使用相同的程序，但有时物理上的差异会迫使特定型号做出更改。
 
-### 将显示器连接到DISP1
+### 将显示器连接到DISP1/DSI1
 :::note[注意]
 树莓派Zero 摄像头电缆不能替代 RPI-DISPLAY 适配器。这两种电缆的接线方式不同。
 :::
 
-将显示器连接到 DISP1：
+要将显示器连接到 DISP1/DSI1：
 1. 断开计算模块的电源。
-2. 通过 22W 至 15W 显示适配器将显示器连接到计算模块 IO 板上的 DISP1 端口。
+2. 通过22W至15W显示适配器，将显示器连接至计算模块I/O板上的DISP1/DSI1端口。
 3. (仅限 CM1、CM3、CM3+ 和 CM4S）： 用跳线连接以下 GPIO 引脚：
   - `0` 至 `CD1_SDA`
   - `1` 至 `CD1_SCL`
-4. 重新连接计算模块的电源。
-5. 在 [/boot/firmware/config.txt](./config-txt.mdx#什么是configtxt) 中添加以下一行：
+4. _（CM5）_ 在计算模块 5 的 I/O 板上，按照丝印标记在 J6 上添加相应的跳线。
+5. 重新连接计算模块的电源。
+6. 在 [/boot/firmware/config.txt](./config-txt.mdx#什么是configtxt) 中添加以下一行：
 ```ini
 dtoverlay=vc4-kms-dsi-7inch
 ```
-6. 使用 `sudo reboot` 重启计算模块。设备应能检测到并开始向显示器显示输出。
+7. 使用 `sudo reboot` 重启计算模块。设备应能检测到并开始向显示器显示输出。
 
-### 将显示器连接到 DISP0
+### 将显示器连接到DISP0/DSI0
 
-将显示器连接到 DISP0：
-1. 通过 22W 至 15W 显示适配器将显示器连接到计算模块 IO 板上的 DISP0 端口。
+要将显示器连接到 DISP0/DSI0：
+1. 通过22W至15W显示适配器，将显示器连接至计算模块I/O板上的DISP0/DSI0端口。
 2. (仅限 CM1、CM3、CM3+ 和 CM4S）： 用跳线连接以下 GPIO 引脚：
   - `28` 至 `CD0_SDA`
   - `29` 至 `CD0_SCL`
-3. 重新连接计算模块的电源。
-4. 在 `/boot/firmware/config.txt `中添加以下一行：
+3. _（仅限CM4）_ 在计算模块4的I/O板上，按照丝印标记在J6上添加相应的跳线。
+4. 重新连接计算模块的电源。
+5. 在 `/boot/firmware/config.txt `中添加以下一行：
 ```ini
 dtoverlay=vc4-kms-dsi-7inch
 ```
-5. 使用 `sudo reboot` 重启计算模块。设备应能检测到并开始向显示屏显示输出。
+6. 使用 `sudo reboot` 重启计算模块。设备应能检测到并开始向显示屏显示输出。
 
 ### 禁用触摸屏
 触摸屏无需额外配置。将其连接到您的计算模块，一旦成功检测到，触摸屏元件和显示屏都将正常工作。
@@ -926,6 +928,23 @@ disable_touchscreen=1
 ```ini
 ignore_lcd=1
 ```
+
+## 安装触摸显示屏2 LCD 面板
+
+Touch Display 2 是专为 Raspberry Pi 设备设计的 720x1280 7" LCD 显示屏（见 https://www.raspberrypi.com/products/touch-display-2/ ）。它的连接方式与原始触摸显示器相同，但计算模块上的软件设置略有不同，因为它使用不同的显示驱动程序。有关连接详情，请参阅 [触摸显示屏2](../accessories/touch-display-2.mdx)。
+
+编辑 /boot/firmware/config.txt 文件并添加以下内容，以便在 DISP1/DSI1 上启用触摸显示屏 2。您还需要在 J6 上添加丝印所示的跳线。
+
+```ini
+dtoverlay=vc4-kms-dsi-ili9881-7inch
+```
+
+使用 DISP0/DSI0 的方法如下：
+
+```ini
+dtoverlay=vc4-kms-dsi-ili9881-7inch,dsi0
+```
+
 
 ## 规格
 

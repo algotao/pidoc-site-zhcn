@@ -5,7 +5,7 @@ title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解(官网2
 description: 树莓派config.txt是树莓派OS在启动期间访问的配置文件，其作用可理解为类似BIOS中的配置，用于控制启动期间各项软硬件的行为。功能有：指定启动分区号、AB启动分区切换、故障安全操作系统升级、dtoverlay覆盖层设置。多种启动模式：SD卡启动，网络启动，USB启动，GPIO启动。超频：ARM核心超频、GPU核心超频、内存超频。
 keywords: [树莓派, Raspberry Pi, config.txt, boot分区, tryboot, SD卡启动, GPIO启动, 网络启动, USB启动, 超频, 许可证密钥]
 last_update: 
-  date: 2025-04-26
+  date: 2025-06-02
 ---
 import Normal from "../_normal.mdx";
 
@@ -164,15 +164,15 @@ boot_partition=2
 
 启用后，固件将自动为识别到的 CSI 摄像头加载覆盖图。
 
-要禁用，请设置 `camera_auto_detect=0`。
+要禁用此功能，请将 `camera_auto_detect` 设置为 `0`（或删除 `camera_auto_detect=1`）。
 
 #### display_auto_detect
 
-默认已启用。
+默认情况下，Raspberry Pi 操作系统在 `/boot/firmware/config.txt` 文件中包含一行配置，用于启用此设置。
 
 启用后，固件将自动为识别到的 DSI 显示器加载覆盖层。
 
-若要禁用，请设置 `display_auto_detect=0`。
+要禁用此功能，请将 `display_auto_detect` 设置为 `0`（或删除 `display_auto_detect=1`）。
 
 #### dtoverlay
 `dtoverlay` 选项要求固件加载一个名为 "设备树"（Device Tree）的覆盖层，这是一个配置文件，可以启用内核对内置和外部硬件的支持。例如，`dtoverlay=vc4-kms-v3d` 会加载一个可启用内核图形驱动程序的覆盖层。
@@ -314,7 +314,8 @@ Raspberry Pi 5、Compute Module 5 和 Raspberry Pi 500 固件默认加载 `kerne
 :::
 
 ### auto_initramfs
-如果 `auto_initramfs` 设置为 `1`，则会使用与内核选择相同的规则查找 `initramfs` 文件。
+
+如果 `auto_initramfs` 设置为 `1`，固件会查找与内核匹配的 `initramfs` 文件。该文件必须与内核映像位于同一位置，且文件名由内核名称衍生而来，即用 `initramfs` 替换 `kernel` 前缀，并去除任何扩展名（如 `.img`），例如 `kernel8.img` 对应的文件名为 `initramfs8`。您可以使用 `auto_initramfs` 配合自定义内核名称，前提是这些名称分别以 `kernel` 和 `initramfs` 开头，且其余部分完全匹配（除 `initramfs` 文件缺少扩展名外）。否则，必须显式指定 [`initramfs`](#initramfs) 配置项。
 
 ### disable_poe_fan
 默认情况下，即使没有连接 PoE HAT，也会在启动时对 I2C 总线进行探测。将该选项设为 1 将禁止通过 I2C（ID_SD 和 ID_SC）针脚控制 PoE HAT 风扇。如果不打算使用 PoE HAT，这将有助于缩短启动时间。

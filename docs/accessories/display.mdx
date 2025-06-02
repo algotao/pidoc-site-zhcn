@@ -4,7 +4,7 @@ draft: false
 description: 树莓派官方显示屏的参数列举，使用扁平软线缆连接显示屏，正确的供电电源接线，更改屏幕方向等。
 keywords: [树莓派, Raspberry Pi, 显示, 显示屏, display, hdmi]
 last_update: 
-  date: 2024-12-20
+  date: 2025-06-02
 ---
 import Normal from "../_normal.mdx";
 
@@ -153,6 +153,10 @@ display_auto_detect=1
 ```
 dtoverlay=vc4-kms-dsi-7inch,sizex=400,invx,invy
 ```
+
+### 在计算模块设备上的安装。
+
+所有树莓派单板计算机（SBC）均可自动检测官方触摸屏，因为连接到树莓派主板DSI接口的电路是固定的；此自动检测功能确保正确的设备树条目被传递给内核。然而，计算模块旨在用于工业应用，其中集成商可以根据需要使用任何和所有GPIO和接口。因此，自动检测在计算模块设备上不可行，且已被禁用。这意味着设置显示屏所需的设备树片段必须通过其他机制加载，具体方式可以是如上所述在 config.txt 中添加 dtoverlay 条目、使用自定义基础设备树文件，或若存在 HAT EEPROM 则通过该 EEPROM 进行加载。
 
 ## 传统支持
 :::warning[警告]

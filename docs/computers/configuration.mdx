@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解
 description: 树莓派系统配置介绍，以图示的方式介绍使用raspi-config工具配置有线网络、配置无线WiFi网络、配置热点、设置代理服务器、设置显示器的分辨率及方向。挂载外部USB存贮设备，更改默认引脚设置，配置UART。LED警告闪烁代码的含义。增加或删除用户，安装防火墙等。
 keywords: [树莓派, Raspberry Pi, 系统配置, raspi-config, LAN, WiFI, 无线, 代理服务器, UART, LED, 闪烁]
 last_update: 
-  date: 2025-04-26
+  date: 2025-06-02
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -1749,8 +1749,8 @@ bootloader，由 SoC 在启动时加载。它执行一些非常基本的设置�
 
 | 文件名 | 处理器 | 树莓派型号 | 备注 |
 | -- | -- | -- | -- |
-| `kernel.img` | BCM2835 | Pi Zero、Pi 1 |  |
-| `kernel7.img` | BCM2836, BCM2837 | Pi Zero 2 W、Pi 2、Pi 3 | Pi 2 的后期版本使用 BCM2837 |
+| `kernel.img` | BCM2835 | Pi Zero、Pi 1、CM1 |  |
+| `kernel7.img` | BCM2836, BCM2837 | Pi Zero 2 W、Pi 2、CM3、Pi 3+、CM3+ | Pi 2 的后期版本使用 BCM2837 |
 | `kernel7l.img` | BCM2711 | Pi 4、CM4、CM4S、Pi 400 | 大物理地址扩展 (LPAE) |
 | `kernel8.img` | BCM2837、BCM2711、BCM2712 | Pi Zero 2 W、Pi 2（后期修订版）、Pi 3、CM3、Pi 3+、CM3+、Pi 4、CM4、CM4S、Pi 400、CM5、Pi 5、Pi 500 | [64位内核](./config-txt.mdx#启动选项)。早期版本的 Raspberry Pi 2（带 BCM2836）不支持 64 位内核。 |
 | `kernel_2712.img` | BCM2712 | Pi 5、CM5、Pi 500 | Pi 5 优化过的 [64位内核](./config-txt.mdx#启动选项)。 |
