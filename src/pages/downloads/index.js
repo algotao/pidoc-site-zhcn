@@ -23,9 +23,9 @@ const DownloadConfig = {
   ubuntu_text: "适用于 Raspberry Pi 的 Ubuntu 操作系统",
   ubuntu_content: 'Raspberry Pi 支持 Ubuntu，开源开发人员可以快速、安全地启动和运行 Raspberry Pi。',
   imager_url: [
-    { os: "Windows", downloadurl: "https://dl.pidoc.cn/imager/imager_1.8.5.exe", title: "下载Windows版", showButton: false, },
-    { os: "MacOS", downloadurl: "https://dl.pidoc.cn/imager/imager_1.8.5.dmg", title: "下载macOS版", showButton: false, },
-    { os: "Linux", downloadurl: "https://dl.pidoc.cn/imager/imager_1.8.5_amd64.deb", title: "下载适用于x64的Ubuntu版", showButton: false, }
+    { os: "Windows", downloadurl: "https://dl.pidoc.cn/imager/imager_1.9.4.exe", title: "下载Windows版", showButton: false, },
+    { os: "MacOS", downloadurl: "https://dl.pidoc.cn/imager/imager_1.9.4.dmg", title: "下载macOS版", showButton: false, },
+    { os: "Linux", downloadurl: "https://dl.pidoc.cn/imager/imager_1.9.4_amd64.deb", title: "下载适用于x64的Ubuntu版", showButton: false, }
   ],
   manually_url: [
     { os: "All", downloadurl: "/downloads/operating-systems/", title: "查看所有下载选项", showButton: true, },
