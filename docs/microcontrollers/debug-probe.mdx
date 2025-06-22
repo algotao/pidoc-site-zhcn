@@ -4,7 +4,7 @@ draft: false
 description: 树莓派调试探针（Debug Probe）是一款 USB 设备，提供 UART 串行端口和标准 Arm 串行线调试 (SWD) 接口。该探针专为方便、无焊、即插即用的调试而设计。
 keywords: [树莓派, Raspberry Pi, 调试探针, Debug Probe, OpenOCD, 串行线调试, SWD]
 last_update: 
-  date: 2024-12-21
+  date: 2025-06-22
 ---
 import Normal from "../_normal.mdx";
 
@@ -77,66 +77,29 @@ OpenOCD 会在目标连接时打开两个 DAP LED 指示灯，并在调用 `DAP_
 <img src="/img/microcontrollers/debug-probe/wiring.png" alt="标记接线" width="70%" />
 
 ## 安装工具
-要使用调试探针，请安装以下工具。
 
-### 安装OpenOCD
-您需要安装 OpenOCD。
+要使用调试探针，需要安装OpenOCD和GNU调试器（GDB）。集成开发环境（IDE）也可能派上用场。
 
-要安装 OpenOCD，请在终端中运行以下命令：
-```sh
-$ sudo apt install openocd
-```
+在Raspberry Pi操作系统、大多数Linux发行版、macOS和Microsoft Windows上，建议安装我们的VS Code扩展。该扩展包包含OpenOCD、ARM工具链、GDB以及Pico系列微控制器的寄存器定义。
 
-#### 在 macOS 上安装 OpenOCD
-首先，安装 [Homebrew](https://brew.sh/) 软件包管理器：
-```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-```
+请参阅我们的指南 [Raspberry Pi Pico 入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)的第 3 章。
 
-要在 macOS 上安装 OpenOCD，请运行以下命令：
-```sh
-brew install openocd
-```
-
-要运行 OpenOCD，请在终端中使用 `openocd` 命令。
-
-### 安装 GDB
-
-我们还需要安装 GNU 调试器 (GDB)。
-
-#### Linux
-
-安装 `gdb-multiarch`：
-
-```sh
-$ sudo apt install gdb-multiarch
-```
-
-#### macOS
-
-运行以下命令安装 `gdb`：
-
-```sh
-brew install arm-none-eabi-gdb
-```
-
-您可以放心地忽略安装时的 "特殊权限" 请求信息。
-
-#### MS Windows
-
-GDB 可作为 [Pico安装程序](https://github.com/raspberrypi/pico-setup-windows/releases/latest) 的一部分提供。它也包含在 [Arm GNU 工具链下载](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) 中。
-
-有关手动安装的其他信息，请参阅 [Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) 一书的第 9 章和附录 A。
+或者，可以按照指南中的附录 C 手动安装工具。
 
 :::note[注意]
-不建议在 Windows 上手动安装 GDB。
+不建议在 Windows 上手动安装这些工具。
 :::
 
-## 串行线调试（SWD）
-串行线调试（SWD）是一种双引脚接口（SWDIO 和 SWCLK），可替代 JTAG 四引脚或五引脚调试接口标准。
 
-### 向Pico上传新程序
-Pico 调试探针可让您通过 SWD 端口和 OpenOCD 加载二进制文件：每次向 Pico 推送新的二进制文件时，您无需拔下并按住 BOOTSEL 按钮。使用调试探针上传新的二进制文件完全不需要动手。
+## 启动调试会话
+
+调试探针允许您通过SWD端口和OpenOCD加载二进制文件：您无需每次将新二进制文件推送到Pico时都拔下并按住BOOTSEL按钮。使用调试探针上传新二进制文件是一个完全无需手动操作的过程。
+
+随后使用GDB对Pico上运行的二进制文件进行调试。
+
+我们建议使用 Raspberry Pi Pico VSCode 扩展，该扩展集成了 OpenOCD 和 GDB 的使用，用于上传和调试程序。有关更多信息，请参阅 [Raspberry Pi Pico 入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) 的第 4 章。
+
+### 独立程序上传
 
 构建二进制文件后
 ```sh
@@ -147,8 +110,9 @@ sudo openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5
 使用调试探针上传二进制文件时，使用的是 ELF 版本的文件，而不是拖放时使用的 UF2 文件。
 :::
 
-### 使用SWD调试
-它还允许你在服务器模式下使用 `openocd`，并连接 GDB，从而提供断点和 "正确的 "调试。
+### 独立调试会话
+
+这将使用 `openocd` 服务器模式，并连接 GDB，使您能够通过控制台界面设置断点并进行单步调试。
 
 :::important[重要]
 要进行调试，必须将二进制文件编译为 Debug 而非 Release 编译类型，例如
@@ -163,8 +127,13 @@ cd blink
 make -j4
 ```
 在调试编译中，当你在调试器下运行程序时会得到更多信息，因为编译器在编译程序时会告诉 GDB 你的程序在做什么。
+:::
 
-更多信息，请参阅[《Raspberry Pi Pico 系列入门》](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)第 6 章。
+:::note[注意]
+对于非树莓派计算机，需要使用能够调试 ARM 处理器的 GDB 变体。根据您的操作系统和设备，选择以下其中一种替代方案：
+
+* 在 Linux 设备上，使用 `gdb-multiarch`。
+* 在 macOS 和 Windows 设备上，使用来自 [Arm 官网](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) 工具链中的 `arm-none-eabi-gdb`。
 :::
 
 要启动 OpenOCD 服务器，请运行以下命令：
@@ -178,11 +147,6 @@ $ gdb blink.elf
 > monitor reset init
 > continue
 ```
-
-GDB 并不适用于所有平台。请根据您的操作系统和设备，使用以下替代方案之一来代替 `gdb`：
-
-- 在 **非** Raspberry Pis 的 Linux 设备上，使用 `gdb-multiarch`。
-- 在 macOS 设备上，使用 `arm-none-eabi-gdb`。
 
 ## 串行连接
 确保调试探针与树莓派Pico的 UART 引脚相连。

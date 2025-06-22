@@ -5,7 +5,7 @@ title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解(官网2
 description: 树莓派config.txt是树莓派OS在启动期间访问的配置文件，其作用可理解为类似BIOS中的配置，用于控制启动期间各项软硬件的行为。功能有：指定启动分区号、AB启动分区切换、故障安全操作系统升级、dtoverlay覆盖层设置。多种启动模式：SD卡启动，网络启动，USB启动，GPIO启动。超频：ARM核心超频、GPU核心超频、内存超频。
 keywords: [树莓派, Raspberry Pi, config.txt, boot分区, tryboot, SD卡启动, GPIO启动, 网络启动, USB启动, 超频, 许可证密钥]
 last_update: 
-  date: 2025-06-02
+  date: 2025-06-22
 ---
 import Normal from "../_normal.mdx";
 
@@ -370,7 +370,7 @@ USB On-The-Go（通常缩写为 OTG）是一项功能，允许使用适当 OTG �
 - `boot.img` 文件是原始磁盘 `.img` 文件。建议使用无 MBR 的普通 FAT32 分区格式。
 - 内存盘文件系统的内存会在操作系统启动前释放。
 - 如果选择 [TRYBOOT](./raspberry-pi.mdx#故障安全操作系统更新-tryboot)，bootloader将搜索 `tryboot.img`，而不是 `boot.img`。
-- 另请参阅 [autoboot.txt](./config-txt.mdx#autoboottxt)
+- 另请参阅 [autoboot.txt](#autoboottxt)
 
 有关`安全启动`和创建 `boot.img` 文件的更多信息，请参阅 [USBBOOT](https://github.com/raspberrypi/usbboot/blob/master/Readme.md)。
 
@@ -403,6 +403,23 @@ USB On-The-Go（通常缩写为 OTG）是一项功能，允许使用适当 OTG �
 如果 `erase_eeprom` 设置为 `1`，那么 `recovery.bin` 将擦除整个 SPI EEPROM，而不是闪烁引导程序映像。该属性在正常启动时没有影响。
 
 默认值：`0`
+
+#### set_reboot_arg1
+仅适用于 Raspberry Pi 5。
+
+将 `boot_arg1` 的值通过一个重置安全寄存器传递给引导加载程序，以便在重启后使用。
+参见 [`boot_arg1`](#boot_arg1) 以获取更多详细信息。
+默认值：``
+
+#### `set_reboot_order`
+
+仅适用于 Raspberry Pi 5。
+
+设置通过重置安全寄存器在重启后传递给引导加载程序的 [BOOT_ORDER](./raspberry-pi.mdx#boot_order) 的值。与 `tryboot` 类似，这是一个一次性设置，并在使用后自动清除。
+
+此属性可用于调试不同的 [BOOT_ORDER](./raspberry-pi.mdx#boot_order) 设置。或者，它可用于具有电源控制和 `nRPIBOOT` GPIO 的配置系统，以在不指定 EEPROM 配置中的 [条件筛选器](#条件筛选器) 语句的情况下覆盖启动模式。
+
+默认值：``
 
 #### eeprom_write_protect
 配置 EEPROM `写入状态寄存器`。可将其设置为将整个 EEPROM 标记为写保护或清除写保护。
@@ -452,13 +469,20 @@ USB On-The-Go（通常缩写为 OTG）是一项功能，允许使用适当 OTG �
 默认值：`0`
 
 #### revoke_devkey
-如果该属性设置为 `1`，`recovery.bin` 将向 OTP 写入一个值，防止 ROM 加载不支持`安全启动`的旧版本第二阶段bootloader。这样就可以防止`安全启动`被还原到旧版本的引导加载程序而关闭。
+
+仅适用于 Raspberry Pi 4。
+
+如果此属性设置为 `1`，则 `recovery.bin` 将向 OTP 写入一个值，以防止 ROM 加载不支持 `secure-boot` 的旧版本第二阶段引导加载程序。这可防止通过回滚到旧版本引导加载程序来关闭 `secure-boot`。因此，如果生产设备启用了 `secure-boot`，则必须设置此属性。
+
+此属性在 `recovery.bin` `2025/05/16` 及更新版本中，如果 `program_pubkey=1`，则会自动设置。
 
 默认值：`0`
 
 #### program_rpiboot_gpio
 
-计算模块有一个专用的 `nRPIBOOT` 跳线，用于选择 `RPIBOOT` 模式。带有 EEPROM 的旗舰版和键盘版 Raspberry Pi 设备没有专用的 `nRPIBOOT` 跳线。要在旗舰版和键盘版设备上选择 `RPIBOOT` 模式，请将下列 GPIO 引脚之一拉低：
+仅适用于 Raspberry Pi 4B 和 Raspberry Pi 400。
+
+Compute Module 4 和 4S 配备专用的 `nRPIBOOT` 跳线，用于选择 `RPIBOOT` 模式。Raspberry Pi 4B 和 Raspberry Pi 400 没有专用的 `nRPIBOOT` 跳线，因此必须选择以下其中一个 GPIO 引脚作为 `nRPIBOOT` 使用。
 
 - `2`
 - `4`
@@ -466,11 +490,11 @@ USB On-The-Go（通常缩写为 OTG）是一项功能，允许使用适当 OTG �
 - `7`
 - `8`
 
-该属性不依赖于 `secure-boot`。不过，您应确认该 GPIO 配置不会与任何可能在启动期间将 GPIO 拉低的 HAT 冲突。
+GPIO 可以在操作系统启动后用作通用输入输出引脚。然而，您应确认此 GPIO 配置不会与任何可能在启动过程中将 GPIO 拉低的 HAT 发生冲突。
 
-为了安全起见，只能通过 `RPIBOOT` 对该属性进行编程。因此，必须首先使用 `erase_eeprom` 清除引导加载程序 EEPROM。这将导致 ROM 故障切换到 `RPIBOOT` 模式，从而允许设置该选项。
+尽管 `secure-boot` 要求在 Raspberry Pi 4B 和 Raspberry Pi 400 上设置此属性，但它并不依赖于 `secure-boot`。例如，`RPIBOOT` 可用于自动化测试。
 
-在 BCM2712 上，您也可以通过按住电源按钮并同时连接 USB-C 电源来强制使用 `RPIBOOT` 模式。
+出于安全考虑，此 OTP 值只能通过 `RPIBOOT` 进行编程。因此，您必须首先使用 `erase_eeprom` 清除引导加载程序 EEPROM。空白的 EEPROM 会导致 ROM 切换到 `RPIBOOT` 模式，从而允许设置此选项。
 
 默认值：` `
 
@@ -717,9 +741,6 @@ vcgencmd pmic_read_adc EXT5V_V
 ### [none]过滤器
 `[none]`（无）过滤器可防止任何设置应用于任何硬件。虽然没有`[none]`也没有什么不可以，但它是一种有用的方法，可以在 config.txt 中保留一组未使用的设置，而不必注释掉每一行。
 
-### [partition=N]过滤器
-该 `partition` 过滤器可用于根据请求的分区号（`sudo reboot N`）或通过直接使用 `PM_RSTS` 看门狗寄存器来选择备用启动流。
-
 ```ini
 # 引导加载程序 EEPROM 配置。
 # 如果 PM_RSTS 为分区 62，则设置引导加载器属性以禁用
@@ -742,10 +763,105 @@ cmdline=cmdline-recovery.txt
 
 启动时 `PM_RSTS` 寄存器的原始值可通过 `/proc/device-tree/chosen/bootloader/rsts` 获取，启动时使用的最终分区号可通过 `/proc/device-tree/chosen/bootloader/partition` 获取。这些都是大端（big-endian）二进制值。
 
+
+### 表达式过滤器
+
+表达式过滤器支持使用一组简单的运算符将无符号整数“启动变量”与常量进行比较。它旨在支持OTA更新机制、调试和测试。
+
+* “启动变量”包括`boot_arg1`、`boot_count`、`boot_partition`和`partition`。
+* 启动变量始终为小写。
+* 整数常量可以以十进制或十六进制形式书写。
+* 表达式条件过滤器没有副作用，例如没有赋值运算符。
+* 与其他过滤器类型一样，表达式过滤器不能嵌套。
+* 使用 `[all]` 过滤器重置表达式和其他所有条件过滤器类型。
+
+语法：
+```ini
+# ARG 是启动变量
+# VALUE 和 MASK 是无符号整数常量
+[ARG=VALUE]      # 当 (ARG == VALUE) 时选中
+[ARG&MASK]       # 当 ((ARG & VALUE) != 0) 时选中
+[ARG&MASK=VALUE] # 当 ((ARG & MASK) == VALUE) 时选中
+[ARG<VALUE]      # 选择条件为 (ARG < VALUE)
+[ARG>VALUE]      # 选择条件为 (ARG > VALUE)
+```
+
+
+#### boot_arg1
+仅适用于 Raspberry Pi 5 及更新设备。
+
+`boot_arg1` 变量是一个 32 位用户自定义值，存储在重置安全寄存器中，可实现参数在重启后传递。
+
+通过 `config.txt` 将 `boot_arg1` 设置为 42：
+
+```ini
+set_reboot_arg1=42
+```
+
+`set_reboot_arg1` 属性用于设置下次启动时的值。它不会更改当前值，当前值仍由配置解析器识别。
+
+通过 vcmailbox 将 `boot_arg1` 设置为 42：
+```sh
+sudo vcmailbox 0x0003808c 8 8 1 42
+```
+
+通过 vcmailbox 读取 `boot_arg1`：
+
+```sh
+sudo vcmailbox 0x0003008c 8 8 1 0
+# 示例输出 - boot_arg1 为 42
+# 0x00000020 0x80000000 0x0003008c 0x00000008 0x80000008 0x00000001 0x0000002a 0x0000000
+```
+
+操作系统启动时 `boot_arg1` 变量的值可通过 [设备树](./configuration.mdx#设备树) 在 `/proc/device-tree/chosen/bootloader/arg1` 读取
+
+#### boot_count
+仅适用于 Raspberry Pi 5 及更新设备。
+
+`boot_count` 变量是一个存储在复位安全寄存器中的 8 位值，在启动时递增（达到 256 后回绕到 0）。如果断开电源，该值将被清零。
+
+通过 vcmailbox 读取 `boot_count`：
+```sh
+sudo vcmailbox 0x0003008d 4 4 0
+# 示例 - 启动计数为 3
+# 0x0000001c 0x80000000 0x0003008d 0x00000004 0x80000004 0x00000003 0x00000000
+```
+
+通过 vcmailbox 设置/清除 `boot_count`：
+```sh
+# 将 boot_count 设置为零以清除其值。
+sudo vcmailbox 0x0003808d 4 4 0
+```
+
+操作系统启动时 `boot_count` 的值可通过 [设备树](./configuration.mdx#设备树) 在 `/proc/device-tree/chosen/bootloader/count` 读取
+
+#### boot_partition
+
+`boot_partition`变量可用于根据`config.txt`文件从哪个分区加载（在处理[autoboot.txt](#autoboottxt)后），选择加载替代操作系统文件（如`cmdline.txt`）。此功能旨在与 `A/B` 启动系统配合使用，其中 `autoboot.txt` 文件用于实现 `A` 和 `B` 镜像在启动分区中安装相同文件的需求。
+
+`boot_partition` 的值可能与请求的 `partition` 变量不同，如果在 [autoboot.txt](#autoboottxt)，或者如果指定的分区不可引导且 [PARTITION_WALK](./raspberry-pi.mdx#partition_walk) 在 EEPROM 配置中启用。
+
+示例 `config.txt` - 选择与 `A/B` 引导文件系统匹配的根文件系统：
+```ini
+# 使用不同的命令行文件指向不同的根文件系统，具体取决于系统从哪个分区启动。
+[boot_partition=1]
+cmdline=cmdline_rootfs_a.txt  # 指向根文件系统 A
+
+[boot_partition=2]
+cmdline=cmdline_rootfs_b.txt  # 指向根文件系统 B
+```
+
+`boot_partition` 的值（即用于启动操作系统的分区）可从 [设备树](./configuration.mdx#设备树) 中的 `/proc/device-tree/chosen/bootloader/partition` 读取。
+
+#### partition
+`partition` 变量可用于根据请求的分区号（`sudo reboot N`）选择替代启动流程，或通过直接使用`PM_RSTS`看门狗寄存器进行操作。
+
 ### [tryboot]过滤器
 如果设置了 `tryboot` 重启标志，该过滤器就会成功。
 
 它用于在 [autoboot.txt](#autoboottxt) 中选择不同的 `tryboot` 模式 `boot_partition`，以实现故障安全操作系统更新。
+
+在启动开始时，`tryboot` 的值可以通过 [设备树](./configuration.mdx#设备树) 在 `/proc/device-tree/chosen/bootloader/tryboot` 读取。
 
 ### [EDID=*]过滤器
 在树莓派中使用单张 SD 卡在多个显示器之间切换时，如果空白配置不足以自动为每个显示器选择所需的分辨率，则可根据显示器的 EDID 名称选择特定设置。

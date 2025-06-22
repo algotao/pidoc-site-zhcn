@@ -5,7 +5,7 @@ title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照�
 description: 树莓派摄像头系列工具介绍。通过libcamera及rpicam系列工具实现拍照、延时摄影、记录视频。使用opencv进行人脸检测等后期处理。使用Tensor Flow Lite进行分类识别。使用Gstreamer与rpicam-vid组成网络传输视频流。
 keywords: [树莓派, Raspberry Pi, 摄像头, 相机, 摄像头模块, camera, 摄像头软件, libcamera, rpicam, opencv, tensor flow lite]
 last_update: 
-  date: 2025-05-10
+  date: 2025-06-22
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -1323,6 +1323,28 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 #### viewfinder-buffer-count
 
 与 `buffer-count` 选项相同，但适用于在预览模式下运行（即 `rpicam-hello` 或 `rpicam-still` 的预览阶段，而非捕捉阶段）。
+
+#### metadata
+
+将捕获的图像元数据保存到文件中，或使用 `-` 输出到标准输出。元数据输出中的字段将根据所使用的相机型号而定。
+
+参见 `metadata-format`。
+
+#### metadata-format
+
+保存元数据的格式。支持以下值：
+
+* `txt` 用于文本格式
+* `json` 用于 JSON 格式
+
+在文本格式中，每行将采用以下形式：
+
+    key=value
+
+在 JSON 格式中，输出为一个 JSON 对象。
+
+除非同时指定 `--metadata` 选项，否则此选项无效。
+
 
 ### 图像选项
 

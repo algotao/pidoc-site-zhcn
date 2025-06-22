@@ -4,7 +4,7 @@ draft: false
 description: 树莓派摄像头早期型号(摄像头模块1、摄像头模块2)，最新型号（摄像头模块3）。普通型号与广告型号，可见光型号与红外型号，HQ与GS摄像头。摄像头的安装与设置，如何使用外部触发器进行触发式的拍摄。
 keywords: [树莓派, Raspberry Pi, 摄像头, 相机, 摄像头模块, camera, HQ, GS, 红外, 摄像头模块3, 滤镜, 拆卸]
 last_update: 
-  date: 2025-02-22
+  date: 2025-06-22
 ---
 import Normal from "../_normal.mdx";
 
@@ -315,91 +315,115 @@ HQ 摄像头有 C/CS 卡口和 M12 卡口两种型号，而 GS 摄像头只有 C
 </table>
 
 ## 同步捕捉
-HQ 摄像头和全局快门摄像头均支持同步捕捉。利用 XVS 引脚（垂直同步），一台摄像头可以在开始帧捕捉时发出脉冲。然后，另一台摄像头可以监听该同步脉冲，并与另一台摄像头同时捕捉帧。
 
-### 使用HQ摄像头
-为了正确操作，两台摄像头的 XVS 线路都需要 1.65V 的上拉电压，该电压通过树莓派上的 3.3V 和 GND 引脚的电位分配器产生。
+高品质（HQ）摄像头支持同步捕获。
+一台摄像头（“源摄像头”）可配置为在启动帧捕获时在其XVS（垂直同步）引脚上生成一个脉冲。
+其他（“目标”）摄像头可以监听此脉冲，并在源摄像头捕获帧的同时进行捕获。
 
-<img src="/img/accessories/camera/synchronous_camera_wiring.jpg" alt="显示电位分配器设置的图片" width="50%" />
+此方法已被 [软件摄像头同步](../computers/camera-software.mdx#软件摄像头同步)所取代，该方法可在无需额外线缆的情况下实现长距离操作，并具备亚毫秒级精度。但当摄像头物理距离较近时，可使用有线同步。
 
-从两个 10kΩ 电阻器上创建一个电位分压器，分别连接到 3.3V 和地（使电压达到 1.65V，有效源阻抗为 5kΩ）。这可以连接到任意一台 Raspberry Pi。
+:::note[注意]
+全局快门（GS）相机也可在同步模式下运行。然而，源相机将额外记录一帧。对于GS相机，我们建议使用 [外部触发源](#gs摄像头上的外部触发器)。无法同步GS相机和HQ相机。
+:::
 
-将每块 HQ 摄像头电路板的接地和 XVS 测试点相互焊接。
+### 连接摄像头
 
-将 XVS 线连接到 1.65V 电位分压器上拉电阻。
+将导线焊接到每个摄像头的XVS测试点，并将它们连接在一起。
 
-#### 启动两个树莓派
-文件 `/sys/module/imx477/parameters/trigger_mode` 决定哪块板输出脉冲或等待接收脉冲（源和"汇"）。该参数只能在超级用户模式下更改。
+将导线焊接到每个摄像头的GND测试点，并将它们连接在一起。
 
-运行以下命令配置"汇"：
-```sh
-sudo su
-echo 2 > /sys/module/imx477/parameters/trigger_mode
-exit
+*仅适用于GS摄像头*，您还需要将每个摄像头的XHS（水平同步）测试点相互连接。对于任何希望作为接收端的GS摄像头，请用焊锡将MAS焊盘的两部分短接。
+
+:::note[注意]
+本文件较早版本曾建议为XVS添加外部上拉电阻。此建议不再适用。请确保使用Raspberry Pi OS最新版本，并为所有连接的摄像头设置`always-on`属性。
+:::
+
+### 驱动程序配置
+
+您需要配置摄像头驱动程序，使其在不进行流媒体传输时保持1.8V电源供应，并可选地设置源和 sink 角色。
+
+#### 对于HQ摄像头
+
+编辑 `/boot/firmware/config.txt`。将 `camera_auto_detect=1` 改为 `camera_auto_detect=0`。
+
+对于源摄像头，添加以下行：
+```ini
+dtoverlay=imx477,always-on,sync-source
 ```
 
-运行以下命令配源：
-```sh
-sudo su
-echo 1 > /sys/module/imx477/parameters/trigger_mode
-exit
+或对于汇：
+```ini
+dtoverlay=imx477,always-on,sync-sink
 ```
 
-运行以下命令启动"汇"：
+在 Raspberry Pi 5、CM4 或 CM5 上使用 CAM0 端口时，在该行末尾添加 `,cam0`（不带空格）。如果同一台 Raspberry Pi 上连接了两台摄像头，则需要两行 dtoverlay 配置，其中仅一行以 `,cam0` 结尾。
+
+或者，如果您希望在运行时交换摄像头的角色（且它们未连接到同一台 Raspberry Pi），请省略上述 `,sync-source` 或 `,sync-sink`。相反，您可以在启动每个摄像头前设置模块参数：
+
+对于带有源摄像头的 Raspberry Pi：
 ```sh
+echo 1 | sudo tee /sys/module/imx477/parameters/trigger_mode
+```
+
+对于带有目标摄像头的树莓派：
+```sh
+echo 2 | sudo tee /sys/module/imx477/parameters/trigger_mode
+```
+每次系统启动时都需要执行此操作。
+
+#### 对于 GS 相机
+
+编辑 `/boot/firmware/config.txt`。将 `camera_auto_detect=1` 改为 `camera_auto_detect=0`。
+
+对于源或汇，添加以下行：
+
+```sh
+dtoverlay=imx296,always-on
+```
+
+在 Raspberry Pi 5、CM4 或 CM5 上使用 CAM0 端口时，在该行末尾添加 `,cam0`，且不留空格。如果同一台 Raspberry Pi 上有两台摄像头，则需要两行 dtoverlay，其中仅一行以 `,cam0` 结尾。
+
+在 GS 相机上，接收端角色通过 MAS 引脚启用，无法通过软件配置（“trigger_mode” 和 “sync-sink” 与 [外部触发方法](#gs摄像头上的外部触发器) 相关，且不应为此方法设置）。
+
+### Libcamera 配置
+
+如果所有摄像头未能在 1 秒内启动，`rpicam` 应用程序可能会超时。为避免此情况，您必须在配备 sink 摄像头的任何 Raspberry Pi 设备上编辑配置文件。
+
+在 Raspberry Pi 5 或 CM5 上：
+```sh
+cp /usr/share/libcamera/pipeline/rpi/pisp/example.yaml timeout.yaml
+```
+
+在其他 Raspberry Pi 型号上：
+```sh
+cp /usr/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml timeout.yaml
+```
+
+现在编辑副本。在两种情况下，删除 `“camera_timeout_value_ms”:` 行中的 `#`（注释），并将数字改为 `60000`（60 秒）。
+
+### 启动摄像头
+
+运行以下命令以启动汇：
+
+```sh
+export LIBCAMERA_RPI_CONFIG_FILE=timeout.yaml
 rpicam-vid --frames 300 --qt-preview -o sink.h264
 ```
 
-运行以下启动配源：
+等待几秒钟，然后运行以下命令以启动源：
+
 ```sh
 rpicam-vid --frames 300 --qt-preview -o source.h264
 ```
 
-帧应同步。使用 `--frames` 可确保捕捉到的帧数相同，且录制长度完全相同。先运行汇集器可确保不遗漏任何帧。
+帧应保持同步。使用 `--frames` 确保捕获的帧数相同，且录制文件的长度完全一致。
+先运行 汇 可确保不会丢失任何帧。
 
 :::note[注意]
-当信号源处于空闲状态时，需要使用电位分配器将 XVS 引脚拉高。这可确保启动时不会创建或丢失帧。信号源在初始化时从低电平变为高电平，可能会触发误帧。
+在使用 GS 相机同步模式时，汇记录的帧数不会与源完全相同。**源会在 sink 开始记录前多记录一帧**。因此，您需要使用 `--frames` 选项指定 sink 少记录一帧。
 :::
 
-### 使用GS摄像头
-:::note[注意]
-全局快门 (GS) 摄像头也可以在同步模式下操作。但是，源摄像头将多记录一帧。要确保两台摄像头拍摄相同的帧数，更好的替代方法是使用[外部触发方法](#gs摄像头上的外部触发器)。
-:::
 
-全局快门摄像头还需要将 XHS（水平同步）引脚连接在一起，才能作为源和"从"一起工作。不过，这些引脚不需要连接上拉电阻器。
-
-接线设置与 [HQ摄像头](#使用hq摄像头) 的方法相同，只是您还需要将 XHS 引脚连接在一起。
-
-从两个 10kΩ 电阻器上创建一个电位分压器，分别连接到 3.3V 和地（使电压达到 1.65V，有效源阻抗为 5kΩ）。这可以连接到任意一台 Raspberry Pi。
-
-将 2 根导线焊接到每块电路板上的 XVS 测试点，然后将这 2 根导线一起连接到 1.65V 电位分压器。
-
-将每块摄像头板的 GND 焊接在一起。同时将 2 根导线焊接到每块电路板上的 XHS 测试点，并将其连接起来。XHS 引脚无需上拉。
-
-在希望用作"汇流排"的电路板上，将 MAS 焊盘的两半焊接在一起。这将告知传感器充当"汇"，并等待信号以捕获帧。
-
-#### 启动源与汇
-运行以下命令配置"汇"：
-
-```sh
-rpicam-vid --frames 300 -o sync.h264
-```
-
-由于 IMX296 传感器的限制，汇接收器无法记录与源完全相同的帧数。**在汇接收器开始记录之前，源会多记录一帧**。因此，需要使用 `--frames` 选项指定水槽少记录一帧。
-
-在启动源之前至少等待两秒钟。
-
-等待两秒后，运行以下命令启动源：
-
-```sh
-rpicam-vid --frames 299 -o sync.h264
-```
-
-由于汇和源录制的帧数不同，请使用 `ffmpeg` 重新同步视频。去掉源视频的第一帧后，我们就能得到两段起点和帧长相同的视频：
-
-```sh
-ffmpeg -i source.h264 -vf select="gte(n\, 1)" source.h264
-```
 
 ## GS摄像头上的外部触发器
 全局快门（GS）摄像头可通过电路板上的外部触发器（在电路板上表示为 XTR）连接进行外部触发。同一脉冲可连接多台摄像头，这也是同步两台摄像头的另一种方法。
@@ -422,14 +446,6 @@ ffmpeg -i source.h264 -vf select="gte(n\, 1)" source.h264
 我们可以使用树莓派Pico来提供触发器。通过 1.5kΩ 电阻器将任何 Pico GPIO 引脚（本例中使用 GP28）连接至 XTR。同时在 XTR 和 GND 之间连接一个 1.8kΩ 电阻器，以将高逻辑电平降至 1.8V。接线图如下所示。
 
 <img src="/img/accessories/camera/pico_wiring.jpg" alt="显示树莓派Pico接线的图片" width="50%" />
-
-#### 启动连接了摄像头的树莓派
-通过超级用户模式启用外部触发：
-```sh
-sudo su
-echo 1 > /sys/module/imx296/parameters/trigger_mode
-exit
-```
 
 #### 树莓派Pico Micropython代码
 ```py
@@ -454,16 +470,39 @@ pwm.duty_u16(int((1 - (shutter - 14) / frame_length) * 65535))
 在本示例中，引脚 28 用于连接 GS 摄像头板上的 XTR 触摸点。
 :::
 
-### 操作
-在 Pico 上运行代码并设置摄像头运行：
+### 相机驱动程序配置
+
+此步骤仅在您使用多台通过XTR并联连接的相机时需要执行。
+
+编辑 `/boot/firmware/config.txt` 文件。将 `camera_auto_detect=1` 修改为 `camera_auto_detect=0`。
+
+```ini
+dtoverlay=imx296,always-on
+```
+
+若在 Raspberry Pi 5、CM4 或 CM5 上使用 CAM0 端口，需在该行末尾添加 `,cam0`（不带空格）。若两台摄像头均连接至同一台 Raspberry Pi，则需添加两行 dtoverlay，其中仅一行以 `,cam0` 结尾。
+
+如果外部触发器不会立即启动，您还需要增加 libcamera 超时设置 [如上所述](#libcamera-配置)。。
+
+### 启动摄像头
+
+启用外部触发：
+
+```sh
+echo 1 | sudo tee /sys/module/imx296/parameters/trigger_mode
+```
+
+在 Pico 上运行代码，然后启动摄像头：
+
 ```sh
 rpicam-hello -t 0 --qt-preview --shutter 3000
 ```
 
-Pico 每脉冲一次该引脚，就会产生一个帧。要控制帧频，可改变脉冲之间的持续时间。
+每次 Pico 脉冲引脚时，它都应捕获一帧图像。然而，如果未设置 `--gain` 和 `--awbgains` 参数，部分帧将被丢弃，以允许自动增益控制（AGC）和自动白平衡（AWB）算法稳定下来。
 
 :::note[注意]
-运行 `rpicam-apps` 时，请始终指定一个固定的快门持续时间，以确保 AGC 不会调整相机的快门速度。持续时间并不重要，因为它实际上是由外部触发脉冲控制的。
+在运行 `rpicam-apps` 时，请始终指定一个固定的快门持续时间，以确保 AGC 不会尝试调整相机的快门速度。该值并不重要，因为它实际上由外部触发脉冲控制。
 :::
+
 
 <Normal />
