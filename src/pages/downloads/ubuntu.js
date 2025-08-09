@@ -15,7 +15,7 @@ const OSConfig = {
     osimages_content2: ' 是将操作系统安装到 microSD 卡上并与 Raspberry Pi 配套使用的快速简便方法。您也可以从以下操作系统中进行选择，下载并手动安装。',
     imager_url: { downloadurl: "/downloads", title: "Raspberry Pi Imager", showButton: false, },
     inner_url: [
-        { linkto: "#ubuntu-2404-lts", title: "Ubuntu 24.04.2 LTS *推荐*", showButton: false },
+        { linkto: "#ubuntu-2404-lts", title: "Ubuntu 24.04.3 LTS *推荐*", showButton: false },
         { linkto: "#ubuntu-2504", title: "Ubuntu 25.04", showButton: false },
         { linkto: "#ubuntu-2410", title: "Ubuntu 24.10", showButton: false },
         { linkto: "#ubuntu-2204-lts", title: "Ubuntu 22.04.5 LTS", showButton: false },
@@ -25,15 +25,15 @@ const OSConfig = {
     os: [
         {
             id: "ubuntu-2404-lts",
-            title: "Ubuntu 24.04.2 LTS (推荐)",
+            title: "Ubuntu 24.04.3 LTS (推荐)",
             desc: "Ubuntu 的最新 LTS 版本。LTS 代表长期支持，这意味着五年的免费安全和维护更新。",
             extos: [
                 {
-                    title: "Ubuntu 24.04.2 LTS Desktop(桌面)",
-                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.2-preinstalled-desktop-arm64+raspi.img.xz",
-                    release_date: "2025-02-15",
+                    title: "Ubuntu 24.04.3 LTS Desktop(桌面)",
+                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.3-preinstalled-desktop-arm64+raspi.img.xz",
+                    release_date: "2025-08-07",
                     system: "64位",
-                    image_size: "2,745MB",
+                    image_size: "2,781MB",
                     compatible_list: [
                         { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
                         { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
@@ -43,11 +43,11 @@ const OSConfig = {
                     ],
                 },
                 {
-                    title: "Ubuntu 24.04.2 LTS Server(64位)",
-                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.2-preinstalled-server-arm64+raspi.img.xz",
-                    release_date: "2025-02-15",
+                    title: "Ubuntu 24.04.3 LTS Server(64位)",
+                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.3-preinstalled-server-arm64+raspi.img.xz",
+                    release_date: "2025-08-07",
                     system: "64位",
-                    image_size: "1,143MB",
+                    image_size: "1,175MB",
                     compatible_list: [
                         { name: "3B", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" },
                         { name: "3B+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" },
