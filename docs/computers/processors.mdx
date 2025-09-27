@@ -1,11 +1,11 @@
 ---
-sidebar_position: 12
+sidebar_position: 13
 draft: false
-title_meta: 树莓派处理器介绍，包括BCM2835、BCM2836、BCM2837、BCM2711、BCM2712、RP3A0等CPU的参数与功能规格(官网24年12月)
+title_meta: 树莓派处理器介绍，包括BCM2835、BCM2836、BCM2837、BCM2711、BCM2712、RP3A0等CPU的参数与功能规格(官网25年09月)
 description: 树莓派处理器介绍，包括BCM2835、BCM2836、BCM2837、BCM2711、BCM2712、RP3A0等CPU的参数与功能规格。
 keywords: [树莓派, Raspberry Pi, BCM2835, BCM2836, BCM2837, BCM2711, BCM2712, RP3A0]
 last_update: 
-  date: 2025-06-02
+  date: 2025-09-27
 ---
 import Normal from "../_normal.mdx";
 
@@ -68,7 +68,7 @@ BCM2711 芯片继续使用 BCM2837B0 开始采用的热扩散技术，从而提�
 
 ## BCM2712
 
-Broadcom BCM2712 是用于 Raspberry Pi 5、Compute Module 5 和 Pi 500 的 16nm 应用处理器。它是 Raspberry Pi 4 中使用的 BCM2711 器件的后续产品，与 Raspberry Pi 早期产品中使用的 BCM27xx 系列中的其他器件具有许多共同的架构特性。
+Broadcom BCM2712 是用于 Raspberry Pi 5、500、500+ 和 Compute Module 5 的 16nm 应用处理器。它是 Raspberry Pi 4 中使用的 BCM2711 器件的后续产品，与 Raspberry Pi 早期产品中使用的 BCM27xx 系列中的其他器件具有许多共同的架构特性。
 
 它围绕四核 Arm Cortex-A76 CPU 集群构建，主频高达 2.4GHz，具有 512KB 每核二级缓存和 2MB 共享三级缓存，集成了改进的 12 核 VideoCore VII GPU、能够驱动双 4kp60 显示器的硬件视频缩放器和 HDMI 控制器，以及树莓派开发的 HEVC 解码器和图像信号处理器。32 位 LPDDR4X 内存接口可提供高达 17GB/s 的内存带宽，而 x1 和 x4 PCI Express 接口可支持高带宽外部外设；在树莓派5上，后者用于连接树莓派RP1南桥，该南桥提供了平台上大部分面向外部的 I/O 功能。
 
@@ -82,7 +82,7 @@ Broadcom BCM2712 是用于 Raspberry Pi 5、Compute Module 5 和 Pi 500 的 16nm
 - 改进的 HVS 和显示管道
   - 支持双 4Kp60
 - VideoCore V3D VII
-  - 速度快 ~2-2.5倍（硬件更多，1GHz，而 Pi4 为 600MHz）
+  - 速度快 ~2-2.5倍（硬件更多，960MHz，而 Pi4 为 600MHz）
   - OpenGL ES 3.1、Vulkan 1.3
 - 4Kp60 HEVC 硬件解码
   - 其他 CODEC 在软件中运行

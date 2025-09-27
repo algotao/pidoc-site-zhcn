@@ -4,13 +4,13 @@ draft: false
 description: Raspberry Pi AI 相机使用索尼 IMX500 成像传感器，可为任何相机应用提供低延迟、高性能的 AI 功能。与 Raspberry Pi 的相机软件栈的紧密集成使用户能够以最小的工作量部署自己的神经网络模型。
 keywords: [树莓派, Raspberry Pi, AI Camera, AI摄像头]
 last_update: 
-  date: 2025-05-10
+  date: 2025-09-27
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# AI 摄像头 (新品)
+# AI 摄像头
 
 Raspberry Pi AI 相机使用索尼 IMX500 成像传感器，可为任何相机应用提供低延迟、高性能的 AI 功能。与 [Raspberry Pi 的相机软件栈](../computers/camera-software.mdx) 的紧密集成使用户能够以最小的工作量部署自己的神经网络模型。
 
@@ -375,28 +375,53 @@ Picamera2 中的 IMX500 类提供了以下辅助函数：
 
 要在 Raspberry Pi AI 摄像头上部署新的神经网络模型，请完成以下步骤：
 
-1. 提供神经网络模型。
-2. 量化并压缩模型，使其能够利用 IMX500 摄像头模块上的可用资源运行。
-3. 将压缩模型转换为 IMX500 格式。
-4. 将模型打包成固件文件，以便在运行时加载到相机上。
+1. 提供浮点神经网络模型（PyTorch 或 TensorFlow）。
+2. 通过 Edge-MDT（边缘人工智能模型开发工具包）运行该模型。
+    * a. 对模型进行**量化**与压缩，使其能够利用 IMX500 相机模块的可用资源运行。
+    * b. 将压缩后的模型**转换**为 IMX500 格式。
+3. 将模型打包成固件文件，以便在运行时加载到相机上。
 
-前三个步骤通常在台式机或服务器等功能更强大的计算机上执行。您必须在 Raspberry Pi 上运行最后的打包步骤。
+前两个步骤通常在台式机或服务器等功能更强大的计算机上执行。您必须在 Raspberry Pi 上运行最后的打包步骤。
 
-### 创建模型
+### 模型创建
 
-神经网络模型的创建超出了本指南的范围。现有模型可以重复使用，也可以使用 TensorFlow 或 PyTorch 等流行框架创建新模型。
+神经网络模型的创建超出了本指南的范围。现有模型可以重复使用，也可以使用 TensorFlow 或 PyTorch 等流行 AI 框架创建新模型。
 
-更多信息，请参阅 [AITRIOS开发者官方网站](https://developer.aitrios.sony-semicon.com/en/raspberrypi-ai-camera)。
 
-### 量化和压缩
+### 模型压缩与转换
 
-使用索尼的模型压缩工具包对模型进行量化和压缩。要安装该工具包，请运行以下命令：
+#### Edge-MDT 安装
 
+Edge-MDT（模型开发工具包）软件包安装了所有必需工具，用于对模型进行量化、压缩和转换，使其能在 IMX500 设备上运行。
+
+Edge-MDT安装包支持通过参数选择安装PyTorch或TensorFlow版本的工具集。
+
+<Tabs groupId="language">
+
+<TabItem value="PyTorch">
 ```sh
-pip install model_compression_toolkit
+pip install edge-mdt[pt]
+```
+</TabItem>
+
+<TabItem value="TensorFlow">
+```sh
+pip install edge-mdt[tf]
 ```
 
-更多信息，请参阅 [索尼模型优化 GitHub 代码库](https://github.com/sony/model_optimization)。
+:::tip 
+请始终使用与模型压缩时相同的TensorFlow版本。
+:::
+
+</TabItem>
+
+</Tabs>
+
+若需同时安装两个软件包，请创建两个独立的Python虚拟环境。此举可避免TensorFlow与PyTorch之间发生冲突。
+
+#### 模型优化
+
+模型通过索尼模型压缩工具包（MCT）进行量化和压缩。该工具会在安装Edge-MDT时自动安装。更多信息请参阅[索尼模型优化GitHub仓库](https://github.com/sony/model_optimization)。
 
 模型压缩工具包以下列格式生成量化模型：
 
@@ -405,32 +430,21 @@ pip install model_compression_toolkit
 
 ### 转换
 
-要转换模型，首先安装转换工具：
+该转换器是一款命令行应用程序，可将量化模型（.onnx 或 .keras 格式）编译为二进制文件，该文件可打包并加载至 AI 相机。此工具作为 Edge-MDT 安装步骤的一部分自动安装。
+
+要转换模型：
+
 
 <Tabs groupId="language">
-<TabItem value="tf">
+<TabItem value="PyTorch">
 
 ```sh
-pip install imx500-converter[tf]
+imxconv-pt -i <compressed ONNX model> -o <output folder>
 ```
 
 </TabItem>
 
-<TabItem value="pt">
-
-```sh
-pip install imx500-converter[pt]
-```
-
-</TabItem>
-</Tabs>
-
-如果需要安装这两个软件包，请使用两个独立的 Python 虚拟环境。这样可以防止 TensorFlow 和 PyTorch 相互冲突。
-
-接下来，转换模型：
-
-<Tabs groupId="language">
-<TabItem value="tf">
+<TabItem value="TensorFlow">
 
 ```sh
 imxconv-tf -i <compressed Keras model> -o <output folder>
@@ -438,19 +452,13 @@ imxconv-tf -i <compressed Keras model> -o <output folder>
 
 </TabItem>
 
-<TabItem value="pt">
-
-```sh
-imxconv-pt -i <compressed ONNX model> -o <output folder>
-```
-
-</TabItem>
 </Tabs>
 
+:::important[重要]
+为充分利用IMX500传感器加速器可用的内存，请在上述命令中添加`--no-input-persistency`参数。但此操作将禁用输入张量生成功能，该功能可能用于调试目的。
+:::
 
 这两条命令都会创建一个输出文件夹，其中包含一份内存使用报告和一个 `packerOut.zip` 文件。
-
-为优化使用 IMX500 传感器加速器的可用内存，请在上述命令中添加 `--no-input-persistency`。不过，这将禁用输入张量生成，并返回应用程序进行调试。
 
 有关模型转换过程的更多信息，请参阅 [索尼 IMX500 转换器官方文档](https://developer.aitrios.sony-semicon.com/en/raspberrypi-ai-camera/documentation/imx500-converter)。
 

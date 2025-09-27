@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解
 description: 树莓派系统配置介绍，以图示的方式介绍使用raspi-config工具配置有线网络、配置无线WiFi网络、配置热点、设置代理服务器、设置显示器的分辨率及方向。挂载外部USB存贮设备，更改默认引脚设置，配置UART。LED警告闪烁代码的含义。增加或删除用户，安装防火墙等。
 keywords: [树莓派, Raspberry Pi, 系统配置, raspi-config, LAN, WiFI, 无线, 代理服务器, UART, LED, 闪烁]
 last_update: 
-  date: 2025-06-22
+  date: 2025-09-27
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -1079,7 +1079,7 @@ sudo adduser <username>
 要授予新用户必要的权限（如 `sudo`），请运行以下命令将用户添加到相关用户组，并用新用户的用户名替换占位符 `<username>`：
 
 ```sh
-sudo usermod -a -G adm,dialout,cdrom,sudo,audio,video,plugdev,games,users,input,netdev,gpio,i2c,spi <username>
+sudo usermod -a -G adm,dialout,cdrom,sudo,audio,video,plugdev,games,users,input,render,netdev,lpadmin,gpio,i2c,spi <username>
 ```
 
 要检查权限是否已成功授予，请运行以下命令，用新用户的用户名替换 `<username>` 占位符：
@@ -1089,6 +1089,12 @@ sudo su - <username>
 ```
 
 如果上述命令运行成功，则表明已成功为该用户配置了权限。
+
+若您更改了键盘布局，可能会发现新添加的用户使用的是"错误"的键盘布局。要解决此问题，请以新用户身份登录并运行：
+
+```sh
+sudo raspi-config nonint update_labwc_keyboard
+```
 
 ### 删除用户
 
@@ -1752,8 +1758,8 @@ bootloader，由 SoC 在启动时加载。它执行一些非常基本的设置�
 | `kernel.img` | BCM2835 | Pi Zero、Pi 1、CM1 |  |
 | `kernel7.img` | BCM2836, BCM2837 | Pi Zero 2 W、Pi 2、CM3、Pi 3+、CM3+ | Pi 2 的后期版本使用 BCM2837 |
 | `kernel7l.img` | BCM2711 | Pi 4、CM4、CM4S、Pi 400 | 大物理地址扩展 (LPAE) |
-| `kernel8.img` | BCM2837、BCM2711、BCM2712 | Pi Zero 2 W、Pi 2（后期修订版）、Pi 3、CM3、Pi 3+、CM3+、Pi 4、CM4、CM4S、Pi 400、CM5、Pi 5、Pi 500 | [64位内核](./config-txt.mdx#启动选项)。早期版本的 Raspberry Pi 2（带 BCM2836）不支持 64 位内核。 |
-| `kernel_2712.img` | BCM2712 | Pi 5、CM5、Pi 500 | Pi 5 优化过的 [64位内核](./config-txt.mdx#启动选项)。 |
+| `kernel8.img` | BCM2837、BCM2711、BCM2712 | Pi Zero 2 W、Pi 2（后期修订版）、Pi 3、CM3、Pi 3+、CM3+、Pi 4、CM4、CM4S、Pi 400、CM5、Pi 5、Pi 500、Pi 500+ | [64位内核](./config-txt.mdx#启动选项)。早期版本的 Raspberry Pi 2（带 BCM2836）不支持 64 位内核。 |
+| `kernel_2712.img` | BCM2712 | Pi 5、CM5、Pi 500、Pi 500+ | Pi 5 优化过的 [64位内核](./config-txt.mdx#启动选项)。 |
 
 :::note[注意]
 运行 32 位内核的系统，`lscpu` 报告 CPU 架构为 `armv7l`；运行 64 位内核的系统，`lscpu` 报告 CPU 架构为 `aarch64`。`armv7l` 中的 `l` 指的是小端 CPU 架构，而不是 `kernel7l.img` 文件名中的 `l` 所表示的 `LPAE`。
@@ -1773,6 +1779,7 @@ bootloader，由 SoC 在启动时加载。它执行一些非常基本的设置�
 | 0 | 8 | SDRAM 故障 |
 | 0 | 9 | SDRAM 不足 |
 | 0 | 10 | 处于 HALT 状态 |
+| 1 | 2 | 检测到SD卡过流 |
 | 2 | 1 | 分区不是 FAT |
 | 2 | 2 | 从分区读取失败 |
 | 2 | 3 | 扩展分区不是 FAT |
@@ -2415,7 +2422,7 @@ conditional = <0>,"=3!4"; // 如果参数值为真，则启用 3，禁用 4、
 
 * `bcm2835` 用于所有围绕 BCM2835、BCM2836、BCM2837 和 RP3A0 SoC 构建的 Raspberry Pis
 * 用于 Raspberry Pi 4B、CM4、CM4S 和 Pi 400 的 `bcm2711`
-* 用于 Raspberry Pi 5、CM5 和 Pi 500 的 `bcm2712`
+* 用于 Raspberry Pi 5、CM5、Pi 500 和 Pi 500+ 的 `bcm2712`
 
 没有值的平台名称（空属性）表示当前覆盖层与该平台兼容；例如，`uart5`与`bcm2711`平台兼容。平台的非空值是替代所请求的覆盖层的名称；在 BCM2712 上请求`disable-bt`，结果是载入`disable-bt-pi5`。任何未包含在覆盖节点中的平台都与该覆盖不兼容。地图中未提及的任何覆盖都被假定为与所有平台兼容。
 
@@ -2688,7 +2695,7 @@ ALSA 不会阻止其编解码器和其他组件在使用中被卸载。如果删
 
 读取32位无符号整数属性的示例shell命令：
 ```sh
-printf “%d” “0x$(od ”/proc/device-tree/chosen/bootloader/partition“ -v -An -t x1 | tr -d ‘ ’ )”
+printf "%d" "0x$(od "/proc/device-tree/chosen/bootloader/partition" -v -An -t x1 | tr -d ‘ ’ )"
 ```
 
 `overlay_prefix` - 字符串。`config.txt` 选择的 [overlay_prefix](./config-txt.mdx#overlay_prefix) 字符串。

@@ -1,11 +1,11 @@
 ---
 sidebar_position: 4
 draft: false
-title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解(官网24年12月)
+title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解(官网25年09月)
 description: 树莓派config.txt是树莓派OS在启动期间访问的配置文件，其作用可理解为类似BIOS中的配置，用于控制启动期间各项软硬件的行为。功能有：指定启动分区号、AB启动分区切换、故障安全操作系统升级、dtoverlay覆盖层设置。多种启动模式：SD卡启动，网络启动，USB启动，GPIO启动。超频：ARM核心超频、GPU核心超频、内存超频。
 keywords: [树莓派, Raspberry Pi, config.txt, boot分区, tryboot, SD卡启动, GPIO启动, 网络启动, USB启动, 超频, 许可证密钥]
 last_update: 
-  date: 2025-06-22
+  date: 2025-09-27
 ---
 import Normal from "../_normal.mdx";
 
@@ -202,7 +202,7 @@ Raspberry Pi 设备的设备树配置文件支持各种参数，例如启用 I2C
 #### power_force_3v3_pwm
 
 :::note
-该选项仅适用于 Raspberry Pi 5、Compute Module 5 和 Pi 500。
+该选项仅适用于 Raspberry Pi 5、500、500+ 和Compute Module 5。
 :::
 
 强制对 GPIO 针座或 CSI 连接器的 3.3V 输出进行 PWM。
@@ -245,7 +245,7 @@ dtoverlay=vc4-kms-v3d,noaudio
 ### start_file, fixup_file
 这些选项指定了启动前传输到 VideoCore GPU 的固件文件。
 
-`start_file` 指定要使用的 VideoCore 固件文件。 `fixup_file` 指定用于修复 `start_file` 中使用的内存位置以匹配 GPU 内存分割的文件。
+`start_file` 指定要使用的 VideoCore 固件文件。`fixup_file` 指定用于修复 `start_file` 中使用的内存位置的文件，使其与 GPU 内存分割相匹配。
 
 `start_file` 和 `fixup_file` 是一对匹配的文件，使用不匹配的文件将导致电路板无法启动。这是一个高级选项，因此我们建议您使用 `start_x` 和 `start_debug`，而不是此选项。
 
@@ -254,7 +254,7 @@ dtoverlay=vc4-kms-v3d,noaudio
 :::
 
 :::note[注意]
-Raspberry Pi 5、Compute Module 5 和 Raspberry Pi 500 固件自带引导加载器 EEPROM。
+Raspberry Pi 5、500、500+，和Compute Module 5 固件自带引导加载器 EEPROM。
 :::
 
 ### cmdline
@@ -264,7 +264,7 @@ Raspberry Pi 5、Compute Module 5 和 Raspberry Pi 500 固件自带引导加载�
 
 `kernel` 是引导分区中用于加载内核的替代文件名。Raspberry Pi 1、Zero 和 Zero W 以及 Raspberry Pi 计算模块 1 的默认值是 `kernel.img`。Raspberry Pi 2、3、3+ 和 Zero 2 W 以及 Raspberry Pi 计算模块 3 和 3+ 的默认值是 `kernel7.img`。Raspberry Pi 4 和 400 以及 Raspberry Pi 计算模块 4 的默认值是 `kernel8.img`，如果 `arm_64bit` 设置为 0，则默认值是 `kernel7l.img`。
 
-Raspberry Pi 5、Compute Module 5 和 Raspberry Pi 500 固件默认加载 `kernel_2712.img`，因为该映像包含这些型号特有的优化（例如 16K 页面大小）。如果没有该文件，则将加载普通 64 位内核 (`kernel8.img`)。
+Raspberry Pi 5、500、500+，和Compute Module 5 固件默认加载 `kernel_2712.img`，因为该映像包含这些型号特有的优化（例如 16K 页面大小）。如果没有该文件，则将加载普通 64 位内核 (`kernel8.img`)。
 
 ### arm_64bit
 如果设置为 1，内核将以 64 位模式启动。设置为 0 则选择 32 位模式。
@@ -420,6 +420,34 @@ USB On-The-Go（通常缩写为 OTG）是一项功能，允许使用适当 OTG �
 此属性可用于调试不同的 [BOOT_ORDER](./raspberry-pi.mdx#boot_order) 设置。或者，它可用于具有电源控制和 `nRPIBOOT` GPIO 的配置系统，以在不指定 EEPROM 配置中的 [条件筛选器](#条件筛选器) 语句的情况下覆盖启动模式。
 
 默认值：``
+
+#### `kernel_watchdog_timeout`
+
+若设置为非零值（单位为秒），此属性将启用硬件看门狗定时器，并在系统启动时移交至操作系统（OS）。若操作系统未能定期"重置"或复位看门狗，系统将在指定超时时间后自动重启。
+
+该属性设置`systemd`的`watchdog.open_timeout`参数，用于控制操作系统初始化并开始服务看门狗的时间限制。该值通过内核命令行传递给操作系统。为确保持续运行，操作系统还需定期重置看门狗，通常由`systemd`中的`RuntimeWatchdogSec`参数控制。更多信息请参阅[systemd看门狗文档](https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#RuntimeWatchdogSec=)。
+
+:::tip
+在树莓派操作系统Bookworm及更早版本中，`RuntimeWatchdogSec`参数默认**未启用**，必须先在`/etc/systemd/system.conf`中配置此设置，才能使用固件内核看门狗功能。
+
+若同时设置了 `BOOT_WATCHDOG_TIMEOUT`（EEPROM/引导程序设置，仅支持树莓派4和5）和 `kernel_watchdog_timeout`，引导程序将在操作系统启动时无缝切换至内核看门狗。这可实现从上电到操作系统运行期间的连续看门狗保护。
+
+建议优先使用`kernel_watchdog_timeout`而非`dtparam=watchdog`，因为前者会显式设置`open_timeout`参数，确保看门狗在systemd接管前始终处于活动状态。
+:::
+
+这有助于确保系统在启动过程完成后能够从操作系统卡死或崩溃中恢复。
+
+默认值：`0`（禁用）
+
+#### `kernel_watchdog_partition`
+
+若内核看门狗触发（即操作系统未能在超时内重置看门狗），此属性将指定重置后启动的分区编号。此功能可实现自动故障转移至恢复分区或备用分区。
+
+可结合 [表达式过滤器](./config-txt.mdx#表达式过滤器) 使用，在看门狗触发特定分区重启时应用不同设置或选择不同启动流程。
+
+有关如何使用高分区号检测看门狗触发机制的详细信息，请参阅[PARTITION](./raspberry-pi.mdx#partition)属性。
+
+默认值：`0`（默认分区）
 
 #### eeprom_write_protect
 配置 EEPROM `写入状态寄存器`。可将其设置为将整个 EEPROM 标记为写保护或清除写保护。
@@ -589,13 +617,13 @@ gpio=17-21=ip
 | core_freq_fixed | 设置为 1 将禁用内核时钟频率的主动缩放，确保使用内核时钟的外设保持一致的速度。固定时钟速度是所用平台的较高/turbo频率。与设置特定的 core_clock 频率相比，使用该频率可提供不同平台间配置文件的可移植性。 |
 
 本表给出了不同型号树莓派上各选项的默认值，所有频率均以 MHz 为单位。
-| 选项 | Pi0/W | Pi1 | Pi2 | Pi3 | Pi3A+<br />Pi3B+ | CM4&Pi4B<br />⇐ R1.3 | Pi4B R1.4 | Pi400 | Pi Zero 2W | Pi5 |
+| 选项 | Pi Zero W | Pi 1 | Pi 2 | Pi 3 | Pi 3A+<br />Pi 3B+ | CM4 & Pi 4B<br />⇐ R1.3 | Pi 4B R1.4 | Pi 400 | Pi Zero 2W | Pi 5/500/500+ |
 | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | 
 | arm_freq | 1000 | 700 | 900 | 1200 | 1400 | 1500 | 1500 或 1800 如果 `arm_boost`=1 | 1800 | 1000 | 1400 |
 | core_freq | 400 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 400 | 910 |
 | h264_freq | 300 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 300 | N/A |
 | isp_freq | 300 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 300 | 910 |
-| v3d_freq | 300 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 300 | 910 |
+| v3d_freq | 300 | 250 | 250 | 400 | 400 | 500 | 500 | 500 | 300 | 960 |
 | hevc_freq | N/A | N/A | N/A | N/A | N/A | 500 | 500 | 500 | N/A | 910 |
 | sdram_freq | 450 | 400 | 450 | 450 | 500 | 3200 | 3200 | 3200 | 450 | 4267 |
 | arm_freq_min | 700 | 700 | 600 | 600 | 600 | 600 | 600 | 600 | 600 | 1500 |
@@ -666,7 +694,7 @@ cat /sys/class/thermal/thermal_zone0/temp
 
 达到温度上限不会对 SoC 造成伤害，但会导致 CPU 节流。散热器有助于控制核心温度，从而提高性能。如果 Raspberry Pi 在机箱内运行，这一点尤其有用。散热片上的气流可提高冷却效率。
 
-树莓派3B+及之后PCB技术已发生变化，以提供更好的散热并增加散热效率。此外还引入了软温度限制，目的是最大限度地延长设备在达到85°C硬限制之前“冲刺”的时间。当达到软限制时，时钟速度从1.4GHz降低到1.2GHz，并且工作电压略有降低。这减缓了温度上升的速度：我们将1.4GHz限制到1.2GHz以换取更长的工作时间。默认情况下软限制为60°C，可以通过 config.txt 中的`temp_soft_limit`中的设置更改此值。
+树莓派3B+及之后PCB技术已发生变化，以提供更好的散热并增加散热效率。此外还引入了软温度限制，目的是最大限度地延长设备在达到85°C硬限制之前"冲刺"的时间。当达到软限制时，时钟速度从1.4GHz降低到1.2GHz，并且工作电压略有降低。这减缓了温度上升的速度：我们将1.4GHz限制到1.2GHz以换取更长的工作时间。默认情况下软限制为60°C，可以通过 config.txt 中的`temp_soft_limit`中的设置更改此值。
 
 ### 监控电压
 为确保性能可靠，电源电压必须保持在 4.8V 以上。请注意，某些 USB 充电器/电源的电压可能低至 4.2V。这是因为它们通常是为 3.7V LiPo 电池充电而设计的，而不是为计算机提供 5V 电压。
@@ -707,9 +735,9 @@ vcgencmd pmic_read_adc EXT5V_V
 | `[pi3]` | 3B、3B+、3A+、CM3、CM3+ |
 | `[pi3+]` | 3A+, 3B+。同时查看 `[pi3]` 内容） |
 | `[pi4]` | 4B、400、CM4、CM4S |
-| `[pi5]` | 5、CM 5、500 |
+| `[pi5]` | 5、500、500+、CM 5 |
 | `[pi400]` | 400。同时查看 `[pi4]` 内容） |
-| `[pi500]` | 500。同时查看 `[pi5]` 内容） |
+| `[pi500]` | 500/500+。同时查看 `[pi5]` 内容） |
 | `[cm1]` | CM1。同时查看 `[pi1]` 内容） |
 | `[cm3]` | CM3。同时查看 `[pi3]` 内容） |
 | `[cm3s]` | CM3S。同时查看 `[pi3]` 内容） |
@@ -766,9 +794,9 @@ cmdline=cmdline-recovery.txt
 
 ### 表达式过滤器
 
-表达式过滤器支持使用一组简单的运算符将无符号整数“启动变量”与常量进行比较。它旨在支持OTA更新机制、调试和测试。
+表达式过滤器支持使用一组简单的运算符将无符号整数"启动变量"与常量进行比较。它旨在支持OTA更新机制、调试和测试。
 
-* “启动变量”包括`boot_arg1`、`boot_count`、`boot_partition`和`partition`。
+* "启动变量"包括`boot_arg1`、`boot_count`、`boot_partition`和`partition`。
 * 启动变量始终为小写。
 * 整数常量可以以十进制或十六进制形式书写。
 * 表达式条件过滤器没有副作用，例如没有赋值运算符。
@@ -814,6 +842,26 @@ sudo vcmailbox 0x0003008c 8 8 1 0
 ```
 
 操作系统启动时 `boot_arg1` 变量的值可通过 [设备树](./configuration.mdx#设备树) 在 `/proc/device-tree/chosen/bootloader/arg1` 读取
+
+#### bootvar0
+
+仅适用于树莓派5及更新设备。
+
+`bootvar0`变量是一个32位用户自定义值，通过`rpi-eeprom-config`设置后，可在`config.txt`中作为条件变量使用。
+
+例如，通过 `rpi-eeprom-config` 将 `bootvar0` 设为 42：
+```ini
+BOOTVAR0=42
+```
+
+在 `config.txt` 中条件使用 `bootvar0`：
+
+```ini
+[bootvar0=42]
+arm_freq=1000
+```
+
+这使得通用镜像（即使用相同`config.txt`文件）能够根据持久化的`rpi-eeprom-config`设置支持不同配置。
 
 #### boot_count
 仅适用于 Raspberry Pi 5 及更新设备。

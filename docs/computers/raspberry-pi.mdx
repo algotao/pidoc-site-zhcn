@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 树莓派1至树莓派5硬件的完整介绍，章节包括：原理图和机械图、产品合规性与安全性、频率管理与热控制、启动EEPROM的更新与故障诊断、系统启动顺序、第一阶段与第二阶段bootloader、USB启动、网络启动、GPIO启动、NVMe SSD启动、HTTP启动、OTP寄存器及位定义、工业应用、SPI软硬件、修订码识别
 keywords: [树莓派, Raspberry Pi, GPIO, 电源, 电压, 输入, 输出, 散热, 驱动强度, 修订码, SPI, OTP]
 last_update: 
-  date: 2025-03-15
+  date: 2025-09-27
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -17,14 +17,13 @@ import TabItem from '@theme/TabItem';
 
 Raspberry Pi 电脑分为几个不同的**系列**：
 
-* **旗舰**系列，通常简称为 `Raspberry Pi`，提供高性能硬件、完整的 Linux 操作系统和各种常用端口，外形尺寸与信用卡差不多。
-* **键盘**系列，提供高性能旗舰硬件、完整的 Linux 操作系统和各种常用端口，并将其捆绑在键盘外形中。
-* **Zero**系列，提供完整的 Linux 操作系统和基本端口，价格实惠，外形小巧，功耗低。
-* **Compute Module**系列，通常简称为 "CM"，在适合工业和嵌入式应用的最小外形中提供高性能硬件和完整的 Linux 操作系统。Compute Module 型号的硬件与相应的旗舰型号相当，但端口较少，没有板载 GPIO 引脚。用户应将计算模块连接到一个单独的底板上，该底板可提供特定应用所需的端口和引脚。
+* **[单板计算机(SBCs)](./raspberry-pi.mdx#旗舰级单板计算机sbc系列)**。旗舰级的树莓派系列在信用卡大小的机身内，集成了高性能硬件、完整的Linux操作系统以及多种通用接口。
+* **[键盘计算机(X00)](./raspberry-pi.mdx#键盘计算机系列x00)**。树莓派键盘计算机将单板计算机硬件、完整的Linux操作系统及常用接口整合于紧凑的键盘外壳内。
+* **[Zero](./raspberry-pi.mdx#zero系列)**。采用极简设计的小型经济型机型，提供完整的Linux操作系统和基本接口，具有低功耗特性。
+* **[计算模块(CM)](./raspberry-pi.mdx#compute-module系列)**。 专为嵌入式及工业应用设计的板卡，提供与旗舰级单板计算机相同的硬件配置，但采用更小尺寸且无板载接口。需连接独立底板以获取必要端口和引脚。
+* **[Pico(微控制器)](./raspberry-pi.mdx#pico微控制器)**。小巧多功能板卡，不运行Linux系统。程序直接刷写至板载存储器，无需可移除存储介质。Pico微控制器适用于实时控制与轻量级嵌入式项目。
 
-此外，Raspberry Pi 还生产 **Pico** 系列小巧、多功能的 [微控制器](https://zh.wikipedia.org/wiki/%E5%8D%95%E7%89%87%E6%9C%BA) 板。Pico 型号不运行 Linux，也不允许使用可移动存储器，而是允许通过将二进制文件闪存到板载闪存上进行编程。
-
-### 旗舰系列
+### 旗舰级单板计算机(SBC)系列
 
 **Model B** 表示有以太网端口。
 **Model A** 表示成本较低的型号，外形较小，没有以太网端口，RAM 较小，USB 端口较少，以限制电路板高度。
@@ -215,9 +214,9 @@ Raspberry Pi 电脑分为几个不同的**系列**：
     </tr>
 </table>
 
-### 键盘系列
+### 键盘计算机系列(X00)
 
-键盘系列设备使用形式为 `<X00>` 的型号标识符，其中 `X` 表示相应的旗舰系列设备。例如，`Raspberry Pi 500` 是 Raspberry Pi 5 的键盘版本。
+键盘系列设备采用`<X00>`形式的型号标识符，其中`X`代表对应的旗舰单板计算机（SBC）系列设备。例如，树莓派400即为树莓派4的键盘版本。有关树莓派键盘计算机的详细信息，请参阅[键盘计算机](./keyboard-computers.mdx)。
 
 <table>
     <tr>
@@ -257,6 +256,23 @@ Raspberry Pi 电脑分为几个不同的**系列**：
           - 蓝牙 5、低功耗蓝牙 (BLE)
           - microSD 卡插槽
           - USB-C 电源(5V/5A(25W) 或 5V/3A(15W)+外设限制为 600mA)
+        </td>
+    </tr>
+     <tr>
+        <td align="center"><img src="/img/computers/raspberry-pi/500plus.png" alt="Raspberry Pi 500+"/>*Raspberry Pi 500+*</td>
+        <td>[BCM2712](./processors.mdx#bcm2712)</td>
+        <td>16 GB</td>
+        <td>40针GPIO头</td>
+        <td>
+          - 2× 微型 HDMI
+          - USB 2.0
+          - 2× USB 3.0
+          - 千兆（1Gb/s）以太网 RJ45
+          - 2.4/5GHz 双频 802.11ac Wi-Fi（300Mb/s）
+          - 蓝牙 5、低功耗蓝牙 (BLE)
+          - microSD 卡插槽
+          - 内置 M.2 SSD（256 GB）
+          - USB-C 电源(5V/5A(25W))
         </td>
     </tr>
 </table>
@@ -335,6 +351,8 @@ Raspberry Pi 电脑分为几个不同的**系列**：
 
 ### Compute Module系列
 
+有关树莓派计算模块硬件的更多详细信息，请参阅 [计算模块硬件](./compute-module.mdx)。
+
 <table>
     <tr>
         <th width="30%">型号</th>
@@ -391,7 +409,7 @@ Raspberry Pi 电脑分为几个不同的**系列**：
     <tr>
         <td align="center"><img src="/img/computers/raspberry-pi/compute-module-5.png" alt="Raspberry Pi Compute Module 5"/>*Raspberry Pi Compute Module 5*</td>
         <td>[BCM2712](./processors.mdx#bcm2712)</td>
-        <td>2GB<br />4GB<br />8GB</td>
+        <td>2GB<br />4GB<br />8GB<br />16GB</td>
         <td>0GB(精简版)<br />16GB<br />32GB<br />64GB</td>
         <td>双 100 针高密度连接器</td>
         <td>
@@ -405,8 +423,6 @@ Raspberry Pi 电脑分为几个不同的**系列**：
 :::tip
 使用 DDR2 SO-DIMM 物理外形尺寸的计算模块与 DDR2 SO-DIMM 电气规格**不兼容**。
 :::
-
-有关 Raspberry Pi 计算模块的更多信息，请参阅 [计算模块](./compute-module.mdx) 文档。
 
 ### Pico微控制器
 
@@ -594,8 +610,8 @@ Raspberry Pi 电脑分为几个不同的**系列**：
 
 了解有关树莓派[合规性支持计划的更多信息](https://www.raspberrypi.com/for-industry/integrator-programme/)。
 
-### ”Powered by 树莓派“ 徽标
-”Powered by 树莓派“计划为希望使用树莓派徽标形式的公司提供了一个流程，涵盖了内置树莓派计算机或芯片的产品以及由树莓派提供的服务。如果您希望开始流程，您可以[在线](https://www.raspberrypi.com/trademark-rules/powered-raspberry-pi/)申请。
+### "Powered by 树莓派" 徽标
+"Powered by 树莓派"计划为希望使用树莓派徽标形式的公司提供了一个流程，涵盖了内置树莓派计算机或芯片的产品以及由树莓派提供的服务。如果您希望开始流程，您可以[在线](https://www.raspberrypi.com/trademark-rules/powered-raspberry-pi/)申请。
 
 ### 核准的设计合作伙伴
 我们的 [认可设计合作伙伴](https://www.raspberrypi.com/for-industry/design-partners/) 列表提供了一系列与我们密切合作并为我们提供支持的咨询公司，这些公司可以在硬件、软件和机械领域提供有偿设计服务。
@@ -605,7 +621,7 @@ Raspberry Pi 电脑分为几个不同的**系列**：
 
 当核心温度在80°C到85°C之间时，ARM核心将逐渐降低温度。如果温度达到85°C，ARM内核和GPU都会受到限制。
 
-树莓派3B+及之后PCB技术已发生变化，以提供更好的散热并增加散热效率。此外还引入了软温度限制，目的是最大限度地延长设备在达到85°C硬限制之前“冲刺”的时间。当达到软限制时，时钟速度从1.4GHz降低到1.2GHz，并且工作电压略有降低。这减缓了温度上升的速度：我们将1.4GHz限制到1.2GHz以换取更长的工作时间。默认情况下软限制为60°C，可以通过[config.txt](./config-txt.mdx#超频选项)中的`temp_soft_limit`中的设置更改此值。
+树莓派3B+及之后PCB技术已发生变化，以提供更好的散热并增加散热效率。此外还引入了软温度限制，目的是最大限度地延长设备在达到85°C硬限制之前"冲刺"的时间。当达到软限制时，时钟速度从1.4GHz降低到1.2GHz，并且工作电压略有降低。这减缓了温度上升的速度：我们将1.4GHz限制到1.2GHz以换取更长的工作时间。默认情况下软限制为60°C，可以通过[config.txt](./config-txt.mdx#超频选项)中的`temp_soft_limit`中的设置更改此值。
 
 树莓派4B继续采用与树莓派3B+相同的PCB技术，有助于散发多余的热量。目前没有定义软限制。
 
@@ -673,6 +689,10 @@ Raspberry Pi 5 的两个风扇都插入了位于电路板右上方 40 针 GPIO �
 - 75°C时，风扇升至全速（100%速度）
 
 温度下降使用相同的映射，**滞后**温度为 5°C；当温度下降到低于上述每个阈值 5°C 时，风扇转速下降。
+
+:::tip
+上述温度、迟滞和转速数值可通过调整各种 `fan_tempN`、`fan_tempN_hyst` 和 `fan_tempN_speed` dtoverlay 设置进行调节（其中 `N` 取值为 0、1、2 或 3）。详见[覆盖层README文件](https://github.com/raspberrypi/linux/blob/rpi-6.12.y/arch/arm/boot/dts/overlays/README)获取完整说明。例如，在`/boot/firmware/config.txt`中添加`dtparam=fan_temp0=55000`，将使风扇保持关闭状态，直至树莓派5的温度达到55°C。
+:::
 
 启动时，风扇打开，并检查转速计输入，查看风扇是否在转动。如果是，则启用 `cooling_fan` 设备树覆盖。该覆盖层默认位于 `bcm2712-rpi-5-b.dtb`，但`status=disabled`。
 
@@ -1028,7 +1048,7 @@ USB 有两种不同的启动模式：
 ### USB设备启动模式
 
 :::note[注意]
-USB 设备启动在 [计算模块系列](#compute-module系列)、[Zero系列](#zero系列)和 [Model A 旗舰系列变体](#旗舰系列) 上可用。
+USB 设备启动在 [计算模块系列](#compute-module系列)、[Zero系列](#zero系列)和 [Model A 旗舰系列变体](#旗舰级单板计算机sbc系列) 上可用。
 :::
 
 当这种启动模式被激活时（通常是在从 SD 卡启动失败之后），树莓派会将其 USB 端口设置为设备模式，并等待主机的 USB 复位。可以在 [Github](https://github.com/raspberrypi/usbboot) 上找到示例代码，说明主机需要如何与树莓派通信。
@@ -1043,7 +1063,7 @@ USB 设备启动在 [计算模块系列](#compute-module系列)、[Zero系列](#
 :::note[注意]
 主机启动仅适用于树莓派3B、3B+、3A+ 和 2B v1.2。树莓派3A+ 仅支持大容量存储器启动，不支持网络启动。
 
-主机启动适用于 [Compute Module 系列（自 Compute Module 3 起）](#compute-module系列)、[Zero 系列（自 Zero 2 W 起）](#zero系列)、Raspberry Pi 2B（1.2 版）、Raspberry Pi 3B 和 [所有的旗舰系列（自 Raspberry Pi 3B+ 起）](#旗舰系列 )。Raspberry Pi 3A+ 支持大容量存储器启动，但不支持网络启动。
+主机启动适用于 [Compute Module 系列（自 Compute Module 3 起）](#compute-module系列)、[Zero 系列（自 Zero 2 W 起）](#zero系列)、Raspberry Pi 2B（1.2 版）、Raspberry Pi 3B 和 [所有的旗舰系列（自 Raspberry Pi 3B+ 起）](#旗舰级单板计算机sbc系列 )。Raspberry Pi 3A+ 支持大容量存储器启动，但不支持网络启动。
 :::
 
 USB 主机启动模式使用以下逻辑：
@@ -1077,7 +1097,7 @@ USB 主机启动模式使用以下逻辑：
 ## USB大容量存储启动
 :::note[注意]
 仅适用于树莓派2B v1.2、3A+、3B、3B+、4B、400 和零 2 W，以及树莓派计算模块 3、3+ 和 4。
-适用于 [自 Compute Module 3 起的 Compute Module 系列](#compute-module系列)、[自 Zero 2 W 起的 Zero 系列](#zero系列)和 [自 Raspberry Pi 2B（1.2 版）起的所有旗舰系列设备](#旗舰系列)。
+适用于 [自 Compute Module 3 起的 Compute Module 系列](#compute-module系列)、[自 Zero 2 W 起的 Zero 系列](#zero系列)和 [自 Raspberry Pi 2B（1.2 版）起的所有旗舰系列设备](#旗舰级单板计算机sbc系列)。
 :::
 
 您可能希望从 USB 大容量存储设备（如闪存盘或 USB 硬盘）启动 Raspberry Pi。在连接 USB 设备（尤其是硬盘和固态硬盘）时，请注意它们的电源要求。如果您计划在 Raspberry Pi 上连接一个以上的固态硬盘或硬盘，通常需要外接电源--供电硬盘盒或供电 USB 集线器。
@@ -1351,7 +1371,8 @@ SD0 是 Broadcom SD 卡/MMC 接口。SoC 内的启动 ROM 运行时，总是将 
 如 BCM2835 [ARM外围设备数据表](https://datasheets.raspberrypi.com/bcm2835/bcm2835-peripherals.pdf)第 102 页所述，GPIO 线路的默认上拉电阻为 50KΩ。建议使用 5KΩ 的上拉电阻来上拉 GPIO 线路：这将允许 GPIO 正常工作，但不会消耗过多的功率。
 
 ## NVMe SSD 启动
-NVMe（Non-Volatile Memory express）是一种通过 PCIe 总线进行外部存储访问的标准。您可以通过 Compute Module 4 (CM4) IO 板或 Raspberry Pi 5 上的 PCIe 插槽连接 NVMe 硬盘。只需进行一些额外配置，就可以从 NVMe 硬盘启动。
+
+NVMe（非易失性内存高速接口）是一种通过PCIe总线访问外部存储的标准。您可通过 Compute Module 4 I/O板的PCIe插槽、Compute Module 5 I/O板的 M.2插槽，或使用M.2 HAT+/M.2 HAT+ Compact扩展板连接树莓派5来连接NVMe驱动器。经过额外配置后，您可从NVMe驱动器启动系统。
 
 ### 先决条件
 
@@ -1359,7 +1380,7 @@ NVMe（Non-Volatile Memory express）是一种通过 PCIe 总线进行外部存�
 
 - NVMe M.2 固态硬盘
 - 将 PCIe 转换为 M.2 标准的适配器。
-  - 对于 Raspberry Pi 5，我们推荐使用 [M.2 HAT+](../accessories/m2-hat-plus.mdx)，它可将 Raspberry Pi 的 *PCIe FFC* 插槽转换为 M Key 接口。
+  - 对于 Raspberry Pi 5，我们推荐使用 [M.2 HAT+ 或 M.2 HAT+ Compact](../accessories/m2-hat-plus.mdx)，它可将 Raspberry Pi 的 *PCIe FFC* 插槽转换为 M Key 接口。
   - 对于 CM4，请搜索 "PCI-E 3.0 ×1 lane to M.2 NGFF M-Key SSD NVMe PCI Express 适配器卡"。
 
 要检查 NVMe 驱动器是否连接正确，请从另一个存储设备（如 SD 卡）启动 Raspberry Pi 并运行 `ls -l /dev/nvme*`。输出示例如下。
@@ -1798,6 +1819,29 @@ sudo -E rpi-eeprom-config --edit
 | 0xf21 | 首先尝试 SD，然后尝试 NETWORK，然后重复 |
 | 0xf46 | 首先尝试NVMe，然后尝试 USB-MSD，然后重复 |
 
+
+#### BOOT_WATCHDOG_TIMEOUT
+
+若设置为非零值（单位为秒），则在引导程序中启用硬件看门狗定时器。若操作系统未能在指定时间内启动，看门狗将重置系统。
+
+ARM CPU启动后，引导程序看门狗将立即自动取消。它在引导程序移交操作系统后**不会**监控操作系统。
+
+此功能适用于无人值守或远程系统，可确保从启动失败（例如操作系统无法加载）中恢复。
+
+默认值：`0`（禁用）
+
+#### `BOOT_WATCHDOG_PARTITION
+
+当引导程序看门狗触发时，此属性指定重置后启动的分区编号。这允许自动切换至恢复分区或备用分区。
+
+若未设置，引导程序将重试默认分区（0）。
+
+可结合 [表达式过滤器](./config-txt.mdx#表达式过滤器) 使用，在看门狗触发特定分区重启时应用不同设置或选择不同启动流程。
+
+有关如何使用高分区号检测看门狗触发，请参阅 [PARTITION](./raspberry-pi.mdx#partition) 属性说明。
+
+默认值：`0`
+
 #### MAX_RESTARTS
 如果 RESTART (`0xf`) 启动模式出现的次数超过 MAX_RESTARTS，就会触发看门狗重置。一般情况下不建议使用这种方式，但对于测试或远程系统来说，需要完全重置以解决硬件或网络接口问题时，这种方式可能会很有用。
 
@@ -1808,6 +1852,18 @@ SD 启动失败后，在转到 `BOOT_ORDER` 定义的下一种启动模式前重
 `-1`表示无限次重试。
 
 默认值：`0`
+
+#### SD_OVERCURRENT_CHECK
+
+仅适用于树莓派 4B、5、500 及 500+。
+
+启动前，引导程序会检测 SD 卡电源开关的过流信号。若 SD 卡损坏导致短路，将产生过流信号并引发发热现象。
+
+若检测到过流状态，引导程序将切断SD卡电源并等待五秒后重新检测。此错误将显示在诊断屏幕、UART串口及活动指示灯（1长闪+2短闪）上。
+
+通过在引导程序配置中设置`SD_OVERCURRENT_CHECK=0`，可将过流检测从错误模式切换为非阻塞警告模式。
+
+默认值：`1`
 
 #### SD_QUIRKS
 
@@ -1849,7 +1905,7 @@ SD 启动失败后，在转到 `BOOT_ORDER` 定义的下一种启动模式前重
 可选的 TFTP 服务器的 IP 地址（如 `192.168.1.99`），它将覆盖 DHCP 请求中的服务器 IP 地址。
 这在家庭网络中可能很有用，因为在宽带路由器作为 DHCP 服务器的情况下，可以用 tftpd-hpa 代替 dnsmasq。
 
-默认值： ””
+默认值： ""
 
 #### TFTP_PREFIX
 为了支持每个 Raspberry Pi 独特的 TFTP 启动目录，引导加载程序会在文件名前加上设备特定目录的前缀。如果在前缀目录中既找不到 start4.elf 也找不到 start.elf，那么前缀就会被清除。
@@ -1867,7 +1923,7 @@ SD 启动失败后，在转到 `BOOT_ORDER` 定义的下一种启动模式前重
 #### TFTP_PREFIX_STR
 指定 `TFTP_PREFIX` 设置为 1 时使用的自定义目录前缀字符串。例如：`TFTP_PREFIX_STR=tftp_test/`
 
-默认值：“”<br />
+默认值：""<br />
 最大长度：32 个字符
 
 #### PXE_OPTION43
@@ -1887,7 +1943,7 @@ SD 启动失败后，在转到 `BOOT_ORDER` 定义的下一种启动模式前重
 #### MAC_ADDRESS
 用给定值覆盖树莓派以太网 MAC 地址，例如 dc:a6:32:01:36:c2
 
-默认值： ””
+默认值： ""
 
 #### MAC_ADDRESS_OTP
 用存储在客制 OTP 寄存器中的值覆盖树莓派以太网 MAC 地址。
@@ -1913,17 +1969,17 @@ MAC_ADDRESS_OTP=0,1
 ##### CLIENT_IP
 客户端的IP地址，例如`192.168.0.32`
 
-默认值： ””
+默认值： ""
 
 #### SUBNET
 子网地址掩码，例如`255.255.255.0`
 
-默认值： ””
+默认值： ""
 
 #### GATEWAY
 如果 TFTP 服务器位于不同的子网上，则使用的网关地址，例如`192.168.0.1`
 
-默认值： ””
+默认值： ""
 
 #### DISABLE_HDMI
 
@@ -2051,7 +2107,7 @@ src_port@src_ip/dev_name,dst_port@dst_ip/dst_mac
 [gpio7=0]
 NETCONSOLE=6665@169.254.1.1/,6666@/
 ```
-默认值：“”（未启用）
+默认值：""（未启用）
 最大长度：32 个字符
 
 #### PARTITION
@@ -2084,19 +2140,23 @@ PARTITION=2
 
 默认值：`0`
 
+#### BOOTVAR0
+
+允许设置由 `config.txt` 使用的条件变量 `bootvar0`。详见 [bootvar0](./config-txt.mdx#bootvar0)。
+
 #### PSU_MAX_CURRENT
 仅限树莓派5。
 
 如果设置了该属性，固件将跳过 USB 供电协商，并假定已连接到额定电流的电源上。通常情况下，该值应设置为 `3000` 或 `5000`，即低电流或高电流电源。
 
-默认值： ””
+默认值： ""
 
 #### USB_MSD_EXCLUDE_VID_PID
 最多 4 个 VID/PID 对的列表，指定引导加载程序应忽略的设备。如果与 HUB 匹配，则不会枚举 HUB，从而排除所有下游设备。这样做的目的是让有问题的设备（如枚举速度很慢）在引导枚举过程中被忽略。这是引导加载程序特有的，不会传递给操作系统。
 
 格式是以逗号分隔的十六进制值列表，其中 VID 为最显著位。不允许有空格。例如：`034700a0,a4231234`
 
-默认值： ””
+默认值： ""
 
 #### USB_MSD_DISCOVER_TIMEOUT
 如果在超时时间内没有找到 USB大容量存储设备，则 USB-MSD 停止，并选择下一种启动模式。
@@ -2162,6 +2222,35 @@ XHCI_DEBUG=0x3
 ```
 
 默认值：`0x0`（不启用 USB 调试消息）
+
+#### SDRAM_BANKLOW
+
+SDRAM_BANKLOW 控制系统地址空间内 SDRAM Bank 的排列方式。Bank 数量可选择映射至地址的高位（MSB），或位于行地址位与列地址位之间。
+此设置将显著影响SDRAM性能。
+
+未设置时，引导程序将选择默认选项。当前树莓派4系列默认值为3，树莓派5系列默认值为1。
+
+| BANKLOW | 地址位映射 |
+| -- | -- |
+| 0 | Address=\{bank[3:0], row, column\} |
+| 1 | Address=\{bank[3:1], row, bank[0], column\} |
+| 2 | Address=\{bank[3:2], row, bank[1:0], column\} |
+| 3 | Address=\{bank[3], row, bank[2:0], column\} |
+| 4 | Address=\{row, bank[3:0], column\} |
+
+
+此设置还会促使引导程序为内核添加NUMA区域数量配置项（"numa=fake=\<n\>"）。
+为获得最佳性能，建议保留默认设置。
+
+:::tip
+在树莓派5系列设备上，若内核不支持NUMA，性能将受到负面影响。
+:::
+
+手动设置SDRAM_BANKLOW=3可缓解此性能损失，但追求最高性能时请确保NUMA可用。
+
+默认值：未设置（使用引导程序推荐设置）
+
+
 
 #### config.txt段
 读取 `config.txt` 文件后，GPU 固件 `start4.elf` 会读取引导加载器 EEPROM 配置，并检查是否存在名为 `[config.txt]` 的配置段。如果`[config.txt]`段存在，那么从该部分开始到文件结束的内容都会被添加到内存中，与从引导分区读取的 `config.txt` 文件内容相同。这可用于将设置自动应用到每个操作系统，例如 dtoverlays。
@@ -3167,9 +3256,10 @@ Raspberry Pi 4B 和 Pi 3B+ 的以太网插孔具有 PoE 功能，支持 IEEE 802
 | 树莓派3A+ | 2.5A | 仅受 PSU、电路板和连接器额定值的限制。 | 350mA |
 | 树莓派3B+ | 2.5A | 1.2A | 500mA |
 | 树莓派4B | 3.0A | 1.2A | 600mA |
-| 树莓派5 | 5.0A | 1.6A((如使用3A电源，则最大电流为600mA) | 800mA |
+| 树莓派5 | 5.0A | 1.6A(如使用3A电源，则最大电流为600mA) | 800mA |
 | 树莓派400 | 3.0A | 1.2A | 800mA |
-| 树莓派500 | 5.0A | 1.6A((如使用3A电源，则最大电流为600mA) | 800mA |
+| 树莓派500 | 5.0A | 1.6A(如使用3A电源，则最大电流为600mA) | 800mA |
+| 树莓派500+ | 5.0A | 1.6A | 800mA (LED灯关闭且固态硬盘处于非活动状态) |
 | 树莓派Zero | 1.2A | 仅受 PSU、电路板和连接器额定值的限制。 | 100mA |
 | 树莓派Zero W | 1.2A | 仅受 PSU、电路板和连接器额定值的限制。 | 150mA |
 | 树莓派Zero 2W | 2A | 仅受 PSU、电路板和连接器额定值的限制。 | 350mA |
@@ -3625,7 +3715,7 @@ Revision    : a02082
 Serial      : 00000000765fc593
 ```
 :::note[注意]
-所有树莓派计算机都会报告 BCM2835，即使是使用 BCM2836、BCM2837、BCM2711 和 BCM2712 处理器的计算机也不例外。您不应使用此字符串来检测处理器。请使用以下信息或 `cat /sys/firmware/devicetree/base/model` 解码修订码。
+所有树莓派计算机都会报告 BCM2835，即使是使用 BCM2836、BCM2837、BCM2711 和 BCM2712 处理器的计算机也不例外。您不应使用此字符串来检测处理器。请使用以下信息或 `cat /sys/firmware/devicetree/base/model` 解码修订码。根据您运行的内核版本不同，`cpuinfo` 输出中可能包含"Model"行，也可能不包含"Hardware"行。
 :::
 
 ### 旧格式修订码
@@ -3713,7 +3803,7 @@ NOQuuuWuFMMMCCCCPPPPTTTTTTTTTRRRR
 |  |  | 0x16: 仅供内部使用 |
 |  |  | 0x17: 5 |
 |  |  | 0x18: CM5 |
-|  |  | 0x19: 500 |
+|  |  | 0x19: 500/500+ |
 |  |  | 0x1a: CM5 Lite |
 | RRRR （位 0-3） | 修订 | 0、1、2 等 |
 
@@ -3781,6 +3871,7 @@ NOQuuuWuFMMMCCCCPPPPTTTTTTTTTRRRR
 | c04180 | CM5 | 1.0 | 4GB | Sony UK |
 | d04180 | CM5 | 1.0 | 8GB | Sony UK |
 | d04190 | 500 | 1.0 | 8GB | Sony UK |
+| e04190 | 500+ | 1.0 | 16GB | Sony UK |
 | b041a0 | CM5 Lite | 1.0 | 2GB | Sony UK |
 | c041a0 | CM5 Lite | 1.0 | 4GB | Sony UK |
 | d041a0 | CM5 Lite | 1.0 | 8GB | Sony UK |
@@ -3879,7 +3970,7 @@ Raspberry Pi 型号的设备树值如下：
 
 | 设备名                         | 制造商           | 型号                | CPU 制造商  | CPU       |
 | -- | -- | -- | -- | -- |
-| Raspberry Pi 500              | `raspberrypi`   | `500`              | `brcm`     | `bcm2712` |
+| Raspberry Pi 500 / 500+       | `raspberrypi`   | `500`              | `brcm`     | `bcm2712` |
 | Raspberry Pi CM5              | `raspberrypi`   | `5-compute-module` | `brcm`     | `bcm2712` |
 | Raspberry Pi 5                | `raspberrypi`   | `5-model-b`        | `brcm`     | `bcm2712` |
 | Raspberry Pi 400              | `raspberrypi`   | `400`              | `brcm`     | `bcm2711` |
@@ -3895,7 +3986,7 @@ Raspberry Pi 型号的设备树值如下：
 | Raspberry Pi 2 Model B        | `raspberrypi`   | `2-model-b`        | `brcm`     | `bcm2836` |
 | Raspberry Pi Zero W           | `raspberrypi`   | `model-zero-w`     | `brcm`     | `bcm2835` |
 | Raspberry Pi Zero             | `raspberrypi`   | `model-zero`       | `brcm`     | `bcm2835` |
-| Raspberry Pi Compute Module   | `raspberrypi`   | `compute-module`   | `brcm`     | `bcm2835` |
+| Raspberry Pi Compute Module 1 | `raspberrypi`   | `compute-module`   | `brcm`     | `bcm2835` |
 | Raspberry Pi Model A+         | `raspberrypi`   | `model-a-plus`     | `brcm`     | `bcm2835` |
 | Raspberry Pi Model B+         | `raspberrypi`   | `model-b-plus`     | `brcm`     | `bcm2835` |
 | Raspberry Pi Model B Rev 2    | `raspberrypi`   | `model-b-rev2`     | `brcm`     | `bcm2835` |

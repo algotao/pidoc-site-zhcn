@@ -317,8 +317,8 @@ HQ 摄像头有 C/CS 卡口和 M12 卡口两种型号，而 GS 摄像头只有 C
 ## 同步捕捉
 
 高品质（HQ）摄像头支持同步捕获。
-一台摄像头（“源摄像头”）可配置为在启动帧捕获时在其XVS（垂直同步）引脚上生成一个脉冲。
-其他（“目标”）摄像头可以监听此脉冲，并在源摄像头捕获帧的同时进行捕获。
+一台摄像头（"源摄像头"）可配置为在启动帧捕获时在其XVS（垂直同步）引脚上生成一个脉冲。
+其他（"目标"）摄像头可以监听此脉冲，并在源摄像头捕获帧的同时进行捕获。
 
 此方法已被 [软件摄像头同步](../computers/camera-software.mdx#软件摄像头同步)所取代，该方法可在无需额外线缆的情况下实现长距离操作，并具备亚毫秒级精度。但当摄像头物理距离较近时，可使用有线同步。
 
@@ -383,7 +383,7 @@ dtoverlay=imx296,always-on
 
 在 Raspberry Pi 5、CM4 或 CM5 上使用 CAM0 端口时，在该行末尾添加 `,cam0`，且不留空格。如果同一台 Raspberry Pi 上有两台摄像头，则需要两行 dtoverlay，其中仅一行以 `,cam0` 结尾。
 
-在 GS 相机上，接收端角色通过 MAS 引脚启用，无法通过软件配置（“trigger_mode” 和 “sync-sink” 与 [外部触发方法](#gs摄像头上的外部触发器) 相关，且不应为此方法设置）。
+在 GS 相机上，接收端角色通过 MAS 引脚启用，无法通过软件配置（"trigger_mode" 和 "sync-sink" 与 [外部触发方法](#gs摄像头上的外部触发器) 相关，且不应为此方法设置）。
 
 ### Libcamera 配置
 
@@ -399,7 +399,7 @@ cp /usr/share/libcamera/pipeline/rpi/pisp/example.yaml timeout.yaml
 cp /usr/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml timeout.yaml
 ```
 
-现在编辑副本。在两种情况下，删除 `“camera_timeout_value_ms”:` 行中的 `#`（注释），并将数字改为 `60000`（60 秒）。
+现在编辑副本。在两种情况下，删除 `"camera_timeout_value_ms":` 行中的 `#`（注释），并将数字改为 `60000`（60 秒）。
 
 ### 启动摄像头
 

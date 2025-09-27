@@ -1,0 +1,195 @@
+---
+sidebar_position: 14
+draft: false
+title_meta: 树莓派软件源码(官网25年09月)
+description: 树莓派软件大集合，包括核心源码、库与应用程序、桌面环境、调试、工具等，一站收集
+keywords: [树莓派, 软件源码]
+last_update: 
+  date: 2025-09-27
+---
+import Normal from "../_normal.mdx";
+
+# 软件源码
+
+在树莓派，我们致力于尽可能开源代码，以便您轻松使用并根据自身需求进行适配。树莓派专门为我们的产品开发和支持软件，并将精力集中在提供最佳用户体验的软件上。例如，优化多媒体加速的驱动程序，包括3D加速、HEVC解码、摄像头成像管道、AI加速、双HDMI及音频功能。
+
+## 在树莓派操作系统中查找软件源
+
+当您寻找随树莓派操作系统分发的软件时，通常存在上游软件源，我们通过打补丁创建下游软件包（标记为`+rpt`）。要查看这些软件包的源代码，通常通过apt获取更为便捷。为此，您需要先编辑apt源列表以包含源代码包。需编辑以下文件，将每行`deb-src`开头的`#`移除：
+
+* `/etc/apt/sources.list`
+* `/etc/apt/sources.list.d/raspi.list`
+
+随后必须更新软件包列表：
+
+```sh
+sudo apt update
+```
+
+现在可获取软件包源，例如：
+
+```sh
+apt source labwc
+```
+
+随后需安装辅助软件包：
+
+```sh
+sudo apt install devscripts
+```
+
+最后，您可以使用标准的Debian构建流程来构建该软件包。
+
+```sh
+sudo apt build-dep labwc
+cd labwc-0.8.4
+debuild -uc -us
+```
+
+## 我们的 GitHub 组织
+
+您还可以在 GitHub 仓库中以更标准的形式找到我们的软件。我们使用三个 GitHub 组织来存储源代码：
+
+* https://github.com/raspberrypi
+* https://github.com/raspberrypi-ui
+* https://github.com/RPi-Distro
+
+## 分类源代码列表
+
+以下是精选的热门仓库列表：
+
+### 核心源代码
+
+https://github.com/raspberrypi/linux<br />
+&nbsp;&nbsp;&nbsp;&nbsp;该仓库包含支持所有树莓派版本（从Pi 1到Pi 5）的下行Linux内核源代码。
+
+https://github.com/raspberrypi/firmware<br />
+&nbsp;&nbsp;&nbsp;&nbsp;此仓库包含闭源固件，但以下两个链接仍具参考价值：
+
+* [固件变更日志](https://github.com/raspberrypi/firmware/commits/master/)
+* [设备树覆盖层README](https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README)
+
+https://github.com/raspberrypi/rpi-eeprom<br />
+&nbsp;&nbsp;&nbsp;&nbsp;适用于树莓派4和树莓派5引导加载程序EEPROM的安装脚本及二进制文件，包含[版本发布](https://github.com/raspberrypi/rpi-eeprom/releases)和[版本说明](https://github.com/raspberrypi/rpi-eeprom/blob/master/releases.md)。
+
+### 库与应用程序
+
+https://github.com/raspberrypi/utils<br />
+&nbsp;&nbsp;&nbsp;&nbsp;包含实用工具集合，如 pinctrl、piolib 和 raspinfo，以及 gpiolib——一种支持树莓派直接访问 GPIO 引脚的方法。
+
+https://github.com/raspberrypi/libcamera<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于控制树莓派 ISP 和摄像头的 libcamera 库实现。
+
+https://github.com/raspberrypi/rpicam-apps<br />
+&nbsp;&nbsp;&nbsp;&nbsp;基于libcamera的C++库及应用套件，用于树莓派摄像头的图像/视频处理与编码。
+
+https://github.com/raspberrypi/picamera2<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于操作和控制树莓派摄像头的Python库。
+
+https://github.com/raspberrypi/drmu<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于直接控制和访问多媒体接口的库。
+
+### 桌面环境
+
+https://github.com/raspberrypi-ui/wf-panel-pi<br />
+&nbsp;&nbsp;&nbsp;&nbsp;在基于Wayland的桌面环境运行时，显示于屏幕顶部的任务栏。
+
+https://github.com/raspberrypi-ui/lxpanel-pi<br />
+&nbsp;&nbsp;&nbsp;&nbsp;运行传统X窗口系统桌面时显示在屏幕顶部的任务栏。
+
+https://github.com/raspberrypi-ui/pplug-batt<br />
+https://github.com/raspberrypi-ui/pplug-bluetooth<br />
+https://github.com/raspberrypi-ui/pplug-clock<br />
+https://github.com/raspberrypi-ui/pplug-cpu<br />
+https://github.com/raspberrypi-ui/pplug-cputemp<br />
+https://github.com/raspberrypi-ui/pplug-ejecter<br />
+https://github.com/raspberrypi-ui/pplug-gpu<br />
+https://github.com/raspberrypi-ui/pplug-menu<br />
+https://github.com/raspberrypi-ui/pplug-netman<br />
+https://github.com/raspberrypi-ui/pplug-power<br />
+https://github.com/raspberrypi-ui/pplug-updater<br />
+https://github.com/raspberrypi-ui/pplug-volumepulse<br />
+&nbsp;&nbsp;&nbsp;&nbsp;任务栏上显示的插件。
+
+https://github.com/raspberrypi-ui/pcmanfm<br />
+https://github.com/raspberrypi-ui/libfm<br />
+&nbsp;&nbsp;&nbsp;&nbsp;桌面使用的文件管理器，同时显示桌面背景。
+
+https://github.com/raspberrypi-ui/appset<br />
+&nbsp;&nbsp;&nbsp;&nbsp;外观设置面板。
+
+https://github.com/raspberrypi-ui/rc_gui<br />
+&nbsp;&nbsp;&nbsp;&nbsp;树莓派配置设置面板。
+
+https://github.com/raspberrypi-ui/rasputin<br />
+&nbsp;&nbsp;&nbsp;&nbsp;鼠标和键盘设置面板。
+
+https://github.com/raspberrypi-ui/raindrop<br />
+&nbsp;&nbsp;&nbsp;&nbsp;屏幕配置设置面板。
+
+https://github.com/raspberrypi-ui/rpinters<br />
+&nbsp;&nbsp;&nbsp;&nbsp;打印机设置面板。
+
+### 应用程序
+
+https://github.com/raspberrypi-ui/agnostics<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于检查SD卡的诊断应用程序。
+
+https://github.com/raspberrypi-ui/bookshelf<br />
+&nbsp;&nbsp;&nbsp;&nbsp;书架应用程序代码，支持下载并阅读电子书及《树莓派官方杂志》过刊。
+
+https://github.com/raspberrypi-ui/piclone<br />
+&nbsp;&nbsp;&nbsp;&nbsp;SD卡复制应用程序，支持克隆存储卡及驱动器。
+
+https://github.com/raspberrypi-ui/rp-prefapps<br />
+&nbsp;&nbsp;&nbsp;&nbsp;推荐软件应用程序，可安装或卸载精选程序。
+
+### 调试
+
+https://github.com/raspberrypi/rpi-analyse-boot<br />
+&nbsp;&nbsp;&nbsp;&nbsp;一款启动分析服务，可从多种不同来源收集启动时指标数据。
+
+### 工具
+
+https://github.com/raspberrypi/rpi-imager<br />
+&nbsp;&nbsp;&nbsp;&nbsp;树莓派映像工具应用程序的代码，用于将操作系统刷写至SD卡。
+
+https://github.com/raspberrypi/rpi-image-gen<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于为嵌入式树莓派系统开发操作系统的构建系统。
+
+https://github.com/raspberrypi/rpi-sb-provisioner<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于在制造阶段配置树莓派设备的工具，包含安全启动和加密文件系统功能。
+
+https://github.com/raspberrypi/usbboot<br />
+&nbsp;&nbsp;&nbsp;&nbsp;通过USB引导树莓派的工具，用于配置计算模块和树莓派设备。
+
+### 反馈渠道
+
+http://github.com/raspberrypi/bookworm-feedback<br />
+&nbsp;&nbsp;&nbsp;&nbsp;专用于当前树莓派操作系统版本的错误报告仓库。
+
+
+### Raspberry Pi Pico
+
+https://marketplace.visualstudio.com/items?itemName=raspberry-pi.raspberry-pi-pico<br />
+&nbsp;&nbsp;&nbsp;&nbsp;此处可下载并安装适用于 Raspberry Pi Pico SDK 的 Microsoft Visual Studio Code 扩展。
+
+https://github.com/raspberrypi/pico-setup<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于命令行操作的树莓派Pico SDK快速安装工具。
+
+https://github.com/raspberrypi/pico-sdk<br />
+&nbsp;&nbsp;&nbsp;&nbsp;树莓派Pico SDK源代码。
+
+https://github.com/raspberrypi/debugprobe<br />
+&nbsp;&nbsp;&nbsp;&nbsp;树莓派调试探针源代码，轻松提供SWD和UART接口。
+
+https://github.com/raspberrypi/openocd<br />
+&nbsp;&nbsp;&nbsp;&nbsp;树莓派下游OpenOCD源代码。
+
+https://github.com/raspberrypi/pico-examples<br />
+&nbsp;&nbsp;&nbsp;&nbsp;树莓派Pico示例代码库。
+
+https://github.com/raspberrypi/picotool<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于在BOOTSEL模式下与RP系列设备交互的工具。
+
+<Normal />

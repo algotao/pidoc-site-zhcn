@@ -4,7 +4,7 @@ draft: false
 description: 树莓派音频板可为您现有的高保真音响或基于树莓派的设备和项目带来高品质音频，本文介绍了4种音频板：DAC Pro、DAC+、DigiAMP、Codec Zero。
 keywords: [树莓派, Raspberry Pi, 音频, 声卡, 声音, audio, DAC, DigiAMP, ]
 last_update: 
-  date: 2024-12-20
+  date: 2025-09-27
 ---
 import Normal from "../_normal.mdx";
 
@@ -181,7 +181,7 @@ sudo reboot
 
 音频卡有多个版本。具体版本决定了配置所需的操作。较旧的 IQaudIO 品牌板的 PCB 板为黑色。较新的树莓派品牌板采用绿色印刷电路板。这些电路板的电气性能相当，但 EEPROM 内容不同。
 
-连接 HAT 并接通电源后，检查音频卡上的电源 LED 是否亮起（如果有的话）。例如，Codec Zero 有一个标有 “PWR ”的 LED。
+连接 HAT 并接通电源后，检查音频卡上的电源 LED 是否亮起（如果有的话）。例如，Codec Zero 有一个标有 "PWR"的 LED。
 
 确定音频卡有电后，使用以下命令检查电路板的版本：
 
@@ -502,7 +502,7 @@ crontab -e
 
 ### DAC PRO、DAC+、DigiAMP+、Codec Zero
 
-<img src="/img/accessories/audio/pin_table_new.jpg" width="80%" alt="新引脚表" />
+<img src="/img/accessories/audio/all_audio_boards_gpio_pinouts.png" width="80%" alt="新引脚表" />
 
 DAC PRO、DAC+ 和 DigiAMP+ 重新暴露了树莓派的信号，可轻松添加额外的传感器和外设。请注意，有些信号（I2S 和 EEPROM）仅供我们的某些电路板使用；而其他信号（如 I2C）则可在多个电路板之间共享。
 

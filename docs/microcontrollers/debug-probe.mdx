@@ -4,7 +4,7 @@ draft: false
 description: 树莓派调试探针（Debug Probe）是一款 USB 设备，提供 UART 串行端口和标准 Arm 串行线调试 (SWD) 接口。该探针专为方便、无焊、即插即用的调试而设计。
 keywords: [树莓派, Raspberry Pi, 调试探针, Debug Probe, OpenOCD, 串行线调试, SWD]
 last_update: 
-  date: 2025-06-22
+  date: 2025-09-27
 ---
 import Normal from "../_normal.mdx";
 
@@ -71,7 +71,7 @@ OpenOCD 会在目标连接时打开两个 DAP LED 指示灯，并在调用 `DAP_
   - 调试探针 `GND` 连接至 Pico H `GND` 引脚
 
 :::note[注意]
- 如果您拥有非 H 型 Pico 或 Pico W（无 JST-SH 连接器），仍可将其连接至调试探针。将一个公连接器焊接到电路板上的 `SWCLK`、`GND` 和 `SWDIO` 针座引脚上。使用调试探针随附的备用 3 针 JST-SH 连接器转 0.1 英寸接头（母头）电缆，连接至调试探针 "D "端口。将 Pico 或 Pico W 上的 `SWCLK`、`GND` 和 `SWDIO` 分别连接至调试探针的 `SC`、`GND` 和 `SD` 引脚。
+ 如果您拥有非 H 型 Pico 或 Pico W（无 JST-SH 连接器），仍可将其连接至调试探针。将一个公连接器焊接到电路板上的 `SWCLK`、`GND` 和 `SWDIO` 针座引脚上。使用调试探针随附的备用 3 针 JST-SH 连接器转 0.1 英寸接头（母头）电缆，连接至调试探针 "D "端口。将 Pico 或 Pico W 上的 `SWCLK`、`GND` 和 `SWDIO` 分别连接至调试探针的 `SC`(橙色)、`GND`(黑色) 和 `SD`(黄色) 引脚。
 :::
 
 <img src="/img/microcontrollers/debug-probe/wiring.png" alt="标记接线" width="70%" />
@@ -203,17 +203,26 @@ minicom -b 115200 -o -D /dev/ttyACM0
 ## 更新调试探针的固件
 调试探针的固件是由 Raspberry Pi 发布的 UF2 文件。
 
-调试探头固件的最新版本是 2.2。如果您运行的是旧版本，或者不小心覆盖了调试探针上的固件，您可以在 [the debugprobe GitHub repository](https://github.com/raspberrypi/debugprobe/releases/latest) 中找到最新版本的固件。
+调试探头固件的最新版本是 2.2.3。如果您运行的是旧版本，或者不小心覆盖了调试探针上的固件，您可以在 [the debugprobe GitHub repository](https://github.com/raspberrypi/debugprobe/releases/latest) 中找到最新版本的固件。
 
-从最新版本中下载 `debugprobe.uf2`。
+要检查调试探针的固件版本，请运行：
+```sh
+lsusb -v -d 2e8a:000c | grep bcdDevice
+```
 
-捏住并取下调试探针外壳的顶部。
+对于固件版本 2.2.3 的调试探针，将显示 `bcdDevice 2.23`。
 
-将调试探针插入计算机时按住 BOOTSEL 按钮，挂载名为 "RPI-RP2 "的卷。
+:::tip
+`openocd` 报告的 `Info : CMSIS-DAP: FW Version = 2.0.0` 仅指 CMSIS-DAP 协议版本（与调试探针固件版本不同）。
+:::
 
-将 `debugprobe.uf2` 复制到 "RPI-RP2" 卷上。文件复制到设备后，卷将自动卸载。
+更新调试探针固件版本：
 
-调试探头将重新启动，并运行更新版的调试探头固件。现在可以进行调试了。
+1. 从最新版本中下载 `debugprobe.uf2`。
+1. 捏住并取下调试探针外壳的顶部。
+1. 将调试探针插入计算机时按住 BOOTSEL 按钮，挂载名为 "RPI-RP2 "的卷。
+1. 将 `debugprobe.uf2` 复制到 "RPI-RP2" 卷上。文件复制到设备后，卷将自动卸载。
+1. 调试探头将重新启动，并运行更新版的调试探头固件。现在可以进行调试了。
 
 ## 示意图
 提供调试探针的原理图和机械图纸：

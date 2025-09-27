@@ -1,11 +1,11 @@
 ---
 sidebar_position: 8
 draft: false
-title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照、延时摄影、记录视频(官网24年12月)
+title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照、延时摄影、记录视频(官网25年09月)
 description: 树莓派摄像头系列工具介绍。通过libcamera及rpicam系列工具实现拍照、延时摄影、记录视频。使用opencv进行人脸检测等后期处理。使用Tensor Flow Lite进行分类识别。使用Gstreamer与rpicam-vid组成网络传输视频流。
 keywords: [树莓派, Raspberry Pi, 摄像头, 相机, 摄像头模块, camera, 摄像头软件, libcamera, rpicam, opencv, tensor flow lite]
 last_update: 
-  date: 2025-06-22
+  date: 2025-09-27
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -2290,7 +2290,7 @@ sudo apt remove --purge rpicam-apps
 #### 在不重建libcamera的情况下构建rpicam-apps
 要在不重建 `libcamera` 和 `libepoxy` 的情况下构建 `rpicam-apps` ，请使用 `apt` 安装 `libcamera` 和 `libepoxy` 及其依赖项：
 ```sh
-sudo apt install -y libcamera-dev libepoxy-dev libjpeg-dev libtiff5-dev libpng-dev
+sudo apt install -y libcamera-dev libepoxy-dev libjpeg-dev libtiff5-dev libpng-dev libopencv-dev
 ```
 
 :::tip

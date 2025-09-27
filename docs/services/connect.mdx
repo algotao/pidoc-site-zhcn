@@ -4,7 +4,7 @@ draft: false
 description: 通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的 Raspberry Pi。要使用 Connect，请在 Raspberry Pi 上安装 Connect 软件。然后访问 connect.raspberrypi.com，在浏览器窗口中通过屏幕共享访问你的 Raspberry Pi。您可以像将显示器插入 Raspberry Pi 一样使用桌面。
 keywords: [树莓派, Raspberry Pi, Connect, 远程登录]
 last_update: 
-  date: 2025-05-10
+  date: 2025-09-27
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -339,7 +339,7 @@ sudo apt remove --purge rpi-connect
 
 * Connect 不支持屏幕键盘。要实现全部功能，请使用实体键盘。
 
-* Connect 需要使用实现 [ECMAScript 2020](https://caniuse.com/?search=es2020) (ES11) 的浏览器，因为它使用了旧版浏览器无法使用的 [功能](https://caniuse.com/?feats=mdn-javascript_operators_optional_chaining,mdn-javascript_operators_nullish_coalescing,mdn-javascript_builtins_globalthis,es6-module-dynamic-import,bigint,mdn-javascript_builtins_promise_allsettled,mdn-javascript_builtins_string_matchall,mdn-javascript_statements_export_namespace,mdn-javascript_operators_import_meta)。
+* Connect 需要使用实现 [ECMAScript 2022](https://caniuse.com/?search=es2022) (ES13) 的浏览器，因为它使用了旧版浏览器无法使用的功能。
 
 * 浏览器会拦截某些按键和按键组合。因此，您无法在 Connect 窗口中输入这些按键。Connect 提供了一个工具栏来模拟一些最常用的拦截键。
 
@@ -407,7 +407,7 @@ Screen sharing is supported by this version of rpi-connect （此版本的 rpi-c
 
 ```sh
 systemctl --user status rpi-connect-wayvnc.service rpi-connect-wayvnc-watcher.path
-journalctl --user --follow --unit rpi-connect-wayvnc.service --unit rpi-connect-wayvnc-watcher.path
+journalctl --follow --user-unit rpi-connect-wayvnc.service --user-unit rpi-connect-wayvnc-watcher.path
 ```
 
 如果服务无法启动或不存在，请确保您的环境符合以下条件：
@@ -447,7 +447,7 @@ Screen sharing is supported by this version of rpi-connect
 ✓ Peer-to-peer connection candidate via TURN
 ```
 
-如果 Connect 无法在您的网络上正常通信，您会在失败的测试用例旁边看到一个 “x” 而不是复选框。请您的网络管理员在您的网络上启用以下连接：
+如果 Connect 无法在您的网络上正常通信，您会在失败的测试用例旁边看到一个 "x" 而不是复选框。请您的网络管理员在您的网络上启用以下连接：
 
 * 通过 `api.connect.raspberrypi.com` 与 `ws.connect.raspberrypi.com` 的 443 端口向 Raspberry Pi Connect API 与 WebSocket 服务 发送 HTTPS 请求
 * 通过以下所有 UDP 端口 3478 向 Raspberry Pi Connect STUN 或 TURN 服务器发出请求：
@@ -483,7 +483,7 @@ Remote shell: allowed (0 sessions active)
 
 此命令的输出会显示您当前是否已登录 Connect，以及 Raspberry Pi 上已启用的远程服务。
 
-如果看到的输出包括 “Raspberry Pi Connect is not running, run rpi-connect on”（Raspberry Pi 连接未运行，请运行 rpi-connect on），请运行 `rpi-connect on` 启动连接。
+如果看到的输出包括 "Raspberry Pi Connect is not running, run rpi-connect on"（Raspberry Pi 连接未运行，请运行 rpi-connect on），请运行 `rpi-connect on` 启动连接。
 
 ### 启用增强日志记录
 
@@ -546,7 +546,26 @@ rpi-connect restart
 要查看 Connect 服务及其专用 WayVNC 服务器的日志，请运行以下命令：
 
 ```sh
-journalctl --user --follow --unit rpi-connect --unit rpi-connect-wayvnc
+journalctl --follow --user-unit rpi-connect --user-unit rpi-connect-wayvnc
 ```
+
+## 安全性
+
+树莓派设备与用户浏览器之间的所有连接均采用[WebRTC](https://webrtc.org)协议：这与Zoom、Microsoft Teams和Google Meet所使用的实时通信技术相同。
+
+这意味着所有屏幕共享和远程shell访问流量均通过[DTLS](https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security)在树莓派设备与用户浏览器端进行加密。我们不会（也无法）解密这些流量，确保您的数据始终保持私密性。
+
+此外，流量主要采用点对点传输模式，即加密数据不会经过我们的基础设施。加密流量直接在您的树莓派设备与浏览器之间传输，使我们无法进行监视。
+
+当直接点对点连接不可行时（例如网络故障），加密数据将通过我们的[TURN](https://en.wikipedia.org/wiki/Traversal_Using_Relays_around_NAT)服务器中转。这些服务器部署于伦敦和加利福尼亚，您的流量将被路由至距离最近的中继节点。我们既不持有解密密钥，也不会记录或存储这些数据。
+
+树莓派连接API会临时存储建立点对点连接所需的IP地址和端口。所有访问该API的流量均通过[HTTP over TLS](https://en.wikipedia.org/wiki/HTTPS)加密传输，出于安全考虑仅支持TLS 1.2及更高版本协议。这确保连接信息绝不会以明文形式发送。此类元数据最多安全存储1分钟，并在连接建立后立即删除。
+
+树莓派连接及其API与软件组件已通过[Cure53](https://cure53.de)的安全渗透测试与安全分析师评估。
+
+有关WebRTC安全的更多细节，请参阅[《WebRTC安全研究》](https://webrtc-security.github.io/)。
+
+针对**Connect for Organisations**客户，我们提供可追溯过去90天活动的审计日志。为保护隐私，通过IP地址进行地理定位时，我们仅存储国家代码。
+
 
 <Normal />

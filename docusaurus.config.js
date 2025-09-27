@@ -151,12 +151,12 @@ const config = {
         typesenseServerConfig: {
           nodes: [
             {
-              host: 'pi.algo.com.cn',
+              host: 'ca.algo.com.cn',
               port: 443,
               protocol: 'https',
             },
           ],
-          apiKey: 's0uaFsTcYWySRCaQc3Nylm5URuB8mPcF',
+          apiKey: 'wlJD7HhRRcMzJFuacoO4bh3VVnyljsgU',
         },
         typesenseSearchParameters: {},
         contextualSearch: true,

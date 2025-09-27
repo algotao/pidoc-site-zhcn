@@ -1,11 +1,11 @@
 ---
 sidebar_position: 1
 draft: false
-title_meta: 树莓派新手上路，硬件装配、镜像烧录、系统安装、启动设置(官网24年12月)
+title_meta: 树莓派新手上路，硬件装配、镜像烧录、系统安装、启动设置(官网25年09月)
 description: 介绍运行树莓派所需的键盘、鼠标、显示器、电源等外设列表，用图示的方式展现如何接线。介绍用何用Raspberry Pi Imager烧录系统镜像，安装操作系统。以及系统启动后的区域设置、网络设置、蓝牙、浏览器、网络更新等操作。
 keywords: [树莓派, Raspberry Pi, 树莓派Imager, 入门, 新手]
 last_update: 
-  date: 2024-12-21
+  date: 2025-09-27
 ---
 import Normal from "../_normal.mdx";
 
@@ -30,16 +30,17 @@ import Normal from "../_normal.mdx";
 
 | 型号 | 推荐电源（电压/电流） | 树莓派电源 | 
 | -- | -- | -- |
-| 树莓派5 | 5V/5A、5V/3A(外设电流限制 600mA) | [27W USB-C 电源](https://www.raspberrypi.com/products/27w-power-supply/) |		
-| 树莓派4B | 5V/3A | [15W USB-C 电源](https://www.raspberrypi.com/products/type-c-power-supply/) |
+| 树莓派500+ | 5V/5A | [27W USB-C 电源](https://www.raspberrypi.com/products/27w-power-supply/) |		
+| 树莓派5 和 树莓派500 | 5V/5A、5V/3A(外设电流限制 600mA) | [27W USB-C 电源](https://www.raspberrypi.com/products/27w-power-supply/) |		
+| 树莓派4B 和 树莓派400 | 5V/3A | [15W USB-C 电源](https://www.raspberrypi.com/products/type-c-power-supply/) |
 | 树莓派3（所有型号） | 5V/2.5A | [12.5W Micro USB 电源](https://www.raspberrypi.com/products/micro-usb-power-supply/) |
-| 树莓派 2（所有型号） | 5V/2.5A | [12.5W Micro USB 电源](https://www.raspberrypi.com/products/micro-usb-power-supply/) |
+| 树莓派 2B | 5V/2.5A | [12.5W Micro USB 电源](https://www.raspberrypi.com/products/micro-usb-power-supply/) |
 | 树莓派1（所有型号） | 5V/2.5A | [12.5W Micro USB 电源](https://www.raspberrypi.com/products/micro-usb-power-supply/) |
 | 树莓派Zero（所有型号） | 5V/2.5A | [12.5W Micro USB 电源](https://www.raspberrypi.com/products/micro-usb-power-supply/) |
 
 <img src="/img/computers/getting-started/peripherals/cable-power.png" alt="将电源插入树莓派" width="80%" />
 
-将电源插入标有“POWER IN”、“PWR IN”或“PWR”的端口。某些树莓派型号（例如Zero系列）具有与电源端口形状相同的USB输出端口。请确保在树莓派上使用正确的端口！
+将电源插入标有"POWER IN"、"PWR IN"或"PWR"的端口。某些树莓派型号（例如Zero系列）具有与电源端口形状相同的USB输出端口。请确保在树莓派上使用正确的端口！
 
 ### 启动介质
 树莓派模块缺乏板载存储，因此您必须提供它。您可以从树莓派支持的任何介质启动操作系统映像：通常是microSD卡，还可以是USB存贮设备、网络存储以及通过PCIe HAT连接的存储。但是，只有最新的树莓派型号支持所有这些媒体类型。
@@ -77,12 +78,11 @@ import Normal from "../_normal.mdx";
 
 |型号 | 显示输出 |
 | -- | -- |
-| 树莓派5 | 2个micro HDMI |
-|树莓派4（所有型号） | 2个micro HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
+| 树莓派5、400、500、500+ | 2个micro HDMI |
+|树莓派4B | 2个micro HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
 | 树莓派3（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
-| 树莓派2（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
-| 树莓派1B+ | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
-| 树莓派1A+ | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
+| 树莓派2B | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
+| 树莓派1（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
 | 树莓派Zero（所有型号） | 1个mini HDMI |
 
 :::note[注意]
@@ -101,11 +101,13 @@ import Normal from "../_normal.mdx";
 ### 网络
 以下树莓派型号配备WiFi和蓝牙连接：
 
+- 自 树莓派3B 以后的所有旗舰型号
+- 所有键盘型号
 - 所有的 Zero W 型号
 - 所有的 Pico W 型号
 - 配置无线功能的计算模块（自 CM4 起可用）
 
-型号中的“B”后缀表示带有以太网口的型号；“A”表示没有以太网口。如果您的 Raspberry Pi 没有以太网口，您仍然可以使用USB转以太网适配器连接到有线网连接。
+型号后缀"B"表示配备以太网端口的变体；"A"则表示未配备以太网端口。键盘型号同样包含以太网端口。若您的树莓派未配备以太网端口，仍可通过USB转以太网适配器连接有线网络。
 
 <img src="/img/computers/getting-started/peripherals/cable-net.png" alt="将以太网线缆插入树莓派" width="80%" />
 
@@ -170,13 +172,13 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 - 键盘布局
 - 远程连接
 
-当您首次打开操作系统自定义菜单时，您可能会看到一条提示，要求您授予从主机加载WiFi凭据的权限。如果您回答“是”，Imager将从您当前连接的网络中预填写WiFi认证。如果您回答“否”，您可以手动输入WiFi认证。
+当您首次打开操作系统自定义菜单时，您可能会看到一条提示，要求您授予从主机加载WiFi凭据的权限。如果您回答"是"，Imager将从您当前连接的网络中预填写WiFi认证。如果您回答"否"，您可以手动输入WiFi认证。
 
 **主机名**选项定义树莓派使用[mDNS](https://en.wikipedia.org/wiki/Multicast_DNS)广播到网络的主机名。当您将树莓派连接到网络时，网络上的其他设备可以使用`<hostname>.local`或`<hostname>.lan`与您的树莓派进行通信。
 
 **用户名和密码**选项定义树莓派的超级管理员帐户的用户名和密码。
 
-**配置WiFi**选项允许您输入无线网络的SSID（名称）和密码。如果您的网络不公开广播SSID，您应该勾选“Hidden SSID”设置。默认情况下，Imager使用您当前所在的国家/地区作为“无线LAN的国家/地区”。此设置控制树莓派使用的WiFi广播频率。如果您计划运行无显示器模式树莓派，请输入无线LAN选项的认证信息。
+**配置WiFi**选项允许您输入无线网络的SSID（名称）和密码。如果您的网络不公开广播SSID，您应该勾选"Hidden SSID"设置。默认情况下，Imager使用您当前所在的国家/地区作为"无线LAN的国家/地区"。此设置控制树莓派使用的WiFi广播频率。如果您计划运行无显示器模式树莓派，请输入无线LAN选项的认证信息。
 
 **语言设置**选项允许您定义树莓派的时区和默认键盘布局。
 
@@ -202,7 +204,7 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 
 然后，单击**是**以在将映像写入存储设备时应用操作系统自定义设置。
 
-最后，在数据写入存储设备前将弹出窗口，对“您确定要继续吗？”回答**是**。
+最后，在数据写入存储设备前将弹出窗口，对"您确定要继续吗？"回答**是**。
 
 <img src="/img/computers/getting-started/imager/are-you-sure.png" alt="写入映像确认" width="80%" />
 
@@ -216,7 +218,7 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 
 *如果你胆特别肥，可以点击**取消验证**，跳过验证过程。*
 
-当您看到“写入成功”弹出窗口时，您的映像已完全写入并验证。现在您已准备好从存储设备启动树莓派！
+当您看到"写入成功"弹出窗口时，您的映像已完全写入并验证。现在您已准备好从存储设备启动树莓派！
 
 <img src="/img/computers/getting-started/imager/finished.png" alt="当图像生成器完成将图像写入存储设备时，屏幕上会显示该图像" width="80%" />
 
@@ -294,7 +296,7 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 ### 用户
 此页面帮助您配置默认用户帐户的用户名和密码。
 
-默认情况下，旧版本的树莓派OS将用户名设置为“pi”。如果您使用用户名“pi”，请避免使用旧的默认密码“raspberry”，以确保树莓派的安全。
+默认情况下，旧版本的树莓派OS将用户名设置为"pi"。如果您使用用户名"pi"，请避免使用旧的默认密码"raspberry"，以确保树莓派的安全。
 <img src="/img/computers/getting-started/initial-setup/user.png" alt="创建您的用户名和密码" width="80%" />
 
 ### WiFi
@@ -321,6 +323,10 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 ### 软件更新
 一旦您的树莓派可以访问互联网，此页面将帮助您将操作系统和软件更新到最新版本。在软件更新过程中，如果您在浏览器选择步骤中选择卸载非默认浏览器，向导将删除它。下载更新可能需要几分钟的时间。
 
+:::tip
+若您是首次为树莓派500+进行系统更新，整个过程可能需要长达半小时。等待期间不妨泡杯咖啡或外出散步。
+:::
+
 <img src="/img/computers/getting-started/initial-setup/update.png" alt="在首次启动之前，您可以在向导过程中下载最新的软件更新" width="80%" />
 <img src="/img/computers/getting-started/initial-setup/download.png" alt="在首次启动之前，您可以在向导过程中下载最新的软件更新" width="80%" />
 
@@ -329,7 +335,7 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 ### 结束
 在配置向导结束时，单击**重新启动**以重新启动树莓派。您的树莓派将应用您的配置并启动到桌面。
 
-<img src="/img/computers/getting-started/initial-setup/restart.png" alt="设置完成”对话框会提示重新启动 Raspberry Pi" width="80%" />
+<img src="/img/computers/getting-started/initial-setup/restart.png" alt="设置完成" width="80%" />
 
 ## 下一步
 现在您的树莓派已设置完毕并准备就绪，下一步是什么？
