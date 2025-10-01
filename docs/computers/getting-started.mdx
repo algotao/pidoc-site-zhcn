@@ -2,8 +2,8 @@
 sidebar_position: 1
 draft: false
 title_meta: 树莓派新手上路，硬件装配、镜像烧录、系统安装、启动设置(官网25年09月)
-description: 介绍运行树莓派所需的键盘、鼠标、显示器、电源等外设列表，用图示的方式展现如何接线。介绍用何用Raspberry Pi Imager烧录系统镜像，安装操作系统。以及系统启动后的区域设置、网络设置、蓝牙、浏览器、网络更新等操作。
-keywords: [树莓派, Raspberry Pi, 树莓派Imager, 入门, 新手]
+description: 快速上手树莓派！本文提供详细入门指南，涵盖硬件连接（电源、显示器、键盘鼠标）、存储设备（microSD卡/U盘/网络存储）、操作系统安装（推荐Raspberry Pi Imager工具）、网络配置（WiFi/蓝牙）、首次启动设置（用户/语言/时区/软件更新）及推荐软件与教程资源，助您轻松启动并最大化利用树莓派功能。
+keywords: [树莓派入门, Raspberry Pi设置, 操作系统安装、树莓派Imager, 首次启动配置, 树莓派硬件连接, 树莓派WiFi设置, 树莓派推荐软件, 树莓派教程, 树莓派电源要求]
 last_update: 
   date: 2025-09-27
 ---
@@ -79,10 +79,10 @@ import Normal from "../_normal.mdx";
 |型号 | 显示输出 |
 | -- | -- |
 | 树莓派5、400、500、500+ | 2个micro HDMI |
-|树莓派4B | 2个micro HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
-| 树莓派3（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
-| 树莓派2B | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
-| 树莓派1（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
+|树莓派4B | 2个micro HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
+| 树莓派3（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
+| 树莓派2B | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
+| 树莓派1（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
 | 树莓派Zero（所有型号） | 1个mini HDMI |
 
 :::note[注意]
@@ -96,7 +96,7 @@ import Normal from "../_normal.mdx";
 <img src="/img/computers/getting-started/peripherals/cable-hdmi.png" alt="将mini HDMI插入树莓派" width="80%" />
 
 ### 音频
-所有配备HDMI、micro HDMI或mini HDMI的树莓派型号都支持通过HDMI进行音频输出。所有树莓派型号均支持USB音频。所有配备蓝牙的树莓派型号都支持蓝牙音频。树莓派 1、2、3 和 4 的系列型号均包含3.5mm[TRRS耳麦插孔](http://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards)，可能需要功放才能获得足够的输出音量。
+所有配备HDMI、micro HDMI或mini HDMI的树莓派型号都支持通过HDMI进行音频输出。所有树莓派型号均支持USB音频。所有配备蓝牙的树莓派型号都支持蓝牙音频。树莓派 1、2、3 和 4 的系列型号均包含3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards)，可能需要功放才能获得足够的输出音量。
 
 ### 网络
 以下树莓派型号配备WiFi和蓝牙连接：

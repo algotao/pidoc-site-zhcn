@@ -2,8 +2,8 @@
 sidebar_position: 3
 draft: false
 title_meta: 树莓派系统软件配置工具详解
-description: 树莓派系统配置介绍，以图示的方式介绍使用raspi-config工具配置有线网络、配置无线WiFi网络、配置热点、设置代理服务器、设置显示器的分辨率及方向。挂载外部USB存贮设备，更改默认引脚设置，配置UART。LED警告闪烁代码的含义。增加或删除用户，安装防火墙等。
-keywords: [树莓派, Raspberry Pi, 系统配置, raspi-config, LAN, WiFI, 无线, 代理服务器, UART, LED, 闪烁]
+description: 全面掌握树莓派系统配置！本文详细介绍如何使用raspi-config工具进行系统设置，包括网络、音频、显示、接口、性能、本地化和高级选项。通过config.txt文件，您可以自定义启动参数、优化性能、调整显示设置，并管理设备树。本文还涵盖了系统安全性、网络配置、用户管理等实用技巧，助您高效定制和优化树莓派系统。
+keywords: [树莓派系统配置, raspi-config, config.txt, 网络设置, 音频配置, 显示选项, 接口选项, 性能优化, 本地化设置, 用户管理, 系统安全性, 网络代理, 启动顺序, 设备树]
 last_update: 
   date: 2025-09-27
 ---
@@ -1358,7 +1358,7 @@ sudo systemctl restart ssh
 
 ### 使用防火墙
 
-Linux 下有许多防火墙解决方案。大多数都使用底层的 [iptables](http://www.netfilter.org/projects/iptables/index.html) 项目来提供数据包过滤功能。该项目位于 Linux netfiltering 系统之上。默认情况下，`iptables` 已安装在树莓派操作系统上，但尚未设置。设置它可能是一项复杂的任务，而 [Uncomplicated Firewall（UFW）](https://www.linux.com/learn/introduction-uncomplicated-firewall-ufw)是一个提供比 `iptables` 更简单界面的项目。它是 Ubuntu 的默认防火墙工具，可以安装在树莓派上：
+Linux 下有许多防火墙解决方案。大多数都使用底层的 [iptables](https://www.netfilter.org/projects/iptables/index.html) 项目来提供数据包过滤功能。该项目位于 Linux netfiltering 系统之上。默认情况下，`iptables` 已安装在树莓派操作系统上，但尚未设置。设置它可能是一项复杂的任务，而 [Uncomplicated Firewall（UFW）](https://www.linux.com/learn/introduction-uncomplicated-firewall-ufw)是一个提供比 `iptables` 更简单界面的项目。它是 Ubuntu 的默认防火墙工具，可以安装在树莓派上：
 ```sh
 sudo apt install ufw
 ```

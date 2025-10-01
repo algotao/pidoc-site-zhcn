@@ -1,8 +1,8 @@
 ---
 sidebar_position: 12
 draft: false
-description: 树莓派Sense HAT 是一块附加板，可为您的树莓派提供一系列传感功能。通过板载传感器，您可以监控压力、湿度、温度、颜色、方向和移动。明亮的 8×8 RGB LED 矩阵可让您将来自传感器的数据可视化，五键操纵杆可让用户与您的项目互动。
-keywords: [树莓派, Raspberry Pi, 传感器帽, Sense HAT, 距离感应器, 温度计, 湿度计]
+description: Raspberry Pi Sense HAT是一款专为树莓派设计的扩展板，提供丰富的传感功能，包括监测压力、湿度、温度、颜色、方向和移动，并通过8×8 RGB LED矩阵实现数据可视化。它还配备五键操纵杆，便于用户与项目互动。Sense HAT最初为国际空间站的Astro Pi计划开发，现适用于任何需要环境或运动传感的项目。官方支持Python库，兼容所有40引脚GPIO接头的树莓派设备，易于安装和使用。
+keywords: [Raspberry Pi Sense HAT, 树莓派, 传感功能, 8×8 RGB LED矩阵, 五键操纵杆, 陀螺仪, 加速计, 磁力计, 温度计, 气压, 湿度, 颜色和亮度, Python库, 环境传感, 运动传感, Astro Pi计划, 树莓派扩展板]
 last_update: 
   date: 2024-12-01
 ---
@@ -39,7 +39,7 @@ Sense HAT 有一个 8×8 RGB LED 矩阵和一个五键操纵杆，还包括以�
 LED 矩阵是一个 RGB565 [帧缓冲器](https://www.kernel.org/doc/Documentation/fb/framebuffer.txt)，id 为 `RPi-Sense FB`。相应的设备节点可作为标准文件或mmap文件写入。附带的 "snake" 示例展示了如何访问帧缓冲器。
 
 ### 操纵杆
-操纵杆作为输入事件设备出现，名为 `Raspberry Pi Sense HAT Joystick`，映射到方向键和 **回车键**。任何能够处理输入的库都应支持它，或者直接通过 [evdev 接口](https://www.kernel.org/doc/Documentation/input/input.txt) 支持。合适的库包括 SDL、[pygame](http://www.pygame.org/docs/) 和 [python-evdev](https://python-evdev.readthedocs.org/en/latest/) 等。附带的 `snake` 示例展示了如何直接访问操纵杆。
+操纵杆作为输入事件设备出现，名为 `Raspberry Pi Sense HAT Joystick`，映射到方向键和 **回车键**。任何能够处理输入的库都应支持它，或者直接通过 [evdev 接口](https://www.kernel.org/doc/Documentation/input/input.txt) 支持。合适的库包括 SDL、[pygame](https://www.pygame.org/docs/) 和 [python-evdev](https://python-evdev.readthedocs.org/en/latest/) 等。附带的 `snake` 示例展示了如何直接访问操纵杆。
 
 ## 安装
 
