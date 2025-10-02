@@ -10,7 +10,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 const config = {
   title: 'Raspberry Pi 树莓派 (官网25年9月更新)',
   tagline: '中文版文档',
-  favicon: 'img/pi.svg',
+  favicon: 'favicon.ico',
 
   // Set the production url of your site here
   url: 'https://pidoc.cn',

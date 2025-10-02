@@ -33,7 +33,7 @@ export default function Home() {
   return (
     <Layout
       title={`${siteConfig.title}`}
-      description="树莓派中文文档">
+      description="Raspberry Pi树莓派官网的中文版文档，为树莓派学习者提供了全面的学习资源。从入门知识学起，涵盖系统安装、配置、底层config.txt配置、硬件参数以及内核编译等内容。同时，还介绍了树莓派的各类配件，如摄像头、音频、显示器等，以及微控制器，像Pico、RP2040等，还有相关的调试工具和开发套件，能帮助用户全面了解和深入学习树莓派相关知识与技术。">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
