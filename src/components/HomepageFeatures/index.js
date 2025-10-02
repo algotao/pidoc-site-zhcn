@@ -12,6 +12,7 @@ const FeatureList = [
         从这里学习树莓派入门的系统安装、系统配置、config.txt底层配置、硬件参数、内核编译等知识。
       </>
     ),
+    alt: "树莓派硬件",
   },
   {
     title: '配件',
@@ -22,6 +23,7 @@ const FeatureList = [
         摄像头、音频、显示器、键盘鼠标、HAT等
       </>
     ),
+    alt: "树莓派配件",
   },
   {
     title: '微控制器',
@@ -32,16 +34,17 @@ const FeatureList = [
         Pico、RP2040、RP1、Debug Probe、MicroPython、C/C++ SDK
       </>
     ),
+    alt: "树莓派微控制器",
   },
 ];
 
-function Feature({ title, description, url, png }) {
+function Feature({ title, description, url, png, alt }) {
   return (
     <div className={clsx('col col--4')}>
 
       <div className="text--center">
         <a href={url}>
-          <img src={png} width="200px" />
+          <img src={png} width="200px" alt={alt} />
         </a>
       </div>
       <div className="text--center padding-horiz--md">
