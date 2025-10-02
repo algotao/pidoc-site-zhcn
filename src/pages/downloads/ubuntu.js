@@ -10,7 +10,8 @@ import styles from './index.module.css';
 const OSConfig = {
     rpios: '/img/downloads/rpi_os_bg.svg',
     osimages_text: "Ubuntu 操作系统",
-    desc: "Raspberry Pi OS 是官方操作系统，配合 Imager 工具使用，可便捷的烧录到 SD 卡。",
+    header_title: "Raspberry Pi 安装 Ubuntu",
+    header_desc: "Raspberry Pi 全面支持 ​​Ubuntu​​ 操作系统，为开源开发者提供快速、安全的树莓派部署方案。除官方 Raspberry Pi OS 外，用户可通过 ​​Raspberry Pi Imager​​ 快速安装系统到 microSD 卡，或手动下载兼容 ​​4B、400、CM4、CM4S​​ 等型号的 Ubuntu 系统（64位，发布于2025年2月15日，大小2,745MB）。本页面提供多系统选择、安装工具及型号兼容性说明，助力开发者灵活配置树莓派设备。",
     osimages_content1: 'Raspberry Pi 支持 Ubuntu，开源开发人员可以快速、安全地启动和运行 Raspberry Pi。',
     osimages_content2: ' 是将操作系统安装到 microSD 卡上并与 Raspberry Pi 配套使用的快速简便方法。您也可以从以下操作系统中进行选择，下载并手动安装。',
     imager_url: { downloadurl: "/downloads", title: "Raspberry Pi Imager", showButton: false, },
@@ -487,8 +488,8 @@ export default function Home() {
     const { siteConfig } = useDocusaurusContext();
     return (
         <Layout
-            title={OSConfig.header_text}
-            description={OSConfig.desc}>
+            title={OSConfig.header_title}
+            description={OSConfig.header_desc}>
             <div className={clsx('container', styles.all_header)}>
                 <OsImages />
                 {

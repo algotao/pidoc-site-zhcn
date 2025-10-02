@@ -10,7 +10,8 @@ import styles from './index.module.css';
 const OSConfig = {
     rpios: '/img/downloads/rpi_os_bg.svg',
     osimages_text: "操作系统镜像",
-    desc: "Raspberry Pi OS 是官方操作系统，配合 Imager 工具使用，可便捷的烧录到 SD 卡。",
+    header_title: "Raspberry Pi OS 下载", 
+    header_desc: "aspberry Pi官网（2025年9月更新）提供了丰富的操作系统镜像资源。其中官方重点推荐Raspberry Pi OS，有64位和32位版本，包含带桌面、带桌面和推荐软件、精简版等不同类型，还有传统的64位和32位版本，适配不同需求。这些系统基于Debian，给出了具体的发布日期、内核版本、Debian版本、大小及SHA256文件完整性哈希值等信息。此外，还有适用于PC和Mac的Raspberry Pi桌面（Debian Bullseye），能让旧计算机重获生机，也可安装在不同介质运行。",
     osimages_content1: 'Raspberry Pi 可使用许多操作系统，包括我们官方支持的操作系统 Raspberry Pi OS 和其他组织提供的操作系统。',
     osimages_content2: ' 是将操作系统安装到 microSD 卡上并与 Raspberry Pi 配套使用的快速简便方法。您也可以从以下操作系统中进行选择，下载并手动安装。',
     imager_url: { downloadurl: "/downloads", title: "Raspberry Pi Imager", showButton: false, },
@@ -421,8 +422,8 @@ export default function Home() {
     const { siteConfig } = useDocusaurusContext();
     return (
         <Layout
-            title={OSConfig.header_text}
-            description={OSConfig.desc}>
+            title={OSConfig.header_title}
+            description={OSConfig.header_desc}>
             <div className={clsx('container', styles.all_header)}>
                 <OsImages />
                 {

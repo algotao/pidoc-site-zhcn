@@ -14,6 +14,7 @@ const DownloadConfig = {
   rpimanually: '/img/downloads/rpi_manually.svg',
   rpiubuntu: '/img/downloads/ubuntu.jpg',
   header_text: "Raspberry Pi OS 下载",
+  header_desc: "Raspberry Pi 官网提供最新的 ​​Raspberry Pi OS​​（原 Raspbian）操作系统下载，这是树莓派官方推荐的系统，支持通过 ​​Raspberry Pi Imager​​ 快速安装到 microSD 卡，也可手动安装。此外，树莓派还兼容 ​​Ubuntu​​ 等开源系统，适合开发者和爱好者使用。本指南包含官方下载链接、安装方法及替代方案，助您轻松上手树莓派！",
   header_content: '您的 Raspberry Pi 需要一个操作系统才能工作。这就是它。Raspberry Pi OS（以前称为 Raspbian）是我们官方支持的操作系统。',
   imager_text: "使用 Raspberry Pi Imager 安装树莓派操作系统",
   imager_content1: 'Raspberry Pi Imager 是将 Raspberry Pi OS 和其他操作系统安装到 microSD 卡的快速简便方法，可随时与 Raspberry Pi 一起使用。',
@@ -188,7 +189,7 @@ export default function Home() {
   return (
     <Layout
       title={DownloadConfig.header_text}
-      description={DownloadConfig.header_text}>
+      description={DownloadConfig.header_desc}>
       <div className={clsx('container', styles.all_header)}>
         <SoftwareHeader />
         <Imager />
