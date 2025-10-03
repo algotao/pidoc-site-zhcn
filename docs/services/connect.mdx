@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update: 
-  date: 2025-09-27
+  date: 2025-10-03
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -131,7 +131,7 @@ Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
 
 <img src="/img/services/connect/new-device.png" alt="新设备" width="80%" />
 
-现在您可以远程连接设备。菜单栏中的 **Connect** 图标将变为蓝色，表明您的设备已登录 **Connect** 服务。您应该会收到一封电子邮件通知，表明您的 Connect 帐户已连接了一台新设备。
+您现在可以远程连接至您的设备。菜单栏中的 **Connect** 图标将变为蓝色，表示您的设备已登录 **Connect** 服务。您应收到一封电子邮件通知，告知有新设备已关联至您的Connect账户。
 
 <img src="/img/services/connect/sign-in-email.png" alt="电子邮件提示" width="70%" />
 
@@ -139,7 +139,7 @@ Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
 如果您收到一封电子邮件，显示您不认识的设备已登录 Connect，请立即更改您的 Raspberry Pi ID 密码。[从 Connect 中移除设备](#管理设备) 可将该设备与您的帐户永久脱离关系。考虑 [启用双因素身份验证](./id.mdx#启用双因素身份验证)，以确保账户安全。
 :::
 
-单击菜单栏中的 **Connect** 图标，打开 **Connect** 菜单。通过该菜单，您可以打开或关闭 **Connect**、登录和退出，以及允许或禁止远程访问方法。
+通过选择菜单栏中的 **Connect** 图标打开 **Connect** 菜单。该菜单允许您开启或关闭 **Connect** 功能、进行登录或注销操作，以及允许或禁止远程访问方式。
 
 :::tip
 Connect 使用设备序列号登录通信。在设备之间移动 SD 卡将会退出 Connect。
@@ -175,7 +175,7 @@ Connect 会将您重定向到 Raspberry Pi ID 服务以登录。登录后，Conn
 连接后，连接仪表板中的**Screen sharing**徽章旁边会出现一个绿点。这表示正在进行屏幕共享会话。鼠标悬停可查看当前屏幕共享会话的数量。
 <img src="/img/services/connect/screen-sharing-in-progress.png" alt="屏幕共享进行中" width="80%" />
 
-当屏幕共享会话正在进行时，系统托盘中的 **Connect** 图标会变成紫色并显示一个封闭的圆圈。屏幕共享会话开始时，桌面会出现通知。
+系统托盘中的 **Connect** 图标在屏幕共享会话进行时会旋转。每次屏幕共享会话开始时，都会出现桌面通知。
 <img src="/img/services/connect/screen-sharing-notification.png" alt="屏幕共享通知" width="80%" />
 
 #### 禁止屏幕共享
@@ -185,7 +185,8 @@ Connect 会将您重定向到 Raspberry Pi ID 服务以登录。登录后，Conn
 
 #### 禁止屏幕共享
 
-要关闭屏幕共享，请单击菜单栏中的 Connect 图标，然后取消选择 **Allow Screen Sharing**。 您的设备仍可登录 Connect，但您将无法从 Connect 面板创建屏幕共享会话。
+要关闭屏幕共享功能，请在菜单栏中选择 Connect 图标，然后取消勾选 **允许屏幕共享**。您的设备仍保持登录 Connect 的状态，但无法通过 Connect 控制面板创建屏幕共享会话。
+
 <img src="/img/services/connect/disallow-screen-sharing.png" alt="禁止屏幕共享" width="80%" />
 
 您也可以使用以下命令禁止屏幕共享：
@@ -199,7 +200,7 @@ rpi-connect vnc off
 
 要重新启用屏幕共享，请执行以下操作之一：
 
-- 单击菜单栏中的 Connect 图标，然后选择 **Allow screen sharing**。
+- 在菜单栏中选择 Connect 图标，然后选择**允许屏幕共享**
 - 运行以下命令
 
 ```sh
@@ -232,7 +233,7 @@ Connect 会将你重定向到 Raspberry Pi ID 服务以登录。登录后，Conn
 每个远程 shell 连接都会创建一个全新的连接，就像 SSH 一样。要在多个会话中持续执行后台命令和配置，请使用 `screen` 或 `tmux`。
 :::
 
-当远程 shell 会话正在进行时，菜单栏中的 **Connect** 图标会变成紫色，并显示一个封闭的圆圈。远程 shell 会话开始时，桌面会出现通知。
+菜单栏中的 **Connect** 图标在远程shell会话进行时会旋转。每次启动远程shell会话时，都会出现桌面通知。
 <img src="/img/services/connect/remote-shell-notification.png" alt="远程shell提示" width="80%" />
 
 :::tip
@@ -245,7 +246,7 @@ Connect 会将你重定向到 Raspberry Pi ID 服务以登录。登录后，Conn
 <img src="/img/services/connect/remote-shell-ended.png" alt="结束远程shell" width="80%" />
 
 #### 禁止远程shell访问
-要关闭远程 shell 访问，请单击菜单栏中的 Connect 图标，然后取消选择 **Allow remote shell**。您的设备仍可登录 Connect，但无法从 Connect 面板创建远程 shell 会话。
+要关闭远程shell访问功能，请在菜单栏中选择 Connect 图标，然后取消勾选**允许远程shell访问**选项。您的设备仍将保持登录Connect的状态，但无法通过Connect控制面板创建远程shell会话。
 <img src="/img/services/connect/disallow-remote-shell.png" alt="禁用远程shell" width="80%" />
 
 或者，也可以使用以下命令禁止远程 shell 访问：
@@ -277,6 +278,17 @@ loginctl enable-linger
 :::tip
 我们建议在所有无头 Raspberry Pi OS Lite 设置中启用用户登录，以防止远程重启后无法访问设备。
 :::
+
+## 禁用动画图标
+
+若要在屏幕共享或远程shell会话进行时禁用动画图标，请右键点击菜单栏中的 Connect 图标，选择**配置插件...**。
+<img src="/img/services/connect/configure-plugin.png" alt="配置插件" width="80%" />
+
+勾选**动画图标**开关即可切换为备用图标。
+<img src="/img/services/connect/disable-animate-icon.png" alt="禁用动画图标" width="80%" />
+
+屏幕共享或远程shell会话进行时，Connect图标将变为蓝色。
+<img src="/img/services/connect/static-icon.png" alt="静态图标" width="80%" />
 
 ## 管理设备
 

@@ -5,7 +5,7 @@ title_meta: 在树莓派OS上使用音视频播放软件、安装Python(官网25
 description: 全面解析树莓派官方操作系统Raspberry Pi OS！基于Debian优化，支持35,000+软件包，提供软件管理（APT命令）、固件升级（rpi-update）、多媒体播放（VLC工具）、硬件控制（GPIO/VC命令）等核心功能，附Python开发指南与无障碍工具，助您高效开发与个性化配置树莓派设备。
 keywords: [Raspberry Pi OS, 树莓派操作系统, Debian系统, APT软件管理, 树莓派固件升级, VLC媒体播放, 树莓派GPIO控制, Python编程树莓派, 树莓派无障碍工具, 树莓派多媒体工具]
 last_update: 
-  date: 2024-12-21
+  date: 2025-10-03
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -19,9 +19,20 @@ Raspberry Pi OS 是基于 Debian 的免费操作系统，针对 Raspberry Pi 硬
 
 由于 Raspberry Pi OS 源自 Debian，它遵循 [Debian发布周期](https://wiki.debian.org/DebianReleases) 的交错版本。大约每两年发布一次。
 
-最新版本的 Raspberry Pi OS 基于 [Debian Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/)。之前的版本基于 [Debian Bullseye](https://www.raspberrypi.com/news/raspberry-pi-os-debian-bullseye)。
+最新版本的树莓派操作系统基于[Debian Trixie](https://www.raspberrypi.com/news/trixie-the-new-version-of-raspberry-pi-os/)。前一版本基于[Debian Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/)。
 
-您可以在 [树莓派操作系统下载](/downloads/operating-systems/) 上找到 Raspberry Pi 操作系统的映像。
+## 获取树莓派操作系统
+
+您可通过树莓派映像工具获取树莓派操作系统。
+您也可在 [操作系统镜像](/downloads/operating-systems/) 获取树莓派操作系统镜像。
+
+我们提供以下版本的 64 位和 32 位操作系统：
+
+* **带桌面的树莓派操作系统**。这是树莓派映像工具中显示的默认版本，包含 Chromium 网页浏览器、Firefox 网页浏览器、VLC 媒体播放器和 Thonny Python 环境等应用程序。
+* **带桌面环境及推荐软件的树莓派操作系统**。树莓派映像工具中标注为 `Raspberry Pi OS 完整版`。额外包含LibreOffice办公套件、KiCad电路设计软件、Scratch编程环境等众多应用。
+* **树莓派操作系统精简版**。此版本不提供图形化桌面体验，适用于无显示器的服务器等场景。我们建议树莓派 1、2 及 Zero 计算机使用此版本。
+
+若您当前运行的是旧版树莓派操作系统，且希望升级至最新主版本，我们建议不要进行就地升级。请重新使用新镜像进行安装。更多信息请参阅 [将操作系统升级到新的主版本](#将操作系统升级到新的主版本)。
 
 ## 升级软件
 
@@ -182,7 +193,7 @@ sudo rpi-update
 sudo reboot
 ```
 :::note[白皮书]
-[更新 Raspberry Pi 固件](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-003476-WP/Updating-Pi-firmware.pdf)。
+[更新 Raspberry Pi 固件](https://pip.raspberrypi.com/documents/RP-003476-WP-Updating-Pi-firmware.pdf)。
 
 本白皮书记录了如何更新 Raspberry Pi OS 映像中的 VideoCore 固件。
 :::
@@ -196,17 +207,52 @@ sudo apt update
 sudo apt install --reinstall raspi-firmware
 ```
 
+### 将树莓派精简版系统转换为桌面版系统
 
-:::note[注意]
-如果你仍在运行 Raspberry Pi OS Bullseye，则必须使用以下命令重新安装 `raspberrypi-kernel`：
+可通过 `apt` 安装相关软件包，将轻量版系统升级为桌面版系统。.
 
-
+1. 安装首选的桌面窗口系统。
+  * 安装 Wayland（推荐）：
 ```sh
-sudo apt install --reinstall libraspberrypi0 libraspberrypi-{bin,dev,doc} raspberrypi-{kernel,bootloader}。
+sudo apt install rpd-wayland-core
+```
+  * 安装 X 窗口系统：
+```sh
+sudo apt install rpd-x-core
 ```
 
-使用 `sudo reboot` 重启 Raspberry Pi，使这些更改生效。
-:::
+2. 安装树莓派主题与控制中心：
+
+```sh
+sudo apt install rpd-theme
+sudo apt install rpd-preferences
+```
+
+3. 添加应用程序：
+```sh
+sudo apt install rpd-applications
+sudo apt install rpd-utilities
+sudo apt install rpd-developer
+sudo apt install rpd-graphics
+```
+
+. 为所选窗口系统添加额外功能，如截图和远程桌面支持。
+  * 对于 Wayland，运行：
+```sh
+sudo apt install rpd-wayland-extras
+```
+  * 对于 X，运行：
+```sh
+sudo apt install rpd-x-extras
+```
+5. 重启树莓派以进入桌面环境。
+```sh
+sudo reboot
+```
+
+至此您已安装完Raspberry Pi OS Desktop所需全部软件包。若需恢复至精简版系统，可卸载这些软件包。
+
+您也可通过Raspberry Pi主菜单选择**首选项 > 推荐软件**，安装Raspberry Pi OS完整版内置的推荐应用程序。
 
 ## 播放音频和视频
 
@@ -225,7 +271,7 @@ Raspberry Pi OS 预装了 [VLC 媒体播放器](https://www.videolan.org/) 。�
 您也可以通过命令行启动 VLC。在下面的示例中，我们使用了 Big Buck Bunny 的一个短片。要从 Raspberry Pi 下载该短片，请运行以下命令：
 
 ```sh
-wget --trust-server-names http://rptl.io/big-buck-bunny
+wget --trust-server-names http://rpltd.co/big-buck-bunny
 ```
 
 要在 VLC 中通过命令行播放片段，请运行以下命令：
@@ -263,7 +309,7 @@ sudo apt install --no-install-recommends vlc-bin vlc-plugin-base
 在下面的示例中，我们使用了一段简短的音频片段。要从 Raspberry Pi 下载该片段，请运行以下命令：
 
 ```sh
-wget --trust-server-names http://rptl.io/startup-music
+wget --trust-server-names http://rpltd.co/startup-music
 ```
 
 要在 VLC 中通过命令行播放该视频，请运行以下命令：

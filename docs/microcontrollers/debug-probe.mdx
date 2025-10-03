@@ -4,7 +4,7 @@ draft: false
 description: 树莓派官方调试探针（Debug-Probe）是一款即插即用的USB调试工具，支持ARM SWD（串行线调试）和UART串口功能，兼容CMSIS-DAP标准，适用于Windows/macOS/Linux平台。它无需焊接即可调试树莓派Pico等RP2040芯片设备，提供3.3V I/O电压、5个状态LED（含电源和活动指示灯），并配备多种转接线缆（如JST-SH转0.1英寸接头）。通过OpenOCD和GDB可实现二进制文件上传、断点调试及串口通信（如UART0数据转发至CDC UART）。支持固件升级（UF2文件），并提供开源原理图与机械图纸。配套VS Code扩展简化开发流程，适用于嵌入式开发与故障排查。
 keywords: [树莓派调试探针, Raspberry Pi Debug Probe, SWD调试, UART串口, CMSIS-DAP, OpenOCD, GDB, RP2040, Pico调试, ARM调试, USB调试工具, 嵌入式开发, 固件升级, VS Code扩展, JST-SH线缆, 串口通信, CDC UART, 开源硬件]
 last_update: 
-  date: 2025-09-27
+  date: 2025-10-03
 ---
 import Normal from "../_normal.mdx";
 
@@ -20,7 +20,7 @@ import Normal from "../_normal.mdx";
 - 开源、易于升级的固件
 
 :::note[注意]
-有关树莓派三针调试连接器的更多信息，请参阅规范。
+有关树莓派三针调试连接器的更多信息，请参阅[规范](https://rpltd.co/debug-spec)。
 :::
 
 这样就可以在 Windows、macOS 和 Linux 等平台上轻松使用 Raspberry Pi Pico，这些平台缺乏 GPIO 头，无法直接连接到 Pico 的串行 UART 或 SWD 端口。
@@ -46,7 +46,7 @@ import Normal from "../_normal.mdx";
 **黄色**<br />
 &emsp;&emsp;RX/SD（探针或 I/O 输入）
 
-而带三针 JST-SH 连接器的电缆则用于 [标准三针连接器](https://rptl.io/debug-spec) ，较新的 Raspberry Pi 板使用这种连接器作为 SWD 调试端口和 UART 连接器。
+而带三针 JST-SH 连接器的电缆则用于 [标准三针连接器](https://rpltd.co/debug-spec) ，较新的 Raspberry Pi 板使用这种连接器作为 SWD 调试端口和 UART 连接器。
 
 调试探针有五个 LED 灯，其中一个红色 LED 灯指示电源，另外四个指示活动的 LED 灯分别是
 

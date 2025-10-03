@@ -1,20 +1,20 @@
 ---
-sidebar_position: 5
+sidebar_position: 14
 draft: false
 title_meta: 树莓派旧版系统config.txt配置文件详解(官网25年09月)
-description: 深入了解树莓派的传统config.txt配置选项，这些选项在树莓派OS Bookworm中已不再使用，但对旧版操作系统用户和裸机开发者仍具参考价值。本文详细介绍了启动选项、GPIO控制、超频设置、内存与视频配置、HDMI模式、传统杂项选项等，帮助用户在特定场景下进行系统优化和故障排除。
-keywords: [树莓派, config.txt, 传统配置, 启动选项, GPIO控制, 超频, 内存配置, 视频选项, HDMI模式, 传统杂项选项, 树莓派OS Bookworm]
+description: 深入了解树莓派的旧版config.txt配置选项，这些选项在树莓派OS Bookworm中已不再使用，但对旧版操作系统用户和裸机开发者仍具参考价值。本文详细介绍了启动选项、GPIO控制、超频设置、内存与视频配置、HDMI模式、旧版杂项选项等，帮助用户在特定场景下进行系统优化和故障排除。
+keywords: [树莓派, config.txt, 旧版配置, 启动选项, GPIO控制, 超频, 内存配置, 视频选项, HDMI模式, 旧版杂项选项, 树莓派OS Bookworm]
 last_update: 
-  date: 2024-12-21
+  date: 2025-10-03
 ---
 import Normal from "../_normal.mdx";
 
-# 传统config.txt
+# 旧版config.txt
 
-## 传统选项
+## 旧版选项
 这里描述的 `config.txt` 选项被视为遗留设置，树莓派OS Bookworm 并不使用它们，官方也不再支持它们。它们要么与固件图形驱动程序等旧版软件有关，要么已被弃用，要么大多数人都不太可能使用。不过，由于它们对旧版操作系统用户或进行裸机开发的人员可能仍有帮助，因此在此保留记录。
 
-## 传统启动选项
+## 旧版启动选项
 
 (另请参阅 [config.txt 启动选项](./config-txt.mdx#启动选项)）。
 
@@ -81,7 +81,7 @@ bootcode_delay
 `boot_delay_ms` 命令表示在加载内核前等待 `start.elf` 和 `boot_delay` 中给定的毫秒数。默认值为 `0`。
 
 ### enable_gic（仅限树莓派4）
-在树莓派4B 上，如果将此值设为 `0`，中断将使用传统中断控制器路由到 Arm 内核，而不是通过 GIC-400。默认值为 `1`。
+在树莓派4B 上，如果将此值设为 `0`，中断将使用旧版中断控制器路由到 Arm 内核，而不是通过 GIC-400。默认值为 `1`。
 
 ### sha256
 如果设置为非零，将启用由 `sha256sum` 工具生成的已加载文件（内核、initramfs、设备树 .dtb 文件和覆盖层）的 SHA256 哈希值日志。如果启用，日志输出将发送到 UART，也可通过 `sudo vclog --msg` 访问。该选项在调试启动问题时可能有用，但代价是启动时间可能会增加*很多*秒。在所有平台上默认为 0。
@@ -96,23 +96,7 @@ bootcode_delay
 
 固件还会优先使用上游 Linux 名称来命名 DTB（例如，用 `bcm2837-rpi-3-b.dtb` 代替 `bcm2710-rpi-3-b.dtb`）。如果找不到上游文件，固件将加载下游变体，并自动应用 "上游 "覆盖进行一些调整。请注意，这一过程是在确定 `os_prefix` 之后进行的。
 
-## 传统GPIO控制
-
-(另请参阅 config.txt [GPIO控制](./config-txt.mdx#gpio控制)）。
-
-### enable_jtag_gpio
-设置 `enable_jtag_gpio=1` 可为 GPIO 引脚 22-27 选择 Alt4 模式，并设置一些内部 SoC 连接，从而启用 Arm CPU 的 JTAG 接口。它适用于所有型号的树莓派。
-
-| 引脚编号 | 功能 |
-| -- | -- |
-| GPIO22 | ARM_TRST |
-| GPIO23 | ARM_RTCK |
-| GPIO24 | ARM_TDO |
-| GPIO25 | ARM_TCK |
-| GPIO26 | ARM_TDI |
-| GPIO27 | ARM_TMS |
-
-## 传统超频选项
+## 旧版超频选项
 
 (另请参阅 [config.txt 超频选项](./config-txt.mdx#超频选项)）。
 
@@ -124,7 +108,7 @@ bootcode_delay
 #### disable_auto_turbo
 在树莓派2和3上，设置此标志将禁止 GPU 进入Turbo模式，在特定负载下，GPU 可以进入Turbo模式。
 
-## 传统的条件过滤器
+## 旧版的条件过滤器
 
 (另请参阅 [config.txt 条件筛选器](./config-txt.mdx#条件筛选器)）。
 
@@ -151,7 +135,7 @@ bootcode_delay
  hdmi_mode:1=67
 ```
 
-## 传统内存选项
+## 旧版内存选项
 
 (另请参阅 [config.txt 内存选项](./config-txt.mdx#内存选项)）
 
@@ -170,7 +154,7 @@ bootcode_delay
 
 在树莓派4上，GPU 的 3D 组件有自己的内存管理单元 (MMU)，不会使用 `gpu_mem` 分配的内存。内存是在 Linux 中动态分配的。这样，在树莓派4上指定的 `gpu_mem` 值就比以前的型号小。
 
-在传统内核中，分配给 GPU 的内存用于显示、3D、编解码器、摄像头以及一些基本的固件内务管理。下面指定的最大值假定您正在使用所有这些功能。如果没有，则应使用较小的 gpu_mem 值。
+在旧版内核中，分配给 GPU 的内存用于显示、3D、编解码器、摄像头以及一些基本的固件内务管理。下面指定的最大值假定您正在使用所有这些功能。如果没有，则应使用较小的 gpu_mem 值。
 
 建议的最大值如下
 
@@ -200,13 +184,13 @@ bootcode_delay
 ### disable_l2cache
 将此值设为 1 将禁止 CPU 访问 GPU 的二级缓存，并需要相应的二级缓存禁用内核。在 BCM2836、BCM2837、BCM2711 和 BCM2712 上，ARM 拥有自己的二级缓存，因此默认值为 1。标准的树莓派kernel.img 和 kernel7.img 版本反映了缓存设置的这种差异。
 
-## 传统视频选项
+## 旧版视频选项
 
 (另请参阅 [config.txt 视频选项](./config-txt.mdx#视频选项)）
 
 ### HDMI模式
 :::note[注意]
-对于具有多个 HDMI 端口的设备，某些 HDMI 命令可以应用于任何端口。您可以使用语法`<command>:<port>`（其中端口为 0 或 1）来指定设置应应用于哪个端口。如果在不需要端口号的命令中指定端口号，端口将被忽略。有关语法和替代机制的更多详情，请参阅文档 [条件部分](#传统的条件过滤器)中的 HDMI 子部分。
+对于具有多个 HDMI 端口的设备，某些 HDMI 命令可以应用于任何端口。您可以使用语法`<command>:<port>`（其中端口为 0 或 1）来指定设置应应用于哪个端口。如果在不需要端口号的命令中指定端口号，端口将被忽略。有关语法和替代机制的更多详情，请参阅文档 [条件部分](#旧版的条件过滤器)中的 HDMI 子部分。
 
 :::
 
@@ -778,7 +762,7 @@ dpi_timings=<h_active_pixels> <h_sync_polarity> <h_front_porch> <h_sync_pulse> <
 将 `framebuffer_ignore_alpha` 设置为 `1` 可禁用 alpha 通道。这有助于显示 32 位的 `framebuffer_depth`。
 
 #### framebuffer_priority
-在使用传统（pre-KMS）图形驱动程序的多显示器系统中，该选项会强制将特定的内部显示设备作为第一个 Linux 帧缓冲器（即 `/dev/fb0`）。
+在使用旧版（pre-KMS）图形驱动程序的多显示器系统中，该选项会强制将特定的内部显示设备作为第一个 Linux 帧缓冲器（即 `/dev/fb0`）。
 
 可设置的选项有
 
@@ -817,7 +801,7 @@ dpi_timings=<h_active_pixels> <h_sync_polarity> <h_front_porch> <h_sync_pulse> <
 您可以将旋转设置和翻转设置加在一起。您也可以用同样的方法进行水平和垂直翻转。例如，带有垂直和水平翻转的 180 度旋转将是 0x20000 + 0x10000 + 2 = 0x30002。
 
 #### display_lcd_rotate
-对于传统图形驱动程序（树莓派4之前型号的默认设置），使用 `display_lcd_rotate` 旋转或翻转 LCD 方向。参数与 `display_hdmi_rotate` 相同。另请参阅 `lcd_rotate`。
+对于旧版图形驱动程序（树莓派4之前型号的默认设置），使用 `display_lcd_rotate` 旋转或翻转 LCD 方向。参数与 `display_hdmi_rotate` 相同。另请参阅 `lcd_rotate`。
 
 #### display_rotate
 在最新固件中，`display_rotate` 已被弃用。保留它只是为了向后兼容。请使用 `display_lcd_rotate` 和 `display_hdmi_rotate` 代替。
@@ -832,7 +816,7 @@ dpi_timings=<h_active_pixels> <h_sync_polarity> <h_front_porch> <h_sync_pulse> <
 ## 树莓派4 HDMI管线
 
 :::important[重要]
-使用 VC4 KMS 图形驱动程序时，整个显示管道由 Linux 管理，其中包括 HDMI 输出。这些设置仅适用于传统的 FKMS 和基于固件的图形驱动程序。
+使用 VC4 KMS 图形驱动程序时，整个显示管道由 Linux 管理，其中包括 HDMI 输出。这些设置仅适用于旧版的 FKMS 和基于固件的图形驱动程序。
 :::
 
 树莓派4无法通过 HDMI 以 1366×768 @ 60Hz 进行输出。某些显示器可以配置为 1360×768 @ 60Hz。它们通常不会通过 EDID 宣传这种模式，因此无法自动选择，但可以通过添加手动选择：
@@ -843,13 +827,13 @@ hdmi_mode=87
 hdmi_cvt=1360 768 60
 ```
 
-...到 [config.txt](#传统视频选项)。
+...到 [config.txt](#旧版视频选项)。
 
 通过 `config.txt` 中的 `hdmi_timings=` 行手动指定的定时也需要遵守所有水平定时参数均可被 `2` 整除的限制。
 
 `dpi_timings=` 则不受此限制，因为该流水线每个时钟周期仍只能运行一个像素。
 
-## 传统杂项选项
+## 旧版杂项选项
 
 ### avoid_warnings
 `avoid_warnings=2` 允许在出现低电压时使用turbo模式。

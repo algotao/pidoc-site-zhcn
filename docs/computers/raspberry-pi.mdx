@@ -1,11 +1,11 @@
 ---
-sidebar_position: 10
+sidebar_position: 9
 draft: false
 title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓派资料
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update: 
-  date: 2025-09-27
+  date: 2025-10-03
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -2262,7 +2262,7 @@ SDRAM_BANKLOW 控制系统地址空间内 SDRAM Bank 的排列方式。Bank 数�
 
 ## 显示并行接口 (DPI)
 :::note[在树莓派上使用 DPI 显示器]
-[在树莓派上使用 DPI 显示器](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-003471-WP/Using-a-DPI-display.pdf)<br />
+[在树莓派上使用 DPI 显示器](https://pip.raspberrypi.com/documents/RP-003471-WP-Using-a-DPI-display.pdf)<br />
 显示并行接口 (DPI) 显示器可通过 40 针通用输入/输出 (GPIO) 连接器连接到树莓派设备，以替代专用的显示串行接口 (DSI) 或高清多媒体接口 (HDMI) 端口。
 :::
 
@@ -2800,7 +2800,7 @@ Raspberry Pi 3.3V 电源的设计最大电流为每个 GPIO 引脚约 3mA。如�
 
 ### 一次性可编程设置
 :::info[白皮书]
-[在树莓派单板计算机上使用一次性可编程内存](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-003611-WP/Using-the-One-time-programmable-memory-on-Raspberry-Pi-single-board-computers.pdf)<br />
+[在树莓派单板计算机上使用一次性可编程内存](https://pip.raspberrypi.com/documents/RP-003611-WP-Using-the-One-time-programmable-memory-on-Raspberry-Pi-single-board-computers.pdf)<br />
 所有树莓派单板计算机（SBC）都有一个内置的一次性可编程（OTP）内存区域，它实际上是芯片上主系统（SoC）的一部分。顾名思义，OTP 内存只能被写入一次（即二进制 0 变为 1）。观察 OTP 的一种方法是将每个位视为保险丝。编程时需要故意烧断保险丝，这是一个不可逆的过程，因为你无法进入芯片内部更换保险丝！
 
 本白皮书假定树莓派正在运行树莓派操作系统 (OS)，并且完全是最新的固件和内核。
@@ -3295,9 +3295,9 @@ vcgencmd get_config usb_max_current_enable
 在这些测量中，我们使用了标准的树莓派OS映像（截至 2016 年 2 月 26 日，树莓派4则截至 2019 年 6 月），在室温下，树莓派与 HDMI 显示器、USB 键盘和 USB 鼠标相连。树莓派3B连接到无线局域网接入点，树莓派4连接到以太网。所有这些功率测量值都是近似值，没有考虑额外 USB 设备的功耗；如果多个额外 USB 设备或 HAT 连接到树莓派，功耗很容易超过这些测量值。
 :::
 :::info[白皮书]
-[树莓派4和CM4上的额外 PMIC 功能](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-004340-WP/Extra-PMIC-features-on-Raspberry-Pi-4-and-Compute-Module-4.pdf)
+[树莓派4、5和CM4上的额外 PMIC 功能](https://pip.raspberrypi.com/documents/RP-004340-WP-Extra-PMIC-features-on-Raspberry-Pi-4-and-Compute-Module-4.pdf)
 
-Raspberry Pi 4 和 CM4 上使用了许多不同的 PMIC 器件。所有 PMIC 除了提供电压供应外，还提供额外的功能。本文档介绍了如何通过软件访问这些功能。
+Raspberry Pi 4、5 和 CM4 上使用了许多不同的 PMIC 器件。所有 PMIC 除了提供电压供应外，还提供额外的功能。本文档介绍了如何通过软件访问这些功能。
 :::
 
 #### 降低 Raspberry Pi 5 关机时的功耗
@@ -3320,7 +3320,7 @@ BOOT_ORDER=0xf416
 电压下降的原因有很多。您可能插入了太多高要求的 USB 设备。电源可能不足。或者电源线使用的电线太细。
 
 :::info[白皮书]
-[打造弹性更强的文件系统](https://pip.raspberrypi.com/categories/685-whitepapers-app-notes/documents/RP-003610-WP/Making-a-more-resilient-file-system.pdf)
+[打造弹性更强的文件系统](https://pip.raspberrypi.com/documents/RP-003610-WP-Making-a-more-resilient-file-system.pdf)
 
 树莓派设备经常被用作数据存储和监控设备，并经常用于可能会突然断电的地方。与任何计算设备一样，断电可能会导致存储损坏。
 
