@@ -2,8 +2,8 @@
 sidebar_position: 5
 draft: false
 title: 5. 配置远程GPIO
-description: GPIO Zero 支持远程GPIO，通过网络远程控制 GPIO 引脚的功能，这意味着你可以使用 GPIO Zero 控制网络上连接到 Raspberry Pi 的设备。你可以从另一台 Raspberry Pi，甚至从 PC 来实现这一功能。
-keywords: [GPIO Zero, gpiozero, Python, 树莓派, Raspberry Pi, 远程, 远程GPIO, rgpio, pigpio]
+description: 本文介绍GPIO Zero配置远程GPIO的方法。GPIO Zero支持多种引脚库，默认是RPi.GPIO，也可选用pigpio实现网络远程控制GPIO引脚，能通过另一台树莓派或PC控制连接在树莓派上的设备。详细说明了准备树莓派（不同系统安装pigpio、启用远程连接及启动守护进程）和控制计算机（不同系统安装相关库）的步骤，还介绍了通过环境变量和引脚工厂两种配置远程引脚的方式及使用示例。
+keywords: [GPIO Zero, 远程GPIO, pigpio, RPi.GPIO, 引脚库, 树莓派, 控制计算机, 环境变量, 引脚工厂, 远程控制]
 last_update: 
   date: 2024-06-13
 ---
