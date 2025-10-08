@@ -5,7 +5,7 @@ title_meta: 树莓派处理器介绍，包括BCM2835、BCM2836、BCM2837、BCM27
 description: 深入了解树莓派系列所使用的各类处理器，包括BCM2835、BCM2836、BCM2837、BCM2837B0、BCM2711、BCM2712和RP3A0等。本文详细介绍了这些处理器的架构、性能特点、内存与缓存配置、多媒体功能以及输入输出接口等关键信息，同时提及了BCM2712处理器的漏洞及缓解措施，为树莓派爱好者和开发者提供全面的处理器知识。
 keywords: [树莓派, 处理器, BCM2835, BCM2836, BCM2837, BCM2837B0, BCM2711, BCM2712, RP3A0, ARM架构, 多媒体功能, 漏洞缓解]
 last_update: 
-  date: 2025-09-27
+  date: 2025-10-08
 ---
 import Normal from "../_normal.mdx";
 
@@ -29,18 +29,18 @@ BCM2836 的底层架构与 BCM2835 相同。唯一明显的不同是去掉了 AR
 - [Cortex-A7 MPcore 处理器参考手册](https://developer.arm.com/documentation/ddi0464/f/)
 
 ## BCM2837
-这是用于树莓派3B、树莓派2B的后期型号以及树莓派CM3 的 Broadcom 芯片。BCM2837 的底层架构与 BCM2836 完全相同。唯一明显的不同是用四核 ARM Cortex A53（ARMv8）集群取代了 ARMv7 四核集群。
+这是用于树莓派3B、树莓派2B的后期型号以及树莓派CM3 的 Broadcom 芯片。BCM2837 的底层架构与 BCM2836 完全相同。唯一明显的不同是用四核 ARM Cortex A53（Armv8）集群取代了 Armv7 四核集群。
 
-ARM 内核的运行频率为 1.2GHz，使该设备比树莓派2快约 50%。VideoCore IV 的运行频率为 400MHz。
+Arm 内核的运行频率为 1.2GHz，使该设备比树莓派2快约 50%。VideoCore IV 的运行频率为 400MHz。
 
-有关ARM外围设备规范的详细信息，请参阅以下 BCM2836 文档，该文档也适用于 BCM2837。
-- [BCM2836 ARM 本地外设](https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf)
+有关Arm外围设备规范的详细信息，请参阅以下 BCM2836 文档，该文档也适用于 BCM2837。
+- [BCM2836 Arm 本地外设](https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf)
 - [Cortex-A53 MPCore 处理器技术参考手册](https://developer.arm.com/documentation/ddi0500/latest/)
 
 ## BCM2837B0
-这是树莓派3A+、B+和树莓派CM3+中使用的 Broadcom 芯片。BCM2837B0 的底层架构与树莓派其他版本中使用的 BCM2837 芯片相同。ARM 内核硬件相同，只是频率更高。
+这是树莓派3A+、B+和树莓派CM3+中使用的 Broadcom 芯片。BCM2837B0 的底层架构与树莓派其他版本中使用的 BCM2837 芯片相同。Arm 内核硬件相同，只是频率更高。
 
-ARM 内核的运行频率高达 1.4GHz，这使得3B+/3A+比原来的树莓派3快约 17%。VideoCore IV 的运行频率为 400MHz。ARM 内核为 64 位，而 VideoCore IV 为 32 位。
+Arm 内核的运行频率高达 1.4GHz，这使得3B+/3A+比原来的树莓派3快约 17%。VideoCore IV 的运行频率为 400MHz。Arm 内核为 64 位，而 VideoCore IV 为 32 位。
 
 BCM2837B0 芯片的封装与 BCM2837 芯片略有不同，最明显的是它包含一个散热器，散热效果更好。这使得时钟频率更高，对芯片温度的监测和控制也更精确。
 
@@ -48,13 +48,13 @@ BCM2837B0 芯片的封装与 BCM2837 芯片略有不同，最明显的是它包�
 
 ## BCM2711
 
-这是用于 Raspberry Pi 4 Model B、Compute Module 4 和 Pi 400 的 Broadcom 芯片。与早期 Raspberry Pi 型号中使用的 SoC 相比，BCM2711 的架构有了大幅升级。它延续了 BCM2837 的四核 CPU 设计，但使用了更强大的 ARM A72 内核。由于集成了连接 USB 2 和 USB 3 端口的 PCIe 链接和本机连接的以太网控制器，它的 GPU 功能大大提高，输入/输出速度更快。与以前使用的 SoC 相比，它还能寻址更多的内存。
+这是用于 Raspberry Pi 4 Model B、Compute Module 4 和 Pi 400 的 Broadcom 芯片。与早期 Raspberry Pi 型号中使用的 SoC 相比，BCM2711 的架构有了大幅升级。它延续了 BCM2837 的四核 CPU 设计，但使用了更强大的 Arm A72 内核。由于集成了连接 USB 2 和 USB 3 端口的 PCIe 链接和本机连接的以太网控制器，它的 GPU 功能大大提高，输入/输出速度更快。与以前使用的 SoC 相比，它还能寻址更多的内存。
 
-ARM 内核的运行速度高达 1.5 GHz，使 树莓派4比树莓派3B+快50%。新的 VideoCore VI 3D 单元现在的运行频率高达 500 MHz。ARM 内核是 64 位的，VideoCore 是 32 位的，但有一个新的内存管理单元，这意味着它可以访问比以前版本更多的内存。
+Arm 内核的运行速度高达 1.5 GHz，使 树莓派4比树莓派3B+快50%。新的 VideoCore VI 3D 单元现在的运行频率高达 500 MHz。ARM 内核是 64 位的，VideoCore 是 32 位的，但有一个新的内存管理单元，这意味着它可以访问比以前版本更多的内存。
 
 BCM2711 芯片继续使用 BCM2837B0 开始采用的热扩散技术，从而提供更好的热管理。
 
-**处理器：** 四核 [Cortex-A72](https://en.wikipedia.org/wiki/ARM_Cortex-A72) (ARM v8) 64 位 SoC，主频 1.5 GHz。
+**处理器：** 四核 [Cortex-A72](https://en.wikipedia.org/wiki/ARM_Cortex-A72) (Armv8-A) 64 位 SoC，主频 1.5 GHz。
 
 **内存：** 访问高达 8GB LPDDR4-2400 SDRAM（取决于型号）
 
@@ -74,7 +74,7 @@ Broadcom BCM2712 是用于 Raspberry Pi 5、500、500+ 和 Compute Module 5 的 
 
 主要功能包括：
 - 四核 Arm Cortex-A76 @ 2.4GHz
-  - ARMv8-A ISA
+  - Armv8-A ISA
   - 64KByte I 和 D 高速缓存
   - 每个内核 512KB L2，2MB 共享 L3
 - 新的树莓派开发的 ISP
@@ -122,7 +122,7 @@ Vulnerability Spectre v2:             Mitigation; CSV2, BHB
 RP3A0 是一款四核 64 位 Arm Cortex A53 CPU，主频为 1 GHz，不过如果安装了散热器或其他冷却解决方案，该芯片有可能超频至 1.2 GHz。
 
 有关 ARM 外围设备规范的详细信息，请参阅以下 BCM2836 文档，该文档也适用于 BCM2837 和 RP3A0。
-- [BCM2836 ARM 本地外设](https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf)
+- [BCM2836 Arm 本地外设](https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf)
 - [Cortex-A53 MPCore 处理器技术参考手册](https://developer.arm.com/documentation/ddi0500/latest/)
 
 :::note[注意]

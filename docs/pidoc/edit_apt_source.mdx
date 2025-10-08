@@ -4,13 +4,15 @@ sidebar_position: 2
 title: 编辑 Raspberry Pi 的 APT 源
 description: 本文介绍了如何为Raspberry Pi OS的Bookworm版本使用国内APT源来加速软件包的下载和更新。提供了快速实施方法，即通过简单命令将默认源替换为阿里云镜像源，并详细说明了手动修改APT源配置文件的步骤，包括备份原文件、编辑源地址以及更新APT源列表。同时，列出了多个云服务商的APT源地址，供用户根据地理位置选择最适合的源，以提高下载速度和效率。
 keywords: [Raspberry Pi OS, Bookworm版本, APT源, 国内源, 加速, 阿里云, 腾讯云, 源地址, 手动修改, APT源配置, 软件包下载, 更新效率]
+last_update: 
+  date: 2025-10-07
 ---
 import Normal from "../_normal.mdx";
 
 # 使用国内源加速您的 APT
 
 :::warning
-本文档适用于 Raspberry Pi OS 的 Bookworm 版本。
+本文档适用于 Raspberry Pi OS 的 Trixie(13)/Bookworm(12) 版本。
 :::
 
 ## 快速实施
@@ -40,10 +42,10 @@ sudo nano /etc/apt/sources.list
 4. 在打开的文件中，将原始的apt源地址替换为公有云的源地址。以下是阿里云的源地址示例，你可以根据自己的地理位置选择合适的源地址：
 ```
 # 默认的树莓派源注释掉或删除
-# deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+# deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
 
 # 阿里云的源地址
-deb http://mirrors.aliyun.com/debian bookworm main contrib non-free non-free-firmware
+deb http://mirrors.aliyun.com/debian trixie main contrib non-free non-free-firmware
 ```
 
 5. 保存并关闭文件。在nano编辑器中，按下Ctrl + X，然后按下Y确认保存，最后按下Enter退出编辑器。

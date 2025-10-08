@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update: 
-  date: 2025-10-03
+  date: 2025-10-08
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -17,7 +17,9 @@ import Normal from "../_normal.mdx";
 通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的 Raspberry Pi。
 <img src="/img/services/connect/hero.png" alt="Connect 使用示例" width="100%" />
 
-要使用 Connect，请在 Raspberry Pi 上 [安装 Connect 软件](#安装) 和 [将设备与账户连接](#将-raspberry-pi-设备与-connect-账户连接起来)。然后访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)，在浏览器窗口中访问 Raspberry Pi 上运行的桌面或 shell。
+Connect默认安装在树莓派操作系统桌面版和树莓派操作系统完整版（含推荐软件的桌面版）中。树莓派操作系统精简版默认不包含Connect，但您可以[安装Connect Lite](#安装-connect-lite)。
+
+使用 Connect 时，请参阅 [将设备与 Connect 账户关联](#将-raspberry-pi-设备与-connect-账户连接起来)。访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)，即可在浏览器窗口中访问运行于树莓派上的桌面环境或 shell 终端。
 
 Connect 使用安全的加密连接。默认情况下，Connect 会在 Raspberry Pi 和浏览器之间直接通信。但是，当 Connect 无法在 Raspberry Pi 和浏览器之间建立直接连接时，我们会使用中继服务器。在这种情况下，Raspberry Pi 只保留操作 Connect 所需的元数据。
 
@@ -25,39 +27,9 @@ Connect 使用安全的加密连接。默认情况下，Connect 会在 Raspberry
 要使用 Connect，您的树莓派必须运行 [Raspberry Pi OS Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/) 或更高版本。
 :::
 
-## 安装
+## 安装 Connect Lite
 
-如果您的 Raspberry Pi 操作系统尚未安装 Connect，请打开终端窗口。运行以下命令更新系统和软件包：
-
-
-```sh
-sudo apt update
-sudo apt full-upgrade
-```
-
-在 Raspberry Pi 上运行以下命令安装 Connect：
-
-```sh
-sudo apt install rpi-connect
-```
-
-您也可以从 **推荐软件** 应用程序中安装 Connect。
-
-安装完成后，使用 `rpi-connect` 命令行界面为当前用户启动 Connect：
-
-```sh
-rpi-connect on
-```
-
-或者，点击菜单栏中的 Connect 图标打开下拉菜单，选择 **Turn On Raspberry Pi Connect**：
-
-下次登录 Raspberry Pi 时，Connect 将自动启动。
-
-<img src="/img/services/connect/turn-on-connect.png" alt="启用" width="80%" />
-
-### Lite连接
-
-我们发布了 Connect 的另一个 *Lite* 版本，它只支持远程 shell 访问，不支持屏幕共享。
+针对树莓派Lite操作系统，我们提供Connect的*Lite*替代，该版本仅支持远程shell访问，不具备屏幕共享功能。
 
 在 Raspberry Pi 上运行以下命令安装 Connect Lite：
 
@@ -73,13 +45,10 @@ rpi-connect on
 
 [启用用户登录](#始终启用远程shell)，使你的设备在你的用户账户未登录时也能访问。
 
-:::tip
-精简版命令使用与完整版 Connect 相同的 `rpi-connect` 名称。`rpi-connect-lite` 只是一个软件包名称。
-:::
 
 ### 手动启动和停止 Connect
 
-要从命令行启动 Connect，请运行以下命令：
+要从命令行启动 Connect 或 Connect Lite，请运行以下命令：
 
 ```sh
 rpi-connect on
@@ -98,13 +67,13 @@ rpi-connect off
 <Tabs>
 <TabItem value="desktop" label="桌面">
 
-如果您正在使用菜单栏的 Connect 插件，首次点击 **打开 Raspberry Pi Connect** 将打开浏览器，提示您使用 Raspberry Pi ID 登录：
+从菜单栏的连接图标中，首次选择**开启树莓派连接**以打开浏览器，系统将提示您使用树莓派ID登录：
 <img src="/img/services/connect/browser-sign-in.png" alt="浏览器登录" width="80%" />
 
-或者，你也可以从下拉菜单中选择 **登录...**：
+若您已开启Connect功能，请从下拉菜单中选择**登录...**：
 <img src="/img/services/connect/sign-in.png" alt="登录" width="80%" />
 
-如果你还没有 Raspberry Pi ID，请点击 **免费创建一个** 到 [创建一个](./id.mdx#创建一个-raspberry-pi-id)。
+若您尚未拥有树莓派ID，请选择*免费创建*以[创建一个](./id.mdx#创建一个-raspberry-pi-id)。
 
 </TabItem>
 <TabItem value="cli" label="终端">
@@ -115,7 +84,7 @@ rpi-connect off
 rpi-connect signin
 ```
 
-该命令应输出类似下面的内容：
+此命令将输出类似以下内容：
 
 ```
 Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
@@ -127,7 +96,7 @@ Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
 
 ### 完成连接您的 Raspberry Pi
 
-验证后，为设备指定一个名称。选择一个能唯一标识设备的名称。单击**创建设备并登录**按钮继续。
+完成身份验证后，为您的设备命名。请选择一个能唯一标识该设备的名称。点击**创建设备并登录**按钮继续。
 
 <img src="/img/services/connect/new-device.png" alt="新设备" width="80%" />
 
@@ -162,7 +131,7 @@ Connect 包括在浏览器中共享设备屏幕的功能。使用以下说明共
 Connect 会将您重定向到 Raspberry Pi ID 服务以登录。登录后，Connect 会显示链接设备的列表。可进行屏幕共享的设备名称下方会显示一个灰色的**Screen sharing**徽章。
 <img src="/img/services/connect/devices.png" alt="列出设备" width="80%" />
 
-单击要访问的设备右侧的**Connect via**连接按钮。从菜单中选择**Screen sharing**选项。这会打开一个浏览器窗口，显示设备的桌面。
+选择您要访问的设备右侧的**Connect via**按钮。从菜单中选择**Screen sharing**选项。这将打开一个浏览器窗口，显示您设备的桌面。
 <img src="/img/services/connect/waiting-for-screen-sharing.png" alt="等待屏幕共享" width="80%" />
 
 现在你可以像在本地一样使用设备了。有关连接的更多信息，请将鼠标悬停在**Disconnect**按钮右侧的挂锁图标上。
@@ -180,7 +149,7 @@ Connect 会将您重定向到 Raspberry Pi ID 服务以登录。登录后，Conn
 
 #### 禁止屏幕共享
 
-要关闭屏幕共享会话，请单击桌面上方的**Disconnect**按钮。
+要关闭屏幕共享会话，请选择桌面上方的**Disconnect**按钮。
 <img src="/img/services/connect/screen-sharing-ended.png" alt="结束屏幕共享" width="80%" />
 
 #### 禁止屏幕共享
@@ -216,7 +185,7 @@ Connect 包括从浏览器启动在设备上运行的 shell 的功能。使用�
 Connect 会将你重定向到 Raspberry Pi ID 服务以登录。登录后，Connect 会显示链接设备的列表。可用于远程 shell 访问的设备会在设备名称下方显示一个灰色的 **Remote shell** 徽标。
 <img src="/img/services/connect/devices.png" alt="列出设备" width="80%" />
 
-单击要访问的设备右侧的 **Connect via** 按钮。从菜单中选择 **Remote shell** 选项。这将在设备上打开一个 shell 会话。
+选择要访问的设备右侧的 **Connect via** 按钮。从菜单中选择 **Remote shell** 选项。这将在设备上打开一个 shell 会话。
 <img src="/img/services/connect/waiting-for-remote-shell.png" alt="等待远程shell连接" width="80%" />
 
 现在您可以像在本地一样使用设备了。
@@ -295,7 +264,7 @@ loginctl enable-linger
 Connect 面板列出了与您的 Connect 账号关联的所有设备，并显示了访问这些设备的各种方法。
 <img src="/img/services/connect/devices.png" alt="列出设备" width="80%" />
 
-单击设备名称可打开设备详细信息页面。此页面提供有关设备的低级信息。您还可以编辑设备名称或从连接中删除设备。
+选择设备名称可打开设备详细信息页面。此页面提供有关设备的低级信息。您还可以编辑设备名称或从连接中删除设备。
 <img src="/img/services/connect/device.png" alt="设备明细" width="80%" />
 
 从 Connect 中删除设备会自动退出该设备上的连接。菜单栏中的 Connect 图标会变成灰色，菜单上只提供**Sign In...**选项。

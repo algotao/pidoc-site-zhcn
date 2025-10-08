@@ -1,11 +1,11 @@
 ---
 sidebar_position: 6
 draft: false
-title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等(官网25年09月)
+title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等
 description: 本文详细介绍了如何在不连接显示器、键盘和鼠标的情况下远程访问和控制树莓派。涵盖了通过本地网络和互联网进行远程控制的方法，包括SSH、VNC、Raspberry Pi Connect等工具的使用。还提供了查找树莓派IP地址的多种方法，以及通过SCP、rsync、NFS、Samba等协议共享文件和文件夹的详细步骤。此外，文章还介绍了如何设置网络文件系统、Apache网络服务器以及通过网络启动树莓派的方法。
 keywords: [远程访问, 树莓派, SSH, VNC, Raspberry Pi Connect, IP地址, 文件共享, SCP, rsync, NFS, Samba, 网络文件系统, Apache, 网络启动, IPv6, 本地网络, 互联网]
 last_update: 
-  date: 2024-12-21
+  date: 2025-10-08
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -136,9 +136,9 @@ PING raspberrypi.local (192.168.1.131): 56 data bytes
 64 bytes from 192.168.1.131: icmp_seq=0 ttl=255 time=2.618 ms
 ```
 
-如果更改树莓派的系统主机名（例如编辑 `/etc/hostname`），Avahi 也会更改 `.local` mDNS 地址。
-
-如果不记得树莓派的主机名，但系统安装了 Avahi，则可以使用 [avahi-browse](https://linux.die.net/man/1/avahi-browse) 命令浏览局域网上的所有主机和服务。
+:::tip
+若通过控制中心、`raspi-config` 或 `/etc/hostname` 修改树莓派系统主机名，Avahi 将自动更新 `.local` mDNS 地址。若忘记树莓派主机名，可在其他设备安装Avahi，通过[`avahi-browse`](https://linux.die.net/man/1/avahi-browse)浏览本地网络中的所有主机与服务。
+:::
 
 ### 路由器设备列表
 在网络浏览器中，导航到路由器的 IP 地址。这个地址通常是 `http://192.168.1.1`，但你也可以在路由器的标签上找到它。这将带你进入一个控制面板。然后使用你的凭据登录，凭据通常也印在路由器上或随附的文件中。浏览已连接设备或类似设备的列表（所有路由器都不一样），你应该能看到一些你认识的设备。有些设备会被检测为个人电脑、平板电脑、手机、打印机等，所以你应该认出其中一些并排除它们，以确定哪个是你的树莓派。还要注意连接类型；如果你的树莓派是用线缆连接的，可供选择的设备应该会少一些。
@@ -196,7 +196,7 @@ Fing 应用程序是一款免费的智能手机网络扫描程序。它适用于
 <Tabs>
 <TabItem value="桌面操作" label="桌面操作">
 
-1. 从 **首选项** 菜单，启动 **Raspberry Pi 配置**。
+1. 从 **首选项** 菜单，启动 **控制中心**。
 2. 导航至 **接口** 选项卡。
 3. 选择 **SSH** 旁边的 **启用**。
 4. 单击 **好**。
@@ -265,7 +265,7 @@ ssh <username>@<ip address>
 #### 通过 SSH 转发 X11
 
 :::tip[注意]
-在 Raspberry Pi 4 和 5 上，Raspberry Pi OS Bookworm 默认使用 Wayland 窗口服务器。只有使用 X 窗口服务器才能转发 X11。要启用 X11 窗口转发，请在 Raspberry Pi 配置中将桌面切换到 X 窗口服务器。
+树莓派操作系统默认使用Wayland窗口服务器。若需转发X11窗口，必须切换至X Window Server。要启用X11窗口转发功能，请通过控制中心或树莓派配置命令行界面将桌面环境切换至X Window Server。
 :::
 
 :::tip[注意]
@@ -427,12 +427,12 @@ Raspberry Pi OS 支持以图形方式和命令行方式启用 VNC 服务器。
 #### 以图形方式启用 VNC 服务器
 
 1. 启动进入 Raspberry Pi 的图形桌面。
-2. 单击桌面系统托盘中的 Raspberry Pi 图标。
-3. 从菜单中选择 **Preferences** > **Raspberry Pi Configuration**。
-<img src="/img/computers/remote-access/raspberry-pi-configuration.png" alt="从系统托盘的首选项菜单中选择 树莓派 配置" width="80%" />
+2. 选择桌面系统托盘中的 Raspberry Pi 图标。
+3. 从菜单中选择 **Preferences** > **Control Centre**。
+<img src="/img/computers/remote-access/raspberry-pi-configuration.png" alt="从系统托盘的首选项菜单中选择 控制中心" width="80%" />
 
 4. 导航至 **Interfaces** 选项卡。
-5. 点击 *VNC* 旁边的单选按钮，使其处于活动状态。
+5. 选中 *VNC* 旁边的单选按钮，使其处于活动状态。
 <img src="/img/computers/remote-access/vnc-enable.png" alt="树莓派配置" width="80%" />
 
 6. 单击 *OK* 按钮保存配置更改。
@@ -478,7 +478,7 @@ sudo raspi-config
 6. 提示输入用户名和密码时，请输入您的凭据。
 <img src="/img/computers/remote-access/vnc-tigervnc-username-password.png" alt="当提示输入用户名和密码时，请输入你的凭证" width="60%" />
 
-7. 点击 "OK" 按钮验证 VNC 服务器。如果凭据正确无误，TigerVNC 将打开一个窗口，其中包含与你在 Raspberry Pi 上的账户相对应的桌面。你应该可以移动鼠标和键盘输入文本并与桌面互动。
+7. 点击 "OK" 按钮验证 VNC 服务器。如果凭据正确无误，TigerVNC 将打开一个窗口，其中包含与你在 Raspberry Pi 上的账户相对应的桌面。您应该能够使用鼠标和键盘与桌面进行交互并输入文本。
 <img src="/img/computers/remote-access/vnc-tigervnc-desktop.png" alt="成功通过 TigerVNC 验证后的 树莓派 桌面" width="60%" />
 
 ## 使用 Raspberry Pi Connect 远程访问
@@ -487,7 +487,7 @@ sudo raspi-config
 
 Connect 包括在运行 Wayland 窗口服务器的 Raspberry Pi 型号上进行屏幕共享的功能，以及在所有 Raspberry Pi 型号上进行远程 shell（终端）访问的功能。
 
-更多信息，请参阅 [Connect 文档](/docs/services/connect.mdx)。
+更多信息，请参阅 [Connect 文档](../services/connect.mdx)。
 
 ## 使用 SCP 共享文件
 

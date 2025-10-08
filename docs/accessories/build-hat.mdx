@@ -4,7 +4,7 @@ draft: false
 description: 树莓派Build HAT是一款专为乐高®教育设计的附加板，通过40引脚GPIO接口与树莓派连接，支持控制SPIKE™系列乐高® Technic™电机和传感器（如距离、颜色、力传感器及多尺寸编码电机）。它兼容所有40引脚GPIO树莓派（包括Zero系列和键盘系列设备），需外接8V电源驱动电机，并提供Python和.NET两种编程库。Build HAT板载RP2040微控制器管理底层控制，支持即插即用，简化乐高®机械结构的编程与交互，适用于STEM教育、机器人开发等场景。
 keywords: [树莓派Build HAT, 乐高® Technic™, 乐高® SPIKE™, 电机控制, 传感器, Python库, .NET框架, RP2040微控制器, 40引脚GPIO, 乐高®教育, STEM教育, 机器人开发]
 last_update: 
-  date: 2024-12-20
+  date: 2025-10-08
 ---
 import Normal from "../_normal.mdx";
 
@@ -73,11 +73,12 @@ Build HAT 无法为键盘系列设备供电，因为它们不支持通过 GPIO �
 
 
 ### 设置树莓派
-启动树莓派后，点击菜单按钮，然后选择 "首选项" 和 "树莓派配置"，打开树莓派配置工具。
 
-点击 "接口" 选项卡，调整串口设置，如下图所示：
+树莓派启动后，请通过选择树莓派菜单按钮，然后选择**首选项 > 控制中心**来打开控制中心工具。
 
-<img src="/img/accessories/build-hat/setting-up.png" width="50%" alt="设置" />
+选择**接口**选项卡，并按照下图所示调整串行设置：
+
+<img src="/img/accessories/build-hat/setting-up.png" width="50%" alt="接口选项卡。SSH、VNC和串行端口已启用。其余选项均未启用。" />
 
 #### 无显示器使用树莓派
 如果无显示器运行树莓派并使用 `raspi-config`，请从第一个菜单中选择 `Interface Options`(接口选项)。

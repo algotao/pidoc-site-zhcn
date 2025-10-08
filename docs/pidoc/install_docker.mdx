@@ -1,10 +1,10 @@
 ---
 draft: false
 title: 在树莓派安装Docker
-description: 快速在树莓派上部署Docker！本文提供详细指南，涵盖系统要求（Raspberry Pi OS Bookworm 12/Bullseye 11）、国内镜像源配置（推荐阿里云/腾讯云替代Docker官方源）、Docker Engine及相关工具（docker-ce、docker-compose-plugin等）的安装步骤、验证方法（通过hello-world镜像）、普通用户权限配置（免sudo操作），以及卸载方法和镜像拉取加速解决方案（国内镜像源配置）。助您高效搭建树莓派容器化开发环境！
+description: 快速在树莓派上部署Docker！本文提供详细指南，涵盖系统要求（Raspberry Pi OS Trixie 13/Bookworm 12/Bullseye 11）、国内镜像源配置（推荐阿里云/腾讯云替代Docker官方源）、Docker Engine及相关工具（docker-ce、docker-compose-plugin等）的安装步骤、验证方法（通过hello-world镜像）、普通用户权限配置（免sudo操作），以及卸载方法和镜像拉取加速解决方案（国内镜像源配置）。助您高效搭建树莓派容器化开发环境！
 keywords: [树莓派Docker, Raspberry Pi Docker, Docker Engine安装, 树莓派操作系统, Docker国内镜像源, Docker加速, Docker CE, docker-compose-plugin, 容器化部署, 树莓派容器, 免sudo Docker, 镜像拉取问题]
 last_update: 
-  date: 2024-11-03
+  date: 2025-10-07
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -15,8 +15,9 @@ import TabItem from '@theme/TabItem';
 ## 操作系统要求
 要安装 Docker Engine，您需要以下 Raspberry Pi OS 版本之一：
 
-- Raspberry Pi OS Bookworm 12（稳定）
-- Raspberry Pi OS Bullseye 11（旧稳定版）
+- Raspberry Pi OS Trixie 13（稳定）
+- Raspberry Pi OS Bookworm 12（旧稳定版）
+- Raspberry Pi OS Bullseye 11（更旧版本）
 
 ## 安装 Docker
 
@@ -37,12 +38,12 @@ for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do
 sudo apt-get update
 sudo apt-get install ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/debian/gpg -o /etc/apt/keyrings/docker_aliyun.asc
-sudo chmod a+r /etc/apt/keyrings/docker_aliyun.asc
+sudo curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
 # 添加仓库到 Apt 源:
 echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker_aliyun.asc] http://mirrors.aliyun.com/docker-ce/linux/debian \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] http://mirrors.aliyun.com/docker-ce/linux/debian \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
   sudo tee /etc/apt/sources.list.d/docker_aliyun.list > /dev/null
 sudo apt-get update
@@ -58,12 +59,12 @@ for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do
 sudo apt-get update
 sudo apt-get install ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL http://mirrors.tencent.com/docker-ce/linux/debian/gpg -o /etc/apt/keyrings/docker_tencentyun.asc
-sudo chmod a+r /etc/apt/keyrings/docker_tencentyun.asc
+sudo curl -fsSL http://mirrors.tencent.com/docker-ce/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
 # 添加仓库到 Apt 源:
 echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker_tencentyun.asc] http://mirrors.tencent.com/docker-ce/linux/debian \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] http://mirrors.tencent.com/docker-ce/linux/debian \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
   sudo tee /etc/apt/sources.list.d/docker_tencentyun.list > /dev/null
 sudo apt-get update

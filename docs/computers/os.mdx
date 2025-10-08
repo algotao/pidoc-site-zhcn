@@ -5,7 +5,7 @@ title_meta: 在树莓派OS上使用音视频播放软件、安装Python(官网25
 description: 全面解析树莓派官方操作系统Raspberry Pi OS！基于Debian优化，支持35,000+软件包，提供软件管理（APT命令）、固件升级（rpi-update）、多媒体播放（VLC工具）、硬件控制（GPIO/VC命令）等核心功能，附Python开发指南与无障碍工具，助您高效开发与个性化配置树莓派设备。
 keywords: [Raspberry Pi OS, 树莓派操作系统, Debian系统, APT软件管理, 树莓派固件升级, VLC媒体播放, 树莓派GPIO控制, Python编程树莓派, 树莓派无障碍工具, 树莓派多媒体工具]
 last_update: 
-  date: 2025-10-03
+  date: 2025-10-08
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -250,7 +250,9 @@ sudo apt install rpd-x-extras
 sudo reboot
 ```
 
-至此您已安装完Raspberry Pi OS Desktop所需全部软件包。若需恢复至精简版系统，可卸载这些软件包。
+您现在已安装构成树莓派操作系统桌面版的全部软件包。
+
+若需恢复至树莓派操作系统精简版，可卸载这些软件包。若希望保留已安装的桌面软件包同时体验精简版功能，请使用 [raspi-config](./configuration.mdx#raspi-config) 工具将树莓派设置为启动时进入命令行界面。
 
 您也可通过Raspberry Pi主菜单选择**首选项 > 推荐软件**，安装Raspberry Pi OS完整版内置的推荐应用程序。
 
@@ -431,7 +433,7 @@ ffmpeg -r 30 -i video.h264 -c:v copy video.mp4
 
 | 时钟 | 描述 |
 | -- | -- |
-| `arm` | ARM核心 |
+| `arm` | Arm核心 |
 | `core` | GPU核心 |
 | `h264` | H.264模块 |
 | `isp` | 图像传感器管线 |
@@ -676,7 +678,7 @@ setuptools 66.1.1
 
 默认情况下，Thonny 使用系统 Python。不过，您可以点击 Thonny 窗口右下角的**解释器菜单**，切换到使用 Python 虚拟环境。选择一个已配置的环境，或使用 "Configure interpreter... "配置一个新的虚拟环境。
 
-<img src="/img/computers/os/thonny-venv.jpg" alt="thonny-venv" />
+<img src="/img/computers/os/thonny-venv.png" alt="thonny-venv" />
 
 ## 在 Python 中使用 GPIO
 使用[GPIO Zero](https://gpiozero.readthedocs.io/)库可以轻松地使用Python控制GPIO设备。该库的完整文档位于[gpiozero.readthedocs.io](https://gpiozero.readthedocs.io/)。

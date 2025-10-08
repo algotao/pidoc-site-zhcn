@@ -2,8 +2,8 @@
 sidebar_position: 11
 draft: false
 title_meta: 在树莓派计算模块(CM)进行烧录、连接与启用外设(官网25年09月)
-description: 深入探索树莓派计算模块（CM）硬件系列，从CM1到最新的CM5，了解各型号的技术规格、内存配置、eMMC存储选项及专用IO板设计。本文详细介绍了CM5、CM4、CM4S、CM3+和CM1等计算模块的特点，以及与之配套的IO板、外壳、天线和散热器等配件，为工业和商业应用提供全面的硬件解决方案。
-keywords: [树莓派计算模块, CM5, CM4, CM4S, CM3+, CM1, eMMC存储, IO板, 外设连接, 树莓派硬件, 工业应用]
+description: 深入探索树莓派计算模块（CM）硬件系列，从CM1到最新的CM5，了解各型号的技术规格、内存配置、eMMC存储选项及专用IO板设计。本文详细介绍了CM5、CM4、CM4S、CM3+、CM1和CM0等计算模块的特点，以及与之配套的IO板、外壳、天线和散热器等配件，为工业和商业应用提供全面的硬件解决方案。
+keywords: [树莓派计算模块, CM5, CM4, CM4S, CM3+, CM1, CM0, eMMC存储, IO板, 外设连接, 树莓派硬件, 工业应用]
 last_update: 
   date: 2025-10-05
 ---
@@ -84,7 +84,7 @@ CM5 采用与 CM4 相同的外形尺寸，具有两个 100 针高密度连接器
 <img src="/img/computers/compute-module/cm0.jpg" alt="计算模块 0" width="60%"/>
 *计算模块0*
 
-计算模块 0（CM0）包含 Raspberry Pi 的内部元件（BCM2837 处理器和 512MB 内存）以及可选的 0GB/8GB/16GB eMMC 闪存。CM0 采用 39x33mm 超小型邮票孔核心板 外形。
+计算模块 0（CM0）包含 Raspberry Pi RP3A0 处理器（BCM2710A1 和 512MB 内存）以及可选的 0GB/8GB/16GB eMMC 闪存。CM0 采用 39x33mm 超小型邮票孔核心板 外形。
 
 ## IO 板
 
@@ -158,12 +158,12 @@ IO 板用于开发或个人使用；在生产中，您应使用更小的、可�
 
 计算模块 IO 板版本 3 增加了一个 microSD 卡插槽，这在计算模块 IO 板版本 1 中是没有的。
 
-### 计算模块 0 Dev 板
+### 计算模块 0 IO 板
 
-<img src="/img/computers/compute-module/cm0dev.jpg" alt="计算模块 0 Dev 板" width="60%"/>
-*计算模块0 Dev板*
+<img src="/img/computers/compute-module/cm0io.jpg" alt="计算模块 0 IO 板" width="60%"/>
+*计算模块0 IO板*
 
-计算模块 0 Dev 板提供以下接口：
+计算模块 0 IO 板提供以下接口：
 
 * 带 40 引脚 GPIO 连接器的 HAT 基底面
 * HDMI 端口
@@ -182,7 +182,7 @@ IO 板用于开发或个人使用；在生产中，您应使用更小的、可�
 | 计算模块 IO 板版本 3 (CMIO)/(CMIO3) | CM1<br /> CM3<br /> CM3+<br /> CM4S<br /> |
 | 计算模块 4 IO 板 (CM4IO) | CM4<br />CM5（功能减弱） |
 | 计算模块 5 IO 板 (CM5IO) | CM4<br />CM5（功能减弱） |
-| 计算模块 0 Dev 板 (CM0Dev) | CM0 |
+| 计算模块 0 IO 板 (CM0IO) | CM0 |
 
 ## CM5 配件
 
