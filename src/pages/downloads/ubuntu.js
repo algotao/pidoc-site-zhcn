@@ -17,7 +17,7 @@ const OSConfig = {
     imager_url: { downloadurl: "/downloads", title: "Raspberry Pi Imager", showButton: false, },
     inner_url: [
         { linkto: "#ubuntu-2404-lts", title: "Ubuntu 24.04.3 LTS *推荐*", showButton: false },
-        { linkto: "#ubuntu-2504", title: "Ubuntu 25.04", showButton: false },
+        { linkto: "#ubuntu-2510", title: "Ubuntu 25.10", showButton: false },
         { linkto: "#ubuntu-2410", title: "Ubuntu 24.10", showButton: false },
         { linkto: "#ubuntu-2204-lts", title: "Ubuntu 22.04.5 LTS", showButton: false },
         { linkto: "#ubuntu-2004-lts", title: "Ubuntu 20.04.5 LTS", showButton: false },
@@ -66,16 +66,16 @@ const OSConfig = {
             ],
         },
         {
-            id: "ubuntu-2504",
-            title: "Ubuntu 25.04",
-            desc: "Ubuntu 25.04 是 Ubuntu 操作系统的最新版本，提供九个月的安全和维护更新，直至 2026 年 1 月。",
+            id: "ubuntu-2510",
+            title: "Ubuntu 25.10",
+            desc: "Ubuntu 25.10 是 Ubuntu 操作系统的最新版本，提供九个月的安全和维护更新，直至 2026 年 7 月。",
             extos: [
                 {
-                    title: "Ubuntu 25.04 Desktop(桌面)",
-                    download_url: "https://dl.pidoc.cn/releases/plucky/release/ubuntu-25.04-preinstalled-desktop-arm64+raspi.img.xz",
-                    release_date: "2025-04-17",
+                    title: "Ubuntu 25.10 Desktop(桌面)",
+                    download_url: "https://dl.pidoc.cn/releases/questing/release/ubuntu-25.10-preinstalled-desktop-arm64+raspi.img.xz",
+                    release_date: "2025-10-09",
                     system: "64位",
-                    image_size: "2,924MB",
+                    image_size: "2,635MB",
                     compatible_list: [
                         { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
                         { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
@@ -87,11 +87,11 @@ const OSConfig = {
                     ],
                 },
                 {
-                    title: "Ubuntu 25.04 Server(64位)",
-                    download_url: "https://dl.pidoc.cn/releases/plucky/release/ubuntu-25.04-preinstalled-server-arm64+raspi.img.xz",
-                    release_date: "2025-04-17",
+                    title: "Ubuntu 25.10 Server(64位)",
+                    download_url: "https://dl.pidoc.cn/releases/questing/release/ubuntu-25.10-preinstalled-server-arm64+raspi.img.xz",
+                    release_date: "2025-10-09",
                     system: "64位",
-                    image_size: "1,234MB",
+                    image_size: "1,345MB",
                     compatible_list: [
                         { name: "3B", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" },
                         { name: "3B+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" },
