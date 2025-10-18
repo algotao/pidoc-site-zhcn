@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解
 description: 全面掌握树莓派系统配置！本文详细介绍如何使用raspi-config工具进行系统设置，包括网络、音频、显示、接口、性能、本地化和高级选项。通过config.txt文件，您可以自定义启动参数、优化性能、调整显示设置，并管理设备树。本文还涵盖了系统安全性、网络配置、用户管理等实用技巧，助您高效定制和优化树莓派系统。
 keywords: [树莓派系统配置, raspi-config, config.txt, 网络设置, 音频配置, 显示选项, 接口选项, 性能优化, 本地化设置, 用户管理, 系统安全性, 网络代理, 启动顺序, 设备树]
 last_update: 
-  date: 2025-10-08
+  date: 2025-10-18
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -1006,53 +1006,145 @@ AUTOCONNECT-PRIORITY  NAME
 
 ## 屏幕休眠
 
-您可以配置树莓派在一段时间不活动后屏幕休眠。默认情况下，当启用屏幕休眠功能时，树莓派OS 会在 10 分钟不活动后休眠屏幕。
+您可以配置树莓派在闲置一段时间后自动关闭屏幕。启用屏幕关闭功能后，树莓派操作系统默认会在设备闲置十分钟后关闭屏幕。
+
+屏幕屏蔽的管理方式取决于您的系统环境：
+
+* 在[桌面环境](#桌面)中，可通过图形化工具或命令行配置屏幕屏蔽功能。
+* 在[控制台模式](#控制台)（无桌面的纯文本界面）中，屏幕休眠需通过内核参数进行控制。
 
 ### 桌面
-您可通过控制中心中的**屏幕空白**选项控制屏幕空白功能。
+在运行带桌面环境的树莓派操作系统时，可通过内置配置工具控制屏幕空闲时间：图形化菜单（**控制中心**）或命令行界面（**CLI**）。
+
+若未使用桌面环境，可通过树莓派终端界面管理屏幕空闲时间。具体操作请参阅 [控制台](#控制台)。
 
 #### 控制中心
-单击菜单栏中的树莓派按钮。导航至 **首选项** > **控制中心**。
+
+**控制中心**应用程序允许您无需手动编辑配置文件即可开启或关闭屏幕空白功能。
+
+1. 选择菜单栏左上角的树莓派图标。
+2. 进入**偏好设置 > 控制中心**。
+<img src="/img/computers/configuration/pi-configuration.png" alt="从桌面打开控制中心应用程序" />
+3. 在**控制中心**窗口中打开**显示**选项卡。
+4. 使用开关启用**屏幕休眠**功能。
+5. 选择**关闭**以确认设置。
+<img src="/img/computers/configuration/blanking.png" alt="在控制中心应用中开启屏幕休眠开关" />
 
 :::tip
 在树莓派操作系统早期版本中，控制中心应用程序名为树莓派配置。
 :::
 
-<img src="/img/computers/configuration/pi-configuration.png" alt="从桌面打开 控制中心 菜单" />
-
-选择 **显示** 选项卡。将 **屏幕休眠** 单选按钮切换到开启位置。按 **确定** 确认选择。
-
-<img src="/img/computers/configuration/blanking.png" alt="在控制中心菜单中切换屏幕休眠" />
-
 #### CLI
-您可以使用 `raspi-config` CLI 工具启用或禁用屏幕休眠。运行以下命令打开该工具：
-```sh
-sudo raspi-config
-```
 
-使用箭头键导航，使用 **Enter** 键选择。选择 `Display Options` > `Screen Blanking`。使用箭头键选择 `yes` 启用屏幕空白，或选择 `no` 禁用屏幕空白。
+若您更倾向于使用终端，可通过`raspi-config`命令行工具启用或禁用屏幕休眠功能。此方法在通过SSH远程操作时，或需要快速访问系统设置时尤为实用。
+
+1. 运行以下命令打开工具：`sudo raspi-config`。
+2. 使用方向键导航，按**Enter**或**Return**键选择`显示选项` *>* `屏幕休眠`。
+3. 通过键盘方向键执行以下操作：
+    - 选择`是`以启用屏幕空白功能。
+    - 选择`否`以禁用屏幕空白功能。
 
 ### 控制台
-`dpms_timeout`屏幕休眠配置仅影响桌面会话。在**控制台模式**下，当树莓派仅通过终端连接显示器和键盘时，请在内核命令行中使用`consoleblank`设置。
+
+在**控制台模式**下，可通过`consoleblank`内核参数控制屏幕休眠设置。
+
+与控制中心和`raspi-config`修改的屏幕休眠设置不同（仅影响桌面会话），`consoleblank`参数适用于树莓派连接显示器和键盘运行纯文本终端会话时。通过在内核命令行设置`consoleblank`，可指定控制台等待多长时间后关闭屏幕。
 
 #### 设置控制台模式屏幕休眠
-要更改控制台模式屏幕休眠配置，请以管理员身份在文本编辑器中打开 `/boot/firmware/cmdline.txt`：
+
+要更改控制台模式屏幕休眠超时配置：
+
+1. 使用以下命令以管理员身份在文本编辑器中打开 `/boot/firmware/cmdline.txt`：`sudo nano /boot/firmware/cmdline.txt`。
+2. 设置树莓派操作系统使控制台屏幕变暗前的秒数。所有参数必须保持在一行内。您可以：
+    * 设置屏幕闲置后自动黑屏的秒数。例如添加 `consoleblank=600` 表示闲置600秒后黑屏。
+    * 添加 `consoleblank=0` 可永久保持屏幕显示。
+3. 执行以下命令重启树莓派：`sudo reboot`。此操作是使更改生效的必要前提。
+
+重启后，控制台休眠超时时间将遵循新设置。
+
+#### 查看当前屏幕黑屏设置
+
+可通过以下命令显示当前控制台黑屏时间（单位：秒）：
+
 ```sh
-sudo nano /boot/firmware/cmdline.txt
+cat /sys/module/kernel/parameters/consoleblank
 ```
 
-您可以调整树莓派OS在控制台休眠前的秒数。例如，添加 `consoleblank=600` 可在 600 秒未活动后禁用显示输出。将值设为 0 则永远不会休眠屏幕。
+## 自定义全屏启动画面
 
-对 `cmdline.txt` 的更改仅在重启后生效。使用以下命令重启树莓派：
+您可配置树莓派在启动时显示全屏启动画面，替代标准控制台日志信息。
+
+### 文件要求
+
+启动画面图像须满足以下条件：
+
+* **最大尺寸**：1920 × 1080 像素。
+    - 若图像小于屏幕尺寸，图像周围空白区域将填充源自图像左上角像素点 `(0, 0)` 的纯色。
+    - 不进行缩放处理。若屏幕小于图像，则裁剪图像并居中显示。
+* **最大颜色数：** 224种独立颜色。
+* **色彩深度.** 24位（每通道8位，无透明通道）。
+* **格式.** 未压缩TGA格式。
+
+可使用ImageMagick的`convert`命令将图像转换为内核要求的TGA格式。例如，将`image.png`转换为符合要求的`splash-image.tga`文件：
+
+```sh
+sudo apt install imagemagick
+convert image.png -colors 224 -depth 8 -type TrueColor -alpha off -compress none -define tga:bits-per-sample=8 splash-image.tga
+```
+
+### 设置全屏启动画面
+
+在树莓派上启用全屏启动画面有两种方式。根据您的技术水平，可选择：
+
+* [使用apt软件包](#使用apt软件包)。此方法更为直接，只需少量配置即可启用启动画面。安装预制软件包（`rpi-splash-screen-support`）即可自动完成大部分设置。该工具会自动复制图片、设置内核参数并完成系统配置。
+* [编辑`cmdline.txt`系统文件](#编辑系统文件cmdlinetxt)。此方法技术性更强，但可完全掌控每个步骤。需在命令行手动配置启动画面，并更新`initramfs`以包含该图片。
+
+#### 使用apt软件包
+
+安装 `rpi-splash-screen-support` 软件包可简化全屏启动画面配置。该包提供 `configure-splash` 工具，能自动设置必要内核参数并更新 `initramfs`。
+
+1. 使用以下命令安装软件包：
+```sh
+sudo apt install rpi-splash-screen-support
+```
+2. 安装 apt 软件包后，运行以下命令配置启动画面，将 `<splash-image.tga>` 替换为图像文件名或路径（可为相对路径或绝对路径）：
+```sh
+sudo configure-splash <splash-image.tga>
+```
+3. 运行以下命令重启树莓派以查看启动画面：
 ```sh
 sudo reboot
 ```
 
-#### 查看当前屏幕休眠设置
-使用以下命令可以显示当前控制台休眠时间（以秒为单位）：
+若启动时图像出现倒置，请编辑 [文件要求](#文件要求)中的`convert`命令，在`splash-image.tga`前添加`-flip`参数。随后运行`configure-splash`更新图像方向。
+
+#### 编辑系统文件cmdline.txt
+
+以下方法需修改系统文件并手动更新`initramfs`。
+
+1. 使用以下命令以管理员身份在文本编辑器中打开`/boot/firmware/cmdline.txt`：`sudo nano /boot/firmware/cmdline.txt`。
+2. 禁用屏幕控制台消息以防止启动信息覆盖启动画面。编辑`cmdline.txt`移除以下内容：
+    - `console=tty1`。
+    - `quiet`（若存在）。
+    - 所有涉及`plymouth`的配置项，如`plymouth.ignore-serial-consoles`。
+3. 编辑 `cmdline.txt` 添加以下参数：
+    - `fullscreen_logo_name=logo.tga fullscreen_logo=1` 以启用全屏启动画面。
+    - `vt.global_cursor_default=0` 以移除启动画面中的闪烁光标。
+
+最终文件内容应类似如下：
 ```sh
-cat /sys/module/kernel/parameters/consoleblank
+fullscreen_logo_name=logo.tga fullscreen_logo=1 vt.global_cursor_default=0
 ```
+4. 将图像文件放置于正确路径：
+    - 内核预期图像文件位于 `/lib/firmware` 目录
+    - TGA 文件在启动时从 `initramfs` 读取
+    - 文件名必须与`cmdline.txt`中的fullscreen_logo_name匹配。
+
+有关在`initramfs`中嵌入TGA图像的示例代码，请参阅GitHub上的[树莓派启动画面支持工具](https://github.com/raspberrypi/rpi-splash-screen-support/blob/master/configure-splash)。
+
+:::tip
+**步骤2**无法阻止`getty`启动登录提示。启动画面会在系统启动时显示，但当系统准备好登录时，控制台将接管界面并覆盖启动画面。系统就绪时，`getty`会清除启动画面并覆盖登录提示。
+:::
 
 ## 用户
 

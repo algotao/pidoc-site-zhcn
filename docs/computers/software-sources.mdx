@@ -15,10 +15,15 @@ import Normal from "../_normal.mdx";
 
 ## 在树莓派操作系统中查找软件源
 
-当您寻找随树莓派操作系统分发的软件时，通常存在上游软件源，我们通过打补丁创建下游软件包（标记为`+rpt`）。要查看这些软件包的源代码，通常通过apt获取更为便捷。为此，您需要先编辑apt源列表以包含源代码包。需编辑以下文件，将每行`deb-src`开头的`#`移除：
+在寻找随树莓派操作系统分发的软件时，通常存在上游软件源，我们会对其打补丁以创建下游软件包（即标记为`+rpt`的软件包）。要查看这些软件包的源代码，通常通过apt获取更为便捷。为此，您需要先编辑apt源列表以包含源代码包。请修改下列文件中所有“Types: deb”行，将其替换为“Types: deb deb-src”：
 
-* `/etc/apt/sources.list`
-* `/etc/apt/sources.list.d/raspi.list`
+* `/etc/apt/sources.list.d/debian.sources`（64位镜像）
+
+或
+* `/etc/apt/sources.list.d/raspbian.sources`（32位镜像）
+
+以及
+* `/etc/apt/sources.list.d/raspi.sources`
 
 随后必须更新软件包列表：
 
@@ -56,7 +61,7 @@ debuild -uc -us
 
 ## 分类源代码列表
 
-以下是精选的热门仓库列表：
+以下是精选的、大多数人感兴趣的仓库列表：
 
 ### 核心源代码
 
@@ -91,6 +96,9 @@ https://github.com/raspberrypi/drmu<br />
 
 ### 桌面环境
 
+https://github.com/raspberrypi-ui/rpd-metas<br />
+&nbsp;&nbsp;&nbsp;&nbsp;用于创建桌面的元包。
+
 https://github.com/raspberrypi-ui/wf-panel-pi<br />
 &nbsp;&nbsp;&nbsp;&nbsp;在基于Wayland的桌面环境运行时，显示于屏幕顶部的任务栏。
 
@@ -115,20 +123,23 @@ https://github.com/raspberrypi-ui/pcmanfm<br />
 https://github.com/raspberrypi-ui/libfm<br />
 &nbsp;&nbsp;&nbsp;&nbsp;桌面使用的文件管理器，同时显示桌面背景。
 
-https://github.com/raspberrypi-ui/appset<br />
-&nbsp;&nbsp;&nbsp;&nbsp;外观设置面板。
-
 https://github.com/raspberrypi-ui/rpcc<br />
-&nbsp;&nbsp;&nbsp;&nbsp;控制中心设置面板。
+&nbsp;&nbsp;&nbsp;&nbsp;控制中心应用程序。
+
+https://github.com/raspberrypi-ui/rc_gui<br />
+&nbsp;&nbsp;&nbsp;&nbsp;控制中心的树莓派配置插件。
+
+https://github.com/raspberrypi-ui/appset<br />
+&nbsp;&nbsp;&nbsp;&nbsp;控制中心的外观设置插件。
 
 https://github.com/raspberrypi-ui/rasputin<br />
-&nbsp;&nbsp;&nbsp;&nbsp;鼠标和键盘设置面板。
+&nbsp;&nbsp;&nbsp;&nbsp;控制中心的鼠标和键盘设置插件。
 
 https://github.com/raspberrypi-ui/raindrop<br />
-&nbsp;&nbsp;&nbsp;&nbsp;屏幕配置设置面板。
+&nbsp;&nbsp;&nbsp;&nbsp;控制中心的屏幕配置插件。
 
 https://github.com/raspberrypi-ui/rpinters<br />
-&nbsp;&nbsp;&nbsp;&nbsp;打印机设置面板。
+&nbsp;&nbsp;&nbsp;&nbsp;控制中心的打印机设置插件。
 
 ### 应用程序
 
@@ -156,9 +167,6 @@ https://github.com/raspberrypi/rpi-imager<br />
 
 https://github.com/raspberrypi/rpi-image-gen<br />
 &nbsp;&nbsp;&nbsp;&nbsp;用于为嵌入式树莓派系统开发操作系统的构建系统。
-
-https://github.com/raspberrypi/rpi-sb-provisioner<br />
-&nbsp;&nbsp;&nbsp;&nbsp;用于在制造阶段配置树莓派设备的工具，包含安全启动和加密文件系统功能。
 
 https://github.com/raspberrypi/usbboot<br />
 &nbsp;&nbsp;&nbsp;&nbsp;通过USB引导树莓派的工具，用于配置计算模块和树莓派设备。
