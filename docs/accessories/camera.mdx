@@ -4,7 +4,7 @@ draft: false
 description: 全面解析树莓派摄像头模块！从经典的500万像素OV5647到最新的1200万像素IMX477、AI摄像头及全局快门GS型号，支持可见光/红外版本与广角选择，适配所有CSI接口树莓派设备。提供详细安装指南（含静电防护与CSI连接器操作）、硬件规格对比（如传感器尺寸、像素、帧率）、软件配置（libcamera/Picamera2）、镜头推荐（C/CS与M12卡口）及同步捕捉技术（XVS/XHS引脚应用）。更有红外滤镜拆卸教程与机械图纸下载，助力摄影、机器视觉等应用开发。
 keywords: [树莓派摄像头, Raspberry Pi Camera, 摄像头模块3, HQ摄像头, 全局快门GS, AI摄像头, CSI接口, 滚动快门, 同步捕捉, 红外滤镜, 镜头推荐, C/CS卡口, M12卡口, 树莓派Pico, 摄影应用, 机器视觉, libcamera, Picamera2, 传感器规格, 静态分辨率, 视频模式, 红外版本, 广角型号]
 last_update: 
-  date: 2025-06-22
+  date: 2025-11-15
 ---
 import Normal from "../_normal.mdx";
 
@@ -134,6 +134,78 @@ Raspberry Pi 相机模块兼容所有带有 CSI 接口的 Raspberry Pi 计算机
 - 摄像头模块 v2 [PDF](https://datasheets.raspberrypi.com/camera/camera-module-2-schematics.pdf)
 - 摄像头模块 v3 [PDF](https://datasheets.raspberrypi.com/camera/camera-module-3-schematics.pdf)
 - HQ 摄像头模块 [PDF](https://datasheets.raspberrypi.com/hq-camera/hq-camera-schematics.pdf)
+
+#### 相机接口引脚排列（15针）
+
+此为树莓派5之前旗舰机型所用15针相机串行接口（CSI）连接器的引脚排列。
+该连接器兼容安费诺SFW15R-2STE1LF型号。
+
+信号方向以树莓派为基准进行标注。
+I2C线路（SCL和SDA）在树莓派主板上被上拉至3.3V。
+
+GPIO线路的功能与方向取决于具体使用的相机模块。通常`CAM_IO0`作为高电平有效电源使能引脚。部分产品未包含`CAM_IO1`引脚。
+
+:::tip
+FPC连接器中第1脚的位置取决于源硬件与目标硬件的配置，以及线缆金属触点位于顶部、底部或双面的情况。扁平柔性连接器（FFC）的第15脚最靠近电路板边缘。
+:::
+
+
+| 引脚 | 名称 | 描述 | 方向/类型 |
+| -- | -- | -- | -- |
+| 1 | GND | - | 接地 |
+| 2 | CAM_DN0 | D-PHY通道0（负向） | 输入，D-PHY |
+| 3 | CAM_DP0 | D-PHY通道0（正向） | 输入，D-PHY |
+| 4 | GND | - | 接地 |
+| 5 | CAM_DN1 | D-PHY通道1（负向） | 输入，D-PHY |
+| 6 | CAM_DP1 | D-PHY通道1（正向） | 输入，D-PHY |
+| 7 | GND | -                             | 接地 |
+| 8 | CAM_CN | D-PHY 时钟（负极） | 输入，D-PHY |
+| 9 | CAM_CP | D-PHY 时钟（正极） | 输入，D-PHY |
+| 10 | GND | - | 接地 |
+| 11 | CAM_IO0 | GPIO（例如电源使能） | 双向，3.3 V |
+| 12 | CAM_IO1 | GPIO（例如时钟、LED） | 双向，3.3 V |
+| 13 | SCL | I2C时钟 | 双向，3.3 V |
+| 14 | SDA | I2C数据 | 双向，3.3 V |
+| 15 | 3V3 | 3.3 V电源 | 输出 |
+
+#### 相机接口引脚排列（22针）
+
+此为树莓派Zero系列、计算模块I/O板以及自树莓派5起旗舰机型所采用的22针相机串行接口（CSI）连接器的引脚排列。
+该连接器兼容安费诺F32Q-1A7H1-11022型号。
+
+信号方向以树莓派视角为准。
+I2C线路（SCL和SDA）在树莓派主板上被上拉至3.3V。
+
+GPIO引脚的功能与方向取决于具体使用的相机模块。通常`CAM_IO0`作为高电平有效电源使能引脚。部分产品未包含`CAM_IO1`。
+
+:::tip
+FPC连接器中第1针脚的端口方向取决于源硬件与目标硬件的配置，以及线缆金属触点位于顶部、底部或顶底两侧的情况。
+:::
+
+| 引脚 | 名称 | 描述 | 方向/类型 |
+| -- | -- | -- | -- |
+| 1 | GND | - | 接地 |
+| 2 | CAM_DN0 | D-PHY通道0（负极） | 输入，D-PHY |
+| 3 | CAM_DP0 | D-PHY通道0（正极） | 输入，D-PHY |
+| 4 | GND | - | 接地 |
+| 5 | CAM_DN1 | D-PHY通道1（负向） | 输入，D-PHY |
+| 6 | CAM_DP1 | D-PHY通道1（正向） | 输入，D-PHY |
+| 7 | GND | - | 接地 |
+| 8 | CAM_CN  | D-PHY 时钟（负极） | 输入，D-PHY |
+| 9 | CAM_CP | D-PHY 时钟（正极） | 输入，D-PHY |
+| 10 | GND | - | 接地 |
+| 11 | CAM_DN2 | D-PHY 通道 2（负极） | 输入，D-PHY |
+| 12 | CAM_DP2 | D-PHY 通道 2（正极）| 输入，D-PHY |
+| 13 | GND | - | 接地 |
+| 14 | CAM_DN3 | D-PHY通道3（负极） | 输入，D-PHY |
+| 15 | CAM_DP3 | D-PHY通道3（正极） | 输入，D-PHY |
+| 16 | GND | - | 接地 |
+| 17 | CAM_IO0 | GPIO（例如电源使能） | 双向，3.3 V |
+| 18 | CAM_IO1 | GPIO（例如时钟、LED） | 双向，3.3 V |
+| 19 | GND | - | 接地 |
+| 20 | SCL | I2C时钟 | 双向，3.3 V |
+| 21 | SDA | I2C数据  双向，3.3 V |
+| 22 | 3V3 | 3.3 V电源 | 输出 |
 
 ## 摄像头滤镜
 某些传输特性适用于摄像头模块3 以及 HQ 和 GS 摄像头。

@@ -5,7 +5,7 @@ title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解(官网2
 description: 深入了解树莓派config.txt配置文件，它是树莓派启动过程中的关键组件，负责在GPU读取后初始化Arm CPU和Linux系统。本文详细介绍了config.txt的文件格式、高级功能、常用选项、属性配置、GPIO控制、超频选项以及监控和维护树莓派设备的方法，是树莓派用户优化和定制系统设置的必备指南。
 keywords: [树莓派, config.txt, GPU, Arm CPU, Linux, 启动过程, 文件格式, 高级功能, 常用选项, 属性配置, GPIO控制, 超频选项, 监控, 维护]
 last_update: 
-  date: 2025-10-03
+  date: 2025-11-15
 ---
 import Normal from "../_normal.mdx";
 
@@ -389,6 +389,14 @@ USB On-The-Go（通常缩写为 OTG）是一项功能，允许使用适当 OTG �
 位 0 (0x1) 表示 .elf 文件是定制固件。这将禁用任何兼容性检查（例如是否支持 USB MSD 启动），并在启动可执行文件前重置 PCIe。
 
 与树莓派5无关，因为没有 `start.elf` 文件。
+
+默认值：`0x0`
+
+#### enable_rp1_uart
+仅适用于树莓派5。
+
+当设置为 `1` 时，固件将 RP1 UART0 初始化为 115200bps，并在启动操作系统前不重置 RP1（可通过 `pciex4_reset=1` 单独配置）。
+这使得在早期启动代码中（例如裸机调试期间）更容易获取 40 针接头上的 UART 输出。
 
 默认值：`0x0`
 

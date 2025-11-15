@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update: 
-  date: 2025-10-08
+  date: 2025-11-15
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -27,6 +27,10 @@ Raspberry Pi 电脑分为几个不同的**系列**：
 
 **Model B** 表示有以太网端口。
 **Model A** 表示成本较低的型号，外形较小，没有以太网端口，RAM 较小，USB 端口较少，以限制电路板高度。
+
+:::important[重要]
+由于核心SoC停产，树莓派2B的1.1版和1.2版已达到产品生命周期终止（EoL）。官方EoL日期为2025年10月16日。树莓派2B修订版1.3采用相同机械尺寸并搭载BCM2837B0处理器，因此推荐用于现有设计。更多详情请参阅官方[停产通知](https://pip.raspberrypi.com/documents/RP-009284-PC-2)。
+:::
 
 <table>
     <tr>
@@ -103,8 +107,9 @@ Raspberry Pi 电脑分为几个不同的**系列**：
     <tr>
         <td align="center"><img src="/img/computers/raspberry-pi/2-model-b.jpg" alt="Raspberry Pi Model 2B"/>*Raspberry Pi Model 2B*</td>
         <td>
-          [BCM2836](./processors.mdx#bcm2836)
-          (在版本1.2更换为[BCM2837](./processors.mdx#bcm2837))
+          - revision 1.1 [BCM2836](./processors.mdx#bcm2836)
+          - revision 1.2 [BCM2837](./processors.mdx#bcm2837)
+          - revision 1.3 [BCM2837b0](./processors.mdx#bcm2837b0)
         </td>
         <td>1 GB</td>
         <td>40针GPIO头</td>
@@ -121,7 +126,10 @@ Raspberry Pi 电脑分为几个不同的**系列**：
     </tr>
     <tr>
         <td align="center"><img src="/img/computers/raspberry-pi/3-model-b.jpg" alt="Raspberry Pi Model 3B"/>*Raspberry Pi Model 3B*</td>
-        <td>[BCM2837](./processors.mdx#bcm2837)</td>
+        <td>
+          - revision 1.1[BCM2837](./processors.mdx#bcm2837)
+          - revision 1.2[BCM2837B0](./processors.mdx#bcm2837b0)
+        </td>
         <td>1 GB</td>
         <td>40针GPIO头</td>
         <td>
@@ -139,7 +147,7 @@ Raspberry Pi 电脑分为几个不同的**系列**：
     </tr>
     <tr>
         <td align="center"><img src="/img/computers/raspberry-pi/3-model-b-plus.jpg" alt="Raspberry Pi Model 3B+"/>*Raspberry Pi Model 3B+*</td>
-        <td>[BCM2837b0](./processors.mdx#bcm2837b0)</td>
+        <td>[BCM2837B0](./processors.mdx#bcm2837b0)</td>
         <td>1 GB</td>
         <td>40针GPIO头</td>
         <td>
@@ -157,7 +165,7 @@ Raspberry Pi 电脑分为几个不同的**系列**：
     </tr>
     <tr>
         <td align="center"><img src="/img/computers/raspberry-pi/3-model-a-plus.jpg" alt="Raspberry Pi Model 3A+"/>*Raspberry Pi Model 3A+*</td>
-        <td>[BCM2837b0](./processors.mdx#bcm2837b0)</td>
+        <td>[BCM2837B0](./processors.mdx#bcm2837b0)</td>
         <td>512MB</td>
         <td>40针GPIO头</td>
         <td>
@@ -351,6 +359,10 @@ Raspberry Pi 电脑分为几个不同的**系列**：
 
 ### Compute Module系列
 
+:::important[重要]
+由于核心SoC停产，树莓派计算模块3（CM3）和计算模块3精简版（CM3Lite）已达到产品生命周期终止（EoL）。官方EoL日期为2025年10月16日。与CM3最接近的替代品是树莓派计算模块3+，其提供相同的机械尺寸、改进的散热设计以及BCM2837B0处理器，因此推荐用于现有设计。对于需要SODIMM规格的新设计，建议选用计算模块4S；其他新设计则推荐计算模块4或计算模块5。更多详情请参阅官方[停产通知](https://pip.raspberrypi.com/documents/RP-009286-PC)。
+:::
+
 有关树莓派计算模块硬件的更多详细信息，请参阅 [计算模块硬件](./compute-module.mdx)。
 
 <table>
@@ -367,7 +379,7 @@ Raspberry Pi 电脑分为几个不同的**系列**：
         <td>[BCM2835](./processors.mdx#bcm2835)</td>
         <td>512MB</td>
         <td>4GB</td>
-        <td>DDR2 SO-DIMM</td>
+        <td>DDR2 SODIMM</td>
         <td>无</td>
     </tr>
     <tr>
@@ -375,15 +387,15 @@ Raspberry Pi 电脑分为几个不同的**系列**：
         <td>[BCM2837](./processors.mdx#bcm2837)</td>
         <td>1GB</td>
         <td>0GB (精简版)<br />4GB</td>
-        <td>DDR2 SO-DIMM</td>
+        <td>DDR2 SODIMM</td>
         <td>无</td>
     </tr>
     <tr>
         <td align="center"><img src="/img/computers/raspberry-pi/compute-module-3-plus.jpg" alt="Raspberry Pi Compute Module 3+"/>*Raspberry Pi Compute Module 3+*</td>
-        <td>[BCM2837b0](./processors.mdx#bcm2837b0)</td>
+        <td>[BCM2837B0](./processors.mdx#bcm2837b0)</td>
         <td>1GB</td>
         <td>0GB (精简版)<br />8GB<br />16GB<br />32GB</td>
-        <td>DDR2 SO-DIMM</td>
+        <td>DDR2 SODIMM</td>
         <td>无</td>
     </tr>
     <tr>
@@ -391,7 +403,7 @@ Raspberry Pi 电脑分为几个不同的**系列**：
         <td>[BCM2711](./processors.mdx#bcm2711)</td>
         <td>1GB<br />2GB<br />4GB<br />8GB</td>
         <td>0GB (精简版)<br />8GB<br />16GB<br />32GB</td>
-        <td>DDR2 SO-DIMM</td>
+        <td>DDR2 SODIMM</td>
         <td>无</td>
     </tr>
     <tr>
@@ -433,7 +445,7 @@ Raspberry Pi 电脑分为几个不同的**系列**：
 </table>
 
 :::tip
-使用 DDR2 SO-DIMM 物理外形尺寸的计算模块与 DDR2 SO-DIMM 电气规格**不兼容**。
+使用 DDR2 SO-DIMM 物理外形尺寸的计算模块与 DDR2 SODIMM 电气规格**不兼容**。
 :::
 
 ### Pico微控制器
@@ -1130,15 +1142,21 @@ Raspberry Pi 4B 之前的型号存在已知问题，无法使用某些 USB 设�
 早期版本的 Compute Module 4 可能需要 [bootloader 更新](./compute-module.mdx#更新计算模块引导加载程序) 才能从 USB 启动。
 :::
 
-### 树莓派3B+
-树莓派3B+支持开箱即用的 USB 大容量存储启动。
 
-### 树莓派2B、3A+、3B、CM3、CM3+、Zero 2W
+### 树莓派3B+、Zero 2 W
 
-在 Raspberry Pi 2B v1.2、3A+、3B、Zero 2 W 以及 Compute Module 3 和 3+上，必须首先启用 [USB 主机启动模式](#usb主机启动模式)。这允许 USB 大容量存储器启动和 [网络启动](#网络启动)。
+树莓派3B+和Zero 2 W支持开箱即用的USB大容量存储启动功能。
 
 :::tip
-Raspberry Pi 3A+ 和 Zero 2 W 不支持网络启动。
+树莓派Zero 2 W不支持网络启动。
+:::
+
+### 树莓派2B、3A+、3B、CM3、CM3+
+
+在树莓派 2B v1.2 和 v1.3、3A+、3B 以及计算模块 3 和 3+ 上，必须先启用 [USB 主机启动模式](#usb主机启动模式)。这将启用 USB 大容量存储启动和 [网络启动](#网络启动) 功能。
+
+:::tip
+树莓派 3A+ 不支持网络启动。
 :::
 
 要在这些设备上启用 USB 主机启动模式，请在 OTP（一次性可编程）内存中设置 USB 主机位。要设置该位，请从 SD 卡启动，其中 [`/boot/firmware/config.txt`](./config-txt.mdx#什么是configtxt) 包含 `program_usb_boot_mode=1` 行。设置该位后，无需 SD 卡即可从 USB 启动。

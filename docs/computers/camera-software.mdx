@@ -5,7 +5,7 @@ title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照�
 description: 全面掌握树莓派摄像头应用！本文详细介绍如何使用rpicam-apps软件套件进行图像捕捉、视频录制、对象检测、图像分割等，支持多种摄像头模块（如HQ、GS、AI摄像头）。提供命令行选项、后处理框架（含TensorFlow Lite集成）、多摄像头同步及网络流媒体传输方法，助您实现高效的树莓派视觉应用开发。
 keywords: [树莓派摄像头应用, rpicam-apps, 图像捕捉, 视频录制, 对象检测, 图像分割, TensorFlow Lite, 多摄像头同步, 网络流媒体, 后处理框架, 树莓派视觉开发]
 last_update: 
-  date: 2025-09-27
+  date: 2025-11-15
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -2019,7 +2019,11 @@ rpicam-hello --lores-width 128 --lores-height 96 --post-process-file motion_dete
 
 #### 先决条件
 
-这些阶段需要导出 C++ API 的 TensorFlow Lite (TFLite) 库。TFLite 并不分发这种形式的库，但您可以从 [lindevs.com](https://lindevs.com/install-precompiled-tensorflow-lite-on-raspberry-pi/) 下载并安装导出 API 的版本。
+这些阶段需要导出 C++ API 的 TensorFlow Lite（TFLite）库。从Trixie版本开始，树莓派系统会构建并分发TFLite软件包，可通过以下命令安装：
+
+```sh
+sudo apt install libtensorflow-lite-dev
+```
 
 安装后，必须 [使用 TensorFlow Lite 支持重新编译`rpicam-apps`](#构建libcamera和rpicam-apps)。
 

@@ -5,7 +5,7 @@ title_meta: 树莓派处理器介绍，包括BCM2835、BCM2836、BCM2837、BCM27
 description: 深入了解树莓派系列所使用的各类处理器，包括BCM2835、BCM2836、BCM2837、BCM2837B0、BCM2711、BCM2712和RP3A0等。本文详细介绍了这些处理器的架构、性能特点、内存与缓存配置、多媒体功能以及输入输出接口等关键信息，同时提及了BCM2712处理器的漏洞及缓解措施，为树莓派爱好者和开发者提供全面的处理器知识。
 keywords: [树莓派, 处理器, BCM2835, BCM2836, BCM2837, BCM2837B0, BCM2711, BCM2712, RP3A0, ARM架构, 多媒体功能, 漏洞缓解]
 last_update: 
-  date: 2025-10-08
+  date: 2025-11-15
 ---
 import Normal from "../_normal.mdx";
 
@@ -22,25 +22,36 @@ BCM2835 是用于树莓派1A、A+、B、B+、树莓派Zero、树莓派Zero W和 
 - [ARM1176JZF-S](https://developer.arm.com/documentation/ddi0301)
 
 ## BCM2836
-BCM2836 的底层架构与 BCM2835 相同。唯一明显的不同是去掉了 ARM1176JZF-S 处理器，代之以四核 Cortex-A7 集群。
+
+早期树莓派2B所采用的 Broadcom 芯片。BCM2836芯片的基础架构与BCM2835完全相同，唯一显著差异在于将ARM1176JZF-S处理器替换为四核Cortex-A7处理器集群。
 
 请参阅
 - [BCM2836 ARM 本地外设](https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf)
 - [Cortex-A7 MPcore 处理器参考手册](https://developer.arm.com/documentation/ddi0464/f/)
 
-## BCM2837
-这是用于树莓派3B、树莓派2B的后期型号以及树莓派CM3 的 Broadcom 芯片。BCM2837 的底层架构与 BCM2836 完全相同。唯一明显的不同是用四核 ARM Cortex A53（Armv8）集群取代了 Armv7 四核集群。
+:::important[重要]
+此系统级芯片（SoC）已停产。后续版本的树莓派2 Model B采用不同型号的SoC。更多信息请参阅[树莓派2B产品变更说明](https://pip.raspberrypi.com/documents/RP-004577-PC-1?disposition=inline)。
+:::
 
-Arm 内核的运行频率为 1.2GHz，使该设备比树莓派2快约 50%。VideoCore IV 的运行频率为 400MHz。
+## BCM2837
+
+这是用于早期树莓派3B、部分树莓派2B 以及 树莓派CM3 的 Broadcom 芯片。BCM2837 的基础架构与 BCM2836 完全相同，唯一显著差异在于将Armv7四核集群替换为四核Arm Cortex A53（Armv8）集群。
+
+该Arm核心运行频率达1.2 GHz，使设备性能较树莓派2提升约50%。VideoCore IV图形处理器运行频率为400 MHz。
 
 有关Arm外围设备规范的详细信息，请参阅以下 BCM2836 文档，该文档也适用于 BCM2837。
 - [BCM2836 Arm 本地外设](https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf)
 - [Cortex-A53 MPCore 处理器技术参考手册](https://developer.arm.com/documentation/ddi0500/latest/)
 
-## BCM2837B0
-这是树莓派3A+、B+和树莓派CM3+中使用的 Broadcom 芯片。BCM2837B0 的底层架构与树莓派其他版本中使用的 BCM2837 芯片相同。Arm 内核硬件相同，只是频率更高。
+:::important[重要]
+此系统级芯片（SoC）已停产。搭载该芯片的树莓派设备均已停产或采用其他SoC。更多信息请参阅：[树莓派3B产品变更通知](https://pip.raspberrypi.com/documents/RP-001029-PC-1?disposition=inline)， [树莓派2B Revision1.1和1.2停产通知1](https://pip.raspberrypi.com/documents/RP-009284-PC-2?disposition=inline)，以及 [树莓派CM3及CM3 Lite停产通知2](https://pip.raspberrypi.com/documents/RP-009286-PC?disposition=inline)。
+:::
 
-Arm 内核的运行频率高达 1.4GHz，这使得3B+/3A+比原来的树莓派3快约 17%。VideoCore IV 的运行频率为 400MHz。Arm 内核为 64 位，而 VideoCore IV 为 32 位。
+## BCM2837B0
+
+这是用于树莓派2B后期型号、树莓派3B后期型号、树莓派3A+、B+以及树莓派CM3+的 Broadcom 芯片。BCM2837B0的底层架构与其他版本树莓派使用的BCM2837芯片完全相同，Arm核心硬件一致，仅频率规格更高。
+
+其Arm核心最高可达1.4 GHz运行频率，使3B+和3A+型号较初代树莓派3提升约17%的运算速度。VideoCore IV运行频率为400 MHz。其中Arm核心采用64位架构，而VideoCore IV则为32位架构。
 
 BCM2837B0 芯片的封装与 BCM2837 芯片略有不同，最明显的是它包含一个散热器，散热效果更好。这使得时钟频率更高，对芯片温度的监测和控制也更精确。
 
