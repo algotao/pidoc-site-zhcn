@@ -4,17 +4,17 @@ draft: false
 description: Raspberry Pi AI相机搭载索尼IMX500成像传感器，为各类相机应用提供低延迟、高性能的AI功能。本文详细介绍了如何在Raspberry Pi 5或4 Model B上安装和配置AI相机，包括固件安装、系统更新及运行预装神经网络模型（如MobileNet SSD和PoseNet）的步骤。通过rpicam-apps和Picamera2等工具，用户可以轻松部署和运行自定义神经网络模型，实现物体检测、姿态估计等功能。文章还深入解析了AI相机的工作原理、系统架构及模型部署流程，帮助开发者充分利用AI加速器，提升图像处理效率。
 keywords: [Raspberry Pi AI相机, 索尼IMX500, 神经网络模型, rpicam-apps, Picamera2, MobileNet SSD, PoseNet, 物体检测, 姿态估计, AI加速器, 图像处理, 模型部署, 输入张量, 输出张量, Raspberry Pi 5, Raspberry Pi 4 Model B]
 last_update: 
-  date: 2025-09-27
+  date: 2025-12-20
 ---
-import Normal from "../_normal.mdx";
-import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Tabs from '@theme/Tabs';
+import Normal from "../_normal.mdx";
 
 # AI 摄像头
 
 Raspberry Pi AI 相机使用索尼 IMX500 成像传感器，可为任何相机应用提供低延迟、高性能的 AI 功能。与 [Raspberry Pi 的相机软件栈](../computers/camera-software.mdx) 的紧密集成使用户能够以最小的工作量部署自己的神经网络模型。
 
-<img src="/img/accessories/ai-camera/ai-camera.png" alt="树莓派人工智能相机" width="80%" />
+<img src="/img/accessories/ai-camera/ai-camera.jpg" alt="树莓派人工智能相机" width="80%" />
 *树莓派人工智能相机*
 
 本节演示如何在摄像头上运行预装或自定义神经网络模型。此外，本节还包括在 [`rpicam-apps`](https://github.com/raspberrypi/rpicam-apps) 和 [Picamera2](https://github.com/raspberrypi/picamera2) 中解释在 IMX500 上运行的神经网络生成的推理数据所需的步骤。
@@ -106,7 +106,7 @@ rpicam-vid -t 10s -o output.264 --post-process-file /usr/share/rpi-camera-assets
 
 例如，`max_detections`（最大检测次数）定义了管道在任何给定时间内检测到的对象的最大数量。`threshold` 定义了管道将任何输入视为对象所需的最小置信度值。
 
-该网络的原始推理输出数据可能会有相当大的噪声，因此这一阶段也会执行一些时间过滤并应用滞后。要禁用这种过滤，请移除 `temporal_filter` 配置块。
+该网络的原始推理输出数据可能存在较多噪声，因此本阶段还会执行时间滤波并应用迟滞效应。若需禁用此滤波功能，请移除`temporal_filter`配置块。
 
 #### 姿态估计
 
@@ -430,7 +430,7 @@ pip install edge-mdt[tf]
 
 ### 转换
 
-该转换器是一款命令行应用程序，可将量化模型（.onnx 或 .keras 格式）编译为二进制文件，该文件可打包并加载至 AI 相机。此工具作为 Edge-MDT 安装步骤的一部分自动安装。
+该转换器是一款命令行应用程序，可将量化模型（`.onnx` 或 `.keras` 格式）编译为二进制文件，该文件可打包并加载至 AI 相机。此工具作为 Edge-MDT 安装步骤的一部分自动安装。
 
 要转换模型：
 

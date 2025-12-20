@@ -5,7 +5,7 @@ title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等
 description: 本文详细介绍了如何在不连接显示器、键盘和鼠标的情况下远程访问和控制树莓派。涵盖了通过本地网络和互联网进行远程控制的方法，包括SSH、VNC、Raspberry Pi Connect等工具的使用。还提供了查找树莓派IP地址的多种方法，以及通过SCP、rsync、NFS、Samba等协议共享文件和文件夹的详细步骤。此外，文章还介绍了如何设置网络文件系统、Apache网络服务器以及通过网络启动树莓派的方法。
 keywords: [远程访问, 树莓派, SSH, VNC, Raspberry Pi Connect, IP地址, 文件共享, SCP, rsync, NFS, Samba, 网络文件系统, Apache, 网络启动, IPv6, 本地网络, 互联网]
 last_update: 
-  date: 2025-10-08
+  date: 2025-12-20
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -207,9 +207,8 @@ Fing 应用程序是一款免费的智能手机网络扫描程序。它适用于
 在全新安装的 Raspberry Pi OS 上配置 SSH：
 
 1. 按照 [Install with Imager](./getting-started.mdx#使用imager工具安装) 指南中的说明操作。
-2. 在**操作系统自定义**步骤中，导航至**服务**选项卡。
-3. 勾选**启用 SSH**复选框。
-4. 选择**密码验证**，使用与实际使用 Raspberry Pi 时相同的用户名和密码登录。选择 **Allow public-key authentication only** 以 [配置 SSH 密钥](#手动配置-ssh-密钥)进行无密码登录。
+2. 在 **自定义>远程访问** 选项卡中，将 **启用SSH** 开关切换至激活状态。
+3. 选择 **使用密码认证**，即可使用与物理操作树莓派时相同的用户名和密码登录。选择 **使用公钥认证**，则需[配置SSH密钥](./remote-access.mdx#手动配置-ssh-密钥)以实现基于SSH密钥的认证登录。
 
 </TabItem>
 <TabItem value="终端操作" label="终端操作">
@@ -265,11 +264,7 @@ ssh <username>@<ip address>
 #### 通过 SSH 转发 X11
 
 :::tip[注意]
-树莓派操作系统默认使用Wayland窗口服务器。若需转发X11窗口，必须切换至X Window Server。要启用X11窗口转发功能，请通过控制中心或树莓派配置命令行界面将桌面环境切换至X Window Server。
-:::
-
-:::tip[注意]
-许多桌面环境不再默认安装 X11。请安装第三方 X 服务器，如 [XQuartz](https://www.xquartz.org/)，以使用 X11 转发。
+在 macOS 和 Windows 系统上，必须安装第三方 X 服务器才能使用 X11 转发功能。
 :::
 
 X11 可通过 SSH 实现图形应用程序。通过 `-Y` 标志可在 SSH 上转发 X 会话：
@@ -290,11 +285,14 @@ Geany &
 
 #### 使用 Raspberry Pi Imager 预先配置操作系统映像
 
-使用 Raspberry Pi Imager 配置启动映像时，可以预先配置 SSH 密钥。你可以生成新的 SSH 密钥对或现有的 SSH 密钥。
+使用树莓派映像工具配置操作系统映像时，可预先配置SSH密钥以使用运行工具所在计算机上的现有密钥。.
 
-- 按照 [使用 Imager 安装](./getting-started.mdx#使用imager工具安装) 指南配置启动映像。
-- 在 **OS Customisation** 步骤中，导航至 **Services** 选项卡并勾选 **Enable SSH** 复选框。
-- 选择 **Allow public-key authentication only** 单选按钮。如果你已经在 `~/.ssh/id_rsa.pub` 中存储了 SSH 公钥，Imager 会自动使用该公钥预填文本框。如果 Imager 没有找到 SSH 公钥，你可以点击 **RUN SSH-KEYGEN** 按钮来生成新的密钥对。
+1. 参照[使用Imager安装](./getting-started.mdx#使用imager工具安装)指南配置启动映像。
+2. 在 **远程访问** 选项卡中，将 *启用SSH* 开关切换至激活状态。.
+3. 选择 *使用公钥认证*。
+  * 若您已在`~/.ssh/id_rsa.pub`存储SSH公钥，Imager将自动填充该公钥至文本框。
+  * 否则请浏览至公钥所在位置。.
+4. 选择 **下一步** 继续镜像操作。
 
 #### 手动配置 SSH 密钥
 

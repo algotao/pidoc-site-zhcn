@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update: 
-  date: 2025-11-15
+  date: 2025-12-20
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -202,7 +202,7 @@ Raspberry Pi 电脑分为几个不同的**系列**：
     <tr>
         <td align="center"><img src="/img/computers/raspberry-pi/5.jpg" alt="Raspberry Pi Model 5"/>*Raspberry Pi Model 5*</td>
         <td>[BCM2712](./processors.mdx#bcm2712)</td>
-        <td>2 GB<br/>4 GB<br/>8 GB<br/>16 GB</td>
+        <td>1 GB<br/>2 GB<br/>4 GB<br/>8 GB<br/>16 GB</td>
         <td>40针GPIO头</td>
         <td>
           - 2× 微型 HDMI
@@ -760,27 +760,33 @@ Compute Module 4 和 Compute Module 4S 不支持自动引导加载程序更新�
 
 #### 使用树莓派Imager更新bootloader
 树莓派Imager提供了一个用于更新 bootloader 和选择启动模式的GUI。
-1. 下载[树莓派Imager](/downloads/)
-2. 选择备用SD卡（bootloader映像将覆盖整个卡中的内容）
-3. 启动树莓派Imager
-4. 选择`选择操作系统`
-5. 选择`其他工具映像`
+
+1. 下载 [树莓派Imager](/downloads/)。
+2. 选择一张未使用的SD卡。刻录工具将覆盖该SD卡上的所有数据。
+3. 将SD卡插入运行 Imager 的计算机。
+4. 启动树莓派 Imager。
+5. 在**设备**选项卡中，从列表中选择您的树莓派型号。点击**下一步**。
+6. 在**操作系统**选项卡中，选择**其他实用工具映像**
 
 <img src="/img/computers/raspberry-pi/misc-utility-images.png" width="60%" alt="其他工具映像" />
 
-6. 为您的 Raspberry Pi 版本选择 `Bootloader`（Pi 400 属于 4 系列）。
+7. 根据您的树莓派版本选择**Bootloader**。
 
 <img src="/img/computers/raspberry-pi/bootloader-family-select.png" width="60%" alt="为您的bootloader选择一个系列" />
 
-7. 选择启动模式：`SD`（推荐）、`USB` 或 `网络`
+8. 选择启动模式。我们推荐 **SD卡启动**。点击 **下一步**。
 
 <img src="/img/computers/raspberry-pi/bootloader-storage-select.png" width="60%" alt="选择您要从中启动的存储" />
 
-8. 选择`SD`卡，然后`写入`
-9. 单击`是`继续
-10. 使用新映像启动树莓派并等待至少10秒
-11. 当绿色活动LED以稳定模式闪烁并且HDMI显示屏显示绿屏时，您已成功写入bootloader
-12. 关闭树莓派电源并取出SD卡
+9. 在 **存储** 选项卡中选择您的SD卡。点击 **下一步**。.
+10. 在 **写入** 选项卡中确认设置，点击 **写入** 继续。
+11. 系统将提示确认是否覆盖SD卡数据。继续操作请选择 **我已知晓，擦除并写入**。
+12. 等待 Imager 完成SD卡写入与验证.
+13. 将SD卡插入需更新 bootloader 的树莓派设备.
+14. 使用新镜像启动树莓派并等待至少十秒.
+15. 当绿色活动指示灯以稳定模式闪烁且HDMI显示屏呈现绿色背景时，即表示引导程序写入成功.
+16. 关闭树莓派电源并取出SD卡
+
 
 #### 使用raspi-config更新bootloader
 
@@ -970,13 +976,13 @@ rpi-eeprom-config --config boot.conf --out new.bin pieeprom.bin
 | recovery.bin | bootloader 恢复可执行文件 |
 | pieeprom.upd | bootloader EEPROM 映像 |
 | pieeprom.bin | bootloader EEPROM 映像 - 与 `pieeprom.upd` 相同，但更改了 `recovery.bin` 行为，使其不会重命名为 `RECOVERY.000` 。 |
-| pieeprom.sig | bootloader 映像的sha256校验和 (pieeprom.upd/pieeprom.bin) |
+| pieeprom.sig | 引导加载程序映像（`pieeprom.upd`/`pieeprom.bin`）的sha256校验和（及可选时间戳） |
 | vl805.bin | VLI805 USB固件 EEPROM 映像 - 仅限树莓派4B Rev1.3及更早版本 |
 | vl805.sig | vl805.bin的sha256校验和 |
 
 - 如果bootloader更新映像名为 `pieeprom.upd`，那么更新完成后，`recovery.bin` 将重命名为 `recovery.000`，然后重新启动系统。由于 `recovery.bin` 已不存在，ROM会从EEPROM中加载新更新的bootloader，操作系统会正常启动。
 - 如果bootloader更新映像名为 `pieeprom.bin`，那么 `recovery.bin` 将在更新完成后停止。更新成功后，HDMI输出将变为绿色，绿色活动LED快速闪烁。如果更新失败，HDMI输出将变为红色，活动LED将显示[错误代码](./configuration.mdx#led警告闪烁代码)。
-- `.sig`文件包含相应图像文件的十六进制sha256校验和；将来可能会添加其他字段。
+- `.sig`文件的第一行包含对应映像文件的十六进制sha256校验和，可选地在下一行跟随映像的时间戳（`ts: unixtime`）；未来可能添加更多字段。
 - BCM2711和BCM2712上的ROM不支持从USB大容量存储器或TFTP加载 `recovery.bin` 。相反，较新版本的bootloader支持自更新机制，bootloader可自行重新刷新EEPROM。请参阅[bootloader配置](#树莓派bootloader配置)页面上的 `ENABLE_SELF_UPDATE`。
 - 启动时，`rpi-eeprom-update` 服务会自动删除临时EEPROM更新文件。
 
@@ -2066,11 +2072,20 @@ MAC_ADDRESS_OTP=0,1
 默认值：`net_install`
 
 #### IMAGER_REPO_URL
-嵌入式树莓派 Imager 应用程序通过启动时下载的 JSON 文件进行配置。
 
-你可以更改嵌入式树莓派 Imager 应用程序使用的 JSON 文件的 URL，用它提供你自己的映像。您可以通过 `--repo` 参数传递 URL，用标准 [树莓派 Imager](/downloads/) 应用程序进行测试。
+树莓派 Imager 应用程序通过启动时下载的JSON文件进行配置。默认情况下，树莓派映像程序使用位于 https://downloads.raspberrypi.com/os_list_imagingutility_v4.json 的JSON文件。
 
-默认值：`http://downloads.raspberrypi.org/os_list_imagingutility_v3.json`
+在EEPROM配置中设置`IMAGER_REPO_URL`，可指定在使用嵌入式树莓派映像程序进行网络安装时使用的JSON文件位置。
+
+您也可通过以下任一方式修改应用程序使用的 JSON 文件 URL，使其提供您自定义的镜像：
+
+* 启动 Imager 时传递 `--repo` 参数，例如：`rpi-imager --repo https://downloads.raspberrypi.com/os_list_imagingutility_v4.json`
+* 在树莓派映像程序界面中：
+  * 进入 **应用选项** 对话框
+  * 在 **内容存储库** 处选择 **编辑**
+    * 若使用本地计算机的JSON文件，请选择 **使用自定义文件** 并浏览至文件位置
+    * 若需使用URL托管的JSON文件，请选择 **使用自定义URL** 并输入URL。
+  * 点击**应用并重启**。Imager将重置设备及操作系统选项，并返回 **设备** 选项卡。
 
 #### NET_INSTALL_ENABLED
 启用网络安装后，如果检测到键盘，bootloader会在启动时显示网络安装屏幕。
@@ -3388,26 +3403,35 @@ vcgencmd pmic_read_adc
 USB 规范要求 USB 设备不得向上游设备提供电流。如果 USB 设备向上游设备提供电流，则称为反向供电。这种情况通常发生在连接了劣质的供电 USB 集线器时，会导致供电 USB 集线器向树莓派主机供电。不建议这样做，因为通过集线器向树莓派供电会绕过树莓派内置的保护电路，使其在电源浪涌时容易受到损坏。
 
 ## 实时时钟 (RTC)
-树莓派5包含一个实时时钟模块。它可以通过USB-C电源插口右侧板上的J5(BAT)插口进行电池供电。
+树莓派5搭载了一个实时时钟（RTC）模块。该模块可通过板载J5（BAT）接口接入电池供电。当元件朝上且徽标方向正确时，J5接口位于电路板左近角处，紧邻USB-C电源接口右侧。
 
 <img src="/img/computers/raspberry-pi-5/j5.jpg" alt="J5电池连接器" width="70%" />
 *J5电池连接器*
-您可以设置唤醒警报，将板切换到非常低功耗的状态（大约3mA）。当到达闹钟时间时，树莓派将重新上电。这对于定时拍摄图像等周期性作业非常有用。
 
-要支持唤醒警报的低功耗模式，您应该编辑bootloader配置：
+您可以设置唤醒闹钟，该功能将使开发板进入超低功耗状态（约3毫安）。当达到闹钟时间时，开发板将重新启动。此功能适用于定时任务，例如延时摄影。
+
+要启用唤醒闹钟的低功耗模式：.
+
+1. 编辑引导程序配置。
+ 
 ```sh
 sudo -E rpi-eeprom-config --edit
 ```
-添加以下两行。
+
+2. 添加以下两行。
+
 ```
 POWER_OFF_ON_HALT=1
 WAKE_ON_GPIO=0
 ```
+
 您可以使用以下方法测试功能：
+
 ```sh
 echo +600 | sudo tee /sys/class/rtc/rtc0/wakealarm
 sudo halt
 ```
+
 这将使开发板停机并进入低功耗的状态，然后在10分钟后唤醒并重新启动。
 
 RTC 还能在启动时提供时间，例如在 dmesg 中，以满足无法访问 NTP 的用例：
@@ -3443,12 +3467,14 @@ RTC 配备了恒流（3mA）恒压充电器。
 电池充电默认为禁用。有一些 `sysfs` 文件可显示充电电压和限制：
 
 ```
-/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage:0
-/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage_max:4400000
-/sys/devices/platform/soc/soc:rpi_rtc/rtc/rtc0/charging_voltage_min:1300000
+$ grep . /sys/class/rtc/rtc0/charging_voltage*
+
+/sys/class/rtc/rtc0/charging_voltage:0
+/sys/class/rtc/rtc0/charging_voltage_max:4400000
+/sys/class/rtc/rtc0/charging_voltage_min:1300000
 ```
 
-要以设定电压为电池充电，请在 `/boot/firmware/config.txt`"中添加 [`rtc_bbat_vchg`](https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README#L279)：
+要以设定电压为电池充电，请在 `/boot/firmware/config.txt`"中添加 [`rtc_bbat_vchg`](https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README#L400)：
 
 ```
 dtparam=rtc_bbat_vchg=3000000
@@ -3458,7 +3484,7 @@ dtparam=rtc_bbat_vchg=3000000
 
 ### 禁用电池充电
 
-要停止充电，请删除 `config.txt` 中包含 [`rtc_bbat_vchg`](https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README#L279) 的所有行。
+要停止充电，请删除 `config.txt` 中包含 [`rtc_bbat_vchg`](https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README#L400) 的所有行。
 
 
 ## 串行外设接口(SPI)
@@ -3900,11 +3926,13 @@ NOQuuuWuFMMMCCCCPPPPTTTTTTTTTRRRR
 | b04180 | CM5 | 1.0 | 2GB | Sony UK |
 | c04180 | CM5 | 1.0 | 4GB | Sony UK |
 | d04180 | CM5 | 1.0 | 8GB | Sony UK |
+| e04180 | CM5 | 1.0 | 16GB | Sony UK |
 | d04190 | 500 | 1.0 | 8GB | Sony UK |
 | e04190 | 500+ | 1.0 | 16GB | Sony UK |
 | b041a0 | CM5 Lite | 1.0 | 2GB | Sony UK |
 | c041a0 | CM5 Lite | 1.0 | 4GB | Sony UK |
 | d041a0 | CM5 Lite | 1.0 | 8GB | Sony UK |
+| e041a0 | CM5 Lite | 1.0 | 16GB | Sony UK |
 
 ### 使用修订码识别电路板
 通过命令行，我们可以使用以下命令获取电路板的修订码：

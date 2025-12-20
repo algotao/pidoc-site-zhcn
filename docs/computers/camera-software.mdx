@@ -5,7 +5,7 @@ title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照�
 description: 全面掌握树莓派摄像头应用！本文详细介绍如何使用rpicam-apps软件套件进行图像捕捉、视频录制、对象检测、图像分割等，支持多种摄像头模块（如HQ、GS、AI摄像头）。提供命令行选项、后处理框架（含TensorFlow Lite集成）、多摄像头同步及网络流媒体传输方法，助您实现高效的树莓派视觉应用开发。
 keywords: [树莓派摄像头应用, rpicam-apps, 图像捕捉, 视频录制, 对象检测, 图像分割, TensorFlow Lite, 多摄像头同步, 网络流媒体, 后处理框架, 树莓派视觉开发]
 last_update: 
-  date: 2025-11-15
+  date: 2025-12-20
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -29,7 +29,7 @@ Raspberry Pi 生产多种官方摄像头模块，包括
 首先，[安装摄像头模块](../accessories/camera.mdx#安装树莓派摄像头)。然后，按照本节中的指南使用你的摄像头模块。
 
 :::warning
-本指南不再涵盖在 Bullseye 和早期 Raspberry Pi OS 版本中可用的*传统相机栈*。传统的相机栈使用 `raspivid`、`raspistill` 等应用程序和原始的 `Picamera`（*而不是* `Picamera2`）Python 库，多年来已被弃用，现在已不再支持。如果您使用的是传统的相机栈，它将只支持 摄像头模块 1、摄像头模块 2 和 高质量摄像头，而不会支持任何更新的相机模块。
+本指南不再涵盖在 _Bullseye_ 和早期 Raspberry Pi OS 版本中可用的*传统相机栈*。传统的相机栈使用 `raspivid`、`raspistill` 等应用程序和原始的 `Picamera`（*而不是* `Picamera2`）Python 库，多年来已被弃用，现在已不再支持。如果您使用的是传统的相机栈，它将只支持 摄像头模块 1、摄像头模块 2 和 高质量摄像头，而不会支持任何更新的相机模块。
 :::
 
 ## rpicam-apps
@@ -2019,7 +2019,7 @@ rpicam-hello --lores-width 128 --lores-height 96 --post-process-file motion_dete
 
 #### 先决条件
 
-这些阶段需要导出 C++ API 的 TensorFlow Lite（TFLite）库。从Trixie版本开始，树莓派系统会构建并分发TFLite软件包，可通过以下命令安装：
+这些阶段需要导出 C++ API 的 TensorFlow Lite（TFLite）库。从_Trixie_版本开始，树莓派系统会构建并分发TFLite软件包，可通过以下命令安装：
 
 ```sh
 sudo apt install libtensorflow-lite-dev

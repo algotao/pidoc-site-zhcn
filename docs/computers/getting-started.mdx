@@ -5,7 +5,7 @@ title_meta: 树莓派新手上路，硬件装配、镜像烧录、系统安装�
 description: 快速上手树莓派！本文提供详细入门指南，涵盖硬件连接（电源、显示器、键盘鼠标）、存储设备（microSD卡/U盘/网络存储）、操作系统安装（推荐Raspberry Pi Imager工具）、网络配置（WiFi/蓝牙）、首次启动设置（用户/语言/时区/软件更新）及推荐软件与教程资源，助您轻松启动并最大化利用树莓派功能。
 keywords: [树莓派入门, Raspberry Pi设置, 操作系统安装、树莓派Imager, 首次启动配置, 树莓派硬件连接, 树莓派WiFi设置, 树莓派推荐软件, 树莓派教程, 树莓派电源要求]
 last_update: 
-  date: 2025-09-27
+  date: 2025-12-20
 ---
 import Normal from "../_normal.mdx";
 
@@ -82,8 +82,9 @@ import Normal from "../_normal.mdx";
 |树莓派4B | 2个micro HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
 | 树莓派3（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
 | 树莓派2B | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
-| 树莓派1（所有型号） | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
-| 树莓派Zero（所有型号） | 1个mini HDMI |
+| 树莓派1A+、1B+ | 1个HDMI、音频和复合输出通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards) |
+| 树莓派1A、1B | 1个HDMI、音频通过3.5mm[TRRS耳麦插孔](https://en.wikipedia.org/wiki/Phone_connector_(audio)#TRRS_standards)，复合输出通过[phono](https://en.wikipedia.org/wiki/RCA_connector) |
+| 树莓派Zero（所有型号） | 1个mini HDMI，通过焊盘输出复合视频信号 |
 
 :::note[注意]
 没有任何 Raspberry Pi 型号支持通过 USB-C 传输视频（DisplayPort 备选模式）。
@@ -113,7 +114,7 @@ import Normal from "../_normal.mdx";
 
 ## 安装操作系统
 
-要使用树莓派，您需要一个操作系统。默认情况下，树莓派检查插入SD卡插槽的SD卡上的可用操作系统。
+要使用树莓派，您需要一个操作系统。默认情况下，树莓派设备检查插入SD卡插槽的SD卡上的可用操作系统。
 
 根据您的树莓派型号，您还可以从其他存储设备启动操作系统，包括USB存贮设备、通过HAT连接的存储和网络存储。
 
@@ -126,103 +127,192 @@ import Normal from "../_normal.mdx";
 
 我们推荐使用[Raspberry Pi Imager](#使用imager工具安装)安装操作系统。
 
+如果您没有其他计算机可以将映像写入启动设备，您可以[直接从互联网在树莓派上安装操作系统](#通过网络安装)。
+
+### 使用Imager工具安装
+
 Raspberry Pi Imager是一款可帮助您在macOS、Windows和Linux上下载和写入映像的工具。Imager包含许多适用于树莓派的流行操作系统映像。Imager还支持加载直接从[树莓派](/downloads/operating-systems/)或第三方供应商（例如[Ubuntu](https://ubuntu.com/download/raspberry-pi)）下载的映像。您可以使用Imager为树莓派预配置登录凭据和远程访问设置。
 
 Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`。
 
-如果您没有其他计算机可以将映像写入启动设备，您可以[直接从互联网在树莓派上安装操作系统](#通过网络安装)。
+#### 步骤1：安装并启动 Imager
 
-### 使用Imager工具安装
-您可以通过以下方式之一安装Imager：
+将 Raspberry Pi Imager 下载至您的计算机（Windows、Mac 或 Linux）：.
 
-- 从[raspberrypi.com/software](/downloads/)下载最新版本并运行安装程序。
-- 使用包管理器从命令行安装它，例如`sudo apt install rpi-imager`。
+1. 通过以下任一方式安装 Imager：
+  * 在 Windows 和 Mac 上，从 [软件下载](/downloads/) 下载最新版本。运行安装程序。
+  * 在树莓派操作系统上，运行 `sudo apt install rpi-imager`。
+  * 在其他 Linux 系统上，从 [软件下载](/downloads/) 下载最新版本的 AppImage 文件。赋予 AppImage 可执行权限。.
 
-安装Imager后，通过单击树莓派Imager图标或运行来启动应用程序`rpi-imager`。
-<img src="/img/computers/getting-started/imager/welcome.png" alt="Raspberry Pi Imager主窗口" width="80%" />
+2. 通过以下任一方式启动树莓派刻录工具：
+  * 在应用程序菜单中查找。
+  * 点击桌面上的树莓派映像工具图标。
+  * 以 root 权限运行 AppImage 文件。例如使用命令：`sudo ./Raspberry_Pi_Imager-2.0.0-desktop-x86_64.AppImage`
 
-单击**CHOOSE DEVICE**并从列表中选择您的树莓派型号。
-<img src="/img/computers/getting-started/imager/choose-model.png" alt="Imager型号选择" width="80%" />
+#### 步骤2：配置基础参数
 
-接下来，单击**选择操作系统**并选择要安装的操作系统。Imager始终在列表顶部显示适合您的型号的树莓派OS推荐版本。
-<img src="/img/computers/getting-started/imager/choose-os.png" alt="Imager操作系统选择" width="80%" />
+告知树莓派映像工具所需的硬件与操作系统组合：
 
-将您首选的存储设备连接到计算机。例如使用外部或内置SD读卡器并插入microSD卡。然后单击**选择SD卡**并选择您的存储设备。这里也可以选择U盘作为存储器。
+1. 在**设备**选项卡中，从列表中选择您的树莓派型号。点击**下一步**。
 
-:::warning[警告]
-如果您的计算机连接了多个存储设备，请务必选择正确的设备！您通常可以通过大小来识别存储设备。如果您不确定，请断开其他设备的连接，直到确定要写入映像的设备为止。
+    <img src="/img/computers/getting-started/imager/choose-device.png" alt="树莓派Imager设备选项卡" width="80%" />
+
+2. 在**操作系统**选项卡中，从可用系统中选择。点击**下一步**。
+
+    Imager会在列表顶部显示推荐的树莓派操作系统版本。
+若需安装计算机中的镜像文件，请选择**使用自定义**选项。
+
+    <img src="/img/computers/getting-started/imager/choose-os.png" alt="Imager中的操作系统选项" width="80%" />
+
+3. 将所需存储设备连接至计算机。例如，通过外置或内置SD卡读卡器插入microSD卡。
+
+4. 在**存储**选项卡中，选择用于写入镜像的存储设备。点击**下一步**。
+
+    <img src="/img/computers/getting-started/imager/choose-storage.png" alt="Imager中的存储选择界面" width="80%" />
+
+:::warning
+若计算机连接了多个存储设备，_请务必选择正确的设备_！通常可通过容量大小识别存储设备。若无法确定，请断开其他设备直至确认目标设备。当您尝试覆盖计算机系统盘时，Imager会发出警告。
 :::
 
-<img src="/img/computers/getting-started/imager/choose-storage.png" alt="Imager存储选择" width="80%" />
+#### 步骤3：自定义操作系统
 
-接下来，点击**NEXT**。
+树莓派操作系统及部分第三方操作系统支持自定义设置。若您安装的是此类操作系统，可通过Imager中的后续步骤进行个性化配置。这些步骤为可选操作，选择**跳过自定义**即可省略。但我们强烈建议您在首次启动前，通过Imager的自定义设置完成树莓派的初始配置。
 
-<img src="/img/computers/getting-started/imager/os-customisation-prompt.png" alt="Imager系统自定义选择" width="80%" />
+可预先配置：
 
-在弹出窗口中，Imager会询问您是否需要自定义操作系统设置。我们强烈建议通过自定义操作系统设置来配置您的树莓派。单击**编辑设置**按钮以打开[操作系统自定义](#操作系统自定义)。
+* 设备主机名
+* 时区设置
+* 键盘布局
+* 用户名与密码
+* Wi-Fi 凭证
+* 远程连接选项
+* Raspberry Pi Connect 功能
 
-如果您不通过操作系统自定义设置来配置树莓派，树莓派OS将在首次启动并运行[配置向导](#首次启动配置)时要求您提供相同的信息。您可以单击**不**按钮跳过操作系统自定义。
+若您先前已通过 Imager 完成自定义步骤，后续操作中将自动填入您选择的值。
 
-#### 操作系统自定义
-操作系统自定义菜单可让您在首次启动之前设置树莓派。您可以预先配置：
-- 用户名和密码
-- WiFi认证
-- 主机名
-- 时区
-- 键盘布局
-- 远程连接
+若未通过这些操作系统自定义设置配置树莓派，系统将在首次启动后再次要求您输入相同信息。对于树莓派操作系统，首次启动配置将在[配置向导](#首次启动配置)中进行。
 
-当您首次打开操作系统自定义菜单时，您可能会看到一条提示，要求您授予从主机加载WiFi凭据的权限。如果您回答"是"，Imager将从您当前连接的网络中预填写WiFi认证。如果您回答"否"，您可以手动输入WiFi认证。
+1. 在 **自定义\>主机名** 选项卡中，为树莓派输入仅含字母、数字和连字符的主机名，然后选择**下一步**。
 
-**主机名**选项定义树莓派使用[mDNS](https://en.wikipedia.org/wiki/Multicast_DNS)广播到网络的主机名。当您将树莓派连接到网络时，网络上的其他设备可以使用`<hostname>.local`或`<hostname>.lan`与您的树莓派进行通信。
+    树莓派将通过[mDNS](https://en.wikipedia.org/wiki/Multicast_DNS)协议向网络广播此主机名。当树莓派连接网络后，其他设备可通过 `<主机名>.local` 或 `<主机名>.lan` 与您的计算机通信。
 
-**用户名和密码**选项定义树莓派的超级管理员帐户的用户名和密码。
+    <img src="/img/computers/getting-started/imager/os-customisation-hostname.png" alt="Imager OS 自定义主机名选项卡" width="80%" />
 
-**配置WiFi**选项允许您输入无线网络的SSID（名称）和密码。如果您的网络不公开广播SSID，您应该勾选"Hidden SSID"设置。默认情况下，Imager使用您当前所在的国家/地区作为"无线LAN的国家/地区"。此设置控制树莓派使用的WiFi广播频率。如果您计划运行无显示器模式树莓派，请输入无线LAN选项的认证信息。
 
-**语言设置**选项允许您定义树莓派的时区和默认键盘布局。
+2. 在 **自定义\>本地化** 选项卡中，选择您的首都城市。Imager将自动填充该城市的时区和键盘布局，您可修改这些设置。选择**下一步**。
 
-<img src="/img/computers/getting-started/imager/os-customisation-general.png" alt="操作系统自定义菜单中的常规设置" width="80%" />
+    <img src="/img/computers/getting-started/imager/os-customisation-locale.png" alt="Imager OS定制化本地化选项卡" width="80%" />
 
-**SERVICES**选项卡包含可帮助您远程连接到树莓派的设置。
+3. 在 **自定义>用户** 选项卡中，为树莓派管理员用户输入用户名和密码。选择**下一步**。
 
-如果您打算通过网络远程使用树莓派，请选中**开启SSH服务**旁边的框。如果您计划运行无显示器模式，则应该启用此选项。
+    <img src="/img/computers/getting-started/imager/os-customisation-user.png" alt="Imager OS自定义用户选项卡" width="80%" />
 
-- 选择**使用密码登录**选项，使用您在操作系统自定义的常规选项卡中提供的用户名和密码通过网络ssh到您的树莓派。
+4. 在 **自定义>Wi-Fi** 选项卡中，首次使用时Imager会预填当前连接Wi-Fi网络的SSID（名称）和密码。
 
-- 选择**只允许公钥登录**选项，使用您当前使用的计算机上的私钥预先配置您的树莓派，以进行无密码仅公钥ssh身份验证。如果您的ssh配置中已有RSA密钥，Imager将使用该公钥。如果没有，您可以单击**RUN SSH-KEYGEN**来生成公钥/私钥对。Imager将使用新生成的公钥。
+    a. 选择连接 **安全网络** 或 **开放网络**。
 
-<img src="/img/computers/getting-started/imager/os-customisation-services.png" alt="操作系统自定义菜单中的服务设置" width="80%" />
+    b. 若无预填信息或需修改，请输入无线网络的SSID（名称）。对于安全网络，需输入并确认网络密码。
 
-操作系统定制还包括一个**OPTIONS**菜单，允许您在写入期间配置Imager的行为。这些选项允许您在Imager完成验证映像写入时播放声音、验证后自动弹出存储介质以及启用遥测（*译注：应该是指使用信息收集*）。
+    c. 若您的网络未公开广播SSID，请启用 **隐藏SSID** 设置。
 
-<img src="/img/computers/getting-started/imager/os-customisation-options.png" alt="操作系统自定义菜单中的选项" width="80%" />
+    d. 选择 **下一步**。
 
-#### 写入
+    <img src="/img/computers/getting-started/imager/os-customisation-wifi-secure.png" alt="Imager OS自定义设置-Wi-Fi选项卡，安全网络界面" width="30%" />
+    <img src="/img/computers/getting-started/imager/os-customisation-wifi-open.png" alt="Imager OS自定义设置-Wi-Fi选项卡，开放网络" width="30%" />
 
-编辑完操作系统自定义设置后，单击**保存**以保存您的自定义设置。
+5. 在 **自定义\>远程访问** 选项卡中配置您的 SSH 设置。
 
-然后，单击**是**以在将映像写入存储设备时应用操作系统自定义设置。
+    a. 若需通过网络远程使用树莓派，请将 *启用 SSH* 开关切换至激活状态。
 
-最后，在数据写入存储设备前将弹出窗口，对"您确定要继续吗？"回答**是**。
+    若计划运行无显示器的树莓派，请启用此选项或为设备配置树莓派连接工具。
 
-<img src="/img/computers/getting-started/imager/are-you-sure.png" alt="写入映像确认" width="80%" />
+    b. 启用 SSH 后，请选择认证方式：
 
-如果您看到管理员权限索取提示，要求授予读取和写入存储介质的权限，这是正常的。请授予 Imager 继续操作的权限。。
+      * 选择**使用密码认证**，通过**自定义\>用户**选项卡中设置的用户名和密码进行网络登录。
 
-<img src="/img/computers/getting-started/imager/writing.png" alt="将映像写入设备" width="80%" />
+      * 选择**使用公钥认证**，配置基于SSH密钥的认证机制。Imager将显示公钥输入框。若SSH配置中已存在RSA公钥，Imager将自动采用该公钥。若未配置，可将公钥复制到Imager或浏览本地计算机查找公钥文件。
 
-*此过程可能需要较久时间，请耐心等待*
+        <img src="/img/computers/getting-started/imager/os-customisation-ssh.png" alt="Imager操作系统定制远程访问选项卡" width="80%" />
 
-<img src="/img/computers/getting-started/imager/stop-ask-verify.png" alt="校验已写入设备的映像" width="80%" />
+6. 部分操作系统现已显示 **自定义\>Raspberry Pi Connect** 选项卡。要将设备关联至您的 [树莓派Connect账户](../services/connect.mdx)，请完成以下步骤：
 
-*不建议跳过验证过程，除非你确信写入过程没有问题。可以点击**取消验证**，跳过验证过程。*
+    a. 将 **启用树莓派Connect** 开关切换至激活状态。
 
-当您看到"写入成功"弹出窗口时，您的映像已完全写入并验证。现在您已准备好从存储设备启动树莓派！
+      <img src="/img/computers/getting-started/imager/os-customisation-connect.png" alt="Imager 操作系统定制 树莓派Connect选项卡" width="60%" />
 
-<img src="/img/computers/getting-started/imager/finished.png" alt="当图像生成器完成将图像写入存储设备时，屏幕上会显示该图像" width="80%" />
+    b. 选择 **打开树莓派Connect**。树莓派Connect网站将在默认浏览器中打开。
 
-接下来，跳至[首次启动配置](#首次启动配置)介绍，让树莓派启动并运行。
+      <img src="/img/computers/getting-started/imager/os-customisation-site.png" alt="树莓派Connect页面" width="60%" />
+
+    c. 使用您的树莓派ID账户登录，若尚未注册请创建账户。
+
+      <img src="/img/computers/getting-started/imager/connect-auth-key.png" alt="树莓派连接新认证密钥页面" width="60%" />
+
+    d. 在 **新建认证密钥** 页面创建您的认证密钥。
+
+      该密钥为一次性临时令牌。树莓派连接网站会显示令牌自生成起有效期。使用令牌前，请确保在过期时间前启动树莓派并连接网络。
+
+      * 若您的树莓派ID账户未加入任何组织，请选择 **创建认证密钥并启动树莓派Imager**。
+
+      * 若您已加入一个或多个组织，请先选择关联该密钥的组织或账户，再选择 **创建认证密钥并启动树莓派Imager**。
+
+    e. 浏览器可能询问是否允许该网站打开 Raspberry Pi Imager。请确认您希望启动 Imager。
+
+      Raspberry Pi Imager 将自动跳转至 **Raspberry Pi Connect** 标签页。该标签页会显示一条确认信息，表明 Imager 已从浏览器接收认证令牌，并提供包含令牌的输入框。
+
+      若令牌未自动复制，可手动将其粘贴至 Imager。打开 Raspberry Pi Connect 网页的 **遇到问题？** 部分，复制令牌并粘贴到 Imager 的令牌字段中。
+
+      <img src="/img/computers/getting-started/imager/os-customisation-connect-token.png" alt="Raspberry Pi Connect 令牌接收提示信息" width="60%" />
+
+    f. 选择 **下一步**。
+
+#### 步骤4：设置Imager选项
+
+您可选择配置 Imager 在写入过程中的行为。在写入映像前，随时可通过选择 **应用程序选项** 进行设置。
+
+在 **应用程序选项** 对话框中，可配置以下选项：
+
+* Imager 在写入完成时是否播放提示音
+* Imager 在写入完成时是否弹出存储介质
+* 是否向我们发送有关设备和操作系统的匿名遥测数据。详情参见 [匿名指标（遥测）](https://github.com/raspberrypi/rpi-imager?tab=readme-ov-file#anonymous-metrics-telemetry)。
+* 写入过程中是否显示警告信息。
+
+（高级用户）**应用选项**对话框还允许您设置自定义存储库，用于检索操作系统和设备列表。更多信息请参阅 [Imager 存储库 URL](./raspberry-pi.mdx#imager_repo_url)。
+
+<img src="/img/computers/getting-started/imager/app-options.png" alt="应用选项对话框" width="80%" />
+
+#### 第5步：将映像写入存储设备
+
+完成Imager各选项卡设置后，系统将显示摘要页面供您核对选项。
+
+1. 若确认无误，请选择**写入**。
+
+    <img src="/img/computers/getting-started/imager/summary.png" alt="写入前在Imager中确认选项" width="80%" />
+
+2. Imager将弹出警告提示即将覆盖存储介质上的所有数据。继续操作请选择**我已知晓，清除并写入**。
+
+    若出现管理员权限提示，要求授予存储介质读写权限，请允许Imager继续操作。
+
+    <img src="/img/computers/getting-started/imager/are-you-sure.png" alt="在Imager中确认存储设备重写映像" width="80%" />
+
+    Imager开始将映像写入存储介质。此过程可能需要数分钟，请稍作休息。
+
+    <img src="/img/computers/getting-started/imager/writing.png" alt="Imager向设备写入镜像" width="80%" />
+    *Imager正在向存储设备写入镜像。*
+
+
+    写入完成后，Imager将验证镜像是否正确写入。建议您完成验证步骤。若需取消验证，请选择 **跳过验证**。
+
+    <img src="/img/computers/getting-started/imager/verify.png" alt="Imager在设备上验证映像" width="80%" />
+    *写入完成后，Imager将执行验证。*
+
+
+    映像写入并验证完成后，Imager将显示 **完成** 选项卡。选择 **结束** 即可退出程序。
+
+    <img src="/img/computers/getting-started/imager/finished.png" alt="Imager向存储设备写入镜像完成后的界面" width="80%" />
+    *镜像操作已完成。*
+
+    接下来请转至 [配置树莓派](#设置你的树莓派) 章节，启动您的树莓派设备。
 
 ### 通过网络安装
 网络安装使树莓派能够使用通过网络下载的树莓派Imager版本在存储设备上安装操作系统。通过网络安装，您可以在树莓派上安装操作系统，无需单独的SD卡读卡器，也不需要除树莓派之外的任何计算机。您可以在任何兼容的存储设备上运行网络安装，包括SD卡和USB存贮设备。
@@ -271,7 +361,7 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 最后，将电源连接到树莓派。当树莓派开机时，您应该会看到状态LED亮起。如果您的树莓派连接到显示器，您应该会在几分钟内看到启动屏幕。
 
 ## 首次启动配置
-如果您使用Imager中的操作系统自定义来预配置您的树莓派，那么**恭喜您**！您的设备已可供使用。继续执行[下一步](#下一步)，了解如何充分利用树莓派。
+若您已在Imager安装过程中自定义了树莓派操作系统，恭喜您，设备已准备就绪。继续执行[下一步](#下一步)，了解如何充分利用树莓派。
 
 如果您的树莓派在5分钟内未启动，请检查状态LED。如果闪烁，请参阅[LED警告闪烁代码](./configuration.mdx#led警告闪烁代码)以获取更多信息。如果您的树莓派不能启动，请尝试以下缓解步骤：
 
@@ -279,7 +369,7 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 - [重新刷新映像到您的SD卡](#安装操作系统)；确保在Imager中完成整个验证步骤
 - [更新树莓派上的bootloader](./raspberry-pi.mdx#更新-bootloader)，然后[重新刷新映像到您的SD卡](#安装操作系统)
 
-如果您选择跳过Imager中的操作系统自定义，您的树莓派将在首次启动时将运行配置向导。您需要显示器和键盘来查看向导；鼠标是可选的。
+如果您选择跳过Imager中的自定义选项，您的树莓派将在首次启动时将运行配置向导。您需要显示器和键盘来查看向导；鼠标是可选的。
 
 <img src="/img/computers/getting-started/initial-setup/start.png" alt="单击“下一步”开始配置" width="80%" />
 
@@ -343,7 +433,7 @@ Imager支持以以`.img`格式打包的映像以及容器格式，例如`.zip`�
 ### 推荐软件
 树莓派操作系统预装了许多基本应用程序，因此您可以立即开始使用它们。如果您想利用我们认为有用的其他应用程序，请单击屏幕左上角的树莓派图标。从下拉菜单中选择**首选项 \> 推荐软件**，您将找到包管理器。您可以在这里免费安装各种推荐的软件。
 
-<img src="/img/computers/getting-started/recommended-software.png" alt="在树莓派OS 中打开包管理器 GUI" width="80%" />
+<img src="/img/computers/getting-started/recommended-software.jpg" alt="在树莓派OS 中打开包管理器 GUI" width="80%" />
 
 例如，如果您计划将树莓派用作家用计算机，您可能会发现LibreOffice对于编写和编辑文档和电子表格很有用。您还可以使用屏幕放大器和Orca屏幕阅读器等应用程序（在通用访问下找到）让您的树莓派更易于访问。
 

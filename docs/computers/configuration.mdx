@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解
 description: 全面掌握树莓派系统配置！本文详细介绍如何使用raspi-config工具进行系统设置，包括网络、音频、显示、接口、性能、本地化和高级选项。通过config.txt文件，您可以自定义启动参数、优化性能、调整显示设置，并管理设备树。本文还涵盖了系统安全性、网络配置、用户管理等实用技巧，助您高效定制和优化树莓派系统。
 keywords: [树莓派系统配置, raspi-config, config.txt, 网络设置, 音频配置, 显示选项, 接口选项, 性能优化, 本地化设置, 用户管理, 系统安全性, 网络代理, 启动顺序, 设备树]
 last_update: 
-  date: 2025-10-18
+  date: 2025-12-20
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -191,7 +191,7 @@ SSH 允许您从另一台计算机远程访问 Raspberry Pi 的命令行。SSH �
 
 #### Wayland
 
-在 X11 和 Wayland 后端之间切换，并选择一个窗口管理器。自 Raspberry Pi OS _Bookworm_以来，所有型号的 Raspberry Pi 默认都使用 labwc 窗口管理器运行 Wayland。
+在 X11 和 Wayland 后端之间切换。自树莓派操作系统_Bookworm_版本起，所有树莓派型号默认使用labwc运行Wayland。
 
 :::tip
 要在运行早于 _Bookworm_ 版本的 Raspberry Pi OS 的 Raspberry Pi 4 之前的 Raspberry Pi 型号上使用 Wayland，请在 `/boot/firmware/cmdline.txt`中添加 `wayland=on`。
@@ -199,7 +199,7 @@ SSH 允许您从另一台计算机远程访问 Raspberry Pi 的命令行。SSH �
 
 #### 音频配置(Audio config)
 
-在 PulseAudio 和 PipeWire 音频后端之间切换。在 Raspberry Pi OS Bookworm 之前，Raspberry Pi OS 使用 PulseAudio。
+在 PulseAudio 和 PipeWire 音频后端之间切换。在 Raspberry Pi OS _Bookworm_ 之前，Raspberry Pi OS 使用 PulseAudio。
 
 ### 更新(Update)
 将此工具更新至最新版本。
@@ -670,24 +670,22 @@ sudo raspi-config nonint do_boot_rom <E1/E2>
 
 #### Wayland
 
-在 X11 和 Wayland 后端之间切换，并选择一个窗口管理器。自 Raspberry Pi OS _Bookworm_以来，所有型号的 Raspberry Pi 默认都使用 labwc 窗口管理器运行 Wayland。
+在 X11 和 Wayland 后端之间切换。自树莓派操作系统_Bookworm_版本起，所有树莓派型号默认使用labwc窗口管理器运行Wayland。
 
 :::tip
 要在运行早于 _Bookworm_ 版本的 Raspberry Pi OS 的 Raspberry Pi 4 之前的 Raspberry Pi 型号上使用 Wayland，请在 `/boot/firmware/cmdline.txt`中添加 `wayland=on`。
 :::
-
 
 ```sh
 sudo raspi-config nonint do_wayland <W1/W2>
 ```
 
 * `W1`: 使用带有 X11 后端的 Openbox 窗口管理器
-* `W2`: 使用带有 Wayland 后端的 wayfire 窗口管理器
-* `W3`: 使用带有 Wayland 后端的 labwc 窗口管理器
+* `W2`: 使用基于 Wayland 后端的 labwc 窗口管理器
 
 #### 音频配置
 
-在 PulseAudio 和 PipeWire 音频后端之间切换。在 Raspberry Pi OS Bookworm 之前，Raspberry Pi OS 使用 PulseAudio。
+在 PulseAudio 和 PipeWire 音频后端之间切换。在 Raspberry Pi OS _Bookworm_ 之前，Raspberry Pi OS 使用 PulseAudio。
 
 ```sh
 sudo raspi-config nonint do_audioconf <1/2>
@@ -845,11 +843,11 @@ Raspberry Pi OS 提供了用于设置无线连接的图形用户界面 (GUI)。R
 支持双频无线的设备会自动禁用网络功能，直至您设置无线局域网所在国家/地区。自树莓派3B+起的旗舰机型、自CM4起计算模块以及键盘型号均支持双频无线功能。设置无线局域网国家/地区时，请从**偏好设置**菜单打开控制中心应用，选择*本地化*选项，然后从菜单中选择您的国家/地区。
 :::
 
-<img src="/img/computers/configuration/wifi2.png" alt="wifi2" />
+<img src="/img/computers/configuration/wifi2.jpg" alt="wifi2" />
 
 右侧的图标显示网络是否安全，并显示信号强度。单击要连接的网络。如果网络是安全的，对话框会提示输入网络密钥：
 
-<img src="/img/computers/configuration/key.png" alt="密钥" />
+<img src="/img/computers/configuration/key.jpg" alt="密钥" />
 
 输入密钥并单击 "**确定**"，然后等待几秒钟。网络图标将短暂闪烁，显示正在进行连接。连接完成后，图标将停止闪烁并显示信号强度。
 
@@ -857,11 +855,11 @@ Raspberry Pi OS 提供了用于设置无线连接的图形用户界面 (GUI)。R
 
 要使用隐藏的网络，请导航至网络菜单中的 **Advanced options** > **Connect to a hidden Wi-Fi network**：
 
-<img src="/img/computers/configuration/network-hidden.png" alt="高级选项中的连接到隐藏 Wi-Fi 网络选项" />
+<img src="/img/computers/configuration/network-hidden.jpg" alt="高级选项中的连接到隐藏 Wi-Fi 网络选项" />
 
 然后输入隐藏网络的 SSID。询问网络管理员网络使用的安全类型；目前大多数家庭网络使用 WPA 和 WPA2 个人安全，而公共网络有时使用 WPA 和 WPA2 企业安全。选择网络的安全类型，然后输入凭据：
 
-<img src="/img/computers/configuration/network-hidden-authentication.png" alt="隐藏 wi-fi 网络验证" />
+<img src="/img/computers/configuration/network-hidden-authentication.jpg" alt="隐藏 wi-fi 网络验证" />
 
 单击**连接**按钮启动网络连接。
 
@@ -1024,11 +1022,11 @@ AUTOCONNECT-PRIORITY  NAME
 
 1. 选择菜单栏左上角的树莓派图标。
 2. 进入**偏好设置 > 控制中心**。
-<img src="/img/computers/configuration/pi-configuration.png" alt="从桌面打开控制中心应用程序" />
+<img src="/img/computers/configuration/pi-configuration.jpg" alt="从桌面打开控制中心应用程序" />
 3. 在**控制中心**窗口中打开**显示**选项卡。
 4. 使用开关启用**屏幕休眠**功能。
 5. 选择**关闭**以确认设置。
-<img src="/img/computers/configuration/blanking.png" alt="在控制中心应用中开启屏幕休眠开关" />
+<img src="/img/computers/configuration/blanking.jpg" alt="在控制中心应用中开启屏幕休眠开关" />
 
 :::tip
 在树莓派操作系统早期版本中，控制中心应用程序名为树莓派配置。
@@ -1596,18 +1594,19 @@ bantime  = -1
 要在首次启动时连接到有线网络，请通过以太网插入无显示器树莓派，如果您的树莓派型号不包含以太网端口，则使用以太网适配器。您的树莓派会自动连接到网络。
 
 ### 连接到无线网络
-要在无显示器树莓派首次启动时配置无线网络访问，请使用树莓派Imager 中的高级设置菜单。输入首选无线网络的 SSID 和密码。首次启动时，树莓派将使用这些凭证连接网络。某些无线适配器和某些树莓派板不支持 5GHz 网络；请查看无线模块的文档，以确保与您首选的网络兼容。
 
-:::note[注意]
-以前版本的树莓派OS 使用 `wpa_supplicant.conf` 文件来配置无线网络设置。从树莓派OS Bookworm 开始，该功能不可用。
+要在无显示器的树莓派首次启动时配置无线网络访问，请在树莓派映像工具的**自定义 > Wi-Fi**选项卡中输入网络信息。输入您首选无线网络的SSID和密码。树莓派将在首次启动时使用这些凭据连接网络。部分无线适配器和某些树莓派主板不支持5 GHz网络；请查阅您的无线模块文档以确保与首选网络兼容。
+
+:::tip
+旧版树莓派操作系统曾通过`wpa_supplicant.conf`配置文件实现无线网络设置（该文件需放置于启动目录）。此功能自树莓派操作系统_Bookworm_版本起已不再可用。
 :::
 
 ### 远程访问
 
 由于没有键盘或显示器，你需要一种方法来[远程控制](./remote-access.mdx)你的无显示器树莓派。首次启动时，唯一的选择就是 SSH。要在新安装的树莓派OS 上启用 SSH，请选择以下方法之一：
 
-* 在树莓派Imager 的操作系统自定义菜单中启用 SSH，然后输入用户名和密码
-* 在 SD 卡第一个分区（标为 `bootfs`）的根目录下创建名为 `ssh` 的文件，然后按照下面部分的说明使用 `userconf.txt` 手动配置用户
+* 在 Raspberry Pi Imager 的 **自定义 \> 远程访问** 选项卡中启用 SSH，选择身份验证机制，并提供用户名和密码或公钥。
+* 在 SD 卡首分区（标记为 `bootfs`）的根目录下创建名为 `ssh` 的文件，然后根据后续章节说明使用 `userconf.txt` 手动配置用户。
 
 更多信息，请参阅设置 [SSH 服务器](./remote-access.mdx#使用-ssh-访问远程终端)。通过 SSH 连接后，如果喜欢图形桌面环境，可以使用 `raspi-config` [启用 VNC](./remote-access.mdx#启用-vnc-服务器)。
 

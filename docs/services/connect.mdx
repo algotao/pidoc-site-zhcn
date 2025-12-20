@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update: 
-  date: 2025-10-08
+  date: 2025-12-20
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -17,7 +17,7 @@ import Normal from "../_normal.mdx";
 通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的 Raspberry Pi。
 <img src="/img/services/connect/hero.png" alt="Connect 使用示例" width="100%" />
 
-Connect默认安装在树莓派操作系统桌面版和树莓派操作系统完整版（含推荐软件的桌面版）中。树莓派操作系统精简版默认不包含Connect，但您可以[安装Connect Lite](#安装-connect-lite)。
+Connect 默认安装在树莓派操作系统桌面版和树莓派操作系统完整版（含推荐软件的桌面系统）中。树莓派操作系统精简版默认安装的是 Connect 的替代版本 **Lite**，该版本仅支持远程 shell 访问，不具备屏幕共享功能。
 
 使用 Connect 时，请参阅 [将设备与 Connect 账户关联](#将-raspberry-pi-设备与-connect-账户连接起来)。访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)，即可在浏览器窗口中访问运行于树莓派上的桌面环境或 shell 终端。
 
@@ -27,26 +27,7 @@ Connect 使用安全的加密连接。默认情况下，Connect 会在 Raspberry
 要使用 Connect，您的树莓派必须运行 [Raspberry Pi OS Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/) 或更高版本。
 :::
 
-## 安装 Connect Lite
-
-针对树莓派Lite操作系统，我们提供Connect的*Lite*替代，该版本仅支持远程shell访问，不具备屏幕共享功能。
-
-在 Raspberry Pi 上运行以下命令安装 Connect Lite：
-
-```sh
-sudo apt install rpi-connect-lite
-```
-
-安装完成后，使用 `rpi-connect` 命令行界面为当前用户启动 Connect：
-
-```sh
-rpi-connect on
-```
-
-[启用用户登录](#始终启用远程shell)，使你的设备在你的用户账户未登录时也能访问。
-
-
-### 手动启动和停止 Connect
+## 手动启动和停止 Connect
 
 要从命令行启动 Connect 或 Connect Lite，请运行以下命令：
 
@@ -62,12 +43,16 @@ rpi-connect off
 
 ## 将 Raspberry Pi 设备与 Connect 账户连接起来
 
-在 Raspberry Pi 设备上安装并启动 Connect 后，必须将设备与 Connect 帐户关联。
+在树莓派设备上启动 Connect 后，您必须将设备与 Connect 账户关联。
+
+若您使用树莓派映像工具在设备上安装树莓派操作系统，则可能已完成设备与 Connect 账户的绑定。更多信息请参阅 [使用映像工具安装](../computers/getting-started.mdx#使用imager工具安装)。
+
 
 <Tabs>
 <TabItem value="desktop" label="桌面">
 
-从菜单栏的连接图标中，首次选择**开启树莓派连接**以打开浏览器，系统将提示您使用树莓派ID登录：
+从菜单栏的“连接”图标中，选择**开启树莓派连接**。这将打开您的浏览器，系统会提示您使用树莓派ID登录：
+
 <img src="/img/services/connect/browser-sign-in.png" alt="浏览器登录" width="80%" />
 
 若您已开启Connect功能，请从下拉菜单中选择**登录...**：
@@ -90,22 +75,59 @@ rpi-connect signin
 Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
 ```
 
-访问任何设备上的验证 URL 并使用您的 Raspberry Pi ID 登录，将您的设备与您的 Connect 帐户相链接。
+要将您的设备与Connect账户关联，请在任意设备上访问验证网址，并使用您的树莓派ID登录。
+
+</TabItem>
+
+<TabItem value="authkey" label="使用授权密钥">
+授权密钥是一种一次性临时令牌，可让您自动将设备与Connect账户关联（无需使用网页界面）。
+
+创建和使用授权密钥最便捷的方式是通过 Imager 中的自定义选项实现。您也可通过个人或组织Connect账户的**设置**页面手动创建授权密钥，组织管理员还可使用[管理API](#管理api)创建授权密钥。
+
+:::tip
+个人账户每次仅能激活一个授权密钥；组织账户可同时激活多个授权密钥。每台设备需使用独立的授权密钥。
+:::
+
+tip:
+Raspberry Pi Connect 网站会显示认证密钥的有效期。使用前请确保在到期前启动树莓派并连接网络。
+:::
+
+创建认证密钥后，可通过 `rpi-connect signin` 命令提供给设备，或将其写入用户主目录的文件中。
+
+若以字符串形式提供密钥，请执行以下命令：
+```sh
+rpi-connect signin --auth-key=rpuak_123456
+```
+
+若将密钥保存至文件，可通过在路径前添加 `@` 符号传递完整路径：
+
+```sh
+rpi-connect signin --auth-key=@/home/alice/auth.key
+```
+
+若将认证密钥保存至用户主目录下的 `.config/com.raspberrypi.connect/auth.key`，Connect 将自动检测到该文件。
+
 </TabItem>
 </Tabs>
 
 ### 完成连接您的 Raspberry Pi
 
-完成身份验证后，为您的设备命名。请选择一个能唯一标识该设备的名称。点击**创建设备并登录**按钮继续。
+完成身份验证后，为您的设备命名。请选择一个能唯一标识该设备的名称。
 
 <img src="/img/services/connect/new-device.png" alt="新设备" width="80%" />
+
+若您是 [组织](#组织版-connect) 的管理员，请选择将此设备添加至个人账户或特定组织。
+
+<img src="/img/services/connect/new-organisation-device.png" alt="新组织" width="80%" />
+
+点击**创建设备并登录**按钮继续。
 
 您现在可以远程连接至您的设备。菜单栏中的 **Connect** 图标将变为蓝色，表示您的设备已登录 **Connect** 服务。您应收到一封电子邮件通知，告知有新设备已关联至您的Connect账户。
 
 <img src="/img/services/connect/sign-in-email.png" alt="电子邮件提示" width="70%" />
 
 :::warning
-如果您收到一封电子邮件，显示您不认识的设备已登录 Connect，请立即更改您的 Raspberry Pi ID 密码。[从 Connect 中移除设备](#管理设备) 可将该设备与您的帐户永久脱离关系。考虑 [启用双因素身份验证](./id.mdx#启用双因素身份验证)，以确保账户安全。
+若收到邮件提示有未知设备登录Connect，请立即更改树莓派ID密码。请按照 [从Connect移除设备](#管理设备) 中的说明操作，永久解除该设备与您账户的关联。建议启用 [启用双因素身份验证](./id.mdx#启用双因素身份验证) 以保障账户安全。
 :::
 
 通过选择菜单栏中的 **Connect** 图标打开 **Connect** 菜单。该菜单允许您开启或关闭 **Connect** 功能、进行登录或注销操作，以及允许或禁止远程访问方式。
@@ -312,6 +334,205 @@ sudo apt remove --purge rpi-connect
 
 要切断设备和 Connect 账号之间的联系，请从 Connect 面板的设备列表中删除设备。 
 
+## 组织版 Connect
+
+**组织版 Connect** 支持多名用户共享设备访问权限。创建组织后，该组织将自动启动为期四周的免费试用。
+
+### 创建组织
+
+创建新组织时，请先登录您的 Raspberry Pi Connect 账户，然后点击导航菜单左上角的账户切换图标。
+
+<img src="/img/services/connect/account-switcher.png" alt="切换组织" width="70%" />
+
+选择**新建组织**并输入名称，点击**开始免费试用**。您的Connect账户将自动加入该组织并成为管理员。
+
+### 邀请用户
+
+仅管理员可邀请其他用户加入组织。邀请步骤如下：.
+
+1. 打开页面顶部的**用户**选项卡。此处显示组织所有成员的姓名、邮箱、角色及加入日期。
+
+    <img src="/img/services/connect/users.png" alt="用户" width="70%" />
+
+2. 选择**邀请他人**以添加新用户。
+
+    <img src="/img/services/connect/invite-user.png" alt="邀请用户" width="70%" />
+
+3. 从下拉菜单选择**角色**。组织成员可选两种角色：
+
+    * **成员**：可远程访问组织内所有设备，但无法修改组织设置。
+    * **管理员**：可远程访问组织内所有设备并修改组织设置。该角色还将接收涉及敏感操作的全局通知邮件，例如新增设备或管理API访问令牌。
+
+4. 输入您要发送邀请的邮箱地址。
+
+5. 选择**发送邀请**。
+
+被邀请者无需使用该邮箱登录，可通过任意有效树莓派ID加入。
+
+### 将树莓派设备关联至组织
+
+仅管理员可将设备关联至组织。操作步骤：
+
+* 若设备未关联Connect账户，请参阅 [将树莓派设备关联至Connect账户](#将-raspberry-pi-设备与-connect-账户连接起来)。
+
+* 若设备已关联Connect账户，请参阅 [转移设备](#转移设备)。
+
+### 转移设备
+
+您必须是管理员才能在账户间转移设备。操作步骤如下：
+
+1. 点击导航菜单左上角的账户切换图标。
+
+    <img src="/img/services/connect/account-switcher-with-organisation.png" alt="更换组织" width="70%" />
+
+2. 切换至当前拥有该设备的账户（个人账户或组织账户）。.
+
+3. 选择需要转移的设备。.
+
+4. 在设备页面右上角打开**设置**下拉菜单。
+
+5. 选择**转移...**
+
+    <img src="/img/services/connect/transfer.png" alt="转移" width="70%" />
+
+6. 选择目标接收账户。
+
+7. 点击**转移**。
+
+### 设置订阅服务
+
+组织版Connect订阅将在四周试用期结束后自动生效，此后按月延后计费。
+
+仅管理员可设置订阅。操作步骤：
+
+1. 点击页面顶部标签栏下方试用横幅中的**设置计费**.
+2. 输入用于接收账单通知（如发票）的邮箱地址.
+3. 填写支付方式信息并提交
+    * 若试用期未结束，按钮显示为**开始试用** 试用期将延续，之后按月计费。
+    * 若试用期已结束，按钮显示为**支付并订阅**。此操作将启动月度订阅。
+
+免费试用结束后，若未设置订阅，您将无法远程访问组织内的设备。
+
+    <img src="/img/services/connect/billing.png" alt="付款" width="70%" />
+
+### 查看审计日志
+
+审计日志按时间顺序显示过去90天内的所有活动，最新事件优先显示。事件包括设备变更、组织成员变更、API访问令牌变更以及远程访问会话等。超过90天的事件将自动删除。
+
+仅管理员可查看组织过去90天的活动记录。要查看审计日志，请打开页面顶部的**审计日志**选项卡。
+
+<img src="/img/services/connect/audit-log.png" alt="审计日志" width="70%" />
+
+列表中的每个事件包含以下信息：
+
+* **时间戳**： 事件发生的时间。
+* **来源**：事件发生于仪表板还是通过API触发。
+* **操作**：具体操作（例如**API访问令牌创建**）及相关细节。
+* **对象**：操作涉及的对象，如特定设备、组织或访问令牌。
+* **执行者**：执行事件的用户，包含事件发生所在国家/地区。
+
+您可按操作类型（如**远程shell会话启动**）筛选事件。筛选列表时，请点击列表左上角**筛选器**旁的**操作**下拉菜单。
+
+点击列表右上角的**下载CSV**即可下载事件列表的CSV格式文件。
+
+### 修改组织设置
+
+组织管理员可在页面顶部的**设置**选项卡中配置以下内容。
+
+<img src="/img/services/connect/organisation-settings.png" alt="组织设置" width="70%" />
+
+#### 重命名组织
+
+若需更改组织名称，请在**常规**部分输入新名称。此操作不会影响您的设备或组织成员。
+
+#### 创建授权密钥
+
+若需通过 [Connect 自动关联设备](#将-raspberry-pi-设备与-connect-账户连接起来)（无需网页界面）进行操作，请创建授权密钥。在**授权密钥**区域选择**新建**，填写描述及有效期（以天为单位）。
+
+新认证密钥将显示。点击其旁的剪贴板图标即可复制。请立即复制此密钥，后续将无法再次查看。
+
+重要提示：认证密钥仅显示一次。请立即复制，后续将无法再次查看。
+
+#### 创建管理API访问令牌
+
+若需自动生成授权密钥（无需网页界面）以 [连接设备至Connect](#将-raspberry-pi-设备与-connect-账户连接起来)，可创建 [Connect for Organisations管理API](#管理api) 的API访问令牌。在**API访问令牌**区域选择**新建**，并输入令牌描述。
+
+新访问令牌将显示。点击其旁的剪贴板图标进行复制。请立即复制此令牌，后续将无法再次查看。
+
+重要提示：访问令牌仅显示一次。请立即复制，后续将无法再次查看。
+
+### 管理API
+
+管理API支持您无需Connect网页界面即可自动管理组织。向管理API发送请求时，必须使用有效的管理API访问令牌进行身份验证。
+
+#### 创建授权密钥
+
+若需自动生成 [通过Connect连接设备](#将-raspberry-pi-设备与-connect-账户连接起来) 的授权密钥（无需使用网页界面），请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理API访问令牌
+* `my-auth-key`：认证密钥描述
+* `1`：认证密钥有效期天数（可选，默认1天）
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+HTTP请求：
++
+```http
+POST /organisation/auth-keys HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/x-www-form-urlencoded
+
+description=my-auth-key&ttl_days=1
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header ‘Authorization: Bearer rporg_accesstokenhere’ --data-urlencode ‘description=my-auth-key’ --data-urlencode ‘ttl_days=1’ https://api.connect.raspberrypi.com/organisation/auth-keys
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回**201 Created**响应，其中包含JSON格式的授权密钥。例如：
+
+```http
+HTTP/2 201
+Content-Type: application/json; charset=utf-8
+
+{"id":"12345","description":"my-auth-key","secret":"rpoak_123456","expires_at":"2025-01-01T00:00:30Z"}
+```
+
+响应包含以下字段：
+
+**id**：认证密钥的唯一标识符。
+**description**：创建认证密钥时使用的描述信息。
+**secret**：以 `rpoak_` 为前缀的随机令牌。
+**expires_at**：密钥过期日期与时间（ISO 8601格式）。
+
+在过期前可使用 `secret` 进行 [设备与Connect的关联](#将-raspberry-pi-设备与-connect-账户连接起来)。
+
+若管理API访问令牌无效，将返回**401 未授权**响应。
+
+若认证密钥创建失败，将返回**422 内容不可处理**响应。
+
+```http
+HTTP/2 422
+Content-Type: application/json; charset=utf-8
+
+{“message”:“验证失败：描述字段不能为空”}
+```
+
+:::tip
+您也可手动在组织的**设置**页面[创建授权密钥](./connect.mdx#创建授权密钥-1)。
+:::
+
 ## 故障排除
 
 ### 已知问题
@@ -387,8 +608,8 @@ Screen sharing is supported by this version of rpi-connect （此版本的 rpi-c
 如果在尝试运行 Connect 所需服务时反复出现问题，请运行以下命令详细检查它们的状态：
 
 ```sh
-systemctl --user status rpi-connect-wayvnc.service rpi-connect-wayvnc-watcher.path
-journalctl --follow --user-unit rpi-connect-wayvnc.service --user-unit rpi-connect-wayvnc-watcher.path
+systemctl --user status rpi-connect-wayvnc.service
+journalctl --follow --user-unit rpi-connect-wayvnc.service
 ```
 
 如果服务无法启动或不存在，请确保您的环境符合以下条件：
@@ -527,7 +748,7 @@ rpi-connect restart
 要查看 Connect 服务及其专用 WayVNC 服务器的日志，请运行以下命令：
 
 ```sh
-journalctl --follow --user-unit rpi-connect --user-unit rpi-connect-wayvnc
+journalctl --follow --user-unit rpi-connect.service --user-unit rpi-connect-wayvnc.service
 ```
 
 ## 安全性

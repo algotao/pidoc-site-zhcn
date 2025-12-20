@@ -4,7 +4,7 @@ draft: false
 description: 树莓派Build HAT是一款专为乐高®教育设计的附加板，通过40引脚GPIO接口与树莓派连接，支持控制SPIKE™系列乐高® Technic™电机和传感器（如距离、颜色、力传感器及多尺寸编码电机）。它兼容所有40引脚GPIO树莓派（包括Zero系列和键盘系列设备），需外接8V电源驱动电机，并提供Python和.NET两种编程库。Build HAT板载RP2040微控制器管理底层控制，支持即插即用，简化乐高®机械结构的编程与交互，适用于STEM教育、机器人开发等场景。
 keywords: [树莓派Build HAT, 乐高® Technic™, 乐高® SPIKE™, 电机控制, 传感器, Python库, .NET框架, RP2040微控制器, 40引脚GPIO, 乐高®教育, STEM教育, 机器人开发]
 last_update: 
-  date: 2025-10-18
+  date: 2025-12-20
 ---
 import Normal from "../_normal.mdx";
 
@@ -15,7 +15,7 @@ import Normal from "../_normal.mdx";
 [树莓派Build HAT](https://raspberrypi.com/products/build-hat) 是一块附加板，可连接到树莓派的 40 引脚 GPIO 接头，它是与乐高®教育合作设计的，可让您轻松地使用树莓派计算机控制乐高® Technic™ 电机和传感器。
 
 :::warning
-Raspberry Pi Build HAT目前尚未获得树莓派操作系统Trixie的支持。若需使用Build HAT，请暂时安装或继续使用树莓派操作系统Bookworm。
+Raspberry Pi Build HAT目前尚未获得树莓派操作系统*Trixie*的支持。若需使用Build HAT，请暂时安装或继续使用树莓派操作系统*Bookworm*。
 :::
 
 <img src="/img/accessories/build-hat/build-hat.jpg" width="80%" alt="Build HAT" />
@@ -62,7 +62,7 @@ Build HAT 无法为键盘系列设备供电，因为它们不支持通过 GPIO �
 ### 访问GPIO引脚
 如果要访问树莓派的 GPIO 引脚，可以添加一个可选的高针座，并使用 15 毫米垫片。
 
-<img src="/img/accessories/build-hat/tall-headers.png" width="80%" alt="高针座" />
+<img src="/img/accessories/build-hat/tall-headers.jpg" width="80%" alt="高针座" />
 
 以下引脚由 Build HAT 本身使用，你不应该连接任何东西到它们。
 
@@ -367,7 +367,7 @@ void MotorPropertyEvent(object? sender, PropertyChangedEventArgs e)
 brick.WaitForSensorToConnect(SensorPort.PortB);
 ```
 
-如果您想实现一些高级功能，如在一段时间后警告用户并重试，也可以使用 `CancellationToken`。
+若需实现高级功能（例如在一段时间后向用户发出警告并重试操作），则还需使用 `CancellationToken`。
 
 ### .NET使用电机
 
@@ -395,7 +395,7 @@ train.SetBias(0.2);
 还提供控制`开始`、`停止`和`设置速度`的功能。下面是一个使用示例：
 
 ```cs
-Console.WriteLine("This will run the motor for 20 secondes incrementing the PWM");
+Console.WriteLine("This will run the motor for 20 seconds incrementing the PWM");
 train.SetPowerLimit(1.0);
 train.Start();
 for (int i = 0; i < 100; i++)
