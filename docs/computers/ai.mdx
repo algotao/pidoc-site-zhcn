@@ -1,66 +1,173 @@
 ---
 sidebar_position: 8
 draft: false
-title_meta: 使用树莓派 AI 人工智能神经网络加速器运行摄像头软件(官网25年09月)
-description: 快速在树莓派5上部署AI加速方案！本指南详细介绍如何安装Hailo NPU（如Hailo-8L），通过Raspberry Pi AI Kit或AI HAT+硬件与64位Raspberry Pi OS Bookworm系统，搭配rpicam-apps演示套件（支持YOLOv5/6/8、YolovX等模型），实现摄像头实时对象检测、图像分割、姿势估计等AI功能。提供硬件连接、驱动安装、依赖配置及性能优化（如启用PCIe Gen 3.0）全流程步骤，并附模型资源与社区支持链接，助您轻松开启树莓派人工智能应用开发。
-keywords: [树莓派5 AI, Hailo NPU, Raspberry Pi AI Kit, AI HAT+, rpicam-apps, 对象检测, 图像分割, 姿势估计, YOLO模型, 神经网络加速, 树莓派AI开发, Hailo-8L, PCIe Gen 3.0, 摄像头演示]
+title_meta: 在树莓派5上运行AI模型 - 视觉AI与大语言模型LLM完整指南
+description: 在树莓派5上运行由Hailo NPU驱动的AI模型完整指南。支持AI Kit、AI HAT+和AI HAT+ 2三种硬件方案。包含视觉AI模型（对象检测、图像分割、姿势估计）和大语言模型LLM的详细配置步骤。涵盖硬件安装、软件依赖、PCIe Gen 3.0配置、rpicam-apps演示、Hailo Ollama服务器部署及Open WebUI界面设置。支持Hailo-8L、Hailo-8和Hailo-10H多种NPU芯片。提供完整的安装验证和故障排除指南。
+keywords: [树莓派5 AI, Hailo NPU, AI HAT+ 2, 大语言模型LLM, 视觉AI, 对象检测, YOLO模型, Hailo-10H, Hailo Ollama, Open WebUI, Docker, GenAI生成式AI, 神经网络加速, rpicam-apps, PCIe Gen 3.0]
 last_update: 
-  date: 2025-12-20
+  date: 2026-01-31
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Normal from "../_normal.mdx";
 
-# AI Kit 与 AI HAT+ 软件
+# AI软件
 
-## 入门
+本页面提供了在树莓派 5 上运行由 Hailo NPU 驱动的 AI 模型的说明。Hailo NPU 是一款专为运行神经网络而设计的 AI 加速芯片；树莓派的 CPU 不再处理 AI 工作，而是由 NPU 更高效地处理。
 
-本指南将帮助您在 Raspberry Pi 5 上安装 Hailo NPU。这将使您能够使用人工智能神经网络加速器运行 `rpicam-apps` 摄像头演示。
+您可以通过以下方式将 Hailo NPU 连接到树莓派 5：
 
-### 先决条件
+- [树莓派 AI Kit](../accessories/ai-kit.mdx)，由 M.2 HAT+ 和预装的 Hailo-8L NPU 组成。
+- [树莓派 AI HAT+](../accessories/ai-hat-plus.mdx)，板载 Hailo-8L NPU 或 Hailo-8 NPU。
+- [树莓派 AI HAT+ 2](../accessories/ai-hat-plus.mdx)，板载 Hailo-10H NPU。
 
-本指南需要以下设备：
+:::info 产品推荐
+这三种选项都允许您在树莓派 5 上运行视觉 AI 模型。但是，AI Kit 已停产，因此对于新设计，我们建议使用 AI HAT+ 或 AI HAT+ 2。
+:::
 
-* 树莓派 5
-* 下列 NPU 之一：
-  * [Raspberry Pi AI Kit](../accessories/ai-kit.mdx)，其中包括：
-    * 一个 M.2 HAT+
-    * 一个预装的 Hailo-8L 人工智能模块
-  * 一个 [Raspberry Pi AI HAT+](../accessories/ai-hat-plus.mdx)。
-* 安装 64 位 Raspberry Pi OS _Bookworm_
-* 任何 Raspberry Pi 官方摄像头（如摄像头模块 3 或高质量摄像头）
+AI HAT+ 2 还允许您运行生成式 AI（GenAI）模型。使用 AI HAT+ 2，您可以：
 
-### 硬件设置
+- 运行大语言模型（LLM）。如果您有 AI HAT+ 2 并想同时运行视觉 AI 模型和 LLM，请遵循两套说明：[视觉 AI 模型](#运行视觉-ai-模型) 和 [大语言模型](#运行大语言模型llm仅-ai-hat-2)。
+- 运行视觉-语言模型（VLM）和其他 GenAI 任务。有关说明，请参阅 Hailo 的 GitHub 仓库：[hailo-apps](https://github.com/hailo-ai/hailo-apps)。
 
-1. 按照 [安装 Raspberry Pi 摄像头](../accessories/camera.mdx#安装树莓派摄像头) 中的说明，将摄像头安装到 Raspberry Pi 5 板上。您可以跳过重新连接 Raspberry Pi 的电源，因为下一步需要断开 Raspberry Pi 的电源。
+## 硬件前提条件
 
-2. 根据您的 NPU，按照 [AI Kit](../accessories/ai-kit.mdx#安装) 或 [AI HAT+](../accessories/ai-hat-plus.mdx#安装) 的安装说明，将您的硬件连接到 Raspberry Pi 5。
+运行 AI 模型需要一台 [树莓派 5](https://www.raspberrypi.com/products/raspberry-pi-5/)，安装 [64 位树莓派 OS](/downloads/operating-systems/)（Trixie），以及以下 Hailo AI 加速器（NPU）选项之一：
 
-3. 按照说明 [启用 PCIe Gen 3.0](./raspberry-pi.mdx#pcie-gen-30)。这一步是可选的，但强烈建议使用 NPU 达到最佳性能。
+- 树莓派 AI HAT+ 或 AI HAT+ 2（推荐），两者都有板载 Hailo 模块。有关这些配件的更多信息，请参阅 [AI HAT+](../accessories/ai-hat-plus.mdx)。
+- 树莓派 AI Kit，包含预装 Hailo-8L AI 加速器的 M.2 HAT+。有关 AI Kit 的更多信息，请参阅 [AI Kit](../accessories/ai-kit.mdx)。
 
-4. 安装使用 NPU 所需的依赖项。在终端窗口运行以下命令
+:::info 产品状态
+AI Kit 已停产；对于新设计，我们建议使用 AI HAT+ 或 AI HAT+ 2。
+:::
 
-```sh
-sudo apt install dkms
-sudo apt install hailo-all
+如果您想运行视觉 AI 模型，还需要一个支持的摄像头，例如树莓派摄像头模块 3。我们建议在连接 AI 硬件之前先连接摄像头。有关说明，请参阅[安装树莓派摄像头](../accessories/camera.mdx#安装树莓派摄像头)。跳过重新连接树莓派电源的步骤，因为下一步需要断开树莓派电源。
+
+然后，根据您的 AI 硬件，按照连接 [AI HAT](../accessories/ai-hat-plus.mdx)（HAT+ 或 HAT+ 2）或 [AI Kit](../accessories/ai-kit.mdx) 到树莓派 5 的说明操作。
+
+接下来，按照[软件前提条件](#软件前提条件)中的说明启用 PCIe Gen 3.0（仅 AI Kit）、安装所需依赖项并验证一切设置正确。
+
+## 软件前提条件
+
+在树莓派 5 上运行视觉 AI 模型或 GenAI 模型之前，必须配置所需的软件。大致包括以下任务，按顺序执行：
+
+1. [启用 PCIe Gen 3.0](#启用-pcie-gen-30仅-ai-kit)。手动配置 PCIe 接口，允许 Hailo NPU 以全速通信。这仅对 AI Kit 必需。
+2. [更新系统](#更新树莓派-os)。确保您的树莓派 OS 软件包完全更新。
+3. [安装依赖项](#安装所需依赖项)。安装必要的软件依赖项，使操作系统（OS）和应用程序能够检测、通信并在 Hailo NPU 上运行 AI 模型。
+4. [验证安装](#重启并验证)。验证您的 AI 硬件是否正确检测并准备就绪。
+
+### 启用 PCIe Gen 3.0（仅 AI Kit）
+
+如果您使用的是 AI Kit，我们强烈建议启用 PCIe Gen 3.0。AI HAT+ 和 AI HAT+ 2 可以跳过此步骤，因为该设置会自动应用。
+
+默认情况下，树莓派 5 在其 PCIe 接口上使用 Gen 2.0（5 GT/s）速度。为了获得 NPU 的最佳性能，使用以下方法之一启用 Gen 3.0（8 GT/s）速度：
+
+- 从配置命令行（CLI）工具（`raspi-config`）在树莓派 5 上启用 Gen 3.0。
+- 更新配置文件（`config.txt`），使树莓派 5 上的 PCIe 接口以 PCIe Gen 3.0 速度运行。
+
+有关此设置的更多信息，请参阅 [PCIe Gen 3.0](./raspberry-pi.mdx#pcie-gen-30)。
+
+<Tabs groupId="pcie-config">
+<TabItem value="raspi-config" label="使用 raspi-config">
+
+首先，打开树莓派配置 CLI；在树莓派终端中运行以下命令：
+
+```bash
+$ sudo raspi-config
 ```
 
-这会安装以下依赖项：
+然后，从配置 CLI 完成以下步骤：
 
-* Hailo 内核设备驱动程序和固件
-* HailoRT 中间件软件
-* Hailo Tappas 核心后处理库
-* Hailo 后期处理软件的 `rpicam-apps` 演示阶段
+1. 选择 **Advanced Options > PCIe Speed**。
+2. 选择 **Yes** 以启用 PCI Gen 3.0 模式。
+3. 选择 **Finish** 以退出配置 CLI。
+4. 重启树莓派以使更改生效。您可以在终端中使用 `sudo reboot` 执行此操作。
 
-5. 最后，使用 `sudo reboot` 重启树莓派，使这些设置生效。
+</TabItem>
+<TabItem value="config-txt" label="使用 config.txt">
 
-6. 为确保一切运行正常，请运行以下命令：
+首先，以 root 用户身份打开配置文件（`/boot/firmware/config.txt`）。然后：
 
-```sh
-hailortcli fw-control identify
+1. 将以下行添加到 `config.txt` 文件：
+
+```ini
+dtparam=pciex1_gen=3
 ```
 
-如果您看到类似下面的输出，说明您已成功安装了 NPU 及其软件依赖项：
+2. 重启树莓派以使这些设置生效：
+
+```bash
+$ sudo reboot
+```
+
+</TabItem>
+</Tabs>
+
+### 更新树莓派 OS
+
+确保树莓派 5 运行的是安装了最新软件的树莓派 OS Trixie，并且具有最新的树莓派固件：
+
+```bash
+$ sudo apt update
+$ sudo apt full-upgrade -y
+$ sudo rpi-eeprom-update -a
+$ sudo reboot
+```
+
+有关更多信息，请参阅[升级软件](./os.mdx#升级软件)和[更新 bootloader 配置](./raspberry-pi.mdx#更新-bootloader-配置)。
+
+### 安装所需依赖项
+
+使用最新的树莓派软件和固件更新树莓派后，使用 NPU 需要以下依赖项：
+
+- Hailo 内核设备驱动程序和固件。
+- Hailo RT 中间件软件。
+- Hailo Tappas 核心后处理库。
+
+如何安装这些依赖项取决于您使用的 AI 硬件。为您的 AI 硬件选择适当的安装选项：
+
+:::info 包兼容性
+AI Kit 和 AI HAT+ 需要不同的软件包（`hailo-all`），而 AI HAT+ 2 需要（`hailo-h10-all`）。这些软件包不能共存。
+:::
+
+<Tabs groupId="ai-hardware">
+<TabItem value="ai-kit-hat" label="AI Kit 和 AI HAT+">
+
+要为 AI Kit 或 AI HAT+ 安装所需的依赖项，请打开树莓派终端并运行以下命令：
+
+```bash
+$ sudo apt install dkms
+$ sudo apt install hailo-all
+```
+
+</TabItem>
+<TabItem value="ai-hat2" label="AI HAT+ 2">
+
+要为 AI HAT+ 2 安装所需的依赖项，请打开树莓派终端并运行以下命令：
+
+```bash
+$ sudo apt install dkms
+$ sudo apt install hailo-h10-all
+```
+
+</TabItem>
+</Tabs>
+
+### 重启并验证
+
+安装所需依赖项后，必须重启树莓派 5。您可以在树莓派终端中使用以下命令执行此操作：
+
+```bash
+$ sudo reboot
+```
+
+当树莓派 5 重新启动完成后，运行以下命令检查一切是否正常运行：
+
+```bash
+$ hailortcli fw-control identify
+```
+
+如果您看到类似以下的输出，说明您已成功安装 NPU 及其软件依赖项：
 
 ```
 Executing on device: 0000:01:00.0
@@ -75,11 +182,9 @@ Part Number: HM21LB1C2LAE
 Product Name: HAILO-8L AI ACC M.2 B+M KEY MODULE EXT TMP
 ```
 
-:::note
-AI HAT+ 设备的 `Serial Number`、`Part Number` 和 `Product Name` 可能会显示 `<N/A>`。这是预料之中的，不会影响功能。
-:::
+AI HAT+ 和 AI HAT+ 2 的 `Serial Number`、`Part Number` 和 `Product Name` 可能会显示 `<N/A>`。这是预期的，不会影响功能。
 
-此外，您还可以运行 `dmesg | grep -i hailo` 检查内核日志，其输出结果应类似于下面的内容：
+此外，您可以运行 `dmesg | grep -i hailo` 检查内核日志，预期输出类似以下内容：
 
 ```
 [    3.049657] hailo: Init module. driver version 4.17.0
@@ -99,133 +204,332 @@ AI HAT+ 设备的 `Serial Number`、`Part Number` 和 `Product Name` 可能会�
 [    3.231845] hailo 0000:01:00.0: Probing: Added board 1e60-2864, /dev/hailo0
 ```
 
-7. 要确保摄像机运行正常，请运行以下命令：
+## 运行视觉 AI 模型
 
-```sh
-rpicam-hello -t 10s
+本节提供了在树莓派 5 上设置 Hailo NPU 的指南，使摄像头应用程序能够对摄像头输入运行实时 AI 任务，如对象检测。以下说明适用于 AI Kit、AI HAT+ 和 AI HAT+ 2。
+
+### 步骤 1. 安装摄像头依赖项
+
+首先，您必须安装树莓派摄像头软件栈。`rpicam-apps` 软件包提供了树莓派 OS 使用的摄像头工具，并包含视觉 AI 管道所需的 Hailo 后处理软件演示阶段。
+
+使用以下命令安装最新的 rpicam-apps 软件包：
+
+```bash
+$ sudo apt update && sudo apt install rpicam-apps
 ```
 
-这样就启动了摄像头，并显示十秒钟的预览窗口。确认一切安装正确后，就可以运行一些演示了。
+然后，运行以下命令确保摄像头正常工作：
 
-### 演示
-
-`rpicam-apps` 摄像头应用程序套件实现了 [后处理框架](./camera-software.mdx#使用-rpicam-apps-做后处理)。本节包含几个演示后处理阶段，重点介绍 NPU 的部分功能。
-
-以下演示使用默认显示预览窗口的 [`rpicam-hello`](./camera-software.mdx#rpicam-hello)。不过，您也可以使用其他 `rpicam-apps` 代替，包括 [`rpicam-vid`](./camera-software.mdx#rpicam-vid) 和 [`rpicam-still`](./camera-software.mdx#rpicam-still) 。您可能需要添加或修改一些命令行选项，以使演示命令与其他应用程序兼容。
-
-首先，运行以下命令安装最新的 `rpicam-apps` 软件包：
-
-```sh
-sudo apt update && sudo apt install rpicam-apps
+```bash
+$ rpicam-hello
 ```
 
-:::tip
-后续章节中提供的命令将使用该版本库中的 JSON 文件。为了便于引用这些文件，此命令会在您的主文件夹中创建克隆的 `rpicam-apps` 目录。如果修改了该目录的位置，还必须修改下面的演示命令，以便引用 JSON 文件的新位置。
-:::
+这会启动摄像头并显示五秒钟的预览窗口。如果预览窗口出现，说明摄像头设置正确。
+
+### 步骤 2. 运行实时视觉 AI 演示
+
+验证一切正确安装后，您可以使用 `rpicam-apps` 摄像头软件运行摄像头 AI 演示。该软件使用[后处理框架](./camera-software.mdx#使用-rpicam-apps-做后处理)实现 AI 演示；该软件使用预训练的神经网络在 NPU 上对摄像头帧运行 AI 推理。
+
+为了突出 NPU 的一些功能，本节概述了一些展示不同模型和后处理阶段的演示，例如在对象周围绘制边界框或在人周围绘制姿势线。结果以视觉方式显示在实时预览窗口（默认）或在树莓派终端中显示为文本。
+
+以下演示使用 [`rpicam-hello`](./camera-software.mdx#rpicam-hello)，但您也可以使用其他 rpicam-apps，例如用于视频录制的 [`rpicam-vid`](./camera-software.mdx#rpicam-vid) 和用于静态图像的 [`rpicam-still`](./camera-software.mdx#rpicam-still)。这些应用程序可能需要您添加或修改一些命令行选项以使其兼容。
 
 #### 对象检测
 
-此演示将显示神经网络检测到的物体周围的边界框。要禁用取景器，请使用 [`-n`](./camera-software.mdx#nopreview) 标志。要返回纯文本输出来描述检测到的对象，请添加 `-v 2` 选项。运行以下命令在 Raspberry Pi 上尝试演示：
+以下 `rpicam-apps` 演示使用不同的 YOLO 模型通过 `rpicam-hello` 执行对象检测。每个演示都在检测到的对象周围绘制边界框，并支持修改输出的可选标志，例如 `-n` 关闭取景器，`-v 2` 仅显示文本输出。
 
-```sh
-picam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov6_inference.json
-```
+不同的演示在速度和准确性方面有不同的权衡。运行以下命令在树莓派 5 上尝试每个演示：
 
-或者，您也可以尝试另一种在性能和效率上有不同权衡的模型。
-
-要使用 Yolov8 模型运行演示，请运行以下命令：
-
-```sh
-rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov8_inference.json
-```
-
-要使用 YoloX 模型运行演示，请运行以下命令：
-
-```sh
-rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolox_inference.json
-```
-
-要使用 Yolov5 人脸模型运行演示，请运行以下命令：
-
-```sh
-rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov5_personface.json
-```
+| 模型 | 命令 | 后处理阶段 |
+| -- | -- | -- |
+| YOLOv6 | `rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov6_inference.json` | 对象检测。 |
+| YOLOv8 | `rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov8_inference.json` | 对象检测。 |
+| YOLOX | `rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolox_inference.json` | 轻量级快速对象检测。 |
+| YOLOv5 | `rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov5_inference.json` | 人和人脸检测。 |
 
 #### 图像分割
 
-此演示通过在取景器图像上绘制彩色遮罩来执行物体检测和物体分割。运行以下命令在 Raspberry Pi 上试用该演示：
+以下 `rpicam-apps` 演示使用 `rpicam-hello` 执行对象检测，然后通过在取景器图像上绘制彩色遮罩来分割对象。运行以下命令在树莓派 5 上尝试该演示：
 
-```sh
-rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov5_segmentation.json --framerate 20
+```bash
+$ rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov5_segmentation.json --framerate 20
 ```
 
 #### 姿势估计
 
-该演示执行 17 点人体姿态估计，并绘制连接检测点的线条。运行以下命令在 Raspberry Pi 上试用该演示：
+以下 `rpicam-apps` 演示使用 `rpicam-hello` 执行 17 点人体姿势估计，绘制连接检测点的线条。运行以下命令在树莓派 5 上尝试该演示：
 
-```sh
-rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov8_pose.json
+```bash
+$ rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov8_pose.json
 ```
 
-### 替代软件包版本
+### AI Kit 和 AI HAT+ 的软件包版本
 
-如果 Hailo 软件包和设备驱动程序的版本不匹配，AI Kit 和 AI HAT+ 将无法运行。此外，Hailo 的神经网络工具可能需要特定版本才能生成模型文件。如果需要特定版本，请完成以下步骤，安装所有依赖项的正确版本：
+如果您想使用 AI Kit 或 AI HAT+ 运行使用特定版本 Hailo 工具链生成的模型，必须确保使用兼容版本的 Hailo 软件包和设备驱动程序。如果这些组件的版本不匹配，它们将无法正常工作。
 
-1. 如果之前使用过 `apt-mark` 来保存任何相关软件包，则可能需要取消保存：
+首先，如果您之前使用 `apt-mark` 保持了任何相关软件包，可能需要使用以下命令取消保持：
 
-```sh
-sudo apt-mark unhold hailo-tappas-core hailort hailo-dkms
+```bash
+$ sudo apt-mark unhold hailo-tappas-core hailort hailo-dkms
 ```
 
-2. 安装所需的软件包版本：
+然后您可以安装所需版本的软件包：
 
-<Tabs>
-<TabItem value="419" label="4.19">
+<Tabs groupId="hailo-version">
+<TabItem value="4.19" label="4.19">
 
-要安装 4.19 版 Hailo 神经网络工具，请运行以下命令：
+要安装 4.19 版本的 Hailo 神经网络工具，请运行以下命令：
 
-```sh
-sudo apt install hailo-tappas-core=3.30.0-1 hailort=4.19.0-3 hailo-dkms=4.19.0-1 python3-hailort=4.19.0-2
+```bash
+$ sudo apt install hailo-tappas-core=3.30.0-1 hailort=4.19.0-3 hailo-dkms=4.19.0-1 python3-hailort=4.19.0-2
 ```
 
-```sh
-sudo apt-mark hold hailo-tappas-core hailort hailo-dkms python3-hailort
+```bash
+$ sudo apt-mark hold hailo-tappas-core hailort hailo-dkms python3-hailort
 ```
+
 </TabItem>
+<TabItem value="4.18" label="4.18">
 
-<TabItem value="418" label="4.18">
+要安装 4.18 版本的 Hailo 神经网络工具，请运行以下命令：
 
-要安装 4.18 版 Hailo 神经网络工具，请运行以下命令：
-
-```sh
-sudo apt install hailo-tappas-core=3.29.1 hailort=4.18.0 hailo-dkms=4.18.0-2
+```bash
+$ sudo apt install hailo-tappas-core=3.29.1 hailort=4.18.0 hailo-dkms=4.18.0-2
 ```
 
-```sh
-sudo apt-mark hold hailo-tappas-core hailort hailo-dkms
+```bash
+$ sudo apt-mark hold hailo-tappas-core hailort hailo-dkms
 ```
+
 </TabItem>
+<TabItem value="4.17" label="4.17">
 
-<TabItem value="417" label="4.17">
+要安装 4.17 版本的 Hailo 神经网络工具，请运行以下命令：
 
-要安装 4.17 版 Hailo 神经网络工具，请运行以下命令：
-
-```sh
-sudo apt install hailo-tappas-core=3.28.2 hailort=4.17.0 hailo-dkms=4.17.0-1
+```bash
+$ sudo apt install hailo-tappas-core=3.28.2 hailort=4.17.0 hailo-dkms=4.17.0-1
 ```
 
-```sh
-sudo apt-mark hold hailo-tappas-core hailort hailo-dkms
+```bash
+$ sudo apt-mark hold hailo-tappas-core hailort hailo-dkms
 ```
+
 </TabItem>
 </Tabs>
 
 ### 更多资源
 
-Hailo 还创建了一套可以在 Raspberry Pi 5 上运行的演示程序，可在 [hailo-ai/hailo-rpi5-examples GitHub 存储库](https://github.com/hailo-ai/hailo-rpi5-examples) 中查看。
+- Hailo 自己的一套可以在树莓派 5 上运行的演示，请参阅 [hailo-rpi5-examples](https://github.com/hailo-ai/hailo-rpi5-example) GitHub 仓库。
+- Hailo 的模型动物园，包含大量神经网络，请参阅 [Hailo Model Explorer](https://hailo.ai/products/hailo-software/model-explorer-vision/)。
+- 有关 Hailo 硬件和工具的讨论，请参阅 [Hailo Community](https://community.hailo.ai/) 论坛和 [Developer Zone](https://hailo.ai/developer-zone)。
 
-你可以在 [hailo-ai/hailo_model_zoo GitHub 仓库](https://github.com/hailo-ai/hailo_model_zoo/tree/master/docs/public_models/HAILO8L)中找到 Hailo 丰富的模型动物园，其中包含大量神经网络。
+## 运行大语言模型LLM（仅 AI HAT+ 2）
 
-请访问 [Hailo社区论坛和开发者专区](https://community.hailo.ai/)，进一步了解有关Hailo硬件和工具的讨论。
+本节提供了在树莓派 5 上为 AI HAT+ 2 设置 Hailo 10 NPU 的说明，以便您可以在本地运行大语言模型（LLM）。通过以下设置，您可以通过以下方式访问 LLM：
+
+- **POST 请求（API 调用）**，您可以直接向 hailo-ollama 服务器发送查询。
+- **Web UI 前端**，您可以使用基于浏览器的类似聊天的界面。
+
+### 运行本地 LLM 的组件
+
+在树莓派 5 上运行本地 LLM 涉及多个系统层，它们协同工作以实现硬件加速推理。
+
+#### 硬件层
+
+运行本地 LLM 所需的物理计算来自：
+
+- **树莓派 5**，提供主 CPU、内存和运行 OS、管理软件以及协调与 AI 加速器通信所需的通用 I/O。
+- **Hailo AI 加速器芯片**（通过 AI HAT+ 2 提供的 Hailo-10H NPU），为 AI 推理提供神经处理，允许您运行本地 LLM。
+
+有关这些前提条件的更多信息，请参阅[硬件前提条件](#硬件前提条件)。
+
+#### 软件层
+
+要在树莓派 5 上使用 Hailo NPU 运行本地 LLM，必须安装一组软件依赖项、驱动程序和运行时组件。
+
+在树莓派 5 上运行 LLM（以及视觉 AI）需要软件依赖项。有关所需依赖项的信息和安装说明，请参阅[安装所需依赖项](#安装所需依赖项)。
+
+#### AI 模型层
+
+**Hailo Gen-AI Model Zoo** 包含适合在 Hailo-10H 上运行的预训练 LLM。这些模型作为[步骤 1. 安装 Hailo Ollama 服务器](#步骤-1-安装-hailo-ollama-服务器)的一部分安装。然后由运行时加载这些模型并由 AI 加速器运行。
+
+#### 后端层
+
+LLM 由 **Hailo Ollama 服务器**加载和运行。此后端层：
+
+- 从 Hailo Gen-AI Model Zoo 加载 LLM。
+- 管理 Hailo-10H NPU 上的推理。
+- 公开一个 REST API，用于向 NPU 发送请求（提交提示）并返回 AI 推理结果（接收响应）。
+
+Hailo Ollama 服务器作为[步骤 2. 启动 Hailo Ollama 服务器并运行 LLM](#步骤-2-启动-hailo-ollama-服务器并运行-llm) 的一部分安装。
+
+#### 前端层（可选）
+
+**Open WebUI** 提供的前端层是一个可选的基于浏览器的聊天界面，用于与 LLM 交互。或者，您可以继续使用[步骤 2](#步骤-2-启动-hailo-ollama-服务器并运行-llm) 中描述的基于终端的 POST 请求与 LLM 交互。
+
+虽然不需要 Open WebUI 来运行 LLM，但它提供了一种更用户友好的方式来提交提示和查看响应，而不是基于终端的 POST 请求。Open WebUI 通过其 REST API 与 Hailo Ollama 服务器通信，并在对话 UI 中显示模型输出。
+
+Open WebUI 需要在 Docker 容器中运行。这是因为 Open WebUI 与 Python 3.13（树莓派 OS Trixie 上使用的版本）不兼容。Docker 提供了一个容器化环境以实现稳定运行。
+
+Open WebUI 的设置是[步骤 3](#步骤-3-安装-docker用于-open-webui) 和[步骤 4](#步骤-4-安装并使用-open-webui可选) 的组合。
+
+### 步骤 1. 安装 Hailo Ollama 服务器
+
+Hailo Ollama 服务器提供：
+
+- 针对 Hailo-10H NPU 优化的预训练 LLM。
+- 公开用于模型推理的 REST API 的 Hailo Ollama 服务器。
+
+要安装 Hailo Ollama 服务器，请下载适用于树莓派 5 的 Hailo Model Zoo GenAI **版本 5.1.1** 的 [Debian 软件包](https://dev-public.hailo.ai/2025_12/Hailo10/hailo_gen_ai_model_zoo_5.1.1_arm64.deb)，然后在树莓派终端中使用以下命令安装：
+
+```bash
+$ sudo dpkg -i hailo_gen_ai_model_zoo_5.1.1_arm64.deb
+```
+
+### 步骤 2. 启动 Hailo Ollama 服务器并运行 LLM
+
+安装完所有内容后，启动本地 `hailo-ollama` 服务器以公开用于 LLM 请求的 REST API，然后下载并运行一些 LLM。
+
+1. 在树莓派终端中，运行以下命令启动本地 `hailo-ollama` 服务器：
+
+```bash
+$ hailo-ollama
+```
+
+2. 在新的终端窗口中，运行以下命令获取 LLM 列表：
+
+```bash
+$ curl --silent http://localhost:8000/hailo/v1/list
+```
+
+3. 运行以下命令从提供的列表中下载模型，将 `"examplemodel:tag"` 替换为任何列出的模型（例如，`"qwen2:1.5b"`）：
+
+```bash
+$ curl --silent http://localhost:8000/api/pull \
+     -H 'Content-Type: application/json' \
+     -d '{ "model": "examplemodel:tag", "stream" : true }'
+```
+
+4. 运行以下命令使用 POST 请求向 LLM 发送查询，将 `"examplemodel:tag"` 替换为您已下载并想要运行的任何模型：
+
+```bash
+$ curl --silent http://localhost:8000/api/chat \
+     -H 'Content-Type: application/json' \
+     -d '{"model": "examplemodel:tag", "messages": [{"role": "user", "content": "Translate to French: The cat is on the table."}]}'
+```
+
+### 步骤 3. 安装 Docker（用于 Open WebUI）
+
+如果您不打算使用 Open WebUI 界面，可以跳过此步骤。
+
+以下说明在树莓派 5 上安装 Docker，这是部署和运行 Open WebUI 的前提条件，如[步骤 4](#步骤-4-安装并使用-open-webui可选) 中所述。有关更全面的安装说明，请参阅 Docker 的页面：[在 Debian 上安装 Docker Engine](https://docs.docker.com/engine/install/debian/)。
+
+要安装 Docker：
+
+1. 删除任何现有的 Docker 软件包：
+
+```bash
+$ sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
+```
+
+2. 安装 Docker apt 仓库：
+
+```bash
+# 添加 Docker 的官方 GPG 密钥：
+$ sudo apt update
+$ sudo apt install ca-certificates curl
+$ sudo install -m 0755 -d /etc/apt/keyrings
+$ sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+$ sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# 将仓库添加到 Apt 源：
+$ sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+$ sudo apt update
+```
+
+3. 检查 `docker.sources` 文件是否已正确创建：
+
+```bash
+$ cat /etc/apt/sources.list.d/docker.sources
+```
+
+预期输出如下，其中 `Suites` 是您操作系统的 `VERSION_CODENAME`（`trixie`）：
+
+```
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: trixie
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+```
+
+4. 安装并运行 Docker 服务：
+
+```bash
+$ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+$ sudo systemctl start docker
+```
+
+5. 创建 `docker` 组：
+
+```bash
+$ sudo groupadd docker
+```
+
+6. 将您的用户添加到 `docker` 组：
+
+```bash
+$ sudo usermod -aG docker $USER
+```
+
+7. 注销并重新登录，以便重新评估您的组成员资格，或运行以下命令激活对组的更改：
+
+```bash
+$ newgrp docker
+```
+
+8. 测试 Docker：
+
+```bash
+$ docker run hello-world
+```
+
+### 步骤 4. 安装并使用 Open WebUI（可选）
+
+在上一步中安装 Docker 后，您可以使用 Docker 部署和运行 Open WebUI 容器。
+
+:::info 部署方法
+以下方法是部署和使用容器的一种方式，但不是唯一的方法。例如，您可以使用 `docker-compose` 进行容器管理。
+:::
+
+1. 要使用 Open WebUI，首先需要安装它。下载运行前端层所需的 Open WebUI 镜像：
+
+```bash
+$ docker pull ghcr.io/open-webui/open-webui:main
+```
+
+2. 确保 `hailo-ollama` 已经在运行。然后，启动 Open WebUI 容器并将其连接到 `hailo-ollama` 后端服务器：
+
+```bash
+$ docker run -d -e OLLAMA_BASE_URL=http://127.0.0.1:8000 -v open-webui:/app/backend/data --name open-webui --network=host --restart always ghcr.io/open-webui/open-webui:main
+```
+
+3. 监控容器启动。容器初始化最多需要一分钟。要查看进度和日志，请运行以下命令，然后等待日志指示服务器正在运行并准备接受连接。
+
+```bash
+$ docker logs open-webui -f
+```
+
+4. 在 Web 浏览器中访问 Open WebUI 并输入以下 URL：[http://127.0.0.1:8080](http://127.0.0.1:8080)。这将打开一个聊天界面，您可以在其中选择模型并开始与 LLM 交互。
+
+有关更详细的说明，请参阅 Open WebUI 文档中的[快速入门](https://docs.openwebui.com/getting-started/quick-start/)指南。
 
 <Normal />

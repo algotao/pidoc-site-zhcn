@@ -5,7 +5,7 @@ title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照�
 description: 全面掌握树莓派摄像头应用！本文详细介绍如何使用rpicam-apps软件套件进行图像捕捉、视频录制、对象检测、图像分割等，支持多种摄像头模块（如HQ、GS、AI摄像头）。提供命令行选项、后处理框架（含TensorFlow Lite集成）、多摄像头同步及网络流媒体传输方法，助您实现高效的树莓派视觉应用开发。
 keywords: [树莓派摄像头应用, rpicam-apps, 图像捕捉, 视频录制, 对象检测, 图像分割, TensorFlow Lite, 多摄像头同步, 网络流媒体, 后处理框架, 树莓派视觉开发]
 last_update: 
-  date: 2025-12-20
+  date: 2026-02-01
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -728,15 +728,39 @@ gst-launch-1.0 libcamerasrc ! capsfilter caps=video/x-raw,width=640,height=360,f
 
 在客户端，我们可以使用与上文相同的播放管道，或其他流媒体播放器。
 
-### WebRTC
+### 第三方流媒体服务器
 
-通过 WebRTC 进行流媒体传输（例如，传输到网络浏览器）最好使用第三方软件。例如，[MediaMTX](https://github.com/bluenviron/mediamtx)包含对 Raspberry Pi 摄像头的本地支持，使用起来非常方便。
+有许多第三方流媒体服务器可用，虽然 Raspberry Pi 并不特别推荐任何一个，但我们提供了一些关于使用几个流行服务器的入门指南。
 
-要安装该软件，请从 [release](https://github.com/bluenviron/mediamtx/releases)页面下载最新版本。Raspberry Pi OS 64 位用户需要 **linux_arm64v8** 压缩 tar 文件（结尾为`.tar.gz`）。解压后会得到一个 `mediamtx` 可执行文件和一个名为 `mediamtx.yml` 的配置文件。
+* [MediaMTX](#使用-mediamtx-流媒体)
 
-值得备份 `mediamtx.yml` 文件，因为它记录了许多 Raspberry Pi 摄像头选项，你以后可能要研究这些选项。
+* [MistServer](#使用-mistserver-流媒体)
 
-要流式传输摄像头，请用以下内容替换 `mediamtx.yml` 中的内容：
+* [go2rtc](#使用-go2rtc-流媒体)
+
+所有这些流媒体服务器都可以接收由 `rpicam-vid` 创建的 Raspberry Pi 摄像头流，并将它们重新流式传输到 RTSP 客户端，或使用 WebRTC 流式传输到网络浏览器，或使用许多其他格式。MediaMTX 通过 libcamera 支持将 Raspberry Pi 摄像头作为本地选项，绕过了对外部可执行文件（如 `rpicam-vid`）的需求。
+
+上述列表并不详尽；但是，我们已经确认这些应用程序可以与 Raspberry Pi 摄像头系统正确配合工作。
+
+#### 使用 MediaMTX 流媒体
+
+[MediaMTX](https://github.com/bluenviron/mediamtx) 接受来自 Raspberry Pi 摄像头系统的输入流（例如，由 `rpicam-vid` 创建），并将其重新流式传输到其他客户端。此外，它还支持将 Raspberry Pi 摄像头作为内置源。
+
+##### 安装和配置
+
+要安装 MediaMTX：
+
+1. 从 [releases](https://github.com/bluenviron/mediamtx/releases) 页面下载最新版本。
+   * 如果您使用的是 Raspberry Pi OS 64 位，请选择 `linux_arm64` 压缩 tar 文件（以 `.tar.gz` 结尾）。
+   * 如果您使用的是 Raspberry Pi OS 32 位，请选择 `armv7` 压缩 tar 文件。
+
+2. 通过运行命令 `tar -xvzf <filename.tar.gz>` 解压压缩的 tar 文件。该文件包含一个 `mediamtx` 可执行文件和一个名为 `mediamtx.yml` 的配置文件。
+
+3. 备份原始的 `mediamtx.yml` 文件（推荐）。例如，您可以运行 `cp mediamtx.yml mediamtx.yml.original`。我们建议这样做，因为原始文件记录了许多您可能想稍后探索的 Raspberry Pi 摄像头选项，因此保留一份副本可以作为参考。
+
+##### 添加摄像头流
+
+要流式传输摄像头，请将 `mediamtx.yml` 的内容替换为以下内容：
 
 ```yml
 paths:
@@ -744,57 +768,156 @@ paths:
     source: rpiCamera
 ```
 
-并启动 `mediamtx` 可执行文件。在浏览器的地址栏中输入 `http://<ip-addr>:8889/cam`。
+参数 `source: rpiCamera` 告诉 MediaMTX 自己启动和控制 Raspberry Pi 摄像头系统。
 
-如果希望 MediaMTX 仅在请求流时才获取摄像机，请在之前的 `mediamtx.yml` 中添加以下一行：
+通过在命令提示符下输入可执行文件名称来启动 `mediamtx` 可执行文件，如有必要，请指定完整路径。
+
+如果您希望 MediaMTX 仅在请求流时才获取摄像头，请在更新后的 `mediamtx.yml` 中添加以下一行：
 ```yml
     sourceOnDemand: yes
 ```
 
-请查阅原始的 `mediamtx.yml` 以获取更多配置参数，这些参数可让您选择图像大小、摄像机模式、比特率等 - 只需搜索 `rpi`。
+请查阅原始的 `mediamtx.yml` 以获取更多配置参数，这些参数可让您选择图像大小、摄像机模式、比特率等。通过在文件中搜索 `rpi` 来找到相关设置。
 
-### 使用 WebRTC 定制图像流
-
-如果只想流式传输摄像机图像，MediaMTX 是个不错的选择。但如果我们想添加一些额外的信息或叠加，或对图像进行一些额外的处理，该怎么办呢？
-
-在开始之前，请确保您已构建了包含 OpenCV 支持的 `rpicam-apps` 版本。请运行
-
-```sh
-rpicam-hello --post-process-file rpicam-apps/assets/annotate_cv.json
-```
-
-并查看图像顶部的覆盖文本信息。
-
-然后，将以下内容粘贴到 `mediamtx.yml` 文件中：
-
+或者，您可以在 MediaMTX 外部运行 `rpicam-vid`，方法是按如下方式设置 `mediamtx.yml`：
 ```yml
 paths:
   cam:
     source: udp://127.0.0.1:1234
 ```
 
-现在，启动 `mediamtx` ，然后，如果使用的是 Pi 5，在新的终端窗口中输入：
-
+您可以运行任何外部程序将 MPEG-TS 流输出到此地址。对于 `rpicam-vid`，它可能如下所示：
 ```sh
-rpicam-vid -t 0 -n --codec libav --libav-video-codec-opts "profile=baseline" --libav-format mpegts -o udp://127.0.0.1:1234?pkt_size=1316 --post-process-file rpicam-apps/assets/annotate_cv.json
+rpicam-vid -t 0 -n --codec libav --low-latency --libav-format mpegts -o udp://127.0.0.1:1234?pkt_size=1316
 ```
 
-（在 Pi 4 或更早的设备上，请省略命令中的 `--libav-video-codec-opts "profile=baseline"` 部分。）
-
-在另一台电脑上，现在可以访问与之前相同的地址，即 `http://<ip-addr-of-pi>:8889/cam`。
-
-在 Pi 5 上指定 `baseline` 配置文件的原因是 MediaMTX 不支持 B 帧，因此我们需要阻止编码器生成 B 帧。在使用硬件编码器的早期设备上，从不生成 B 帧，因此不存在这个问题。在 Pi 5 上，你也可以去掉这个选项，代之以 `--low-latency`（低延迟），这样也能阻止 B 帧，并产生一个（压缩效果稍差）延迟更低的流。
-
 :::note
-如果你注意到视频流中偶尔出现停顿，这可能是因为 Pi 上的 UDP 接收缓冲区（从 `rpicam-vid` 向 MediaMTX 传输数据）太小。要永久增加缓冲区，请在 `/etc/sysctl.conf`文件中添加
+这提供了以某种方式更改图像的机会，也许使用 `rpicam-apps` 后处理功能，或 `Picamera2` Python 模块。`--low-latency` 选项抑制 B 帧（在 Raspberry Pi 5 或更高版本上；早期的 Raspberry Pi 设备不生成任何 B 帧），这通常是明智的，因为客户端请求的某些流媒体格式不支持它们。
+:::
 
+##### 使用客户端查看
+
+您可以在媒体播放器或网络浏览器中查看流。以下示例假设流名称为 'cam'：
+
+* 要使用 RTSP 协议的媒体播放器应用程序查看流，请使用地址 `rtsp://<MediaMTX-服务器的IP地址>:8554/cam`。
+
+* 要在网络浏览器中查看流，请使用地址 `http://<MediaMTX-服务器的IP地址>:8889/cam`。
+
+##### 故障排除
+
+视频流中偶尔出现的停顿可能是由于 Raspberry Pi 上的 UDP 接收缓冲区空间不足造成的。如果缓冲区太小，数据可能会被丢弃，从而导致可见的停顿。要永久增加这些缓冲区，请创建一个名为 `/etc/sysctl.d/99-network-tuning.conf` 的文件，其中包含以下行：
 ```ini
 net.core.rmem_default=1000000
 net.core.rmem_max=1000000
 ```
 
-（并重新启动或运行 `sudo sysctl -p`）。
+重新启动或运行 `sudo sysctl -p /etc/sysctl.d/99-network-tuning.conf`。
+
+在 Raspberry Pi OS Bookworm 或更早版本上，您必须改为将这些行添加到 `/etc/sysctl.conf`（然后重新启动或运行 `sudo sysctl -p`）。
+
+有关 MediaMTX 及其功能的更多信息，请参阅 [MediaMTX 文档](https://mediamtx.org/docs/kickoff/introduction)。
+
+#### 使用 MistServer 流媒体
+
+[MistServer](https://mistserver.org/) 是一款流行的免费媒体服务器，您可以将其与 Raspberry Pi 摄像头系统结合使用。与 MediaMTX 不同，它没有内置的摄像头支持；但是，您可以配置 MistServer 来接收来自 `rpicam-vid` 的流，并以各种格式将其提供给客户端。
+
+##### 安装和配置
+
+您可以按照 MistServer 文档中的说明在 Raspberry Pi 上安装 MistServer：
+
+* 对于 64 位操作系统，请按照 [Armv8 64 位 Linux](https://docs.mistserver.org/mistserver/installation/linux#armv8-64-bits-linux) 中的说明操作。
+* 对于 32 位操作系统，请按照 [Armv7 Linux](https://docs.mistserver.org/mistserver/installation/linux/#armv7-linux) 中的说明操作。
+
+确保以 root 身份运行命令。此过程设置了一个自动运行的系统 MistServer 服务。
+
+要配置 MistServer，请在 Raspberry Pi 上访问管理界面（MI）网页 `http://localhost:4242/`；如果您替换 Raspberry Pi 的 IP 地址，也可以从另一台计算机访问该页面。第一次使用管理界面时，它会要求您创建一个管理员账户。在接下来的步骤中，您可以接受默认值。
+
+:::note
+您也可以在与摄像头不同的计算机上运行 MistServer。
 :::
+
+##### 添加摄像头流
+
+要添加摄像头流，请转到**管理界面**网页并完成以下步骤：
+
+1. 在左侧窗格中，选择 **Streams**。
+2. 在右侧窗格中，选择 **Create Stream**。
+3. 填写所需信息：
+   * 流名称，例如 'cam'。这是客户端识别此流的方式。
+   * 源。要配置 MistServer 自动启动 `rpicam-vid`，请输入以下命令：
+     ```sh
+     ts-exec: rpicam-vid -n -t 0 --width 1920 --height 1080 --codec libav --libav-format mpegts -o -
+     ```
+     此命令中的参数配置了以下内容：
+     * `ts-exec` 配置命令将 MPEG-TS 流输出到 `stdout`。此前缀要求 MistServer 在带有摄像头的 Raspberry Pi 上运行。
+     * `rpicam-vid` 是视频命令。
+     * `-n` 配置无预览。
+     * `-t` 配置命令无限期运行。
+     * `--width` 和 `--height` 指定您选择的尺寸。
+
+或者，如果您在外部运行 `rpicam-vid`，输出到 UDP 套接字，请使用 `tsudp` 代替 `ts-exec`，并在其后跟上传入流的 IP 地址。
+
+##### 使用客户端查看
+
+您可以在媒体播放器或网络浏览器中查看流。以下示例假设流名称为 'cam'：
+
+* 要使用 RTSP 协议的媒体播放器应用程序查看流，请使用地址：`rtsp://<MistServer-服务器的IP地址>:8554/cam`。
+
+* 要在网页中查看流，请使用 MistServer 的内置媒体播放器页面。在您的网络浏览器中，输入：`http://<MistServer-服务器的IP地址>:8080/cam.html`。
+
+有关 MistServer 用例和选项的更多信息，请参阅 [MistServer 文档](https://docs.mistserver.org/)。
+
+#### 使用 go2rtc 流媒体
+
+[go2rtc](https://github.com/AlexxIT/go2rtc) 是一个媒体服务器平台，虽然不像 MediaMTX 那样提供直接集成，但允许以与 MistServer 相同的方式进行互操作。
+
+##### 安装和配置
+
+要安装 go2rtc：
+
+1. 从 [releases 页面](https://github.com/AlexxIT/go2rtc/releases/)下载二进制文件：
+   * 如果您运行的是 64 位操作系统，请选择 `go2rtc_linux_arm64` 二进制文件。
+   * 如果您运行的是 32 位操作系统，请选择 `go2rtc_linux_arm` 二进制文件。
+   * 如果您的设备是 Raspberry Pi 1 或 Zero，请选择 `go2rtc_linux_armv6` 二进制文件。
+2. 更改文件权限以使下载的二进制文件可执行。
+3. 运行二进制文件。
+
+您可以使用默认配置运行此应用程序。当 go2rtc 运行时，管理页面位于 `http://localhost:1984/`。
+
+:::note
+与 MediaMTX 一样，您可以在与带有摄像头的 Raspberry Pi 不同的系统上运行 go2rtc。
+:::
+
+##### 添加摄像头流
+
+您可以通过在运行可执行文件的同一文件夹中创建文件 `go2rtc.yaml` 来添加摄像头流。当 go2rtc 启动时，它会向控制台输出一条消息，指示它期望在哪里找到其配置文件。
+
+将以下文本添加到文件中，替换您所需的宽度和高度：
+
+```yaml
+streams:
+  cam:
+    - exec:rpicam-vid -n -t 0 --width 1280 --height 720 --codec libav --libav-format mpegts --low-latency -o -
+```
+
+此配置在任何客户端请求 'cam' 流时启动 `rpicam-vid`。参数 `--low-latency` 在 Raspberry Pi 5 或更高版本上抑制 B 帧。在这种情况下，go2rtc 必须在带有摄像头的 Raspberry Pi 上运行。
+
+或者，您可以在外部运行 `rpicam-vid` 并让它将 MPEG-TS 流输出到地址，例如 `udp://127.0.0.1:1234`。要进行配置，请确保 `go2rtc.yaml` 文件包含以下文本：
+
+```yaml
+  cam:
+    - ffmpeg:udp://127.0.0.1:1234
+```
+
+如果 go2rtc 在与摄像头不同的计算机上运行，请调整 IP 地址。
+
+##### 使用客户端查看
+
+要使用 RTSP 协议的媒体播放器应用程序查看流，假设流名称为 'cam'，请使用地址：`rtsp://<go2rtc-服务器的IP地址>:8554/cam`。
+
+要在网页中查看流，请使用 go2rtc 的内置页面。输入 `http://<go2rtc-服务器的IP地址>:1984/stream.html?src=cam`。
+
+有关 go2rtc 用例和选项的更多信息，请参阅 [go2rtc README 文档](https://github.com/AlexxIT/go2rtc/blob/master/README.md)。
 
 ## rpicam-apps 选项参考
 

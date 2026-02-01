@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update: 
-  date: 2025-12-20
+  date: 2026-02-01
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -3141,7 +3141,7 @@ vcgencmd otp_dump
 
 <img src="/img/computers/raspberry-pi/pcie.jpg" alt="Raspberry Pi PCIe 连接器" width="70%" />
 
-Raspberry Pi 5 的电路板右侧有一个 FPC 连接器。该连接器为快速外设提供了 PCIe Gen 2.0 ×1 接口。
+Raspberry Pi 5 的电路板左侧有一个 FPC 连接器。该连接器为快速外设提供了 PCIe Gen 2.0 ×1 接口。
 
 要连接 PCIe [HAT+设备](https://datasheets.raspberrypi.com/hat/hat-plus-specification.pdf)，请将其连接到树莓派。Raspberry Pi 会自动检测到该设备。要连接非 HAT+ 设备，请将其连接到 Raspberry Pi，然后[手动启用 PCIe](#启用-pcie)。
 
@@ -3861,6 +3861,7 @@ NOQuuuWuFMMMCCCCPPPPTTTTTTTTTRRRR
 |  |  | 0x18: CM5 |
 |  |  | 0x19: 500/500+ |
 |  |  | 0x1a: CM5 Lite |
+|  |  | 0x1b: CM0 |
 | RRRR （位 0-3） | 修订 | 0、1、2 等 |
 
 [^optbits]:有关 [OPT位编程](#otp寄存器和位定义)的信息。
@@ -3919,6 +3920,7 @@ NOQuuuWuFMMMCCCCPPPPTTTTTTTTTRRRR
 | b04170 | 5 | 1.0 | 2GB | Sony UK |
 | c04170 | 5 | 1.0 | 4GB | Sony UK |
 | d04170 | 5 | 1.0 | 8GB | Sony UK |
+| a04171 | 5 | 1.0 | 1GB | Sony UK |
 | b04171 | 5 | 1.1 | 2GB | Sony UK |
 | c04171 | 5 | 1.1 | 4GB | Sony UK |
 | d04171 | 5 | 1.1 | 8GB | Sony UK |

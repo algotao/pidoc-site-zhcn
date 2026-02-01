@@ -4,80 +4,169 @@ draft: false
 description: Raspberry Pi AI HAT+ 是一款专为 Raspberry Pi 5 设计的人工智能附加板，内置 Hailo-8L 或 Hailo-8 神经网络推理加速器，提供 13 TOPS 和 26 TOPS 两种型号，适用于过程控制、安防、家庭自动化和机器人等应用。通过 PCIe 接口与 Raspberry Pi 5 通信，AI HAT+ 能显著提升人工智能计算任务的性能，自动检测并利用 NPU 执行任务。本文详细介绍了 AI HAT+ 的安装步骤，包括固件更新、硬件连接及与 Raspberry Pi Active Cooler 的搭配使用，确保最佳性能。安装完成后，Raspberry Pi OS 内置的 rpicam-apps 相机应用程序将自动利用 NPU 运行兼容的后处理任务，简化 AI 应用的部署与运行。
 keywords: [Raspberry Pi AI HAT+, Hailo AI 加速器, Raspberry Pi 5, NPU, 人工智能, 机器学习, 神经网络推理, PCIe 接口, 13 TOPS, 26 TOPS, 安装指南, AI 应用, 过程控制, 安防, 家庭自动化, 机器人, rpicam-apps, Raspberry Pi Active Cooler]
 last_update: 
-  date: 2025-12-20
+  date: 2026-01-31
 ---
 import Normal from "../_normal.mdx";
 
 # AI HAT+ (人工智能板)
 
-## 关于
 
-<img src="/img/accessories/ai-hat-plus/ai-hat-plus-hero.jpg" width="80%" alt="树莓派人工智能板" />
-*26TOPS的 Raspberry Pi AI HAT+*
+AI HATs是树莓派5的扩展板，内置人工智能加速芯片：Hailo 神经处理单元（NPU）。该NPU使树莓派5能够本地运行硬件加速的人工智能模型，无需将数据发送至远程云服务器处理。这种边缘AI方案可提升性能、降低延迟并保障数据隐私。有关AI HAT如何与树莓派5协同实现硬件加速AI推理的详情，请参阅[说明(#工作原理)。
 
-Raspberry Pi AI HAT+ 附加板内置 Hailo AI 加速器，兼容Raspberry Pi 5。AI HAT+ 中的 NPU 可用于过程控制、安防、家庭自动化和机器人等应用。
+AI HAT采用新版树莓派HAT规范，标记为加号(**\+**)。目前提供两种型号：**AI HAT+**与**AI HAT+ 2**。更多信息请参阅 [AI HAT 型号](#型号)。这些AI HAT提供不同性能版本，以每秒万亿次运算（TOPS）衡量推理性能。AI HAT+提供**13 TOPS**或**26 TOPS**版本；AI HAT+ 2仅提供**40 TOPS**版本。更多信息请参阅 [AI HAT TOPS](#性能tops版本)。
 
-AI HAT+ 围绕 Hailo-8L 和 Hailo-8 神经网络推理加速器，提供 13 和 26 TOPS两种型号。13 TOPS 型号最适合中等工作量，性能与 [人工智能套件](./ai-kit.mdx) 类似。26 TOPS 型号可以运行更大的网络，运行网络的速度更快，并能更有效地同时运行多个网络。
+<img src="/img/accessories/ai-hat-plus/ai-hat-plus-hero.jpg" width="50%" alt="26万亿次操作每秒（TOPS）树莓派AI HAT+" />
+*26万亿次操作每秒（TOPS）树莓派AI HAT+*
 
-AI HAT+ 使用 Raspberry Pi 5 的 PCIe 接口进行通信。主机 Raspberry Pi 5 会自动检测板载 Hailo 加速器，并使用 NPU 执行支持的人工智能计算任务。Raspberry Pi OS 内置的 `rpicam-apps` 相机应用程序会自动使用 NPU 运行兼容的后处理任务。
+<img src="/img/accessories/ai-hat-plus/ai-hat-plus-2-hero.jpg" width="50%" alt="40万亿次操作每秒（TOPS）树莓派AI HAT+ 2" />
+*40万亿次操作每秒（TOPS）树莓派AI HAT+ 2*
 
-## 安装
+## 工作原理
 
-要使用 AI HAT+，您需要
+AI HAT通过集成树莓派5主板，利用板载Hailo神经处理单元（加速芯片）实现硬件加速的AI推理。
 
-* 树莓派 5
+当AI HAT+或AI HAT+ 2连接至树莓派5时，树莓派操作系统将自动检测板载加速器，并将支持的AI工作负载卸载至该芯片。这包括利用现有相机与视觉框架，在NPU上运行基于视觉的神经网络模型。有关连接AI HAT+或AI HAT+ 2至树莓派5的操作指南，请参阅 [安装 AI HAT+](#硬件组装)
 
-每个 AI HAT+ 都配有带状电缆、GPIO 堆叠接头和安装硬件。完成以下说明即可安装 AI HAT+：
+随树莓派操作系统附带的相机应用框架 `rpicam-apps` 和 `Picamera2`，可自动调用Hailo NPU执行图像识别、目标检测等支持的AI计算任务。更多信息请参阅 [AI软件](../computers/ai.mdx)。
 
-1. 首先，确保您的 Raspberry Pi 运行最新的软件。运行以下命令更新：
+虽然检测和基本集成是自动完成的，但您还需安装其他软件组件和支持的AI模型才能使用硬件加速推理。更多信息请参阅 [AI软件](../computers/ai.mdx)。
 
-```sh
-sudo apt update && sudo apt full-upgrade
-```
+## 型号
 
-2. 接下来，[确保你的 Raspberry Pi 固件是最新的](../computers/raspberry-pi.mdx#更新-bootloader-配置)。运行以下命令查看您正在运行的固件：
+下表列出了 AI HAT+ 与 AI HAT+ 2 的主要性能差异。有关各型号可用加速器芯片具体性能变体的信息，请参阅 [AI HAT TOPS](#性能tops版本)。
 
-```sh
-sudo rpi-eeprom-update
-```
+:::tip
+**AI Kit** 与 AI HAT+ 的 Hailo-8L 型号规格相同且功能等效。但 AI Kit 已停产，建议使用本页所述的 AI HAT 系列产品。
+:::
 
-如果看到 2023 年 12 月 6 日或更晚的日期，请继续下一步。如果看到的日期早于 2023 年 12 月 6 日，运行以下命令打开 Raspberry Pi 配置 CLI：
+| 特性 | AI HAT+ | AI HAT+ 2 |
+| -- | -- | -- |
+| **加速器芯片（Hailo NPU）** | Hailo-8L（13 TOPS，INT8）或 Hailo-8（26 TOPS，INT8） | Hailo-10H（40 TOPS，INT4）
+| **内存（RAM）** | 使用树莓派5的内存 | 配备独立8GB板载内存，可运行参数规模达约60亿的大型语言模型（LLM）和视觉语言模型（VLM） |
+| **大型语言模型（LLM）支持** | 不支持 | 支持 |
+| **视觉语言模型（VLM）支持** | 不支持 | 支持 |
+| **应用场景** | 目标检测、摄像头后处理、机器人技术、中等神经网络负载 | 涵盖AI HAT+所有功能及生成式AI任务，包括本地LLM与VLM |
 
-```sh
-sudo raspi-config
-```
 
-在 `Advanced Options` > `Bootloader Version` 下，选择 `Latest`。然后用 `Finish` 或 **Escape** 键退出 `raspi-config`。
+## 性能（TOPS）版本
 
-运行以下命令将固件更新到最新版本：
+**AI HAT+** 提供以下每秒万亿次运算（TOPS）推理性能版本：
 
-```sh
-sudo rpi-eeprom-update -a
-```
-然后，使用 `sudo reboot` 重新启动。
+- **13 TOPS** 版本基于 **Hailo-8L** 神经网络加速器构建。适用于中等工作负载，性能与 [AI Kit](ai-kit.mdx) 相当。
+- **26 TOPS** 版本：基于 **Hailo-8** 神经网络加速器构建，支持更大规模网络、更高吞吐量及并行AI模型。
 
-3. 开始安装前，断开 Raspberry Pi 的电源。
+**AI HAT+ 2** 搭载 **Hailo-10H** 神经网络推理加速器，提供 **40 TOPS** 推理性能。除支持所有AI HAT+工作负载外，还新增本地LLM与VLM能力，可实现文档本地聊天等应用场景。
 
-4. 为获得最佳性能，我们建议将 AI HAT+ 与 Raspberry Pi Active Cooler 搭配使用。如果您有主动冷却器，请在安装 AI HAT+ 之前安装。
+## 物理规格
 
-<img src="/img/accessories/ai-hat-plus/ai-hat-plus-installation-01.png" width="60%" alt="安装散热器" />
+下图展示了AI HAT+、AI HAT+ 2及AI HAT+ 2配套散热器的物理尺寸。AI HAT+与AI HAT+ 2尺寸相同，主要视觉差异在于AI HAT+ 2新增了SDRAM模块。更多差异说明详见 [AIHAT-型号](#型号)文档。
 
-5. 使用提供的四颗螺丝安装垫片。将 GPIO 堆叠接头紧紧压在 Raspberry Pi GPIO 引脚上；只要所有引脚都能安装到位，方向并不重要。断开 AI HAT+ 的带状电缆，将另一端插入 Raspberry Pi 的 PCIe 端口。从两侧提起带状电缆支架，然后将电缆的铜接触点朝内，朝向 USB 端口插入。将带状电缆完全均匀地插入 PCIe 端口后，从两侧向下推动电缆固定器，将带状电缆牢牢固定到位。
+### AI HAT+规格参数
 
-<img src="/img/accessories/ai-hat-plus/ai-hat-plus-installation-02.png" width="60%" alt="安装支架及线缆" />
+下图展示AI HAT+的近似物理尺寸（单位：毫米）。AI HAT+ 约为 66 mm × 56.5 mm。Hailo NPU 周围设有金属外壳，尺寸约为 17 mm × 17 mm。
 
-6. 将 AI HAT+ 固定在垫片上，用剩余的四个螺丝将其固定到位。
+<img src="/img/accessories/ai-hat-plus/aihat-plus-mechanical.png" width="60%" alt="AI HAT+ 机械结构图；所有尺寸均为毫米单位近似值" />
+*AI HAT+ 机械结构图；所有尺寸均为毫米单位近似值*
 
-7. 将带状电缆插入 AI HAT+ 的插槽。从两侧抬起带状电缆固定器，然后将电缆铜触点朝上插入。将带状电缆完全均匀地插入端口后，从两侧向下推动电缆支架，将带状电缆固定到位。
+### AI HAT+ 2 及散热器规格
 
-8. 恭喜，您已成功安装 AI HAT+。连接树莓派电源；树莓派操作系统会自动检测到 AI HAT+。
+下图展示了AI HAT+ 2的近似物理尺寸（单位：毫米）。AI HAT+ 2尺寸约为66毫米×56.5毫米。Hailo NPU尺寸约为15毫米×15毫米，SDRAM尺寸约为14.5毫米×10毫米。
 
-## 在 Raspberry Pi 上开始使用人工智能
+<img src="/img/accessories/ai-hat-plus/aihat-plus-2-mechanical.png" width="60%" alt="AI HAT+ 机械结构图；所有尺寸均为毫米单位近似值" />
+*AI HAT+ 2 机械结构图；所有尺寸均为近似值且单位为毫米*
 
-要开始在 Raspberry Pi 上运行人工智能加速应用程序，请查看我们的 [开始使用 AI Kit 和 AI HAT+](../computers/ai.mdx) 指南。
+下图展示了 AI HAT+ 2 散热器的近似物理尺寸（单位：毫米）。考虑到散热器两端用于固定至AI HAT+ 2的推针孔，散热器整体尺寸约为42.5毫米×64毫米。安装推针时，AI HAT+ 2高度约为14毫米；移除推针后，高度约为3.2毫米。
 
-## 产品简介
+<img src="/img/accessories/ai-hat-plus/aihat-plus-2-heatsink-mechanical.png" width="60%" alt="AI HAT+ 2散热器机械示意图；所有尺寸均为毫米单位近似值" />
+*AI HAT+ 2散热器机械示意图；所有尺寸均为毫米单位近似值*
 
-有关 AI HAT+ 的更多信息，包括机械规格和工作环境限制，请参阅 [产品简介](https://datasheets.raspberrypi.com/ai-hat-plus/raspberry-pi-ai-hat-plus-product-brief.pdf)。
+## 硬件组装
+
+请确认备齐所需硬件，然后按照步骤将 AI HAT+ 或 AI HAT+ 2 安装到树莓派 5 上。开始前请确保树莓派 5 已断电。
+
+### 准备工作
+
+AI HAT+ 和 AI HAT+ 2 均配备以下安装硬件：
+
+- 四个螺纹垫片。
+- 四颗长螺钉（用于将垫片固定至树莓派5）
+- 四颗短螺钉（用于将AI HAT+或AI HAT+ 2安装至树莓派5的垫片）
+- GPIO堆叠接头。
+- 平面排线。
+
+<img src="/img/accessories/ai-hat-plus/ai-hat-plus-installation-02.png" width="60%" alt="AI HAT安装硬件示意图" />
+*AI HAT安装硬件示意图*
+
+此外您还需要：
+
+- 一台树莓派5。
+- 一把十字螺丝刀。
+- 可选配件：树莓派主动散热器（推荐）。该铝制散热片内置风扇，可有效帮助树莓派5散热，维持安全工作温度。
+
+AI HAT+ 2 附带额外散热片需安装在扩展板顶部。建议同时安装主动散热器（用于树莓派 5）和散热片（用于 AI HAT+ 2）。
+
+备齐所有硬件后，请按以下步骤操作：
+
+### 步骤 1. 安装主动散热器（推荐）
+
+我们建议您为树莓派 5 安装主动散热器。若想跳过此步骤，或您的树莓派 5 已安装主动散热器，请直接进入下一步。
+
+<img src="/img/accessories/ai-hat-plus/ai-hat-plus-installation-01.png" width="60%" alt="AI HAT安装硬件示意图" />
+
+首先确保树莓派5已断电，然后：.
+
+1. **准备散热器**。撕除散热器底部的导热垫保护纸，使每个导热垫的粘性表面暴露出来。
+2. **定位散热器**。将两个白色推销对准树莓派5上的两个专用散热孔。此时导热垫将与无线射频模块、系统级芯片（SoC）及电源管理集成电路（PMIC）对齐。
+3. **固定散热器**。轻压散热器使其贴合树莓派5机身，随后均匀按压两枚白色推针，直至其完全卡入机身散热孔并发出咔嗒声。.
+4. **连接风扇**。将风扇的JST接口插入树莓派5的风扇接口。
+
+:::tip
+使用前请确保推针完好无损且牢固卡入树莓派5。
+:::
+
+建议安装后勿拆卸散热器，因拆卸可能导致推针与导热垫损坏，进而造成设备损伤。
+
+### 步骤2. 安装AI HAT+ 2散热片（推荐）
+
+AI HAT+ 2附带额外散热片。若您安装的是 AI HAT+ 而非 AI HAT+ 2，可跳过此步骤。
+
+虽然 AI HAT+ 2 附带的散热片为可选配件，但我们建议将其安装在 AI HAT+ 2 上，尤其在运行基准测试或高强度 AI 工作负载时。这可防止 AI HAT+ 2 因过热导致性能下降。
+
+在将散热片安装至树莓派5之前，请按以下步骤将其固定在AI HAT+ 2上：.
+
+1. **准备散热片**。撕除散热片底面导热垫上的保护纸，露出各导热垫的粘性表面。.
+2. **定位散热片**。将散热器上的两个黑色推销对准AI HAT+ 2对角线相对位置的专用散热孔。此时导热垫将与电源调节器、Hailo NPU及SDRAM芯片精准对齐。.
+3. **固定散热器**。均匀按压两个黑色推销，直至其卡入AI HAT+ 2散热孔并发出咔嗒声。
+
+:::tip
+使用前请确保推销完好无损且牢固卡入AI HAT+ 2。
+:::
+
+建议安装至树莓派AI HAT+ 2后勿拆卸散热片。拆卸可能导致推销和导热垫损坏，进而造成产品损伤。
+
+### 步骤 3. 安装 AI HAT
+
+AI HAT+ 和 AI HAT+ 2 均通过 PCIe 接口连接至树莓派 5，该接口是用于连接硬件组件的高速接口。
+
+首先确保树莓派 5 已断电，然后：.
+
+1. **安装垫片**。使用十字螺丝刀，将四枚较长的螺丝穿过树莓派5的黄色孔位，固定四个垫片。.
+2. **连接GPIO堆叠接头**。将GPIO堆叠接头对准树莓派5的GPIO引脚，用力按压直至完全卡入。接头方向不限，但需确保所有GPIO引脚正确对齐并插入。
+3. **断开AI HAT上的PCIe排线连接**。将AI HAT上PCIe接口两侧的卡扣向外滑动，然后轻轻拔出排线。
+4. **将PCIe排线插入树莓派**。将排线另一端插入树莓派5的PCIe接口。操作时需先从两侧向上推开树莓派5的PCIe接口卡扣，再将排线插入接口。确保金属触点朝内（面向USB接口方向）。
+5. **固定PCIe排线至树莓派**。固定排线位置的同时，从两侧将卡扣推回插槽，确保排线均匀插入。
+6. **安装AI HAT扩展板**。将AI HAT主组件朝上放置，对齐扩展板的安装孔与树莓派5的垫片。使用剩余四颗（较短）螺丝固定AI HAT。.
+7. **将PCIe排线插入AI HAT**。将排线未连接端插入AI HAT的PCIe接口。操作步骤：先从两侧向外滑开AI HAT上PCIe接口的卡扣，再将排线插入接口。.
+8. **固定PCIe排线至AI HAT**。固定排线位置的同时，从两侧将卡扣推回接口，确保排线均匀插入。
+
+## 后续步骤：运行AI模型
+
+AI HAT支持Hailo提供的示例模型及针对特定应用训练的自定义模型，例如语音转文本、翻译或视觉场景分析。可用示例模型列表请参阅Hailo的 [模型探索器](https://hailo.ai/products/hailo-software/model-explorer/generative-ai/)。
+
+要在树莓派5上运行AI模型，请参阅 [AI软件](../computers/ai.mdx) 文档，其中提供以下信息与指导：
+
+- 在树莓派5上运行AI加速视觉模型
+- 与AI HAT+ 2相关的生成式AI模型
+
 
 <Normal />

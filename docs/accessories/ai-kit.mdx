@@ -1,98 +1,94 @@
 ---
 sidebar_position: 13
 draft: false
-description: Raspberry Pi AI Kit是专为Raspberry Pi 5设计的人工智能套件，集成了Hailo AI加速模块和M.2 HAT+，提供13 TOPS的神经网络推理能力。该套件包含Hailo AI模块、M.2 HAT+、散热垫及安装硬件，支持即插即用，简化了AI应用的部署。通过PCIe接口与Raspberry Pi 5通信，AI Kit能显著提升人工智能计算任务的性能，适用于各种AI应用场景。本文详细介绍了AI Kit的安装步骤，包括固件更新、硬件连接及与Raspberry Pi Active Cooler的搭配使用，确保最佳性能。安装完成后，Raspberry Pi OS将自动检测AI Kit，用户可轻松开始运行人工智能加速应用程序。
-keywords: [Raspberry Pi AI Kit, Hailo AI加速模块, M.2 HAT+, Raspberry Pi 5, 神经网络推理, 13 TOPS, AI应用, 安装指南, PCIe接口, Raspberry Pi Active Cooler, Raspberry Pi OS]
+description: 树莓派AI Kit已停产，建议使用AI HAT+系列产品替代。AI Kit曾将M.2 HAT+与Hailo AI加速模块捆绑使用，为树莓派5提供13 TOPS神经网络推理加速能力。本页面仅作参考保留，详细介绍了AI Kit的硬件组成、安装步骤及使用方法。套件包含Hailo-8L AI模块、M.2 HAT+、散热垫、安装硬件和16mm堆叠GPIO接头。推荐搭配Active Cooler使用以获得最佳性能。更多AI技术信息和最新产品，请参阅AI HAT+文档。
+keywords: [树莓派AI Kit, Hailo AI模块, M.2 HAT+, 树莓派5, 神经网络推理, 13 TOPS, Hailo-8L芯片, NPU神经处理单元, PCIe接口, Active Cooler主动散热器, AI HAT+, 已停产产品]
 last_update: 
-  date: 2025-12-20
+  date: 2026-02-01
 ---
 import Normal from "../_normal.mdx";
 
 # AI Kit (人工智能套件)
 
-## 关于 AI Kit
+:::info 产品状态
+本页面仅供参考。
 
-<img src="/img/accessories/ai-kit/ai-kit.jpg" width="80%" alt="树莓派人工智能套件" />
-*树莓派人工智能套件*
-
-Raspberry Pi AI Kit 将 [Raspberry Pi M.2 HAT+](./m2-hat-plus.mdx#关于) 与 Hailo AI 加速模块捆绑在一起，供 Raspberry Pi 5 使用。套件包含以下内容：
-
-- 包含神经处理单元（NPU）的 Hailo AI 模块
-- Raspberry Pi M.2 HAT+，用于将 AI 模块连接到 Raspberry Pi 5
-- 预装在模块和 M.2 HAT+ 之间的散热垫
-- 安装硬件套件
-- 16 毫米堆叠 GPIO 接头
-
-## AI 模块功能
-
-- 围绕 Hailo-8L 芯片构建的每秒 13 TOPS 神经网络推理加速器。
-- M.2 2242 外形尺寸
-
-## 安装
-
-要使用人工智能套件，您需要
-
-- Raspberry Pi 5 （树莓派5）
-
-每个 AI 套件都预装了 AI 模块、带状电缆、GPIO 堆叠接头和安装硬件。完成以下操作即可安装 AI 套件：
-
-1. 首先，确保 Raspberry Pi 运行最新的软件。运行以下命令更新：
-```sh
-sudo apt update && sudo apt full-upgrade
-```
-
-2. 接下来，[确保你的 Raspberry Pi 固件是最新的](../computers/raspberry-pi.mdx#更新-bootloader-配置)。运行以下命令查看您正在运行的固件：
-```sh
-sudo rpi-eeprom-update
-```
-
-如果看到 2023 年 12 月 6 日或更晚的日期，请继续下一步。如果看到的日期早于 2023 年 12 月 6 日，运行以下命令打开 Raspberry Pi 配置 CLI：
-
-```sh
-sudo raspi-config
-```
-
-在 `Advanced Options` > `Bootloader Version` 下，选择 `Latest`。然后用 `Finish` 或 **Escape** 键退出 `raspi-config`。
-
-运行以下命令将固件更新到最新版本：
-```sh
-sudo rpi-eeprom-update -a
-```
-
-然后，使用 `sudo reboot` 重新启动。
-
-3. 开始安装前，断开 Raspberry Pi 的电源。
-
-4. 为获得最佳性能，我们建议将 AI 套件与 Raspberry Pi Active Cooler 搭配使用。如果您有主动冷却器，请在安装 AI 套件之前安装。
-
-<img src="/img/accessories/ai-kit/ai-kit-installation-01.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
-
-5. 使用提供的四颗螺丝安装垫片。将 GPIO 堆叠接头紧紧压在 Raspberry Pi GPIO 引脚上；只要所有引脚都能安装到位，方向并不重要。断开 AI 套件的带状电缆，将另一端插入 Raspberry Pi 的 PCIe 端口。从两侧提起带状电缆支架，然后将电缆的铜接触点朝内，朝向 USB 端口插入。将带状电缆完全均匀地插入 PCIe 端口后，从两侧向下推动电缆支架，将带状电缆牢牢固定到位。
-
-<img src="/img/accessories/ai-kit/ai-kit-installation-02.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
-
-6. 将 AI 套件放在垫片上，用剩余的四颗螺丝将其固定到位。
-
-<img src="/img/accessories/ai-kit/ai-kit-installation-03.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
-
-7. 将带状电缆插入 AI 套件的插槽。从两侧抬起带状电缆支架，然后将电缆插入，铜接触点朝上。将带状电缆完全均匀地插入端口后，从两侧向下推动电缆支架，将带状电缆固定到位。
-
-<img src="/img/accessories/ai-kit/ai-kit-installation-04.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
-
-8. 恭喜，您已成功安装 AI 套件。连接 Raspberry Pi 至电源；Raspberry Pi OS 将自动检测 AI 套件。
-
-<img src="/img/accessories/ai-kit/ai-kit-installation-05.png" width="80%" alt="树莓派人工智能套件搭配Active Cooler" /><br /><br />
-
-:::warning
-在从 M.2 插槽连接或断开设备之前，请务必断开 Raspberry Pi 的电源。
+树莓派 **AI Kit** 已停产，我们建议使用 [AI HAT+](./ai-hat-plus.mdx) 系列产品。在该页面，您还可以找到更多关于 Hailo NPU 提供的 AI 技术信息，该技术同时应用于 AI Kit 和功能等效的 AI HAT+ Hailo-8L 版本。
 :::
 
-## 在树莓派上开始使用人工智能
+<img src="/img/accessories/ai-kit/ai-kit.jpg" width="80%" alt="树莓派AI Kit" />
+*树莓派AI Kit*
 
-要开始在 Raspberry Pi 上运行人工智能加速应用程序，请查看我们的 [开始使用 AI Kit 和 AI HAT+](../computers/ai.mdx) 指南。
+## 硬件组成
 
-## 产品简介
+AI Kit 将 [树莓派 M.2 HAT+](./m2-hat-plus.mdx) 与 Hailo AI 加速模块捆绑在一起，供树莓派 5 使用。套件包含：
 
-有关人工智能套件的更多信息，包括机械规格和工作环境限制，请参阅 [产品简介](https://datasheets.raspberrypi.com/ai-kit/raspberry-pi-ai-kit-product-brief.pdf)。
+* 树莓派 M.2 HAT+，用于将 AI 模块连接到树莓派 5
+* Hailo AI 模块，内含神经处理单元（NPU），预装在 M.2 HAT+ 上
+* 预装在模块和 M.2 HAT+ 之间的散热垫
+* 安装硬件套件，包括带状电缆、垫片和螺丝
+* 16mm 堆叠 GPIO 接头
+
+Hailo AI 模块提供：
+
+* 基于 Hailo-8L 芯片构建的 13 TOPS（每秒万亿次运算）神经网络推理加速器
+* M.2 2242 外形规格
+
+此外，您还需要：
+
+- 树莓派 5
+- 十字螺丝刀
+- 可选：树莓派 Active Cooler 主动散热器（推荐）。这是一个带风扇的铝制散热器，有助于散发树莓派 5 的热量，保持安全的工作温度。
+
+## 步骤 1. 安装 Active Cooler 主动散热器（推荐）
+
+我们建议您为树莓派 5 安装 Active Cooler 主动散热器。如果您想跳过此步骤，或者树莓派 5 已经安装了 Active Cooler，请继续下一步。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-01.png" width="60%" alt="树莓派AI Kit安装步骤1" />
+
+首先，确保树莓派 5 已断开电源。然后：
+
+1. **准备散热器。** 撕掉散热器底部散热垫上的保护纸。这将露出每个散热垫上的粘性表面。
+2. **定位散热器。** 将两个白色按压插销与树莓派 5 上的两个专用散热器孔对齐。在此位置，散热垫与无线模块、片上系统（SoC）和电源管理集成电路（PMIC）对齐。
+3. **固定散热器。** 轻轻将散热器按压到树莓派 5 上。然后，将两个白色按压插销均匀地按入树莓派 5 上的两个专用散热器孔中，直到听到咔嗒声。
+4. **连接风扇。** 将风扇的 JST 连接器插入树莓派 5 上的风扇插座。
+
+:::info 注意
+使用前请确保按压插销完好无损并牢固夹紧在树莓派 5 上。
+:::
+
+我们建议散热器安装到树莓派 5 后不要拆除。这是因为拆除散热器可能会导致按压插销和散热垫老化，从而造成产品损坏。
+
+## 步骤 2. 安装 M.2 HAT+
+
+M.2 HAT+ 通过 PCIe 端口连接到树莓派 5，这是一个用于连接硬件组件的高速接口。首先，确保树莓派 5 已断开电源，然后：
+
+1. **安装垫片。** 使用十字螺丝刀，用四颗螺丝将四个垫片固定到树莓派 5 上的黄色孔位。
+2. **连接 GPIO 堆叠接头。** 将 GPIO 堆叠接头与树莓派 5 上的 GPIO 引脚对齐。用力向下按压，直到接头完全就位。只要所有 GPIO 引脚都正确对齐并插入，接头的方向并不重要。
+3. **从 HAT 上断开 PCIe 带状电缆。** 从 HAT 上 PCIe 连接器的两侧向外滑动固定夹，然后轻轻拔出电缆。
+4. **将 PCIe 带状电缆插入树莓派。** 将带状电缆的另一端插入树莓派 5 的 PCIe 连接器。为此，首先从两侧向上滑动树莓派 5 PCIe 连接器的固定夹。然后，将带状电缆插入 PCIe 连接器。确保金属触点朝内（朝向 USB 端口）。
+5. **将 PCIe 带状电缆固定到树莓派。** 在固定带状电缆的同时，从两侧将固定夹推回连接器，确保电缆均匀插入。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-02.png" width="60%" alt="树莓派AI Kit安装步骤2" />
+
+6. **安装 HAT。** 将 HAT 的主要组件朝上，将 HAT 上的安装孔与树莓派 5 上的垫片对齐。使用剩余的四颗（较短的）螺丝将 HAT 固定到位。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-03.png" width="60%" alt="树莓派AI Kit安装步骤3" />
+
+7. **将 PCIe 带状电缆插入 HAT。** 将带状电缆未连接的一端插入 HAT 上的 PCIe 连接器。为此，首先从两侧向外滑动 HAT 上 PCIe 连接器的固定夹。然后，将带状电缆插入 PCIe 连接器。
+
+<img src="/img/accessories/ai-kit/ai-kit-installation-04.png" width="60%" alt="树莓派AI Kit安装步骤4" />
+
+8. **将 PCIe 带状电缆固定到 HAT。** 在固定带状电缆的同时，从两侧将固定夹推回连接器，确保电缆均匀插入。
+
+:::warning 警告
+在从 M.2 插槽连接或断开设备之前，务必断开树莓派的电源。
+:::
+
+## 下一步：运行 AI 模型
+
+有关可用示例模型列表，请参阅 Hailo 的 [Model Explorer](https://hailo.ai/products/hailo-software/model-explorer-vision/)。
+
+要开始在树莓派 5 上运行 AI 模型，请参阅 [AI 软件](../computers/ai.mdx)，其中提供了有关运行 AI 加速视觉模型的信息和指导。
 
 <Normal />

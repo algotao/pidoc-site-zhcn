@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update: 
-  date: 2025-12-20
+  date: 2026-02-01
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -463,11 +463,11 @@ sudo apt remove --purge rpi-connect
 
 ### 管理API
 
-管理API支持您无需Connect网页界面即可自动管理组织。向管理API发送请求时，必须使用有效的管理API访问令牌进行身份验证。
+管理API支持您无需Connect网页界面即可自动管理组织。向管理API发送请求时，必须使用有效的管理API访问令牌进行身份验证。基础URL为 https://api.connect.raspberrypi.com。
 
 #### 创建授权密钥
 
-若需自动生成 [通过Connect连接设备](#将-raspberry-pi-设备与-connect-账户连接起来) 的授权密钥（无需使用网页界面），请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
+若需自动生成 [通过Connect连接设备](#将-raspberry-pi-设备与-connect-账户连接起来) 的授权密钥，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
 
 请替换下方代码中的参数：
 
@@ -532,6 +532,134 @@ Content-Type: application/json; charset=utf-8
 :::tip
 您也可手动在组织的**设置**页面[创建授权密钥](./connect.mdx#创建授权密钥-1)。
 :::
+
+#### 列出设备
+
+若需列出组织中的所有设备，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理API访问令牌
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/devices HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/devices
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回**200 OK**响应，其中包含最多100个按名称字母顺序排列的组织设备，采用JSON格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "devices": [
+        {
+            "id": "69739b44-ebb2-468e-9e24-08126dec4925",
+            "name": "raspberrypi5",
+            "serial_number": "ea636879c4d47a37"
+        }
+    ],
+    "meta": {
+        "page": 1,
+        "per_page": 100,
+        "total_count": 1,
+        "total_pages": 1
+    }
+}
+```
+
+响应包含以下字段：
+
+**devices**：组织中的设备列表（每页最多100个）。
+**meta**：分页详情。
+
+`devices` 列表中的每个项目包含以下字段：
+
+**id**：设备的唯一标识符。
+**name**：设备名称。
+**serial_number**：设备序列号。
+
+`meta` 对象包含以下字段：
+
+**page**：响应的当前页码。
+**per_page**：每页的最大设备数。
+**total_count**：组织中的设备总数。
+**total_pages**：组织设备的总页数。
+
+若管理API访问令牌无效，将返回**401 未授权**响应。
+
+要获取后续页面的设备，请在查询字符串中使用 `page` 参数：
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/devices?page=2 HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' 'https://api.connect.raspberrypi.com/organisation/devices?page=2'
+```
+
+</TabItem>
+
+</Tabs>
+
+#### 删除设备
+
+若需删除组织中的设备并将其从Raspberry Pi Connect注销，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理API访问令牌
+* `device-id`：设备的唯一标识符
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+DELETE /organisation/devices/device-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --request DELETE --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/devices/device-id
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回**204 无内容**响应，响应体为空。
+
+若管理API访问令牌无效，将返回**401 未授权**响应。
+
+若在组织中未找到给定的设备ID，将返回**404 未找到**响应。
 
 ## 故障排除
 
@@ -693,7 +821,13 @@ Remote shell: allowed (0 sessions active)
 
 #### 在`rpi-connect`中启用增强日志功能
 
-使用以下命令覆盖 `rpi-connect` 服务定义：
+将环境变量 `RPI_CONNECT_VERBOSE=1` 添加到 `/etc/default/rpi-connect`，然后使用以下命令重启Connect：
+
+```sh
+rpi-connect restart
+```
+
+或者，对于2.7之前的版本，使用以下命令覆盖 `rpi-connect` 服务定义：
 
 ```sh
 systemctl --user edit rpi-connect
