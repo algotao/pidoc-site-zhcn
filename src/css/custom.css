@@ -81,3 +81,144 @@ pre {
   color: rgb(85, 85, 85);
   font-weight: bold;
 }
+
+/* ===============================================
+   SourceClass 组件样式 - 类定义显示
+   =============================================== */
+.source-class-wrapper {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-left: 4px solid #2980b9;
+  padding: 14px 18px;
+  margin: 20px 0;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.source-class-wrapper:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+[data-theme='dark'] .source-class-wrapper {
+  background: linear-gradient(135deg, #1e2125 0%, #282c34 100%);
+  border-left-color: #61dafb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .source-class-wrapper:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.source-class-keyword {
+  color: #d73a49;
+  font-weight: 600;
+  font-style: italic;
+  margin-right: 2px;
+}
+
+[data-theme='dark'] .source-class-keyword {
+  color: #ff79c6;
+}
+
+.source-class-name {
+  color: #005cc5;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+[data-theme='dark'] .source-class-name {
+  color: #50fa7b;
+}
+
+.source-class-args {
+  color: #6f42c1;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .source-class-args {
+  color: #8be9fd;
+}
+
+/* ===============================================
+   SourceProp 组件样式 - 方法/属性显示
+   =============================================== */
+.source-prop-wrapper {
+  background: #f6f8fa;
+  border-left: 3px solid #6c757d;
+  padding: 10px 16px;
+  margin: 14px 0;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+.source-prop-wrapper:hover {
+  background: #eef1f4;
+  border-left-width: 4px;
+  padding-left: 15px;
+}
+
+[data-theme='dark'] .source-prop-wrapper {
+  background: #2d3238;
+  border-left-color: #6c757d;
+}
+
+[data-theme='dark'] .source-prop-wrapper:hover {
+  background: #353b43;
+}
+
+/* 属性类型特殊样式 */
+.source-prop-property {
+  border-left-color: #9b59b6;
+}
+
+[data-theme='dark'] .source-prop-property {
+  border-left-color: #bd93f9;
+}
+
+/* 方法类型特殊样式 */
+.source-prop-method {
+  border-left-color: #3498db;
+}
+
+[data-theme='dark'] .source-prop-method {
+  border-left-color: #61dafb;
+}
+
+/* property 关键字样式 */
+.source-prop-keyword {
+  color: #e74c3c;
+  font-weight: 600;
+  font-style: italic;
+  margin-right: 4px;
+}
+
+[data-theme='dark'] .source-prop-keyword {
+  color: #ff6b6b;
+}
+
+.source-prop-name {
+  color: #005cc5;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+[data-theme='dark'] .source-prop-name {
+  color: #f1fa8c;
+}
+
+.source-prop-args {
+  color: #6f42c1;
+  font-weight: 500;
+  margin-left: 0;
+}
+
+[data-theme='dark'] .source-prop-args {
+  color: #8be9fd;
+}

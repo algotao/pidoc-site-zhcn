@@ -1,7 +1,7 @@
 ---
 sidebar_position: 8
 draft: false
-title: 8. 源与值
+title: 7. 源与值
 description: 本文介绍了GPIO Zero中源与值的相关知识。它提供了一种声明式编程范例来连接设备，如将按钮值输入到LED。每个设备有value属性，输出设备有source属性可设置迭代器。还阐述了处理数值的方法，包括使用自定义生成器和处理迭代器。同时介绍了源工具，如人造源、处理单个源和组合多个源的工具。此外，还提及内部设备和复合设备的value属性及应用。
 keywords: [GPIO Zero, 源与值, 声明式编程, 设备连接, value属性, source属性, 数值处理, 源工具, 内部设备, 复合设备]
 last_update: 
@@ -296,7 +296,7 @@ pause()
 
 ## 内部设备
 
-GPIO Zero 还提供了几个 [内部设备](./api-internal.mdx)，代表操作系统本身提供的设施。这些设备可用于对时间或网络上是否有服务器等信息做出反应。这些类包括一个 `value` 属性，可用于向设备 `source` 源输入值。例如，连接到 `Energenie` 插座的电灯可以由 `TimeOfDay` 对象控制，使其在上午 8 点到晚上 8 点之间开启：
+GPIO Zero 还提供了几个 [内部设备](./api-internal)，代表操作系统本身提供的设施。这些设备可用于对时间或网络上是否有服务器等信息做出反应。这些类包括一个 `value` 属性，可用于向设备 `source` 源输入值。例如，连接到 `Energenie` 插座的电灯可以由 `TimeOfDay` 对象控制，使其在上午 8 点到晚上 8 点之间开启：
 
 <TimedHeatLamp title="定时加热灯"/>
 <br /><br />

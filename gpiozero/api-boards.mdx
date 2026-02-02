@@ -1,0 +1,1326 @@
+---
+sidebar_position: 18
+draft: false
+title: 17. API-开发板和配件
+description: 开发板和配件的组合设备接口。包括LED板、按钮板、机器人控制板等多种预定义设备，方便快速开发项目。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 开发板, LED板, 机器人, 交通灯]
+last_update:
+  date: 2026-02-01
+---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-开发板和配件
+
+这些额外的接口用于将组件集合组合在一起以便于使用，并作为示例。它们是由 GPIO Zero 提供的各种[输入设备](./api-input.mdx)和[输出设备](./api-output.mdx)组成的复合设备。有关单独使用组件的更多信息，请参阅这些页面。
+
+:::tip
+所有 GPIO 引脚编号默认使用 Broadcom (BCM) 编号。更多信息，请参阅 [引脚编号](./recipes.mdx#引脚编号) 部分。
+:::
+
+## 常规类
+
+以下类用于与它们命名的设备一起使用。本节中的所有类都是具体类（非抽象类）。
+
+### LEDBoard
+
+<SourceClass funname="gpiozero.LEDBoard" funargs="*pins, pwm=False, active_high=True, initial_value=False, _order=None, pin_factory=None, **named_pins"></SourceClass>
+
+扩展 `LEDCollection`，表示通用 LED 板或 LED 集合。
+
+以下示例使用 LEDBoard 控制三个 LED：
+
+```py
+from gpiozero import LEDBoard
+
+leds = LEDBoard(2, 3, 4)
+leds.on()
+leds.blink()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **\*pins** （`int` 或 `str` 或 `LEDCollection`）- 指定板上 LED 连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。您可以指定任意数量的引脚。您也可以指定 `LEDBoard` 实例来创建 LED 树。
+              - **pwm** （`bool`）- 如果为 `True`，则为每个引脚构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），`on` 方法将所有关联的引脚设置为 HIGH。如果为 `False`，`on` 方法将所有引脚设置为 LOW（`off` 方法始终执行相反操作）。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 最初将关闭。如果为 `None`，每个设备将保持其当前状态。如果为 `True`，设备将初始打开。
+              - **_order** - 内部参数，用于指定设备顺序。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一项高级功能，大多数用户可以忽略）。
+              - **\*\*named_pins** - 您可以使用命名参数指定 LED。例如 `LEDBoard(red=2, green=3, blue=4)` 允许您通过 `leds.red.on()` 访问 LED。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs="*args"></SourceProp>
+
+打开所有或指定索引的 LED。
+
+<SourceProp propname="off" propargs="*args"></SourceProp>
+
+关闭所有或指定索引的 LED。
+
+<SourceProp propname="toggle" propargs="*args"></SourceProp>
+
+切换所有或指定索引的 LED 状态。
+
+<SourceProp propname="blink" propargs="on_time=1, off_time=1, fade_in_time=0, fade_out_time=0, n=None, background=True"></SourceProp>
+
+使所有 LED 重复开启和关闭。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **on_time** （`float`）- 开启的秒数。默认为 `1`。
+              - **off_time** （`float`）- 关闭的秒数。默认为 `1`。
+              - **fade_in_time** （`float`）- 淡入的秒数。默认为 `0`。如果构造时 `pwm` 为 `False`，则必须为 `0`（否则将引发 `ValueError`）。
+              - **fade_out_time** （`float`）- 淡出的秒数。默认为 `0`。如果构造时 `pwm` 为 `False`，则必须为 `0`（否则将引发 `ValueError`）。
+              - **n** （`int` 或 `None`）- 闪烁的次数；`None`（默认值）表示永久闪烁。
+              - **background** （`bool`）- 如果为 `True`（默认值），启动后台线程继续闪烁并立即返回。如果为 `False`，仅在闪烁完成后返回（警告：*n* 的默认值将导致此方法永不返回）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pulse" propargs="fade_in_time=1, fade_out_time=1, n=None, background=True"></SourceProp>
+
+使所有 LED 呼吸闪烁（平滑淡入和淡出）。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **fade_in_time** （`float`）- 淡入的秒数。默认为 `1`。
+              - **fade_out_time** （`float`）- 淡出的秒数。默认为 `1`。
+              - **n** （`int` 或 `None`）- 呼吸闪烁的次数；`None`（默认值）表示永久呼吸闪烁。
+              - **background** （`bool`）- 如果为 `True`（默认值），启动后台线程继续呼吸闪烁并立即返回。如果为 `False`，仅在完成后返回（警告：*n* 的默认值将导致此方法永不返回）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+:::note
+此方法要求构造时 `pwm` 为 `True`，否则将引发 `ValueError`。
+:::
+
+
+### LEDBarGraph
+
+<SourceClass funname="gpiozero.LEDBarGraph" funargs="*pins, pwm=False, active_high=True, initial_value=0.0, pin_factory=None"></SourceClass>
+
+扩展 `LEDCollection`，控制一排 LED 表示柱状图。正值（0 到 1）从第一个到最后一个点亮 LED，负值（-1 到 0）从最后一个到第一个点亮 LED。
+
+```py
+from gpiozero import LEDBarGraph
+
+graph = LEDBarGraph(2, 3, 4, 5, 6, pwm=True)
+graph.value = 0.5  # 点亮一半的 LED
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **\*pins** （`int` 或 `str`）- 指定柱状图 LED 连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。
+              - **pwm** （`bool`）- 如果为 `True`，则为每个引脚构造 `PWMLED` 实例以实现平滑过渡。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），`on` 方法将所有关联的引脚设置为 HIGH。如果为 `False`，`on` 方法将所有引脚设置为 LOW。
+              - **initial_value** （`float`）- 柱状图的初始值。默认为 `0.0`（所有 LED 熄灭）。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="value"></SourceProp>
+
+LED 柱状图的值（-1 到 1）。0 表示所有 LED 熄灭，1 表示所有 LED 点亮，0 到 1 之间按比例从头到尾点亮，-1 到 0 之间按比例从尾到头点亮。
+
+<SourceProp propname="source"></SourceProp>
+
+用于更新 `value` 的值源。
+
+<SourceProp propname="values"></SourceProp>
+
+返回单独 LED 值的迭代器。
+
+<SourceProp propname="lit_count"></SourceProp>
+
+实际点亮的 LED 数量（可以是负数）。
+
+
+### LEDCharDisplay
+
+<SourceClass funname="gpiozero.LEDCharDisplay" funargs="*pins, dp=None, pwm=False, active_high=True, initial_value=' ', pin_factory=None"></SourceClass>
+
+扩展 `LEDCollection`，显示单个字符的七段或十四段显示器。
+
+<SourceProp propname="value"></SourceProp>
+
+要显示的字符。
+
+<SourceProp propname="font"></SourceProp>
+
+用于字符显示的字体。
+
+
+### LEDMultiCharDisplay
+
+<SourceClass funname="gpiozero.LEDMultiCharDisplay" funargs="char, *pins, pwm=False, active_high=True, initial_value=None, pin_factory=None"></SourceClass>
+
+扩展 `CompositeOutputDevice`，用于多字符多路复用 LED 字符显示器。
+
+该类使用一个 `LEDCharDisplay` 实例（用于控制一个字符的 LED）和一组引脚（代表每个字符的公共阴极或阳极）构造而成。
+
+```py
+from gpiozero import LEDCharDisplay, LEDMultiCharDisplay
+
+c = LEDCharDisplay(4, 5, 6, 7, 8, 9, 10)
+d = LEDMultiCharDisplay(c, 19, 20, 21, 22)
+d.value = 'LEDS'
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **char** （`LEDCharDisplay`）- 能够控制显示器中一个字符 LED 的 `LEDCharDisplay` 实例。
+              - **\*pins** （`int` 或 `str`）- 代表每个字符的公共阴极（或阳极）的引脚。
+              - **pwm** （`bool`）- 如果为 `True`，则为每个引脚构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），则适用于控制晶体管的引脚。
+              - **initial_value** （`str` 或 `None`）- 显示器的初始值。默认为指定字符显示器值的元组，乘以提供的引脚数。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="value"></SourceProp>
+
+要显示的字符序列。可以是字符串或字符元组（用于处理小数点）。
+
+<SourceProp propname="plex_delay"></SourceProp>
+
+多路复用延迟时间（秒），默认为 0.005 秒。
+
+
+### LEDCharFont
+
+<SourceClass funname="gpiozero.LEDCharFont" funargs="font"></SourceClass>
+
+包含值到 LED 状态元组的映射。
+
+此类实际上充当 `LEDCharDisplay` 的"字体"，GPIO Zero 默认提供两种字体（用于 7 段和 14 段显示器）。您可以从 `dict` 构造自己的字体实例，该字典将值（通常是单字符字符串）映射到 LED 状态元组：
+
+```py
+from gpiozero import LEDCharDisplay, LEDCharFont
+
+my_font = LEDCharFont({
+    ' ': (0, 0, 0, 0, 0, 0, 0),
+    'D': (1, 1, 1, 1, 1, 1, 0),
+    'A': (1, 1, 1, 0, 1, 1, 1),
+    'd': (0, 1, 1, 1, 1, 0, 1),
+    'a': (1, 1, 1, 1, 1, 0, 1),
+})
+display = LEDCharDisplay(26, 13, 12, 22, 17, 19, 6, dp=5, font=my_font)
+display.value = 'D'
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **font** （`dict`）- 将值映射到 LED 状态元组的字典。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+:::note
+您的自定义映射应始终包含一个值（通常是空格），表示所有 LED 都关闭。这通常是 `LEDCharDisplay` 实例的默认值。
+
+您也可以从友好的基于文本的格式加载字体。GPIO Zero 提供了 `gpiozero.fonts.load_segment_font()` 函数来解析此类格式。
+:::
+
+
+### ButtonBoard
+
+<SourceClass funname="gpiozero.ButtonBoard" funargs="*pins, pull_up=True, active_state=None, bounce_time=None, hold_time=1, hold_repeat=False, _order=None, pin_factory=None, **named_pins"></SourceClass>
+
+扩展 `CompositeDevice`，表示通用按钮板或按钮集合。按钮板的 `value` 是所有按钮状态的元组。
+
+```py
+from gpiozero import ButtonBoard
+
+buttons = ButtonBoard(6, 7, 8, 9)
+buttons[0].when_pressed = lambda: print("Button 1 pressed")
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **\*pins** （`int` 或 `str`）- 指定按钮板上按钮连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。您可以指定 `ButtonBoard` 实例来创建按钮树。
+              - **pull_up** （`bool`）- 如果为 `True`（默认值），GPIO 引脚将被默认拉高。
+              - **active_state** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice`。
+              - **bounce_time** （`float` 或 `None`）- 如果为 `None`（默认值），则不执行软件防抖动补偿。
+              - **hold_time** （`float`）- 按钮按下后，执行 `when_held` 处理程序前等待的时间长度（以秒为单位）。默认为 `1`。
+              - **hold_repeat** （`bool`）- 如果为 `True`，只要设备保持激活状态，就会每隔 *hold_time* 秒重复执行 `when_held` 处理程序。
+              - **_order** - 内部参数，用于指定设备顺序。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+              - **\*\*named_pins** - 您可以使用命名参数指定按钮。例如 `ButtonBoard(red=2, green=3)` 允许您通过 `btns.red.is_pressed` 访问按钮。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_press" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到任意按钮被按下。
+
+<SourceProp propname="wait_for_release" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到所有按钮被释放。
+
+<SourceProp propname="is_pressed"></SourceProp>
+
+如果任意按钮当前被按下，则返回 `True`。
+
+<SourceProp propname="pressed_time"></SourceProp>
+
+按钮被按下的时长。
+
+<SourceProp propname="when_pressed"></SourceProp>
+
+当按钮被按下时要调用的函数。
+
+<SourceProp propname="when_released"></SourceProp>
+
+当按钮被释放时要调用的函数。
+
+<SourceProp propname="value"></SourceProp>
+
+所有按钮状态的元组。
+
+
+### TrafficLights
+
+<SourceClass funname="gpiozero.TrafficLights" funargs="red=None, amber=None, green=None, *, pwm=False, initial_value=False, yellow=None, pin_factory=None"></SourceClass>
+
+扩展 `LEDBoard`，用于包含红、黄、绿色 LED 的交通信号灯设备。
+
+```py
+from gpiozero import TrafficLights
+from time import sleep
+
+lights = TrafficLights(red=2, amber=3, green=4)
+lights.green.on()
+sleep(1)
+lights.amber.on()
+sleep(1)
+lights.red.on()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **red** （`int` 或 `str`）- 红色 LED 连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。
+              - **amber** （`int` 或 `str` 或 `None`）- 琥珀色（黄色）LED 连接的 GPIO 引脚。
+              - **green** （`int` 或 `str`）- 绿色 LED 连接的 GPIO 引脚。
+              - **pwm** （`bool`）- 如果为 `True`，则为每个引脚构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool`）- 如果为 `False`（默认值），所有 LED 最初将关闭。
+              - **yellow** （`int` 或 `str` 或 `None`）- 黄色 LED 连接的 GPIO 引脚。这仅仅是 `amber` 参数的别名；您不能同时指定 `amber` 和 `yellow`。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="red"></SourceProp>
+
+红色 `LED` 或 `PWMLED`。
+
+<SourceProp propname="amber"></SourceProp>
+
+琥珀色 `LED` 或 `PWMLED`。注意，当使用 *yellow* 关键字参数构造实例时，此属性不会存在。
+
+<SourceProp propname="yellow"></SourceProp>
+
+黄色 `LED` 或 `PWMLED`。注意，仅当使用 *yellow* 关键字参数构造实例时，此属性才会存在。
+
+<SourceProp propname="green"></SourceProp>
+
+绿色 `LED` 或 `PWMLED`。
+
+
+### TrafficLightsBuzzer
+
+<SourceClass funname="gpiozero.TrafficLightsBuzzer" funargs="lights, buzzer, button, *, pin_factory=None"></SourceClass>
+
+扩展 `CompositeOutputDevice`，是带有交通灯、按钮和蜂鸣器的 HAT 的通用类。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **lights** （`TrafficLights`）- 表示 HAT 上交通灯的 `TrafficLights` 实例。
+              - **buzzer** （`Buzzer`）- 表示 HAT 上蜂鸣器的 `Buzzer` 实例。
+              - **button** （`Button`）- 表示 HAT 上按钮的 `Button` 实例。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="lights"></SourceProp>
+
+作为 *lights* 参数传递的 `TrafficLights` 实例。
+
+<SourceProp propname="buzzer"></SourceProp>
+
+作为 *buzzer* 参数传递的 `Buzzer` 实例。
+
+<SourceProp propname="button"></SourceProp>
+
+作为 *button* 参数传递的 `Button` 实例。
+
+
+### PiHutXmasTree
+
+<SourceClass funname="gpiozero.PiHutXmasTree" funargs="*, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `LEDBoard`，用于 [Pi Hut 的圣诞树板](https://thepihut.com/products/3d-xmas-tree-for-raspberry-pi)：一个 3D 圣诞树板，带有 24 个红色 LED 和一个顶部的白色 LED 星星。
+
+24 个红色 LED 可以通过属性 `led0`、`led1`、`led2` 等访问。白色星星 LED 通过 `star` 属性访问。或者，与所有 `LEDBoard` 的子类一样，您可以将实例视为 LED 序列（第一个元素是 `star`）。
+
+圣诞树板的引脚是固定的，因此在构造此类时无需指定。以下示例逐个打开所有 LED：
+
+```py
+from gpiozero import PiHutXmasTree
+from time import sleep
+
+tree = PiHutXmasTree()
+
+for light in tree:
+    light.on()
+    sleep(1)
+```
+
+以下示例打开星星 LED 并使所有红色 LED 随机闪烁：
+
+```py
+from gpiozero import PiHutXmasTree
+from gpiozero.tools import random_values
+from signal import pause
+
+tree = PiHutXmasTree(pwm=True)
+
+tree.star.on()
+for led in tree[1:]:
+    led.source = random_values()
+
+pause()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则为每个 LED 构造 `PWMLED` 实例，允许可变亮度。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `True`，所有 LED 初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="star"></SourceProp>
+
+顶部的白色星星 LED（`PWMLED` 或 `LED`）。
+
+
+### LedBorg
+
+<SourceClass funname="gpiozero.LedBorg" funargs="*, initial_value=(0, 0, 0), pwm=True, pin_factory=None"></SourceClass>
+
+扩展 `RGBLED`，用于 [PiBorg LedBorg](https://www.piborg.org/ledborg)：一个包含非常明亮 RGB LED 的扩展板。
+
+LedBorg 的引脚是固定的，因此在构造此类时无需指定。以下示例将 LedBorg 设为紫色：
+
+```py
+from gpiozero import LedBorg
+
+led = LedBorg()
+led.color = (1, 0, 1)
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **initial_value** （`Color` 或 `tuple`）- LedBorg 的初始颜色。默认为黑色 `(0, 0, 0)`。
+              - **pwm** （`bool`）- 如果为 `True`（默认值），为 LedBorg 的每个组件构造 `PWMLED` 实例。如果为 `False`，则构造常规 `LED` 实例，这将阻止平滑的颜色渐变。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### PiLiter
+
+<SourceClass funname="gpiozero.PiLiter" funargs="*, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `LEDBoard`，用于 [Ciseco Pi-LITEr](http://shop.ciseco.co.uk/pi-liter-8-led-strip-for-the-raspberry-pi/)：一排 8 个非常明亮的 LED。
+
+Pi-LITEr 的引脚是固定的，因此在构造此类时无需指定。以下示例打开 Pi-LITEr 的所有 LED：
+
+```py
+from gpiozero import PiLiter
+
+lite = PiLiter()
+lite.on()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则为每个引脚构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `None`，每个 LED 将保持为输出配置时的任何状态（警告：可能是开启的）。如果为 `True`，所有 LED 初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### PiLiterBarGraph
+
+<SourceClass funname="gpiozero.PiLiterBarGraph" funargs="*, pwm=False, initial_value=0.0, pin_factory=None"></SourceClass>
+
+扩展 `LEDBarGraph`，将 [Ciseco Pi-LITEr](http://shop.ciseco.co.uk/pi-liter-8-led-strip-for-the-raspberry-pi/) 作为 8 段柱状图使用。
+
+Pi-LITEr 的引脚是固定的，因此在构造此类时无需指定。以下示例将柱状图值设为 0.5：
+
+```py
+from gpiozero import PiLiterBarGraph
+
+graph = PiLiterBarGraph()
+graph.value = 0.5
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则为每个引脚构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`float`）- 柱状图的初始 `value`，以 -1 到 +1 之间的浮点数给出。默认为 `0.0`。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### PiTraffic
+
+<SourceClass funname="gpiozero.PiTraffic" funargs="*, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `TrafficLights`，用于连接到 GPIO 引脚 9、10 和 11 的 [Low Voltage Labs PI-TRAFFIC](http://lowvoltagelabs.com/products/pi-traffic/) 垂直交通灯板。
+
+如果 PI-TRAFFIC 连接到默认引脚（9、10、11），则无需指定引脚。以下示例打开 PI-TRAFFIC 的琥珀色 LED：
+
+```py
+from gpiozero import PiTraffic
+
+traffic = PiTraffic()
+traffic.amber.on()
+```
+
+要在 PI-TRAFFIC 板连接到非标准引脚组时使用，只需使用父类 `TrafficLights`。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则为每个 LED 构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `None`，每个设备将保持为输出配置时的任何状态（警告：可能是开启的）。如果为 `True`，设备初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### PiStop
+
+<SourceClass funname="gpiozero.PiStop" funargs="location, *, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `TrafficLights`，用于 [PiHardware Pi-Stop](https://pihw.wordpress.com/meltwaters-pi-hardware-kits/pi-stop/)：一个垂直交通灯板。
+
+以下示例打开连接到位置 `A+` 的 Pi-Stop 的琥珀色 LED：
+
+```py
+from gpiozero import PiStop
+
+traffic = PiStop('A+')
+traffic.amber.on()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **location** （`str`）- Pi-Stop 连接到 GPIO 头的[位置](https://github.com/PiHw/Pi-Stop/blob/master/markdown_source/markdown/Discover-PiStop.md)。必须是以下之一：`A`、`A+`、`B`、`B+`、`C`、`D`。
+              - **pwm** （`bool`）- 如果为 `True`，则为每个 LED 构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `None`，每个设备将保持为输出配置时的任何状态（警告：可能是开启的）。如果为 `True`，设备初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### FishDish
+
+<SourceClass funname="gpiozero.FishDish" funargs="*, pwm=False, pin_factory=None"></SourceClass>
+
+扩展 `CompositeOutputDevice`，用于 [Pi Supply FishDish](https://www.pi-supply.com/product/fish-dish-raspberry-pi-led-buzzer-board/)：交通灯 LED、按钮和蜂鸣器。
+
+FishDish 的引脚是固定的，因此在构造此类时无需指定。以下示例等待 FishDish 上的按钮被按下，然后打开所有 LED：
+
+```py
+from gpiozero import FishDish
+
+fish = FishDish()
+fish.button.wait_for_press()
+fish.lights.on()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则为每个 LED 构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### TrafficHat
+
+<SourceClass funname="gpiozero.TrafficHat" funargs="*, pwm=False, pin_factory=None"></SourceClass>
+
+扩展 `CompositeOutputDevice`，用于 [Pi Supply Traffic HAT](https://uk.pi-supply.com/products/traffic-hat-for-raspberry-pi)：一个带有交通灯 LED、按钮和蜂鸣器的板。
+
+Traffic HAT 的引脚是固定的，因此在构造此类时无需指定。以下示例等待 Traffic HAT 上的按钮被按下，然后打开所有 LED：
+
+```py
+from gpiozero import TrafficHat
+
+hat = TrafficHat()
+hat.button.wait_for_press()
+hat.lights.on()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则为每个 LED 构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### TrafficpHat
+
+<SourceClass funname="gpiozero.TrafficpHat" funargs="*, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `TrafficLights`，用于 [Pi Supply Traffic pHAT](http://pisupp.ly/trafficphat)：一个带有交通灯 LED 的小板。
+
+Traffic pHAT 的引脚是固定的，因此在构造此类时无需指定。以下示例打开所有 LED：
+
+```py
+from gpiozero import TrafficpHat
+
+phat = TrafficpHat()
+phat.red.on()
+phat.blink()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则为每个 LED 构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `None`，每个设备将保持为输出配置时的任何状态（警告：可能是开启的）。如果为 `True`，设备初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### JamHat
+
+<SourceClass funname="gpiozero.JamHat" funargs="*, pwm=False, pin_factory=None"></SourceClass>
+
+扩展 `CompositeOutputDevice`，用于 [ModMyPi JamHat](https://thepihut.com/products/jam-hat) 板。
+
+有 6 个 LED、两个按钮和一个音调蜂鸣器。引脚是固定的。用法：
+
+```py
+from gpiozero import JamHat
+
+hat = JamHat()
+
+hat.button_1.wait_for_press()
+hat.lights_1.on()
+hat.buzzer.play('C4')
+hat.button_2.wait_for_press()
+hat.off()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，为板上每个 LED 构造 `PWMLED` 实例。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="lights_1, lights_2"></SourceProp>
+
+两个 `LEDBoard` 实例，分别表示 JamHat 上的顶部（lights_1）和底部（lights_2）LED 行。每个包含 `red`、`yellow`、`green` 属性，分别对应红、黄、绿 `LED` 或 `PWMLED` 实例。
+
+<SourceProp propname="button_1, button_2"></SourceProp>
+
+JamHat 上的左侧（button_1）和右侧（button_2）`Button` 对象。
+
+<SourceProp propname="buzzer"></SourceProp>
+
+JamHat 右下角的 `TonalBuzzer`。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭所有 LED 并停止蜂鸣器。
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开所有 LED 并使蜂鸣器播放其中音。
+
+
+### Pibrella
+
+<SourceClass funname="gpiozero.Pibrella" funargs="*, pwm=False, pin_factory=None"></SourceClass>
+
+扩展 `CompositeOutputDevice`，用于 Cyntech/Pimoroni [Pibrella](http://www.pibrella.com/) 板。
+
+Pibrella 板包含 3 个 LED、一个按钮、一个音调蜂鸣器、四个通用输入通道和四个通用输出通道（带 LED）。
+
+此类公开 LED、按钮和蜂鸣器。用法：
+
+```py
+from gpiozero import Pibrella
+
+pb = Pibrella()
+
+pb.button.wait_for_press()
+pb.lights.on()
+pb.buzzer.play('A4')
+pb.off()
+```
+
+四个输入和输出通道也被公开，因此您可以使用这些引脚创建 GPIO Zero 设备，而无需查找它们各自的引脚编号：
+
+```py
+from gpiozero import Pibrella, LED, Button
+
+pb = Pibrella()
+btn = Button(pb.inputs.a, pull_up=False)
+led = LED(pb.outputs.e)
+
+btn.when_pressed = led.on
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，为板上每个 LED 构造 `PWMLED` 实例，否则如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="lights"></SourceProp>
+
+表示三个 LED 的 `TrafficLights` 实例。包含 `red`、`amber`、`green` 属性，分别对应红、琥珀、绿 `LED` 或 `PWMLED` 实例。
+
+<SourceProp propname="button"></SourceProp>
+
+Pibrella 上的红色 `Button` 对象。
+
+<SourceProp propname="buzzer"></SourceProp>
+
+表示蜂鸣器的 `TonalBuzzer` 对象。
+
+<SourceProp propname="inputs"></SourceProp>
+
+输入引脚编号的 `namedtuple`，包含 `a`、`b`、`c`、`d` 属性。
+
+<SourceProp propname="outputs"></SourceProp>
+
+输出引脚编号的 `namedtuple`，包含 `e`、`f`、`g`、`h` 属性。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭所有 LED 并停止蜂鸣器。
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开所有 LED 并使蜂鸣器播放其中音。
+
+
+### Robot
+
+<SourceClass funname="gpiozero.Robot" funargs="left, right, *, pin_factory=None"></SourceClass>
+
+扩展 `CompositeDevice`，表示通用双电机机器人。
+
+此类由代表机器人左右轮的两个电机实例构造而成。例如，如果左侧电机的控制器连接到 GPIO 4 和 14，而右侧电机的控制器连接到 GPIO 17 和 18，则以下示例将驱动机器人向前移动：
+
+```py
+from gpiozero import Robot, Motor
+
+robot = Robot(left=Motor(4, 14), right=Motor(17, 18))
+robot.forward(0.5)
+robot.left()
+robot.stop()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **left** （`Motor` 或 `PhaseEnableMotor`）- 机器人左轮的 `Motor` 或 `PhaseEnableMotor` 实例。
+              - **right** （`Motor` 或 `PhaseEnableMotor`）- 机器人右轮的 `Motor` 或 `PhaseEnableMotor` 实例。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="forward" propargs="speed=1, *, curve_left=0, curve_right=0"></SourceProp>
+
+使机器人以指定速度向前行驶。
+
+<SourceProp propname="backward" propargs="speed=1, *, curve_left=0, curve_right=0"></SourceProp>
+
+使机器人以指定速度向后行驶。
+
+<SourceProp propname="left" propargs="speed=1"></SourceProp>
+
+使机器人左转。
+
+<SourceProp propname="right" propargs="speed=1"></SourceProp>
+
+使机器人右转。
+
+<SourceProp propname="reverse" propargs=""></SourceProp>
+
+反转机器人的当前运动方向。
+
+<SourceProp propname="stop" propargs=""></SourceProp>
+
+停止机器人。
+
+<SourceProp propname="left_motor"></SourceProp>
+
+机器人左侧的 `Motor`。
+
+<SourceProp propname="right_motor"></SourceProp>
+
+机器人右侧的 `Motor`。
+
+<SourceProp propname="value"></SourceProp>
+
+表示机器人运动的元组 (left_motor_speed, right_motor_speed)，`(-1, -1)` 表示全速后退，`(1, 1)` 表示全速前进，`(0, 0)` 表示停止。
+
+
+### PhaseEnableRobot
+
+<SourceClass funname="gpiozero.PhaseEnableRobot" funargs="left, right, *, pin_factory=None"></SourceClass>
+
+扩展 `Robot`，用于使用相位/使能（Phase/Enable）驱动的电机板（如 Pololu DRV8835）的机器人。
+
+:::note
+此类已废弃。请改用 `PololuDRV8835Robot` 或使用 `PhaseEnableMotor` 类构造自己的 `Robot`。
+:::
+
+
+### RyanteckRobot
+
+<SourceClass funname="gpiozero.RyanteckRobot" funargs="*, pwm=True, pin_factory=None"></SourceClass>
+
+扩展 `Robot`，用于 [Ryanteck 电机控制板](https://uk.pi-supply.com/products/ryanteck-rtk-000-001-motor-controller-board-kit-raspberry-pi)。
+
+Ryanteck MCB 的引脚是固定的，因此在构造此类时无需指定。以下示例驱动机器人向前移动：
+
+```py
+from gpiozero import RyanteckRobot
+
+robot = RyanteckRobot()
+robot.forward()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`（默认值），则为电机控制器引脚构造 `PWMOutputDevice` 实例，允许方向和变速控制。如果为 `False`，则构造 `DigitalOutputDevice` 实例，仅允许方向控制。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### CamJamKitRobot
+
+<SourceClass funname="gpiozero.CamJamKitRobot" funargs="*, pwm=True, pin_factory=None"></SourceClass>
+
+扩展 `Robot`，用于 [CamJam #3 EduKit](http://camjam.me/?page_id=1035) 电机控制板。
+
+CamJam 机器人控制器的引脚是固定的，因此在构造此类时无需指定。以下示例驱动机器人向前移动：
+
+```py
+from gpiozero import CamJamKitRobot
+
+robot = CamJamKitRobot()
+robot.forward()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`（默认值），则为电机控制器引脚构造 `PWMOutputDevice` 实例，允许方向和变速控制。如果为 `False`，则构造 `DigitalOutputDevice` 实例，仅允许方向控制。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### PololuDRV8835Robot
+
+<SourceClass funname="gpiozero.PololuDRV8835Robot" funargs="*, pwm=True, pin_factory=None"></SourceClass>
+
+扩展 `Robot`，用于 [Pololu DRV8835 双电机驱动套件](https://www.pololu.com/product/2753)。
+
+Pololu DRV8835 的引脚是固定的，因此在构造此类时无需指定。以下示例驱动机器人向前移动：
+
+```py
+from gpiozero import PololuDRV8835Robot
+
+robot = PololuDRV8835Robot()
+robot.forward()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`（默认值），则为电机控制器的使能引脚构造 `PWMOutputDevice` 实例，允许方向和变速控制。如果为 `False`，则构造 `DigitalOutputDevice` 实例，仅允许方向控制。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### Energenie
+
+<SourceClass funname="gpiozero.Energenie" funargs="socket, initial_value=False, *, pin_factory=None"></SourceClass>
+
+扩展 `Device`，表示 [Energenie 插座](https://energenie4u.co.uk/) 控制器。
+
+此类使用插座编号和可选的初始状态（默认为 `False`，表示关闭）构造。此类的实例可用于打开和关闭外围设备。例如：
+
+```py
+from gpiozero import Energenie
+
+lamp = Energenie(1)
+lamp.on()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **socket** （`int`）- 此实例应控制的插座。这是一个介于 1 和 4 之间的整数。
+              - **initial_value** （`bool` 或 `None`）- 插座的初始状态。由于 Energenie 插座不提供读取其状态的方法，您可以为插座提供初始状态，该状态将在构造时设置。默认为 `False`，将关闭插座。指定 `None` 将不设置任何初始状态，也不向设备传输任何控制信号。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开插座。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭插座。
+
+<SourceProp propname="value"></SourceProp>
+
+表示插座状态：`1` 表示开启，`0` 表示关闭。由于 Energenie 插座不提供读取其状态的方法，此属性仅存储软件状态（即最后设置的值）。
+
+
+### StatusZero
+
+<SourceClass funname="gpiozero.StatusZero" funargs="*labels, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `LEDBoard`，用于 Pi Hut 的 [STATUS Zero](https://thepihut.com/products/status-zero)：一个 Pi Zero 尺寸的扩展板，带有三组红/绿 LED 来提供状态指示。
+
+以下示例将第一组指定为标签 "wifi"，第二组为 "raining"，并分别将它们设为绿色和红色：
+
+```py
+from gpiozero import StatusZero
+
+status = StatusZero('wifi', 'raining')
+status.wifi.green.on()
+status.raining.red.on()
+```
+
+每个指定的标签将包含两个名为 "red" 和 "green" 的 `LED` 对象。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **\*labels** （`str`）- 指定要分配给指示条的标签名称。最多可以列出三个标签。如果未提供标签，将使用名称 'one'、'two' 和 'three' 初始化三个指示条。如果仅提供部分标签，任何剩余的指示条将不会被初始化。
+              - **pwm** （`bool`）- 如果为 `True`，则构造 `PWMLED` 实例表示每个 LED。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `True`，所有 LED 初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### StatusBoard
+
+<SourceClass funname="gpiozero.StatusBoard" funargs="*labels, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `CompositeOutputDevice`，用于 Pi Hut 的 [STATUS](https://thepihut.com/products/status-board) 板：一个 HAT 尺寸的扩展板，带有五组红/绿 LED 和按钮来提供带有额外输入的状态指示。
+
+以下示例将第一组指定为标签 "wifi"，第二组为 "raining"，将 wifi 设为绿色，然后激活按钮以在按下时切换其灯光：
+
+```py
+from gpiozero import StatusBoard
+
+status = StatusBoard('wifi', 'raining')
+status.wifi.lights.green.on()
+status.wifi.button.when_pressed = status.wifi.lights.toggle
+```
+
+每个指定的标签将包含一个 "lights" `LEDBoard`（包含两个名为 "red" 和 "green" 的 `LED` 对象）和一个名为 "button" 的 `Button` 对象。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **\*labels** （`str`）- 指定要分配给指示条的标签名称。最多可以列出五个标签。如果未提供标签，将使用名称 'one' 到 'five' 初始化五个指示条。如果仅提供部分标签，任何剩余的指示条将不会被初始化。
+              - **pwm** （`bool`）- 如果为 `True`，则构造 `PWMLED` 实例表示每个 LED。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `True`，所有 LED 初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+### SnowPi
+
+<SourceClass funname="gpiozero.SnowPi" funargs="*, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `LEDBoard`，用于 [Ryanteck SnowPi](https://ryanteck.uk/raspberry-pi/114-snowpi-the-gpio-snowman-for-raspberry-pi-0635648608303.html) 板。
+
+SnowPi 的引脚是固定的，因此在构造此类时无需指定。以下示例打开眼睛，使鼻子呼吸闪烁，手臂闪烁：
+
+```py
+from gpiozero import SnowPi
+
+snowman = SnowPi(pwm=True)
+snowman.eyes.on()
+snowman.nose.pulse()
+snowman.arms.blink()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则构造 `PWMLED` 实例表示每个 LED。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `True`，所有 LED 初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="arms"></SourceProp>
+
+表示雪人手臂的 `LEDBoard`。
+
+<SourceProp propname="eyes"></SourceProp>
+
+表示雪人眼睛的 `LEDBoard`。
+
+<SourceProp propname="nose"></SourceProp>
+
+表示雪人鼻子的 `LED` 或 `PWMLED`。
+
+
+### PumpkinPi
+
+<SourceClass funname="gpiozero.PumpkinPi" funargs="*, pwm=False, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `LEDBoard`，用于 [ModMyPi PumpkinPi](https://www.modmypi.com/blog/pumpkin-pi-at-the-big-birthday-weekend) 板。
+
+PumpkinPi 有十二个 LED 连接到各个引脚，因此引脚是固定的。例如：
+
+```py
+from gpiozero import PumpkinPi
+
+pumpkin = PumpkinPi(pwm=True)
+pumpkin.sides.pulse()
+pumpkin.off()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pwm** （`bool`）- 如果为 `True`，则构造 `PWMLED` 实例表示每个 LED。如果为 `False`（默认值），则构造常规 `LED` 实例。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），所有 LED 初始关闭。如果为 `True`，所有 LED 初始打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="sides"></SourceProp>
+
+表示南瓜侧面的 `LEDBoard`。
+
+<SourceProp propname="eyes"></SourceProp>
+
+表示南瓜眼睛的 `LEDBoard`。
+
+<SourceProp propname="nose"></SourceProp>
+
+表示南瓜鼻子的 `LED` 或 `PWMLED`。
+
+<SourceProp propname="mouth"></SourceProp>
+
+表示南瓜嘴巴的 `LEDBoard`。
+
+
+
+## 基类
+
+上述部分中的类派生自一系列基类，其中一些实际上是抽象的。这些类形成了下图中显示的（部分）层次结构：
+
+![复合设备层次结构图](@site/static/gpiozeroimg/composite_device_hierarchy.svg)
+
+对于复合设备，以下图表显示了哪些设备由哪些其他设备组成：
+
+![复合设备组成图](@site/static/gpiozeroimg/composed_devices.svg)
+
+以下部分为希望为自己的设备构造类的高级用户记录这些基类。
+
+### LEDCollection
+
+<SourceClass funname="gpiozero.LEDCollection" funargs="*pins, pwm=False, active_high=True, initial_value=False, _order=None, pin_factory=None, **named_pins"></SourceClass>
+
+扩展 `CompositeOutputDevice`。`LEDBoard` 和 `LEDBarGraph` 的抽象基类。
+
+<SourceProp propname="is_lit"></SourceProp>
+
+如果复合设备的任何组成设备具有"真值"值，则复合设备被认为是"活动的"。
+
+<SourceProp propname="leds"></SourceProp>
+
+此集合（及所有子集合）中包含的所有 LED 的扁平元组。
+
+### CompositeOutputDevice
+
+<SourceClass funname="gpiozero.CompositeOutputDevice" funargs="*args, _order=None, pin_factory=None, **kwargs"></SourceClass>
+
+扩展 `CompositeDevice`，添加了 `on()`、`off()` 和 `toggle()` 方法用于控制从属输出设备。还将 `value` 扩展为可写。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **\*args** （`Device`）- 属于复合设备的未命名设备。这些设备的 `value` 属性将按此处指定的顺序在复合设备的元组 `value` 中表示。
+              - **_order** （`list` 或 `None`）- 如果指定，这是关键字参数指定的命名项的顺序（以确保 `value` 元组以特定顺序构造）。所有关键字参数 *必须* 包含在集合中。如果省略，将为关键字参数选择按字母顺序排序的顺序。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一项高级功能，大多数用户可以忽略）。
+              - **\*\*kwargs** （`Device`）- 属于复合设备的命名设备。这些设备将作为结果设备上的命名属性访问，其 `value` 属性将作为复合设备元组 `value` 的命名元素访问。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭所有输出设备。
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开所有输出设备。
+
+<SourceProp propname="toggle" propargs=""></SourceProp>
+
+切换所有输出设备。对于每个设备，如果开启则关闭；如果关闭则开启。
+
+<SourceProp propname="value"></SourceProp>
+
+包含每个从属设备值的元组。此属性也可设置以更新所有从属输出设备的状态。
+
+### CompositeDevice
+
+<SourceClass funname="gpiozero.CompositeDevice" funargs="*args, _order=None, pin_factory=None, **kwargs"></SourceClass>
+
+扩展 `Device`，表示由多个设备组成的复合设备，如简单的 HAT、H 桥电机控制器、由多个电机组成的机器人等。
+
+构造函数接受从属设备作为位置参数或关键字参数。位置参数形成未命名设备，通过将复合设备视为容器来访问，而关键字参数作为命名（只读）属性添加到设备。
+
+例如：
+
+```py
+>>> from gpiozero import *
+>>> d = CompositeDevice(LED(2), LED(3), LED(4), btn=Button(17))
+>>> d[0]
+<gpiozero.LED object on pin GPIO2, active_high=True, is_active=False>
+>>> d[1]
+<gpiozero.LED object on pin GPIO3, active_high=True, is_active=False>
+>>> d[2]
+<gpiozero.LED object on pin GPIO4, active_high=True, is_active=False>
+>>> d.btn
+<gpiozero.Button object on pin GPIO17, pull_up=True, is_active=False>
+>>> d.value
+CompositeDeviceValue(device_0=False, device_1=False, device_2=False, btn=False)
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **\*args** （`Device`）- 属于复合设备的未命名设备。这些设备的 `value` 属性将按此处指定的顺序在复合设备的元组 `value` 中表示。
+              - **_order** （`list` 或 `None`）- 如果指定，这是关键字参数指定的命名项的顺序（以确保 `value` 元组以特定顺序构造）。所有关键字参数 *必须* 包含在集合中。如果省略，将为关键字参数选择按字母顺序排序的顺序。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一项高级功能，大多数用户可以忽略）。
+              - **\*\*kwargs** （`Device`）- 属于复合设备的命名设备。这些设备将作为结果设备上的命名属性访问，其 `value` 属性将作为复合设备元组 `value` 的命名元素访问。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="close" propargs=""></SourceProp>
+
+关闭设备并释放所有关联资源（如 GPIO 引脚）。
+
+此方法是幂等的（可以在已关闭的设备上调用而没有任何副作用）。它主要用于命令行的交互使用。它禁用设备并释放其引脚供另一个设备使用。
+
+您可以简单地通过删除对象来尝试执行此操作，但除非您清理了对该对象的所有引用，否则这可能不起作用（即使您清理了所有引用，仍然不能保证垃圾收集器会在该点实际删除对象）。相比之下，close 方法提供了确保对象被关闭的方法。
+
+例如，如果您的面包板上有一个连接到引脚 16 的蜂鸣器，但然后希望连接一个 LED：
+
+```py
+>>> from gpiozero import *
+>>> bz = Buzzer(16)
+>>> bz.on()
+>>> bz.off()
+>>> bz.close()
+>>> led = LED(16)
+>>> led.blink()
+```
+
+`Device` 后代也可以使用 `with` 语句用作上下文管理器。例如：
+
+```py
+>>> from gpiozero import *
+>>> with Buzzer(16) as bz:
+...     bz.on()
+...
+>>> with LED(16) as led:
+...     led.on()
+...
+```
+
+<SourceProp propname="closed"></SourceProp>
+
+如果设备已关闭（参见 `close()` 方法），则返回 `True`。一旦设备关闭，您将无法再使用任何其他方法或属性来控制或查询设备。
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果复合设备的任何组成设备具有"真值"值，则复合设备被认为是"活动的"。
+
+<SourceProp propname="namedtuple"></SourceProp>
+
+用于表示复合设备值的 `namedtuple()` 类型。`value` 属性返回此类型的值。
+
+<SourceProp propname="value"></SourceProp>
+
+包含每个从属设备值的 `namedtuple()`。具有名称的设备将表示为命名元素。未命名设备将为其生成唯一名称，并按照它们在构造函数中出现的位置显示。
+
+<Normal />

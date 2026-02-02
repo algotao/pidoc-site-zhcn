@@ -151,7 +151,7 @@ const config = {
         typesenseServerConfig: {
           nodes: [
             {
-              host: 'ca.algo.com.cn',
+              host: 'search.pidoc.cn',
               port: 443,
               protocol: 'https',
             },

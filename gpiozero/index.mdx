@@ -1,7 +1,7 @@
 ---
 sidebar_position: 0
 draft: false
-title: 1. GPIO Zero 介绍
+title: 0. GPIO Zero 介绍
 description: GPIO Zero是树莓派官方推荐的Python库，提供简单直观的组件接口，支持LED、按钮、传感器等硬件控制。无需复杂代码即可实现物理计算，支持声明式编程和多种引脚库（如RPi.GPIO、pigpio），并包含模拟测试功能。适用于Raspberry Pi OS及PC远程控制，文档丰富，社区支持活跃，适合初学者和开发者快速上手硬件项目。
 keywords: [GPIO Zero, 树莓派, Python库, 硬件控制, GPIO引脚, LED灯, 按钮, 传感器, 编程, 模拟测试, 硬件项目]
 last_update: 
@@ -65,9 +65,9 @@ pause()
 该库包括许多简单日常组件的接口，以及一些更复杂的组件，如传感器、模数转换器、全彩 LED、机器人套件等。请参阅文档的 [方案](./recipes.mdx) 章节，了解如何入门。
 
 ## 引脚工厂
-GPIO Zero 基于大量底层引脚库，包括 [RPi.GPIO](https://pypi.org/project/RPi.GPIO) 和 [pigpio](https://pypi.org/project/pigpio)，每个引脚库都有自己的优势。你可以根据自己的需要，为整个脚本或每个设备选择一个特定的引脚库。请参阅 [更改引脚工厂](./api-pins.mdx#todo) 部分。
+GPIO Zero 基于大量底层引脚库，包括 [RPi.GPIO](https://pypi.org/project/RPi.GPIO) 和 [pigpio](https://pypi.org/project/pigpio)，每个引脚库都有自己的优势。你可以根据自己的需要，为整个脚本或每个设备选择一个特定的引脚库。请参阅 [API-引脚](./api-pins) 文档的"更改引脚工厂"部分。
 
-为测试目的，还提供了一个 "模拟引脚" 接口。请参阅 [模拟引脚](./api-pins.mdx#todo) 部分了解更多信息。
+为测试目的，还提供了一个 "模拟引脚" 接口。请参阅 [API-引脚](./api-pins) 文档的"模拟引脚"部分了解更多信息。
 
 ## 安装
 GPIO Zero 默认安装在 Raspberry Pi OS 桌面映像中，可从 [raspberrypi.org](https://www.raspberrypi.org/software/) 获取。要在 Raspberry Pi OS Lite 或其他操作系统（包括使用远程 GPIO 的 PC）上安装，请参阅 [安装](./installing.mdx) 章节。

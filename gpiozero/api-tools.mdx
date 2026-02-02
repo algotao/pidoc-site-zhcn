@@ -1,0 +1,451 @@
+---
+sidebar_position: 21
+draft: false
+title: 20. API-设备源工具
+description: GPIO Zero的工具函数文档，包括用于源值转换、组合和生成的各种实用函数。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, 工具函数, source, values]
+last_update:
+  date: 2026-02-01
+---
+import Normal from "./_normal.mdx";
+import {SourceClass} from "/js/gpiozeroutils.js";
+
+# API-设备源工具
+
+GPIO Zero 包含几个实用例程，旨在与库中大多数设备通用的 [source/values](./source-values.mdx) 属性一起使用。这些实用例程位于 GPIO Zero 的 `tools` 模块中，通常按如下方式导入：
+
+```python
+from gpiozero.tools import scaled, negated, all_values
+```
+
+鉴于 `source` 和 `values` 处理无限迭代器，另一个极好的实用工具来源是标准库中的 `itertools` 模块。
+
+## 单源转换
+
+<SourceClass funname="gpiozero.tools.absoluted" funargs="values" />
+
+返回将所有负元素取反（使其为正）后的 *values*。例如：
+
+```python
+from gpiozero import PWMLED, Motor, MCP3008
+from gpiozero.tools import absoluted, scaled
+from signal import pause
+
+led = PWMLED(4)
+motor = Motor(22, 27)
+pot = MCP3008(channel=0)
+
+motor.source = scaled(pot, -1, 1)
+led.source = absoluted(motor)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.booleanized" funargs="values, min_value, max_value, hysteresis=0" />
+
+对于 *values* 中介于 *min_value* 和 *max_value* 之间的每个项返回 True，否则返回 False。*hysteresis* 可选地用于添加[滞后](https://en.wikipedia.org/wiki/Hysteresis)，以防止当输入值在 *min_value* 或 *max_value* 阈值附近波动时输出值快速翻转。例如，仅当电位器位于其全范围的 ¼ 到 ¾ 之间时点亮 LED：
+
+```python
+from gpiozero import LED, MCP3008
+from gpiozero.tools import booleanized
+from signal import pause
+
+led = LED(4)
+pot = MCP3008(channel=0)
+
+led.source = booleanized(pot, 0.25, 0.75)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.clamped" funargs="values, output_min=0, output_max=1" />
+
+返回被限制在 *output_min* 到 *output_max* 范围内的 *values*，即小于 *output_min* 的任何项将返回为 *output_min*，大于 *output_max* 的任何项将返回为 *output_max*（默认分别为 0 和 1）。例如：
+
+```python
+from gpiozero import PWMLED, MCP3008
+from gpiozero.tools import clamped
+from signal import pause
+
+led = PWMLED(4)
+pot = MCP3008(channel=0)
+
+led.source = clamped(pot, 0.5, 1.0)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.inverted" funargs="values, input_min=0, input_max=1" />
+
+返回提供值的反转（*input_min* 变为 *input_max*，*input_max* 变为 *input_min*，`input_min + 0.1` 变为 `input_max - 0.1`，等等）。假设 *values* 中的所有项都在 *input_min* 和 *input_max* 之间（默认分别为 0 和 1），输出也将在相同范围内。例如：
+
+```python
+from gpiozero import MCP3008, PWMLED
+from gpiozero.tools import inverted
+from signal import pause
+
+led = PWMLED(4)
+pot = MCP3008(channel=0)
+
+led.source = inverted(pot)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.negated" funargs="values" />
+
+返回提供值的否定（`True` 变为 `False`，`False` 变为 `True`）。例如：
+
+```python
+from gpiozero import Button, LED
+from gpiozero.tools import negated
+from signal import pause
+
+led = LED(4)
+btn = Button(17)
+
+led.source = negated(btn)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.post_delayed" funargs="values, delay" />
+
+在返回 *values* 中的每个项后等待 *delay* 秒。
+
+<SourceClass funname="gpiozero.tools.post_periodic_filtered" funargs="values, repeat_after, block" />
+
+每隔 *repeat_after* 个项后，阻止来自 *values* 的下一个 *block* 个项。请注意，与 `pre_periodic_filtered()` 不同，*repeat_after* 不能为 0。例如，要阻止从 ADC 读取的每十个项：
+
+```python
+from gpiozero import MCP3008
+from gpiozero.tools import post_periodic_filtered
+
+adc = MCP3008(channel=0)
+
+for value in post_periodic_filtered(adc, 9, 1):
+    print(value)
+```
+
+<SourceClass funname="gpiozero.tools.pre_delayed" funargs="values, delay" />
+
+在返回 *values* 中的每个项之前等待 *delay* 秒。
+
+<SourceClass funname="gpiozero.tools.pre_periodic_filtered" funargs="values, block, repeat_after" />
+
+阻止来自 *values* 的前 *block* 个项，如果 *repeat_after* 非零，则每隔 *repeat_after* 个项后重复阻止。例如，要丢弃从 ADC 读取的前 50 个值：
+
+```python
+from gpiozero import MCP3008
+from gpiozero.tools import pre_periodic_filtered
+
+adc = MCP3008(channel=0)
+
+for value in pre_periodic_filtered(adc, 50, 0):
+    print(value)
+```
+
+或者只显示从 ADC 读取的每个偶数项：
+
+```python
+from gpiozero import MCP3008
+from gpiozero.tools import pre_periodic_filtered
+
+adc = MCP3008(channel=0)
+
+for value in pre_periodic_filtered(adc, 1, 1):
+    print(value)
+```
+
+<SourceClass funname="gpiozero.tools.quantized" funargs="values, steps, input_min=0, input_max=1" />
+
+返回量化为 *steps* 增量的 *values*。假设 *values* 中的所有项都在 *input_min* 和 *input_max* 之间（默认分别为 0 和 1），输出也将在相同范围内。
+
+例如，要将 0 和 1 之间的值量化为 5 个"步长"（0.0、0.25、0.5、0.75、1.0）：
+
+```python
+from gpiozero import PWMLED, MCP3008
+from gpiozero.tools import quantized
+from signal import pause
+
+led = PWMLED(4)
+pot = MCP3008(channel=0)
+
+led.source = quantized(pot, 4)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.queued" funargs="values, qsize" />
+
+将来自 *values* 的读数排入队列（排入队列的读数数量由 *qsize* 决定），并在队列满时才开始产生值。例如，要沿着一系列 LED "级联"值：
+
+```python
+from gpiozero import LEDBoard, Button
+from gpiozero.tools import queued
+from signal import pause
+
+leds = LEDBoard(5, 6, 13, 19, 26)
+btn = Button(17)
+
+for i in range(4):
+    leds[i].source = queued(leds[i + 1], 5)
+    leds[i].source_delay = 0.01
+
+leds[4].source = btn
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.smoothed" funargs="values, qsize, average=<function mean>" />
+
+将来自 *values* 的读数排入队列（排入队列的读数数量由 *qsize* 决定），并在队列满时开始产生最后 *qsize* 个值的 *average*。*qsize* 越大，值越平滑。例如，要平滑从 ADC 读取的模拟值：
+
+```python
+from gpiozero import MCP3008
+from gpiozero.tools import smoothed
+
+adc = MCP3008(channel=0)
+
+for value in smoothed(adc, 5):
+    print(value)
+```
+
+<SourceClass funname="gpiozero.tools.scaled" funargs="values, output_min, output_max, input_min=0, input_max=1" />
+
+返回从 *output_min* 到 *output_max* 缩放的 *values*，假设 *values* 中的所有项都在 *input_min* 和 *input_max* 之间（默认分别为 0 和 1）。例如，使用电位器（通常提供 0 到 1 之间的值）控制电机的方向（表示为 -1 到 1 之间的值）：
+
+```python
+from gpiozero import Motor, MCP3008
+from gpiozero.tools import scaled
+from signal import pause
+
+motor = Motor(20, 21)
+pot = MCP3008(channel=0)
+
+motor.source = scaled(pot, -1, 1)
+
+pause()
+```
+
+:::warning[警告]
+如果 *values* 包含位于 *input_min* 到 *input_max*（包含）范围之外的元素，则该函数不会产生位于 *output_min* 到 *output_max*（包含）范围内的值。
+:::
+
+## 组合源
+
+<SourceClass funname="gpiozero.tools.all_values" funargs="*values" />
+
+返回所有提供值的[逻辑合取](https://en.wikipedia.org/wiki/Logical_conjunction)（仅当所有输入值同时为 `True` 时结果才为 `True`）。可以指定一个或多个 *values*。例如，仅在*两个*按钮都被按下时点亮 `LED`：
+
+```python
+from gpiozero import LED, Button
+from gpiozero.tools import all_values
+from signal import pause
+
+led = LED(4)
+btn1 = Button(20)
+btn2 = Button(21)
+
+led.source = all_values(btn1, btn2)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.any_values" funargs="*values" />
+
+返回所有提供值的[逻辑析取](https://en.wikipedia.org/wiki/Logical_disjunction)（如果任何输入值当前为 `True`，则结果为 `True`）。可以指定一个或多个 *values*。例如，当*任何*按钮被按下时点亮 `LED`：
+
+```python
+from gpiozero import LED, Button
+from gpiozero.tools import any_values
+from signal import pause
+
+led = LED(4)
+btn1 = Button(20)
+btn2 = Button(21)
+
+led.source = any_values(btn1, btn2)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.averaged" funargs="*values" />
+
+返回所有提供值的平均值。可以指定一个或多个 *values*。例如，将 `PWMLED` 点亮为连接到 `MCP3008` ADC 的几个电位器的平均值：
+
+```python
+from gpiozero import MCP3008, PWMLED
+from gpiozero.tools import averaged
+from signal import pause
+
+pot1 = MCP3008(channel=0)
+pot2 = MCP3008(channel=1)
+pot3 = MCP3008(channel=2)
+led = PWMLED(4)
+
+led.source = averaged(pot1, pot2, pot3)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.multiplied" funargs="*values" />
+
+返回所有提供值的乘积。可以指定一个或多个 *values*。例如，将 `PWMLED` 点亮为连接到 `MCP3008` ADC 的几个电位器的乘积（即乘法）：
+
+```python
+from gpiozero import MCP3008, PWMLED
+from gpiozero.tools import multiplied
+from signal import pause
+
+pot1 = MCP3008(channel=0)
+pot2 = MCP3008(channel=1)
+pot3 = MCP3008(channel=2)
+led = PWMLED(4)
+
+led.source = multiplied(pot1, pot2, pot3)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.summed" funargs="*values" />
+
+返回所有提供值的和。可以指定一个或多个 *values*。例如，将 `PWMLED` 点亮为连接到 `MCP3008` ADC 的几个电位器的（缩放后的）和：
+
+```python
+from gpiozero import MCP3008, PWMLED
+from gpiozero.tools import summed, scaled
+from signal import pause
+
+pot1 = MCP3008(channel=0)
+pot2 = MCP3008(channel=1)
+pot3 = MCP3008(channel=2)
+led = PWMLED(4)
+
+led.source = scaled(summed(pot1, pot2, pot3), 0, 1, 0, 3)
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.zip_values" funargs="*devices" />
+
+提供由每个项的值构造的源，例如：
+
+```python
+from gpiozero import MCP3008, Robot
+from gpiozero.tools import zip_values
+from signal import pause
+
+robot = Robot(left=(4, 14), right=(17, 18))
+
+left = MCP3008(0)
+right = MCP3008(1)
+
+robot.source = zip_values(left, right)
+
+pause()
+```
+
+`zip_values(left, right)` 等价于 `zip(left.values, right.values)`。
+
+## 人工源
+
+<SourceClass funname="gpiozero.tools.alternating_values" funargs="initial_value=False" />
+
+提供在 `True` 和 `False` 之间交替的无限值源，从 *initial_value*（默认为 `False`）开始。例如，要产生闪烁的 LED：
+
+```python
+from gpiozero import LED
+from gpiozero.tools import alternating_values
+from signal import pause
+
+red = LED(2)
+
+red.source_delay = 0.5
+red.source = alternating_values()
+
+pause()
+```
+
+<SourceClass funname="gpiozero.tools.cos_values" funargs="period=360" />
+
+提供表示余弦波（从 -1 到 +1）的无限值源，每 *period* 个值重复一次。例如，要产生每秒重复一次的"警笛"效果：
+
+```python
+from gpiozero import PWMLED
+from gpiozero.tools import cos_values, scaled_half, inverted
+from signal import pause
+
+red = PWMLED(2)
+blue = PWMLED(3)
+
+red.source_delay = 0.01
+blue.source_delay = red.source_delay
+red.source = scaled_half(cos_values(100))
+blue.source = inverted(red)
+
+pause()
+```
+
+如果需要 -1 到 +1 以外的范围，请参阅 `scaled()`。
+
+<SourceClass funname="gpiozero.tools.ramping_values" funargs="period=360" />
+
+提供表示三角波（从 0 到 1 再返回）的无限值源，每 *period* 个值重复一次。例如，要使 LED 每秒脉冲一次：
+
+```python
+from gpiozero import PWMLED
+from gpiozero.tools import ramping_values
+from signal import pause
+
+red = PWMLED(2)
+
+red.source_delay = 0.01
+red.source = ramping_values(100)
+
+pause()
+```
+
+如果需要比 0 到 1 更宽的范围，请参阅 `scaled()`。
+
+<SourceClass funname="gpiozero.tools.random_values" funargs="" />
+
+提供 0 和 1 之间随机值的无限源。例如，要用 LED 产生"闪烁蜡烛"效果：
+
+```python
+from gpiozero import PWMLED
+from gpiozero.tools import random_values
+from signal import pause
+
+led = PWMLED(4)
+
+led.source = random_values()
+
+pause()
+```
+
+如果需要比 0 到 1 更宽的范围，请参阅 `scaled()`。
+
+<SourceClass funname="gpiozero.tools.sin_values" funargs="period=360" />
+
+提供表示正弦波（从 -1 到 +1）的无限值源，每 *period* 个值重复一次。例如，要产生每秒重复一次的"警笛"效果：
+
+```python
+from gpiozero import PWMLED
+from gpiozero.tools import sin_values, scaled_half, inverted
+from signal import pause
+
+red = PWMLED(2)
+blue = PWMLED(3)
+
+red.source_delay = 0.01
+blue.source_delay = red.source_delay
+red.source = scaled_half(sin_values(100))
+blue.source = inverted(red)
+
+pause()
+```
+
+如果需要 -1 到 +1 以外的范围，请参阅 `scaled()`。
+
+<Normal />

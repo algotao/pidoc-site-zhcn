@@ -1,7 +1,7 @@
 ---
 sidebar_position: 10
 draft: false
-title: 10. 常见问题(FAQ)
+title: 9. 常见问题(FAQ)
 description: 本文围绕GPIO Zero常见问题展开解答。包括如何保持脚本运行，如使用pause()函数；阐述when_pressed、is_pressed和wait_for_press的区别及使用场景；解决事件处理程序未调用的问题，强调不要调用所分配函数；解释导入gpiozero时收到PinFactoryFallback警告的原因及解决办法；介绍判断gpiozero版本、解决pinout工具相关问题、引脚分配工具识别型号问题等，还涵盖与RPi.GPIO相关问题及GPIO Zero库本身的诸多疑问。
 keywords: [GPIO Zero, 常见问题, 脚本运行, 事件处理, PinFactoryFallback警告, gpiozero版本, pinout工具, 引脚分配, RPi.GPIO, 库相关问题]
 last_update: 
@@ -133,7 +133,7 @@ b.when_pressed = pushed
 pip install rpi.gpio
 ```
 
-导入 GPIO Zero 时，它会按照首选顺序（详见 [API-引脚](./api-pins.mdx)）尝试查找引脚驱动程序。如果加载第一个首选项（`RPi.GPIO`）失败，它会发出警告，然后返回尝试第二个首选项，以此类推。最终，它会一直返回到 `native` 实现。这是 GPIO Zero 本身内置的纯 Python 实现。虽然它在大多数情况下都能工作，但几乎肯定不是你想要的（它不支持 PWM，而且在某些情况下运行速度很慢）。
+导入 GPIO Zero 时，它会按照首选顺序（详见 [API-引脚](./api-pins)）尝试查找引脚驱动程序。如果加载第一个首选项（`RPi.GPIO`）失败，它会发出警告，然后返回尝试第二个首选项，以此类推。最终，它会一直返回到 `native` 实现。这是 GPIO Zero 本身内置的纯 Python 实现。虽然它在大多数情况下都能工作，但几乎肯定不是你想要的（它不支持 PWM，而且在某些情况下运行速度很慢）。
 
 如果你想使用默认引脚驱动程序以外的引脚驱动程序，并希望抑制警告，你有几个选择：
 

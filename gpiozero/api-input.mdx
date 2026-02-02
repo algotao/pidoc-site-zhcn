@@ -1,14 +1,17 @@
 ---
 sidebar_position: 15
-draft: true
-title: 15. API-输入设备
-description: 对于任何希望参与该项目的人，我们建议首先熟悉一些简单的设备类。选取 LED 这样的类，然后按照其继承顺序回溯到 DigitalOutputDevice。然后再追溯到 OutputDevice，这样你就能很好地理解简单的输出设备，并掌握 GPIO Zero 如何在很大程度上依赖继承来完善设备的功能。输入设备以及更复杂的设备（复合设备和基于 SPI 的设备）也可以采用同样的方法。
-keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 开发, 二次开发]
+draft: false
+title: 14. API-输入设备
+description: 这些输入设备组件接口是为日常组件的简单使用而提供的。在代码中使用组件前，必须正确布线。包括按钮、传感器、距离传感器、旋转编码器等设备的详细API文档。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 输入设备, 按钮, 传感器, Button, Sensor]
+last_update:
+  date: 2026-02-01
 ---
 import Normal from "./_normal.mdx";
 import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
 
 # API-输入设备
+
 这些输入设备组件接口是为日常组件的简单使用而提供的。在代码中使用组件前，必须正确布线。
 
 :::tip
@@ -19,9 +22,9 @@ import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
 
 下列类用于它们所代表的设备。本节中的所有类都是具体类（非抽象类）。
 
-### Button(按钮)
+### Button（按钮）
 
-<SourceClass funname="gpiozero.Button" funargs="*args, **kwargs"></SourceClass>
+<SourceClass funname="gpiozero.Button" funargs="pin, *, pull_up=True, active_state=None, bounce_time=None, hold_time=1, hold_repeat=False, pin_factory=None"></SourceClass>
 
 扩展 `DigitalInputDevice`，表示一个简单的按钮或开关。
 
@@ -37,7 +40,7 @@ button.wait_for_press()
 print("The button was pressed!")
 ```
 
- <table>
+<table>
     <tbody>
         <tr className="table_noneborder">
             <td className="table_noneborder_param">参数</td>
@@ -48,21 +51,876 @@ print("The button was pressed!")
               - **bounce_time**（`float` 或 `None`）- 如果为 `None`（默认值），则不执行软件防抖动补偿。否则，这是组件在初始变化后忽略状态变化的时间长度（以秒为单位）。
               - **hold_time** (`float`) - 按钮按下后，执行 `when_held` 处理程序前等待的时间长度（以秒为单位）。默认为 `1`。
               - **hold_repeat** (`bool`) - 如果为 `True`，只要设备保持激活状态，就会每隔 *hold_time* 秒重复执行 `when_held` 处理程序。如果为 `False`（默认值），则每次保持时只执行一次 `when_held` 处理程序。
-              - **pin_factory**（`Factor` 或 `None`）- 请参阅 [API - Pins](./api-pins.mdx) 获取更多信息（这是一项高级功能，大多数用户可以忽略）。
+              - **pin_factory**（`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一项高级功能，大多数用户可以忽略）。
             </td>
         </tr>
     </tbody>
 </table>
 
-**参数:**
+<SourceProp propname="wait_for_press" propargs="timeout=None"></SourceProp>
 
+暂停脚本，直到设备被激活或超时。
 
-    <SourceProp propname="wait_for_press" propargs="timeout=None"></SourceProp>
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续前要等待的秒数。如果为 `None`（默认值），则无限期等待，直到设备激活。
+            </td>
+        </tr>
+    </tbody>
+</table>
 
-        暂停脚本，直到设备被激活或超时。
+<SourceProp propname="wait_for_release" propargs="timeout=None"></SourceProp>
 
-- 参数:
+暂停脚本，直到设备被释放或超时。
 
-    timeout（浮点数或无）- 继续前要等待的秒数。如果为 None（无）（默认值），则无限期等待，直到设备激活。
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续前要等待的秒数。如果为 `None`（默认值），则无限期等待，直到设备被释放。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。如果设备已关闭（参见 `close()` 方法），则为 `None`。处理 GPIO 引脚时，查询 `pin.number` 可发现设备连接到的 GPIO 引脚（BCM 编号）。
+
+<SourceProp propname="is_pressed"></SourceProp>
+
+如果设备当前激活则返回 `True`，否则返回 `False`。此属性通常从 `value` 派生。与 `value` 不同，此属性*始终*是布尔值。
+
+<SourceProp propname="is_held"></SourceProp>
+
+当设备按住超过 `hold_time` 秒时返回 `True`。
+
+<SourceProp propname="hold_time"></SourceProp>
+
+设备激活后等待多长时间（以秒为单位），直到执行 `when_held` 处理程序。如果 `hold_repeat` 为 `True`，这也是 `when_held` 两次调用之间的时间长度。
+
+<SourceProp propname="held_time"></SourceProp>
+
+设备已被按住的时长（以秒为单位）。此时长从首次执行 `when_held` 事件开始计时，而不是从设备激活时开始，这与 `active_time` 形成对比。如果设备当前未被按住，则返回 `None`。
+
+<SourceProp propname="hold_repeat"></SourceProp>
+
+如果为 `True`，只要设备保持激活状态，就会每隔 `hold_time` 秒重复执行 `when_held` 处理程序。如果为 `False`（默认值），则每次保持时只执行一次 `when_held` 处理程序。
+
+<SourceProp propname="pull_up"></SourceProp>
+
+如果为 `True`，设备使用上拉电阻将 GPIO 引脚默认设置为"高电平"。
+
+<SourceProp propname="when_pressed"></SourceProp>
+
+当设备从不活动状态变为活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_released"></SourceProp>
+
+当设备从活动状态变为不活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，停用设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_held"></SourceProp>
+
+当设备保持活动状态达 `hold_time` 秒时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="value"></SourceProp>
+
+返回 `0`（未按下）或 `1`（按下）。
+
+### LineSensor（TRCT5000）
+
+<SourceClass funname="gpiozero.LineSensor" funargs="pin, *, pull_up=False, active_state=None, queue_len=5, sample_rate=100, threshold=0.5, partial=False, pin_factory=None"></SourceClass>
+
+扩展 `SmoothedInputDevice`，表示单引脚线传感器，如 [CamJam #3 EduKit](http://camjam.me/?page_id=1035) 中的 TCRT5000 红外接近传感器。
+
+典型的线传感器有一个小电路板，带有三个引脚：VCC、GND 和 OUT。VCC 应连接到 3V3 引脚，GND 连接到一个接地引脚，最后 OUT 连接到构造函数中 *pin* 参数指定的 GPIO 引脚。
+
+以下代码将在传感器检测到线或停止检测线时打印一行文本：
+
+```py
+from gpiozero import LineSensor
+from signal import pause
+
+sensor = LineSensor(4)
+sensor.when_line = lambda: print('Line detected')
+sensor.when_no_line = lambda: print('No line detected')
+
+pause()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 传感器连接的 GPIO 引脚。
+              - **pull_up** （`bool` 或 `None`）- 如果为 `True`，GPIO 引脚将被默认拉高。默认为 `False`。
+              - **active_state** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice`。
+              - **queue_len** （`int`）- 用于平滑设备值的读取数量。默认为 `5`。
+              - **sample_rate** （`float`）- 每秒对设备状态进行采样的次数。默认为 `100`。
+              - **threshold** （`float`）- 当平均值超过此值时，设备将被视为"激活"。默认为 `0.5`。
+              - **partial** （`bool`）- 如果为 `False`（默认值），在队列填满前，值为 `None`。如果为 `True`，返回平均值，即使队列未满。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_line" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被停用或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于不活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_no_line" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被激活或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。如果设备已关闭（参见 `close()` 方法），则为 `None`。处理 GPIO 引脚时，查询 `pin.number` 可发现设备连接到的 GPIO 引脚（BCM 编号）。
+
+<SourceProp propname="line_detected"></SourceProp>
+
+当传感器检测到线时返回 `True`。
+
+<SourceProp propname="when_line"></SourceProp>
+
+当设备从活动状态变为不活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，停用设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_no_line"></SourceProp>
+
+当设备从不活动状态变为活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="value"></SourceProp>
+
+返回表示队列值平均值的值。传感器下方为黑色时，该值接近 0；传感器下方为白色时，该值接近 1。
+
+### MotionSensor（D-SUN PIR）
+
+<SourceClass funname="gpiozero.MotionSensor" funargs="pin, *, pull_up=False, active_state=None, queue_len=1, sample_rate=10, threshold=0.5, partial=False, pin_factory=None"></SourceClass>
+
+扩展 `SmoothedInputDevice`，表示被动红外（PIR）运动传感器，如 [CamJam #2 EduKit](http://camjam.me/?page_id=623) 中的传感器。
+
+典型的 PIR 设备有一个小电路板，带有三个引脚：VCC、OUT 和 GND。VCC 应连接到 5V 引脚，GND 连接到一个接地引脚，最后 OUT 连接到构造函数中 *pin* 参数指定的 GPIO 引脚。
+
+以下代码将在检测到运动时打印一行文本：
+
+```py
+from gpiozero import MotionSensor
+
+pir = MotionSensor(4)
+pir.wait_for_motion()
+print("Motion detected!")
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 传感器连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。
+              - **pull_up** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice` 的说明。
+              - **active_state** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice` 的说明。
+              - **queue_len** （`int`）- 用于存储从传感器读取的值的队列长度。默认值为 1，这实际上禁用了队列。如果您的运动传感器特别"抖动"，您可能希望增加此值。
+              - **sample_rate** （`float`）- 每秒从设备读取（并附加到内部队列）的值的数量。默认为 10。
+              - **threshold** （`float`）- 默认为 0.5。当内部队列中所有值的平均值超过此值时，`is_active` 属性将认为传感器处于"活动"状态，并将触发所有相应的事件。
+              - **partial** （`bool`）- 当为 `False`（默认值）时，在内部队列填满值之前，对象不会返回 `is_active` 的值。只有在对象构造后立即需要值时才将其设置为 `True`。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一个高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_motion" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被激活或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_no_motion" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被停用或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于不活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。如果设备已关闭（参见 `close()` 方法），则为 `None`。处理 GPIO 引脚时，查询 `pin.number` 可发现设备连接到的 GPIO 引脚（BCM 编号）。
+
+<SourceProp propname="motion_detected"></SourceProp>
+
+如果 `value` 当前超过 `threshold` 则返回 `True`，否则返回 `False`。
+
+<SourceProp propname="when_motion"></SourceProp>
+
+当设备从不活动状态变为活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_no_motion"></SourceProp>
+
+当设备从活动状态变为不活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，停用设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="value"></SourceProp>
+
+使用默认的 *queue_len* 为 1 时，这实际上是布尔值，其中 0 表示未检测到运动，1 表示检测到运动。如果您指定大于 1 的 *queue_len*，这将是一个平均值，值越接近 1 表示检测到运动。
+
+### LightSensor（LDR）
+
+<SourceClass funname="gpiozero.LightSensor" funargs="pin, *, pull_up=False, active_state=None, queue_len=5, charge_time_limit=0.01, threshold=0.1, partial=False, pin_factory=None"></SourceClass>
+
+扩展 `SmoothedInputDevice`，表示光敏电阻（LDR）。
+
+将 LDR 的一条腿连接到 3V3 引脚；将 1µF 电容的一条腿连接到接地引脚；将 LDR 的另一条腿和电容的另一条腿连接到同一个 GPIO 引脚。此类重复放电电容，然后计时充电所需的时间（根据照射在 LDR 上的光线而变化）。
+
+以下代码将在检测到光线时打印一行文本：
+
+```py
+from gpiozero import LightSensor
+
+ldr = LightSensor(18)
+ldr.wait_for_light()
+print("Light detected!")
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 传感器连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。
+              - **queue_len** （`int`）- 用于存储从电路读取的值的队列长度。默认为 5。
+              - **charge_time_limit** （`float`）- 如果电路中的电容充电时间超过此时间长度，则假定为黑暗。默认值（0.01 秒）适用于 [CamJam #2 EduKit](http://camjam.me/?page_id=623) 中的 1µF 电容与 LDR 的组合。对于不同值的电容或 LDR，您可能需要调整此值。
+              - **threshold** （`float`）- 默认为 0.1。当内部队列中所有值的平均值超过此值时，区域将被视为"有光"，并将触发所有相应的事件。
+              - **partial** （`bool`）- 当为 `False`（默认值）时，在内部队列填满值之前，对象不会返回 `is_active` 的值。只有在对象构造后立即需要值时才将其设置为 `True`。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一个高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_light" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被激活或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_dark" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被停用或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于不活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。如果设备已关闭（参见 `close()` 方法），则为 `None`。处理 GPIO 引脚时，查询 `pin.number` 可发现设备连接到的 GPIO 引脚（BCM 编号）。
+
+<SourceProp propname="light_detected"></SourceProp>
+
+如果 `value` 当前超过 `threshold` 则返回 `True`，否则返回 `False`。
+
+<SourceProp propname="when_light"></SourceProp>
+
+当设备从不活动状态变为活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_dark"></SourceProp>
+
+当设备从活动状态变为不活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，停用设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="value"></SourceProp>
+
+返回介于 0（黑暗）和 1（明亮）之间的值。
+
+### DistanceSensor（HC-SR04）
+
+<SourceClass funname="gpiozero.DistanceSensor" funargs="echo, trigger, *, queue_len=9, max_distance=1, threshold_distance=0.3, partial=False, pin_factory=None"></SourceClass>
+
+扩展 `SmoothedInputDevice`，表示 HC-SR04 超声波距离传感器，如 [CamJam #3 EduKit](http://camjam.me/?page_id=1035) 中的传感器。
+
+距离传感器需要两个 GPIO 引脚：一个用于触发（传感器上标记为 TRIG），另一个用于回声（传感器上标记为 ECHO）。但是，需要分压器来确保 ECHO 引脚的 5V 电压不会损坏树莓派。请按照以下说明连接传感器：
+
+1. 将传感器的 GND 引脚连接到树莓派的接地引脚。
+2. 将传感器的 TRIG 引脚连接到一个 GPIO 引脚。
+3. 将一个 330Ω 电阻的一端连接到传感器的 ECHO 引脚。
+4. 将一个 470Ω 电阻的一端连接到传感器的 GND 引脚。
+5. 将两个电阻的另一端连接到另一个 GPIO 引脚。这形成了所需的[分压器](https://en.wikipedia.org/wiki/Voltage_divider)。
+6. 最后，将传感器的 VCC 引脚连接到树莓派的 5V 引脚。
+
+或者，3V3 兼容的 HC-SR04P 传感器（不需要分压器）也适用于此类。
+
+:::note
+如果您没有上述指定的精确电阻值，不用担心！重要的是电阻之间的**比率**。
+
+您也不需要绝对精确；上面给出的[分压器](https://en.wikipedia.org/wiki/Voltage_divider)实际上会输出约 3V（而不是 3.3V）。简单的 2:3 比率将给出 3.333V，这意味着您可以取三个相同值的电阻，使用其中一个代替 330Ω 电阻，并使用其中两个串联代替 470Ω 电阻。
+:::
+
+以下代码将定期报告传感器测量的距离（以厘米为单位），假设 TRIG 引脚连接到 GPIO17，ECHO 引脚连接到 GPIO18：
+
+```py
+from gpiozero import DistanceSensor
+from time import sleep
+
+sensor = DistanceSensor(echo=18, trigger=17)
+while True:
+    print('Distance: ', sensor.distance * 100)
+    sleep(1)
+```
+
+:::note
+为了提高精度，请使用 pigpio 引脚驱动程序而不是默认的 RPi.GPIO 驱动程序（pigpio 使用 DMA 采样以获得更精确的边缘定时）。如果您使用的是 Pi 1 或 Pi Zero，这尤其相关。有关更多信息，请参阅[更改引脚工厂](./api-pins#更改引脚工厂)。
+:::
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **echo** （`int` 或 `str`）- ECHO 引脚连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。
+              - **trigger** （`int` 或 `str`）- TRIG 引脚连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。
+              - **queue_len** （`int`）- 用于存储从传感器读取的值的队列长度。默认为 9。
+              - **max_distance** （`float`）- `value` 属性报告介于 0（太近无法测量）和 1（最大距离）之间的归一化值。此参数指定预期的最大距离（以米为单位）。默认为 1。
+              - **threshold_distance** （`float`）- 默认为 0.3。这是越过时将触发 `in_range` 和 `out_of_range` 事件的距离（以米为单位）。
+              - **partial** （`bool`）- 当为 `False`（默认值）时，在内部队列填满值之前，对象不会返回 `is_active` 的值。只有在对象构造后立即需要值时才将其设置为 `True`。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一个高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_in_range" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被停用或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于不活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_out_of_range" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被激活或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="trigger"></SourceProp>
+
+TRIG 引脚连接的 `Pin`。
+
+<SourceProp propname="echo"></SourceProp>
+
+返回传感器回声连接的 `Pin`。这只是通常 `pin` 属性的别名。
+
+<SourceProp propname="in_range"></SourceProp>
+
+如果检测到的 `distance` 小于 `threshold_distance`，则返回 `True`。
+
+<SourceProp propname="when_in_range"></SourceProp>
+
+当设备从活动状态变为不活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，停用设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_out_of_range"></SourceProp>
+
+当设备从不活动状态变为活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活设备的对象将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="max_distance"></SourceProp>
+
+传感器将测量的最大距离（以米为单位）。此值在构造函数中指定，用于为 `value` 属性提供缩放。当 `distance` 等于 `max_distance` 时，`value` 将为 1。
+
+<SourceProp propname="distance"></SourceProp>
+
+返回传感器当前测量的距离（以米为单位）。请注意，此属性的值介于 0 和 `max_distance` 之间。
+
+<SourceProp propname="threshold_distance"></SourceProp>
+
+当越过时将触发 `when_in_range` 和 `when_out_of_range` 事件的距离（以米为单位）。这只是通常 `threshold` 属性的米缩放变体。
+
+<SourceProp propname="value"></SourceProp>
+
+返回介于 0 和 1 之间的值，其中 0 表示反射器正在接触传感器或距离足够近以至于传感器无法区分，1 表示反射器位于或超过指定的 *max_distance*。
+
+### RotaryEncoder
+
+<SourceClass funname="gpiozero.RotaryEncoder" funargs="a, b, *, bounce_time=None, max_steps=None, threshold_steps=(0, 0), wrap=False, pin_factory=None"></SourceClass>
+
+表示一个简单的双引脚增量式[旋转编码器](https://en.wikipedia.org/wiki/Rotary_encoder)设备。
+
+这些设备通常有三个引脚，标记为"A"、"B"和"C"。将 A 和 B 直接连接到两个 GPIO 引脚，将 C（"公共"）连接到树莓派上的一个接地引脚。然后在构造此类时，只需将 A 和 B 引脚指定为参数。
+
+例如，如果编码器的 A 引脚连接到 GPIO 21，B 引脚连接到 GPIO 20（并且 C 引脚presumably连接到合适的 GND 引脚），而一个 LED（带有合适的 300Ω 电阻）连接到 GPIO 5，以下会话将导致 LED 的亮度由旋转编码器的旋转来控制：
+
+```py
+>>> from gpiozero import RotaryEncoder
+>>> from gpiozero.tools import scaled_half
+>>> rotor = RotaryEncoder(21, 20)
+>>> led = PWMLED(5)
+>>> led.source = scaled_half(rotor.values)
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **a** （`int` 或 `str`）- 连接到旋转编码器"A"输出的 GPIO 引脚。
+              - **b** （`int` 或 `str`）- 连接到旋转编码器"B"输出的 GPIO 引脚。
+              - **bounce_time** （`float` 或 `None`）- 如果为 `None`（默认值），则不执行软件防抖动补偿。否则，这是组件在初始变化后忽略状态变化的时间长度（以秒为单位）。
+              - **max_steps** （`int` 或 `None`）- 编码器顺时针旋转多少步将 `value` 从 0 改变到 1，或逆时针从 0 改变到 -1。如果为 0，则编码器的 `value` 永远不会改变，但您仍然可以读取 `steps` 以确定编码器顺时针或逆时针移动的整数步数。
+              - **threshold_steps** （`int` 的 `tuple`）- 一个（最小值，最大值）步数元组，设备将在此范围内被视为"活动"（包含边界）。换句话说，当 `steps` 大于或等于 *最小值*，且小于或等于 *最大值* 时，`active` 属性将为 `True`，并将触发相应的事件（`when_activated`、`when_deactivated`）。默认为 (0, 0)。
+              - **wrap** （`bool`）- 如果为 `True` 且 *max_steps* 非零，当 `steps` 达到正或负 *max_steps* 时，它会通过取反回绕。默认为 `False`。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一个高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_rotate" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到编码器向任一方向旋转至少一步，或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到编码器旋转。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_rotate_clockwise" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到编码器顺时针旋转至少一步，或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到编码器顺时针旋转。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_rotate_counter_clockwise" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到编码器逆时针旋转至少一步，或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到编码器逆时针旋转。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="max_steps"></SourceProp>
+
+旋转编码器顺时针移动将 `value` 从 0 变为 1，或逆时针从 0 变为 -1 所需的离散步数。从另一个意义上说，这也是此输入可以表示的离散状态的总数。
+
+<SourceProp propname="steps"></SourceProp>
+
+编码器的"步数"值从 0 开始。编码器每顺时针旋转一步，该值增加 1；每逆时针旋转一步，该值减少 1。步数值受 `max_steps` 限制。除非 `wrap` 为 `True`（此时它将通过取反回绕），否则它不会超过正或负 `max_steps`。如果 `max_steps` 为零，则步数完全不受限制，并将在任一方向无限增加，但 `value` 将返回常量零。
+
+请注意，与大多数其他输入设备不同，由于旋转编码器没有绝对位置，因此 `steps` 属性（以及推论的 `value`）是可写的。
+
+<SourceProp propname="threshold_steps"></SourceProp>
+
+`is_active` 将返回 `True` 的最小和最大步数。默认为 (0, 0)。
+
+<SourceProp propname="value"></SourceProp>
+
+表示旋转编码器的值，介于 -1 和 1 之间。该值是通过将 `steps` 的值划分到从负 `max_steps` 到正 `max_steps` 的范围来计算的。
+
+请注意，与大多数其他输入设备不同，由于旋转编码器没有绝对位置，因此 `value` 属性是可写的。
+
+<SourceProp propname="when_rotated"></SourceProp>
+
+当编码器向任一方向旋转时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_rotated_clockwise"></SourceProp>
+
+当编码器顺时针旋转时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_rotated_counter_clockwise"></SourceProp>
+
+当编码器逆时针旋转时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="wrap"></SourceProp>
+
+如果为 `True`，当 `value` 达到其限制（-1 或 1）时，它会"回绕"到相反的限制。当为 `False` 时，值（以及相应的 `steps` 属性）不会超出该限制。
+
+## 基类
+
+以上部分中的类派生自一系列基类，其中一些实际上是抽象的。这些类构成下图中显示的（部分）层次结构（抽象类比具体类颜色浅）：
+
+![输入设备层次结构图](@site/static/gpiozeroimg/input_device_hierarchy.svg)
+
+以下部分记录了这些基类，供希望为自己的设备构建类的高级用户使用。
+
+### DigitalInputDevice
+
+<SourceClass funname="gpiozero.DigitalInputDevice" funargs="pin, *, pull_up=False, active_state=None, bounce_time=None, pin_factory=None"></SourceClass>
+
+表示具有典型开/关行为的通用输入设备。
+
+此类扩展 `InputDevice`，为以典型数字方式运行的设备提供激活和停用事件的触发机制：两种状态之间有（合理的）干净的转换。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 设备连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。
+              - **pull_up** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice` 的说明。
+              - **active_state** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice` 的说明。
+              - **bounce_time** （`float` 或 `None`）- 指定在初始变化后组件将忽略状态变化的时间长度（以秒为单位）。默认为 `None`，表示不会执行防抖动补偿。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一个高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_active" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被激活或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="wait_for_inactive" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被停用或达到超时。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **timeout** （`float` 或 `None`）- 继续执行前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备处于不活动状态。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="active_time"></SourceProp>
+
+设备处于活动状态的时间长度（以秒为单位）。当设备处于不活动状态时，该值为 `None`。
+
+<SourceProp propname="inactive_time"></SourceProp>
+
+设备处于不活动状态的时间长度（以秒为单位）。当设备处于活动状态时，该值为 `None`。
+
+<SourceProp propname="value"></SourceProp>
+
+返回表示设备状态的值。通常这是一个布尔值，或介于 0 和 1 之间的数字，但某些设备使用更大的范围（例如 -1 到 +1），复合设备通常使用元组来返回其所有从属组件的状态。
+
+<SourceProp propname="when_activated"></SourceProp>
+
+当设备从不活动状态变为活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_deactivated"></SourceProp>
+
+当设备从活动状态变为不活动状态时要运行的函数。
+
+可以将其设置为不接受（强制）参数的函数，或接受单个强制参数（带任意数量可选参数）的 Python 函数。如果函数接受单个强制参数，停用它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+### SmoothedInputDevice
+
+<SourceClass funname="gpiozero.SmoothedInputDevice" funargs="pin, *, pull_up=False, active_state=None, threshold=0.5, queue_len=5, sample_rate=100, partial=False, pin_factory=None"></SourceClass>
+
+表示通用输入设备，其值取自历史值队列的平均值。
+
+此类扩展 `InputDevice`，添加了一个由后台线程填充的队列，该线程持续轮询底层设备的状态。队列中值的平均值（一个可配置的函数）与阈值进行比较，该阈值用于确定 `is_active` 属性的状态。
+
+:::note
+后台队列不会在构造时自动启动。这是为了允许子类在队列开始读取值之前设置其他组件。实际上，这是一个抽象基类。
+:::
+
+此类适用于表现出模拟行为（例如带有 LDR 的电容充电时间）或表现出"抖动"行为（例如某些运动传感器）的设备。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 设备连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。
+              - **pull_up** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice` 的说明。
+              - **active_state** （`bool` 或 `None`）- 更多信息请参阅 `InputDevice` 的说明。
+              - **threshold** （`float`）- 设备将被视为"开启"的值。
+              - **queue_len** （`int`）- 后台线程填充的内部队列的长度。
+              - **sample_wait** （`float`）- 检索底层设备状态之间的等待时间长度。默认为 0.0，表示尽可能快地检索值。
+              - **partial** （`bool`）- 如果为 `False`（默认值），在队列填满之前，尝试读取设备状态（从 `is_active` 属性）将阻塞。如果为 `True`，将立即返回一个值，但请注意此值可能会过度波动。
+              - **average** - 用于平均内部队列中值的函数。默认为 `statistics.median()`，这是一个很好的选择，可以丢弃抖动传感器的异常值。指定的函数必须接受一系列数字并返回单个数字。
+              - **ignore** （`frozenset` 或 `None`）- 如果从查询设备值时返回，队列应忽略的值集合。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一个高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果 `value` 当前超过 `threshold` 则返回 `True`，否则返回 `False`。
+
+<SourceProp propname="partial"></SourceProp>
+
+如果为 `False`（默认值），在队列填满之前，尝试读取 `value` 或 `is_active` 属性将阻塞。
+
+<SourceProp propname="queue_len"></SourceProp>
+
+内部值队列的长度，用于平均以确定设备的总体状态。默认为 5。
+
+<SourceProp propname="threshold"></SourceProp>
+
+如果 `value` 超过此值，则 `is_active` 将返回 `True`。
+
+<SourceProp propname="value"></SourceProp>
+
+返回内部队列中值的平均值。将此值与 `threshold` 进行比较以确定 `is_active` 是否为 `True`。
+
+### InputDevice
+
+<SourceClass funname="gpiozero.InputDevice" funargs="pin, *, pull_up=False, active_state=None, pin_factory=None"></SourceClass>
+
+表示通用 GPIO 输入设备。
+
+此类扩展 `GPIODevice`，添加 GPIO 输入设备通用的功能。构造函数添加可选的 *pull_up* 参数来指定引脚应如何通过内部电阻拉动。`is_active` 属性会相应调整，以便 `True` 仍表示活动状态，无论 *pull_up* 设置如何。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 设备连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。
+              - **pull_up** （`bool` 或 `None`）- 如果为 `True`，引脚将使用内部电阻拉高。如果为 `False`（默认值），引脚将拉低。如果为 `None`，引脚将浮动。由于 gpiozero 在引脚未拉动时无法自动猜测活动状态，因此必须传递 *active_state* 参数。
+              - **active_state** （`bool` 或 `None`）- 如果为 `True`，当硬件引脚状态为 `HIGH` 时，软件引脚为 `HIGH`。如果为 `False`，输入极性反转：当硬件引脚状态为 `HIGH` 时，软件引脚状态为 `LOW`。使用此参数在将引脚配置为未拉动时（当 *pull_up* 为 `None` 时）设置底层引脚的活动状态。当 *pull_up* 为 `True` 或 `False` 时，活动状态会自动设置为正确的值。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一个高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果设备当前处于活动状态则返回 `True`，否则返回 `False`。此属性通常从 `value` 派生。与 `value` 不同，这*总是*一个布尔值。
+
+<SourceProp propname="pull_up"></SourceProp>
+
+如果为 `True`，设备使用上拉电阻默认将 GPIO 引脚设置为"高电平"。
+
+<SourceProp propname="value"></SourceProp>
+
+返回表示设备状态的值。通常这是一个布尔值，或介于 0 和 1 之间的数字，但某些设备使用更大的范围（例如 -1 到 +1），复合设备通常使用元组来返回其所有从属组件的状态。
+
+### GPIODevice
+
+<SourceClass funname="gpiozero.GPIODevice" funargs="pin, *, pin_factory=None"></SourceClass>
+
+扩展 `Device`。表示通用 GPIO 设备，并提供所有单引脚 GPIO 设备通用的服务（例如确保两个 GPIO 设备不共享一个 `pin`）。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 设备连接的 GPIO 引脚。有关有效的引脚编号，请参阅[引脚编号](./recipes.mdx#引脚编号)。如果该值为 `None`，将引发 `GPIODeviceError`。如果引脚已被另一个设备使用，将引发 `GPIOPinInUse`。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="close" propargs=""></SourceProp>
+
+关闭设备并释放所有关联资源（例如 GPIO 引脚）。
+
+此方法是幂等的（可以在已关闭的设备上调用而不会产生任何副作用）。它主要用于命令行的交互式使用。它会禁用设备并释放其引脚，以供其他设备使用。
+
+您可以尝试通过删除对象来完成此操作，但除非清除了对该对象的所有引用，否则这可能不起作用（即使清除了所有引用，也无法保证垃圾回收器会在那时实际删除该对象）。相比之下，`close` 方法提供了一种确保对象关闭的方法。
+
+例如，如果您的面包板上有一个连接到引脚 16 的蜂鸣器，但随后希望改接一个 LED：
+
+```py
+from gpiozero import *
+
+bz = Buzzer(16)
+bz.on()
+bz.off()
+bz.close()
+led = LED(16)
+led.blink()
+```
+
+`Device` 的子类也可以使用 `with` 语句作为上下文管理器。例如：
+
+```py
+from gpiozero import *
+
+with Buzzer(16) as bz:
+    bz.on()
+
+with LED(16) as led:
+    led.on()
+```
+
+<SourceProp propname="closed"></SourceProp>
+
+如果设备已关闭（参见 `close()` 方法）则返回 `True`。一旦设备关闭，您就无法再使用任何其他方法或属性来控制或查询该设备。
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。如果设备已关闭（参见 `close()` 方法），则为 `None`。处理 GPIO 引脚时，查询 `pin.number` 可发现设备连接到的 GPIO 引脚（BCM 编号）。
+
+<SourceProp propname="value"></SourceProp>
+
+返回表示设备状态的值。通常这是一个布尔值，或介于 0 和 1 之间的数字，但某些设备使用更大的范围（例如 -1 到 +1），复合设备通常使用元组来返回其所有从属组件的状态。
 
 <Normal />

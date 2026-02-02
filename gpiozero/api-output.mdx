@@ -1,4 +1,996 @@
 ---
-sidebar_position: 30
-draft: true
+sidebar_position: 16
+draft: false
+title: 15. API-输出设备
+description: 这些输出设备组件接口是为日常组件的简单使用而提供的。在代码中使用组件前，必须正确布线。包括LED、蜂鸣器、电机、舵机等设备的详细API文档。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 输出设备, LED, 蜂鸣器, 电机, 舵机]
+last_update:
+  date: 2026-02-01
 ---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-输出设备
+
+这些输出设备组件接口是为日常组件的简单使用而提供的。在代码中使用组件前，必须正确布线。
+
+:::tip
+所有 GPIO 引脚编号默认使用 Broadcom (BCM) 编号。更多信息，请参阅 [引脚编号](./recipes.mdx#引脚编号) 部分。
+:::
+
+## 常规类
+
+下列类用于它们所代表的设备。本节中的所有类都是具体类（非抽象类）。
+
+### LED
+
+<SourceClass funname="gpiozero.LED" funargs="pin, *, active_high=True, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `DigitalOutputDevice`，表示一个发光二极管（LED）。
+
+将 LED 的阴极（短腿，平坦的一侧）连接到接地引脚；将阳极（长腿）连接到限流电阻；将限流电阻的另一侧连接到 GPIO 引脚（限流电阻可以放在 LED 的任一侧）。
+
+以下示例将点亮 LED：
+
+```py
+from gpiozero import LED
+
+led = LED(17)
+led.on()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- LED 连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。如果为 `None`，将抛出 `GPIODeviceError`。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），LED 将按照上述电路正常工作。如果为 `False`，则应将阴极连接到 GPIO 引脚，将阳极连接到 3V3 引脚（通过限流电阻）。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），LED 初始状态为关闭。如果为 `None`，LED 将保持引脚配置为输出时发现的任何状态（警告：这可能是开启状态）。如果为 `True`，LED 初始将被打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins) 获取更多信息（这是一项高级功能，大多数用户可以忽略）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开设备。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭设备。
+
+<SourceProp propname="toggle" propargs=""></SourceProp>
+
+反转设备的状态。如果当前是开，则关闭；如果当前是关，则打开。
+
+<SourceProp propname="blink" propargs="on_time=1, off_time=1, n=None, background=True"></SourceProp>
+
+使设备重复开启和关闭。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **on_time** （`float`）- 开启的秒数。默认为 `1`。
+              - **off_time** （`float`）- 关闭的秒数。默认为 `1`。
+              - **n** （`int` 或 `None`）- 闪烁的次数；`None`（默认值）表示永久闪烁。
+              - **background** （`bool`）- 如果为 `True`（默认值），启动后台线程继续闪烁并立即返回。如果为 `False`，仅在闪烁完成后返回（警告：*n* 的默认值将导致此方法永不返回）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。如果设备已关闭，此属性将为 `None`（参见 `close()` 方法）。在处理 GPIO 引脚时，查询 `pin.number` 以发现设备连接的 GPIO 引脚（BCM 编号）。
+
+<SourceProp propname="is_lit"></SourceProp>
+
+当设备当前活动时返回 `True`，否则返回 `False`。此属性通常从 `value` 派生。与 `value` 不同，这*始终*是布尔值。
+
+<SourceProp propname="value"></SourceProp>
+
+如果设备当前活动则返回 1，否则返回 0。设置此属性会更改设备的状态。
+
+### PWMLED
+
+<SourceClass funname="gpiozero.PWMLED" funargs="pin, *, active_high=True, initial_value=0, frequency=100, pin_factory=None"></SourceClass>
+
+扩展 `PWMOutputDevice`，表示具有可变亮度的发光二极管（LED）。
+
+典型的此类设备配置是将 GPIO 引脚连接到 LED 的阳极（长腿），将阴极（短腿）连接到接地，使用可选的电阻以防止 LED 烧毁。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- LED 连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。如果为 `None`，将抛出 `GPIODeviceError`。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），`on` 方法将 GPIO 设置为 HIGH。如果为 `False`，`on` 方法将 GPIO 设置为 LOW（`off` 方法总是相反）。
+              - **initial_value** （`float`）- 如果为 `0`（默认值），LED 初始状态为关闭。可以指定 0 到 1 之间的其他值作为 LED 的初始亮度。注意，不能指定 `None`（与父类不同），因为 PWM 无法不改变引脚状态。
+              - **frequency** （`int`）- 用于驱动 LED 的脉冲频率（以 Hz 为单位）。默认为 100Hz。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开设备，使其达到最大亮度。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭设备。
+
+<SourceProp propname="toggle" propargs=""></SourceProp>
+
+反转设备的状态。如果设备当前关闭（`value` 为 0.0），则将其改为"完全"开启（`value` 为 1.0）。如果设备的占空比（`value`）为 0.1，这会将其切换到 0.9，以此类推。
+
+<SourceProp propname="blink" propargs="on_time=1, off_time=1, fade_in_time=0, fade_out_time=0, n=None, background=True"></SourceProp>
+
+使设备重复开启和关闭。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **on_time** （`float`）- 开启的秒数。默认为 `1`。
+              - **off_time** （`float`）- 关闭的秒数。默认为 `1`。
+              - **fade_in_time** （`float`）- 淡入的秒数。默认为 `0`。
+              - **fade_out_time** （`float`）- 淡出的秒数。默认为 `0`。
+              - **n** （`int` 或 `None`）- 闪烁的次数；`None`（默认值）表示永久闪烁。
+              - **background** （`bool`）- 如果为 `True`（默认值），启动后台线程继续闪烁并立即返回。如果为 `False`，仅在闪烁完成后返回（警告：*n* 的默认值将导致此方法永不返回）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pulse" propargs="fade_in_time=1, fade_out_time=1, n=None, background=True"></SourceProp>
+
+使设备重复淡入和淡出。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **fade_in_time** （`float`）- 淡入的秒数。默认为 `1`。
+              - **fade_out_time** （`float`）- 淡出的秒数。默认为 `1`。
+              - **n** （`int` 或 `None`）- 脉冲的次数；`None`（默认值）表示永久脉冲。
+              - **background** （`bool`）- 如果为 `True`（默认值），启动后台线程继续脉冲并立即返回。如果为 `False`，仅在脉冲完成后返回（警告：*n* 的默认值将导致此方法永不返回）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。
+
+<SourceProp propname="is_lit"></SourceProp>
+
+当设备当前活动（`value` 非零）时返回 `True`，否则返回 `False`。
+
+<SourceProp propname="value"></SourceProp>
+
+PWM 设备的占空比。0.0 完全关闭，1.0 完全开启。可以为设备中不同的功率级别指定中间值。
+
+### RGBLED
+
+<SourceClass funname="gpiozero.RGBLED" funargs="red, green, blue, *, active_high=True, initial_value=(0, 0, 0), pwm=True, pin_factory=None"></SourceClass>
+
+扩展 `CompositeOutputDevice`，表示一个全彩 LED 组件（由红、绿、蓝三个 LED 组成）。
+
+将 RGBLED 的共阴极连接到接地引脚；将红色、绿色和蓝色阳极分别连接到任意 GPIO 引脚。
+
+以下示例将 LED 设置为黄色：
+
+```py
+from gpiozero import RGBLED
+
+led = RGBLED(2, 3, 4)
+led.color = (1, 1, 0)
+```
+
+还支持 [colorzero](https://colorzero.readthedocs.io/) 库：
+
+```py
+from gpiozero import RGBLED
+from colorzero import Color
+
+led = RGBLED(2, 3, 4)
+led.color = Color('yellow')
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **red** （`int` 或 `str`）- 红色 LED 连接的 GPIO 引脚。
+              - **green** （`int` 或 `str`）- 绿色 LED 连接的 GPIO 引脚。
+              - **blue** （`int` 或 `str`）- 蓝色 LED 连接的 GPIO 引脚。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），LED 将按照共阴极配置正常工作。如果为 `False`，使用共阳极配置。
+              - **initial_value** （`Color` 或元组）- LED 的初始颜色。默认为黑色 `(0, 0, 0)`。
+              - **pwm** （`bool`）- 如果为 `True`（默认值），构造 `PWMLED` 实例以表示每个组件。如果为 `False`，构造常规的 `LED` 实例，这将阻止改变每个组件的亮度。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开 LED。这等同于将 LED 颜色设置为白色 `(1, 1, 1)`。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭 LED。这等同于将 LED 颜色设置为黑色 `(0, 0, 0)`。
+
+<SourceProp propname="toggle" propargs=""></SourceProp>
+
+反转设备的状态。如果设备当前是关闭（`value` 为 `(0, 0, 0)`），则将其改为"完全"开启（`value` 为 `(1, 1, 1)`）。如果设备有特定颜色，此方法将反转该颜色。
+
+<SourceProp propname="blink" propargs="on_time=1, off_time=1, fade_in_time=0, fade_out_time=0, on_color=(1, 1, 1), off_color=(0, 0, 0), n=None, background=True"></SourceProp>
+
+使设备重复开启和关闭。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **on_time** （`float`）- 开启的秒数。默认为 `1`。
+              - **off_time** （`float`）- 关闭的秒数。默认为 `1`。
+              - **fade_in_time** （`float`）- 淡入的秒数。默认为 `0`。如果类构造时 *pwm* 为 `False`，则必须为 0（否则将引发 `ValueError`）。
+              - **fade_out_time** （`float`）- 淡出的秒数。默认为 `0`。如果类构造时 *pwm* 为 `False`，则必须为 0（否则将引发 `ValueError`）。
+              - **on_color** （`Color` 或 `tuple`）- LED"开启"时使用的颜色。默认为白色。
+              - **off_color** （`Color` 或 `tuple`）- LED"关闭"时使用的颜色。默认为黑色。
+              - **n** （`int` 或 `None`）- 闪烁的次数；`None`（默认值）表示永久闪烁。
+              - **background** （`bool`）- 如果为 `True`（默认值），启动后台线程继续闪烁并立即返回。如果为 `False`，仅在闪烁完成后返回（警告：*n* 的默认值将导致此方法永不返回）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pulse" propargs="fade_in_time=1, fade_out_time=1, on_color=(1, 1, 1), off_color=(0, 0, 0), n=None, background=True"></SourceProp>
+
+使设备重复淡入和淡出。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **fade_in_time** （`float`）- 淡入的秒数。默认为 `1`。
+              - **fade_out_time** （`float`）- 淡出的秒数。默认为 `1`。
+              - **on_color** （`Color` 或 `tuple`）- LED"开启"时使用的颜色。默认为白色。
+              - **off_color** （`Color` 或 `tuple`）- LED"关闭"时使用的颜色。默认为黑色。
+              - **n** （`int` 或 `None`）- 脉冲的次数；`None`（默认值）表示永久脉冲。
+              - **background** （`bool`）- 如果为 `True`（默认值），启动后台线程继续脉冲并立即返回。如果为 `False`，仅在脉冲完成后返回（警告：*n* 的默认值将导致此方法永不返回）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="red"></SourceProp>
+
+将 LED 的红色元素表示为 `Red` 对象。
+
+<SourceProp propname="green"></SourceProp>
+
+将 LED 的绿色元素表示为 `Green` 对象。
+
+<SourceProp propname="blue"></SourceProp>
+
+将 LED 的蓝色元素表示为 `Blue` 对象。
+
+<SourceProp propname="is_lit"></SourceProp>
+
+当 LED 当前处于活动状态（不是黑色）时返回 `True`，否则返回 `False`。
+
+<SourceProp propname="color"></SourceProp>
+
+将 LED 的颜色表示为 `Color` 对象。
+
+<SourceProp propname="value"></SourceProp>
+
+将 LED 颜色表示为 (红, 绿, 蓝) 的 RGB 3 元组，每个值从 0 到 1（如果类构造时 *pwm* 为 `True`），或者只能是 0 或 1（如果不是）。
+
+例如，红色将是 `(1, 0, 0)`，黄色将是 `(1, 1, 0)`，而橙色将是 `(1, 0.5, 0)`。
+
+### Buzzer
+
+<SourceClass funname="gpiozero.Buzzer" funargs="pin, *, active_high=True, initial_value=False, pin_factory=None"></SourceClass>
+
+扩展 `DigitalOutputDevice`，表示数字蜂鸣器组件。
+
+:::note
+此接口仅能执行简单的开/关命令，无法播放各种音调（请参阅 `TonalBuzzer`）。
+:::
+
+将蜂鸣器的阴极（负引脚）连接到接地引脚；将另一侧连接到任意 GPIO 引脚。
+
+以下示例将发出蜂鸣声：
+
+```py
+from gpiozero import Buzzer
+
+bz = Buzzer(3)
+bz.on()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 蜂鸣器连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。如果为 `None`，将抛出 `GPIODeviceError`。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），蜂鸣器将按照上述电路正常工作。如果为 `False`，则应将阴极连接到 GPIO 引脚，将阳极连接到 3V3 引脚。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），蜂鸣器初始为静音。如果为 `None`，蜂鸣器将保持引脚配置为输出时发现的任何状态（警告：这可能是开启状态）。如果为 `True`，蜂鸣器初始将被打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开设备。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭设备。
+
+<SourceProp propname="toggle" propargs=""></SourceProp>
+
+反转设备的状态。如果当前是开，则关闭；如果当前是关，则打开。
+
+<SourceProp propname="beep" propargs="on_time=1, off_time=1, n=None, background=True"></SourceProp>
+
+使设备重复开启和关闭。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **on_time** （`float`）- 开启的秒数。默认为 `1`。
+              - **off_time** （`float`）- 关闭的秒数。默认为 `1`。
+              - **n** （`int` 或 `None`）- 闪烁的次数；`None`（默认值）表示永久闪烁。
+              - **background** （`bool`）- 如果为 `True`（默认值），启动后台线程继续闪烁并立即返回。如果为 `False`，仅在闪烁完成后返回（警告：*n* 的默认值将导致此方法永不返回）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。如果设备已关闭，此属性将为 `None`（参见 `close()` 方法）。在处理 GPIO 引脚时，查询 `pin.number` 以发现设备连接的 GPIO 引脚（BCM 编号）。
+
+<SourceProp propname="is_active"></SourceProp>
+
+当设备当前活动时返回 `True`，否则返回 `False`。此属性通常从 `value` 派生。与 `value` 不同，这*始终*是布尔值。
+
+<SourceProp propname="value"></SourceProp>
+
+如果设备当前活动则返回 1，否则返回 0。设置此属性会更改设备的状态。
+
+### TonalBuzzer
+
+<SourceClass funname="gpiozero.TonalBuzzer" funargs="pin, *, initial_value=None, mid_tone='A4', octaves=1, pin_factory=None"></SourceClass>
+
+扩展 `CompositeDevice`，表示一个音调蜂鸣器。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 蜂鸣器连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。如果为 `None`，将抛出 `GPIODeviceError`。
+              - **initial_value** （`float`）- 如果为 `None`（默认值），蜂鸣器初始为关闭。可以将 -1 到 1 之间的值指定为蜂鸣器的初始值。
+              - **mid_tone** （`int` 或 `str`）- 表示设备中间值（0）的音调。默认为 "A4"（MIDI 音符 69）。
+              - **octaves** （`int`）- 允许距离基础音符的八度数。默认为 1，表示 -1 的值下降一个八度，上升一个八度，即默认基础音符 A4 时从 A3 到 A5。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+:::note
+此类当前不适用于 `PiGPIOFactory`。
+:::
+
+<SourceProp propname="play" propargs="tone"></SourceProp>
+
+播放指定的 *tone*。它可以是 `Tone` 的实例，也可以是任何可用于构造 `Tone` 实例的内容。
+
+例如：
+
+```py
+>>> from gpiozero import TonalBuzzer
+>>> from gpiozero.tones import Tone
+>>> b = TonalBuzzer(17)
+>>> b.play(Tone("A4"))
+>>> b.play(Tone(220.0)) # Hz
+>>> b.play(Tone(60)) # MIDI 符号中的中 C
+>>> b.play("A4")
+>>> b.play(220.0)
+>>> b.play(60)
+```
+
+<SourceProp propname="stop" propargs=""></SourceProp>
+
+关闭蜂鸣器。这等同于将 `value` 设置为 `None`。
+
+<SourceProp propname="octaves"></SourceProp>
+
+可用的八度数（mid_tone 的上方和下方）。
+
+<SourceProp propname="min_tone"></SourceProp>
+
+蜂鸣器可以播放的最低音调，即 `value` 为 -1 时播放的音调。
+
+<SourceProp propname="mid_tone"></SourceProp>
+
+可用的中间音调，即 `value` 为 0 时播放的音调。
+
+<SourceProp propname="max_tone"></SourceProp>
+
+蜂鸣器可以播放的最高音调，即 `value` 为 1 时播放的音调。
+
+<SourceProp propname="tone"></SourceProp>
+
+当前正在播放的 `Tone`，如果蜂鸣器静音则为 `None`。
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果蜂鸣器当前正在播放，则返回 `True`，否则返回 `False`。
+
+<SourceProp propname="value"></SourceProp>
+
+将蜂鸣器的状态表示为 -1（表示最小音调）到 1（表示最大音调）之间的值。这也可以是特殊值 `None`，表示蜂鸣器当前静音。
+
+### Motor
+
+<SourceClass funname="gpiozero.Motor" funargs="forward, backward, *, enable=None, pwm=True, pin_factory=None"></SourceClass>
+
+扩展 `CompositeDevice`，表示连接到双向电机驱动电路（即 [H 桥](https://en.wikipedia.org/wiki/H_bridge)）的通用电机。
+
+将 [H 桥](https://en.wikipedia.org/wiki/H_bridge) 电机控制器连接到树莓派；将电源（如电池组或 5V 引脚）连接到控制器；将控制器板的输出连接到电机的两个端子；将控制器板的输入连接到两个 GPIO 引脚。
+
+以下代码将使电机"正转"：
+
+```py
+from gpiozero import Motor
+
+motor = Motor(17, 18)
+motor.forward()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **forward** （`int` 或 `str`）- 控制电机正转的 GPIO 引脚。
+              - **backward** （`int` 或 `str`）- 控制电机反转的 GPIO 引脚。
+              - **enable** （`int` 或 `str` 或 `None`）- 如果指定，表示启用引脚的 GPIO 引脚（通常用于 PWM 速度控制）。
+              - **pwm** （`bool`）- 如果为 `True`（默认值），构造 `PWMOutputDevice` 实例用于 *forward* 和 *backward* 引脚，允许可变速度。如果为 `False`，构造 `DigitalOutputDevice` 实例，固定速度。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="forward" propargs="speed=1"></SourceProp>
+
+驱动电机正转。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **speed** （`float`）- 电机应转动的速度。可以是 0（停止）到默认值 1（最大速度）之间的任何值（如果类构造时 *pwm* 为 `True`），或者只能是 0 或 1（如果不是）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="backward" propargs="speed=1"></SourceProp>
+
+驱动电机反转。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **speed** （`float`）- 电机应转动的速度。可以是 0（停止）到默认值 1（最大速度）之间的任何值（如果类构造时 *pwm* 为 `True`），或者只能是 0 或 1（如果不是）。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="reverse" propargs=""></SourceProp>
+
+反转电机的当前旋转方向。如果电机当前空闲，则不执行任何操作。否则，电机的方向将在当前速度下反转。
+
+<SourceProp propname="stop" propargs=""></SourceProp>
+
+停止电机。
+
+<SourceProp propname="is_active"></SourceProp>
+
+当电机当前运行时返回 `True`，否则返回 `False`。
+
+<SourceProp propname="value"></SourceProp>
+
+表示电机的速度，范围从 -1（全速反转）到 1（全速正转），0 表示停止。
+
+### PhaseEnableMotor
+
+<SourceClass funname="gpiozero.PhaseEnableMotor" funargs="phase, enable, *, pwm=True, pin_factory=None"></SourceClass>
+
+扩展 `CompositeDevice`，表示连接到相位/使能电机驱动电路的通用电机；驱动器的相位控制电机是正转还是反转，而使能通过 PWM 控制速度。
+
+以下代码将使电机"正转"：
+
+```py
+from gpiozero import PhaseEnableMotor
+motor = PhaseEnableMotor(12, 5)
+motor.forward()
+```
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **phase** （`int` 或 `str`）- 控制电机旋转方向的 GPIO 引脚。
+              - **enable** （`int` 或 `str`）- 控制电机速度的 GPIO 引脚（使用 PWM）。
+              - **pwm** （`bool`）- 如果为 `True`（默认值），对 *enable* 引脚使用 PWM。如果为 `False`，使用数字输出（固定速度）。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="forward" propargs="speed=1"></SourceProp>
+
+驱动电机正转。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **speed** （`float`）- 电机应转动的速度。可以是 0（停止）到默认值 1（最大速度）之间的任何值。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="backward" propargs="speed=1"></SourceProp>
+
+驱动电机反转。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **speed** （`float`）- 电机应转动的速度。可以是 0（停止）到默认值 1（最大速度）之间的任何值。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="reverse" propargs=""></SourceProp>
+
+反转电机的当前旋转方向。如果电机当前空闲，则不执行任何操作。否则，电机的方向将在当前速度下反转。
+
+<SourceProp propname="stop" propargs=""></SourceProp>
+
+停止电机。
+
+<SourceProp propname="is_active"></SourceProp>
+
+当电机当前运行时返回 `True`，否则返回 `False`。
+
+<SourceProp propname="value"></SourceProp>
+
+表示电机的速度，为从 -1（全速反转）到 1（全速正转）的浮点值。
+
+### Servo
+
+<SourceClass funname="gpiozero.Servo" funargs="pin, *, initial_value=0, min_pulse_width=1/1000, max_pulse_width=2/1000, frame_width=20/1000, pin_factory=None"></SourceClass>
+
+扩展 `CompositeDevice`，表示连接到 GPIO 引脚的 PWM 控制的舵机电机。
+
+将电源（如电池组或 5V 引脚）连接到舵机的电源线（通常为红色）；将舵机的接地线（通常为黑色或棕色）连接到电池组的负极或 GND 引脚；将最后一根线（通常为白色或橙色）连接到您希望用于控制舵机的 GPIO 引脚。
+
+以下代码将使舵机在其最小、最大和中间位置之间移动，每次之间有一个停顿：
+
+```py
+from gpiozero import Servo
+from time import sleep
+
+servo = Servo(17)
+
+while True:
+    servo.min()
+    sleep(1)
+    servo.mid()
+    sleep(1)
+    servo.max()
+    sleep(1)
+```
+
+您还可以使用 `value` 属性将舵机移动到特定位置，范围从 -1（最小）到 1（最大），其中 0 是中点：
+
+```py
+from gpiozero import Servo
+
+servo = Servo(17)
+
+servo.value = 0.5
+```
+
+:::note
+为了减少舵机抖动，请使用 pigpio 引脚驱动而不是默认的 RPi.GPIO 驱动（pigpio 使用 DMA 采样以获得更精确的边缘时序）。请参阅 [更改引脚工厂](./api-pins#更改引脚工厂) 获取更多信息。
+:::
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 舵机连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。如果为 `None`，将抛出 `GPIODeviceError`。
+              - **initial_value** （`float`）- 如果为 `0`（默认值），设备的中点将被初始设置。可以将 -1 到 +1 之间的其他值指定为初始位置。`None` 表示以非控制状态启动舵机（参见 `value`）。
+              - **min_pulse_width** （`float`）- 对应舵机最小位置的脉冲宽度。默认为 1ms。
+              - **max_pulse_width** （`float`）- 对应舵机最大位置的脉冲宽度。默认为 2ms。
+              - **frame_width** （`float`）- 舵机控制脉冲之间的时间长度（以秒为单位）。默认为 20ms，这是舵机的常见值。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="detach" propargs=""></SourceProp>
+
+暂时禁用对舵机的控制。这等同于将 `value` 设置为 `None`。
+
+<SourceProp propname="min" propargs=""></SourceProp>
+
+将舵机设置到其最小位置。
+
+<SourceProp propname="mid" propargs=""></SourceProp>
+
+将舵机设置到其中点位置。
+
+<SourceProp propname="max" propargs=""></SourceProp>
+
+将舵机设置到其最大位置。
+
+<SourceProp propname="frame_width"></SourceProp>
+
+控制脉冲之间的时间，以秒为单位。
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果复合设备的任何组成设备具有"真值"，则复合设备被视为"活动"。
+
+<SourceProp propname="max_pulse_width"></SourceProp>
+
+对应舵机最大位置的控制脉冲宽度，以秒为单位。
+
+<SourceProp propname="min_pulse_width"></SourceProp>
+
+对应舵机最小位置的控制脉冲宽度，以秒为单位。
+
+<SourceProp propname="pulse_width"></SourceProp>
+
+返回当前控制舵机的脉冲宽度。
+
+<SourceProp propname="value"></SourceProp>
+
+表示舵机的位置，为从 -1（最小位置）到 +1（最大位置）的值。这也可以是特殊值 `None`，表示舵机当前"不受控制"，即没有发送控制信号。通常这意味着舵机的位置保持不变，但可以用手移动。
+
+### AngularServo
+
+<SourceClass funname="gpiozero.AngularServo" funargs="pin, *, initial_angle=0, min_angle=-90, max_angle=90, min_pulse_width=1/1000, max_pulse_width=2/1000, frame_width=20/1000, pin_factory=None"></SourceClass>
+
+扩展 `Servo`，表示可旋转到特定角度的 PWM 控制旋转舵机电机（假设向构造函数提供了有效的最小和最大角度）。
+
+将电源（如电池组或 5V 引脚）连接到舵机的电源线（通常为红色）；将舵机的接地线（通常为黑色或棕色）连接到电池组的负极或 GND 引脚；将最后一根线（通常为白色或橙色）连接到您希望用于控制舵机的 GPIO 引脚。
+
+接下来，校准舵机可以旋转到的角度。在交互式 Python 会话中，构造一个 `Servo` 实例。默认情况下，舵机应移动到其中点。将舵机设置为其最小值，并测量与中点的角度。将舵机设置为其最大值，并再次测量角度：
+
+```py
+>>> from gpiozero import Servo
+>>> s = Servo(17)
+>>> s.min() # 测量角度
+>>> s.max() # 测量角度
+```
+
+现在您应该能够使用正确的边界构造一个 `AngularServo` 实例：
+
+```py
+>>> from gpiozero import AngularServo
+>>> s = AngularServo(17, min_angle=-42, max_angle=44)
+>>> s.angle = 0.0
+>>> s.angle
+0.0
+>>> s.angle = 15
+>>> s.angle
+15.0
+```
+
+:::note
+如果您希望反转角度的意义（例如 `min_angle=45, max_angle=-45`），可以将 *min_angle* 设置为大于 *max_angle*。这对于旋转方向与您预期的最小和最大值相反的舵机很有用。
+:::
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 舵机连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。如果为 `None`，将抛出 `GPIODeviceError`。
+              - **initial_angle** （`float`）- 设置舵机的初始角度为指定值。默认为 0。指定的值必须在 *min_angle* 和 *max_angle* 之间（包含）。`None` 表示以非控制状态启动舵机（参见 `value`）。
+              - **min_angle** （`float`）- 设置舵机可以旋转到的最小角度。默认为 -90 度，但应设置为校准期间从舵机测量的任何值。
+              - **max_angle** （`float`）- 设置舵机可以旋转到的最大角度。默认为 90 度，但应设置为校准期间从舵机测量的任何值。
+              - **min_pulse_width** （`float`）- 对应舵机最小位置的脉冲宽度。默认为 1ms。
+              - **max_pulse_width** （`float`）- 对应舵机最大位置的脉冲宽度。默认为 2ms。
+              - **frame_width** （`float`）- 舵机控制脉冲之间的时间长度（以秒为单位）。默认为 20ms，这是舵机的常见值。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="min" propargs=""></SourceProp>
+
+将舵机设置到其最小位置。
+
+<SourceProp propname="mid" propargs=""></SourceProp>
+
+将舵机设置到其中点位置。
+
+<SourceProp propname="max" propargs=""></SourceProp>
+
+将舵机设置到其最大位置。
+
+<SourceProp propname="angle"></SourceProp>
+
+舵机的位置，以度为单位的角度。只有在构造函数中正确设置了 `min_angle` 和 `max_angle` 时，这才会准确。
+
+这也可以是特殊值 `None`，表示舵机当前"不受控制"，即没有发送控制信号。通常这意味着舵机的位置保持不变，但可以用手移动。
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果复合设备的任何组成设备具有"真值"，则复合设备被视为"活动"。
+
+<SourceProp propname="max_angle"></SourceProp>
+
+当调用 `max()` 时舵机将旋转到的最大角度。
+
+<SourceProp propname="min_angle"></SourceProp>
+
+当调用 `min()` 时舵机将旋转到的最小角度。
+
+<SourceProp propname="value"></SourceProp>
+
+表示舵机的位置，为从 -1（最小位置）到 +1（最大位置）的值。这也可以是特殊值 `None`，表示舵机当前"不受控制"，即没有发送控制信号。通常这意味着舵机的位置保持不变，但可以用手移动。
+
+## 基类
+
+上述部分中的类派生自一系列基类，其中一些实际上是抽象的。这些类形成了下图中显示的（部分）层次结构（抽象类的阴影比具体类浅）：
+
+![输出设备层次结构图](@site/static/gpiozeroimg/output_device_hierarchy.svg)
+
+以下部分为希望为自己的设备构造类的高级用户记录这些基类。
+
+### DigitalOutputDevice
+
+<SourceClass funname="gpiozero.DigitalOutputDevice" funargs="pin, *, active_high=True, initial_value=False, pin_factory=None"></SourceClass>
+
+表示具有典型开/关行为的通用输出设备。
+
+此类扩展 `OutputDevice`，添加了 `blink()` 方法，该方法使用可选的后台线程来处理切换设备状态而无需进一步交互。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 设备连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），`on` 方法将 GPIO 设置为 HIGH。如果为 `False`，`on` 方法将 GPIO 设置为 LOW。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），设备初始为关闭。如果为 `None`，设备将保持引脚配置为输出时发现的任何状态。如果为 `True`，设备初始将被打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开设备。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭设备。
+
+<SourceProp propname="blink" propargs="on_time=1, off_time=1, n=None, background=True"></SourceProp>
+
+使设备重复开启和关闭。
+
+<SourceProp propname="value"></SourceProp>
+
+返回 `0`（关闭）或 `1`（开启）。
+
+### PWMOutputDevice
+
+<SourceClass funname="gpiozero.PWMOutputDevice" funargs="pin, *, active_high=True, initial_value=0, frequency=100, pin_factory=None"></SourceClass>
+
+为脉宽调制（PWM）配置的通用输出设备。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 设备连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），`on` 方法将 GPIO 设置为 HIGH。如果为 `False`，`on` 方法将 GPIO 设置为 LOW。
+              - **initial_value** （`float`）- 如果为 `0`（默认值），设备初始值为关闭。可以指定 0 到 1 之间的其他值作为初始值。
+              - **frequency** （`int`）- PWM 信号的频率（以 Hz 为单位）。默认为 100Hz。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开设备。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭设备。
+
+<SourceProp propname="blink" propargs="on_time=1, off_time=1, fade_in_time=0, fade_out_time=0, n=None, background=True"></SourceProp>
+
+使设备重复开启和关闭。
+
+<SourceProp propname="pulse" propargs="fade_in_time=1, fade_out_time=1, n=None, background=True"></SourceProp>
+
+使设备重复淡入和淡出。
+
+<SourceProp propname="toggle" propargs=""></SourceProp>
+
+反转设备的状态。如果设备当前关闭（`value` 为 0.0），则将其改为"完全"开启（`value` 为 1.0）。如果设备的占空比（`value`）为 0.1，这会将其切换到 0.9，以此类推。
+
+<SourceProp propname="frequency"></SourceProp>
+
+与 PWM 设备一起使用的脉冲频率（以 Hz 为单位）。默认为 100Hz。
+
+<SourceProp propname="is_active"></SourceProp>
+
+当设备当前活动（`value` 非零）时返回 `True`，否则返回 `False`。
+
+<SourceProp propname="value"></SourceProp>
+
+设备的占空比。0.0 完全关闭，1.0 完全开启。0 到 1 之间的值表示中间值。
+
+### OutputDevice
+
+<SourceClass funname="gpiozero.OutputDevice" funargs="pin, *, active_high=True, initial_value=False, pin_factory=None"></SourceClass>
+
+表示通用 GPIO 输出设备。
+
+此类扩展 `GPIODevice`，添加 GPIO 输出设备常用的功能：用于打开设备的 `on()` 方法、相应的 `off()` 方法和 `toggle()` 方法。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 设备连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。如果为 `None`，将抛出 `GPIODeviceError`。
+              - **active_high** （`bool`）- 如果为 `True`（默认值），`on` 方法将 GPIO 设置为 HIGH。如果为 `False`，`on` 方法将 GPIO 设置为 LOW（`off` 方法总是相反）。
+              - **initial_value** （`bool` 或 `None`）- 如果为 `False`（默认值），设备初始为关闭。如果为 `None`，设备将保持引脚配置为输出时发现的任何状态（警告：这可能是开启状态）。如果为 `True`，设备初始将被打开。
+              - **pin_factory** （`Factory` 或 `None`）- 请参阅 [API - Pins](./api-pins)。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="on" propargs=""></SourceProp>
+
+打开设备。
+
+<SourceProp propname="off" propargs=""></SourceProp>
+
+关闭设备。
+
+<SourceProp propname="toggle" propargs=""></SourceProp>
+
+反转设备的状态。如果当前是开，则关闭；如果当前是关，则打开。
+
+<SourceProp propname="active_high"></SourceProp>
+
+当为 `True` 时，设备的 `pin` 为高时 `value` 属性为 `True`。当为 `False` 时，设备的引脚为低时 `value` 属性为 `True`（即值被反转）。
+
+此属性可以在构造后设置；请注意，更改它会反转 `value`（即更改此属性不会更改设备的引脚状态 - 它只是更改该状态的解释方式）。
+
+<SourceProp propname="value"></SourceProp>
+
+如果设备当前活动则返回 1，否则返回 0。设置此属性会更改设备的状态。
+
+### GPIODevice
+
+<SourceClass funname="gpiozero.GPIODevice" funargs="pin, *, pin_factory=None"></SourceClass>
+
+扩展 `Device`。表示通用 GPIO 设备，并提供所有单引脚 GPIO 设备的公共服务（如确保两个 GPIO 设备不共享同一个 `pin`）。
+
+<table>
+    <tbody>
+        <tr className="table_noneborder">
+            <td className="table_noneborder_param">参数</td>
+            <td className="table_noneborder">
+              - **pin** （`int` 或 `str`）- 设备连接的 GPIO 引脚。更多信息请参阅 [引脚编号](./recipes.mdx#引脚编号)。如果为 `None`，将抛出 `GPIODeviceError`。如果引脚已被另一个设备使用，将抛出 `GPIOPinInUse`。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<SourceProp propname="close" propargs=""></SourceProp>
+
+关闭设备并释放所有关联的资源（如 GPIO 引脚）。
+
+此方法是幂等的（可以在已关闭的设备上调用而不会产生任何副作用）。它主要用于命令行的交互式使用。它禁用设备并释放其引脚以供另一个设备使用。
+
+您可以尝试通过删除对象来实现这一点，但除非您清理了对对象的所有引用，否则这可能不起作用（即使您清理了所有引用，也不能保证垃圾收集器会在那时实际删除对象）。相比之下，close 方法提供了一种确保对象被关闭的方法。
+
+例如，如果您有一个面包板，蜂鸣器连接到引脚 16，但随后希望改为连接 LED：
+
+```py
+>>> from gpiozero import *
+>>> bz = Buzzer(16)
+>>> bz.on()
+>>> bz.off()
+>>> bz.close()
+>>> led = LED(16)
+>>> led.blink()
+```
+
+`Device` 的子类也可以使用 `with` 语句作为上下文管理器。例如：
+
+```py
+>>> from gpiozero import *
+>>> with Buzzer(16) as bz:
+...     bz.on()
+...
+>>> with LED(16) as led:
+...     led.on()
+...
+```
+
+<SourceProp propname="closed"></SourceProp>
+
+如果设备已关闭则返回 `True`（参见 `close()` 方法）。设备关闭后，您不能再使用任何其他方法或属性来控制或查询设备。
+
+<SourceProp propname="pin"></SourceProp>
+
+设备连接的 `Pin`。如果设备已关闭，此属性将为 `None`（参见 `close()` 方法）。在处理 GPIO 引脚时，查询 `pin.number` 以发现设备连接的 GPIO 引脚（BCM 编号）。
+
+<SourceProp propname="value"></SourceProp>
+
+返回表示设备状态的值。通常这是一个布尔值，或介于 0 和 1 之间的数字，但某些设备使用更大的范围（例如 -1 到 +1），复合设备通常使用元组来返回其所有从属组件的状态。
+
+<Normal />

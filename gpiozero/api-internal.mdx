@@ -1,4 +1,387 @@
 ---
-sidebar_position: 30
-draft: true
+sidebar_position: 19
+draft: false
+title: 18. API-内部设备
+description: 内部设备的API文档。这些设备代表操作系统本身提供的功能，如时间、网络连接、CPU温度、负载平均值和磁盘使用率等，可用于响应系统事件。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 内部设备, TimeOfDay, PingServer, CPUTemperature, LoadAverage, DiskUsage]
+last_update:
+  date: 2026-02-01
 ---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-内部设备
+
+GPIO Zero 还提供了几个"内部"设备，它们代表操作系统本身提供的功能。这些设备可用于响应诸如时间、网络服务器是否可用等事件。
+
+这些设备提供了与 GPIO 设备类似且兼容的 API，因此内部设备事件可以像输入设备一样触发 GPIO 输出设备的更改。就像 `Button` 对象在按下时处于活动状态并可在状态变化时触发其他设备一样，`TimeOfDay` 对象在特定时间段内处于活动状态。
+
+考虑以下代码，其中 `Button` 对象用于控制 `LED` 对象：
+
+```python
+from gpiozero import LED, Button
+from signal import pause
+
+led = LED(2)
+btn = Button(3)
+
+btn.when_pressed = led.on
+btn.when_released = led.off
+
+pause()
+```
+
+现在考虑以下示例，其中 `TimeOfDay` 对象使用相同的方法控制 `LED`：
+
+```python
+from gpiozero import LED, TimeOfDay
+from datetime import time
+from signal import pause
+
+led = LED(2)
+tod = TimeOfDay(time(9), time(10))
+
+tod.when_activated = led.on
+tod.when_deactivated = led.off
+
+pause()
+```
+
+在这里，LED 不是由按钮控制，而是由时间控制。当时间达到上午 9:00 时，LED 亮起，在上午 10:00 时熄灭。
+
+像 `Button` 对象一样，内部设备如 `TimeOfDay` 对象具有 `value`、`values`、`is_active`、`when_activated` 和 `when_deactivated` 属性，因此使用其他范式的替代方法也可以工作。
+
+:::note
+请注意，虽然内部设备的构造函数参数中有 `pin_factory`，并且需要有效，但所选的引脚工厂不会产生任何实际差异。例如，目前无法读取远程 Pi 的 CPU 温度。
+:::
+
+## 常规类
+
+以下类供与其命名的设备一般使用。本节中的所有类都是具体类（非抽象类）。
+
+### TimeOfDay
+
+<SourceClass funname="gpiozero.TimeOfDay" funargs="*args, **kwargs"></SourceClass>
+
+扩展 `PolledInternalDevice` 以提供一个设备，当计算机时钟指示当前时间在 *start_time* 和 *end_time* 之间（包含两端）时处于活动状态，这两个参数是 `time` 实例。
+
+以下示例在上午 07:00 到 08:00 之间打开连接到 `Energenie` 插座的灯：
+
+```python
+from gpiozero import TimeOfDay, Energenie
+from datetime import time
+from signal import pause
+
+lamp = Energenie(1)
+morning = TimeOfDay(time(7), time(8))
+
+morning.when_activated = lamp.on
+morning.when_deactivated = lamp.off
+
+pause()
+```
+
+请注意，*start_time* 可以大于 *end_time*，表示跨越午夜的时间段。
+
+**参数：**
+
+- **start_time** ([time](https://docs.python.org/3.9/library/datetime.html#datetime.time)) - 从此时间起设备将被视为活动状态
+- **end_time** ([time](https://docs.python.org/3.9/library/datetime.html#datetime.time)) - 在此时间之后设备将被视为非活动状态
+- **utc** ([bool](https://docs.python.org/3.9/library/functions.html#bool)) - 如果为 `True`（默认），将使用 naive UTC 时间进行比较，而不是本地时区读数
+- **event_delay** ([float](https://docs.python.org/3.9/library/functions.html#float)) - 文件读取之间的秒数（默认为 10 秒）
+- **pin_factory** ([Factory](/gpiozero/api-pins) 或 None) - 参见 [API-引脚](/gpiozero/api-pins) 获取更多信息（这是高级功能，大多数用户可以忽略）
+
+<SourceProp propname="end_time"></SourceProp>
+
+设备被视为非活动状态之后的时间。
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果设备当前处于活动状态则返回 `True`，否则返回 `False`。此属性通常派生自 `value`。与 `value` 不同，此属性*始终*是布尔值。
+
+<SourceProp propname="start_time"></SourceProp>
+
+设备被视为活动状态之后的时间。
+
+<SourceProp propname="utc"></SourceProp>
+
+如果为 `True`，使用 naive UTC 时间读数进行比较，而不是本地时区读数。
+
+<SourceProp propname="value"></SourceProp>
+
+当系统时钟读数在 `start_time` 和 `end_time` 之间时返回 `1`，否则返回 `0`。如果 `start_time` 大于 `end_time`（表示跨越午夜的时间段），则当当前时间大于 `start_time` 或小于 `end_time` 时返回 `1`。
+
+<SourceProp propname="when_activated"></SourceProp>
+
+当设备从非活动状态变为活动状态（时间达到 `start_time`）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_deactivated"></SourceProp>
+
+当设备从活动状态变为非活动状态（时间达到 `end_time`）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+### PingServer
+
+<SourceClass funname="gpiozero.PingServer" funargs="*args, **kwargs"></SourceClass>
+
+扩展 `PolledInternalDevice` 以提供一个在主机（域名或 IP 地址）可以 ping 通时处于活动状态的设备。
+
+以下示例在 `google.com` 可达时点亮 LED：
+
+```python
+from gpiozero import PingServer, LED
+from signal import pause
+
+google = PingServer('google.com')
+led = LED(4)
+
+google.when_activated = led.on
+google.when_deactivated = led.off
+
+pause()
+```
+
+**参数：**
+
+- **host** ([str](https://docs.python.org/3.9/library/stdtypes.html#str)) - 要尝试 ping 的主机名或 IP 地址
+- **event_delay** ([float](https://docs.python.org/3.9/library/functions.html#float)) - ping 之间的秒数（默认为 10 秒）
+- **pin_factory** ([Factory](/gpiozero/api-pins) 或 None) - 参见 [API-引脚](/gpiozero/api-pins) 获取更多信息（这是高级功能，大多数用户可以忽略）
+
+<SourceProp propname="host"></SourceProp>
+
+每当查询 `value` 时要测试的主机名或 IP 地址。
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果设备当前处于活动状态则返回 `True`，否则返回 `False`。此属性通常派生自 `value`。与 `value` 不同，此属性*始终*是布尔值。
+
+<SourceProp propname="value"></SourceProp>
+
+如果主机返回单个 ping，返回 `1`，否则返回 `0`。
+
+<SourceProp propname="when_activated"></SourceProp>
+
+当设备从非活动状态（主机无响应）变为活动状态（主机响应）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_deactivated"></SourceProp>
+
+当设备从活动状态（主机响应）变为非活动状态（主机无响应）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+### CPUTemperature
+
+<SourceClass funname="gpiozero.CPUTemperature" funargs="*args, **kwargs"></SourceClass>
+
+扩展 `PolledInternalDevice` 以提供一个在 CPU 温度超过 *threshold* 值时处于活动状态的设备。
+
+以下示例在 LED 条形图上绘制 CPU 温度：
+
+```python
+from gpiozero import LEDBarGraph, CPUTemperature
+from signal import pause
+
+# 使用更接近"正常"使用的最小值和最大值，以便条形图更"活跃"
+cpu = CPUTemperature(min_temp=50, max_temp=90)
+
+print(f'Initial temperature: {cpu.temperature}C')
+
+graph = LEDBarGraph(5, 6, 13, 19, 25, pwm=True)
+graph.source = cpu
+
+pause()
+```
+
+**参数：**
+
+- **sensor_file** ([str](https://docs.python.org/3.9/library/stdtypes.html#str)) - 从中读取温度的文件。默认为 sysfs 文件 `/sys/class/thermal/thermal_zone0/temp`。指定的文件应包含以毫摄氏度表示的温度的单行
+- **min_temp** ([float](https://docs.python.org/3.9/library/functions.html#float)) - `value` 将读取 0.0 的温度。默认为 0.0
+- **max_temp** ([float](https://docs.python.org/3.9/library/functions.html#float)) - `value` 将读取 1.0 的温度。默认为 100.0
+- **threshold** ([float](https://docs.python.org/3.9/library/functions.html#float)) - 超过此温度时设备将被视为"活动"（参见 `is_active`）。默认为 80.0
+- **event_delay** ([float](https://docs.python.org/3.9/library/functions.html#float)) - 文件读取之间的秒数（默认为 5 秒）
+- **pin_factory** ([Factory](/gpiozero/api-pins) 或 None) - 参见 [API-引脚](/gpiozero/api-pins) 获取更多信息（这是高级功能，大多数用户可以忽略）
+
+<SourceProp propname="is_active"></SourceProp>
+
+当 CPU `temperature` 超过 *threshold* 时返回 `True`。
+
+<SourceProp propname="temperature"></SourceProp>
+
+返回当前 CPU 温度（以摄氏度为单位）。
+
+<SourceProp propname="value"></SourceProp>
+
+返回当前 CPU 温度作为 0.0（表示 *min_temp* 值）和 1.0（表示 *max_temp* 值）之间的值。这些分别默认为 0.0 和 100.0，因此 `value` 默认为 `temperature` 除以 100。
+
+<SourceProp propname="when_activated"></SourceProp>
+
+当设备从非活动状态变为活动状态（温度达到 *threshold*）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_deactivated"></SourceProp>
+
+当设备从活动状态变为非活动状态（温度降至 *threshold* 以下）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+### LoadAverage
+
+<SourceClass funname="gpiozero.LoadAverage" funargs="*args, **kwargs"></SourceClass>
+
+扩展 `PolledInternalDevice` 以提供一个在 CPU 负载平均值超过 *threshold* 值时处于活动状态的设备。
+
+以下示例在 LED 条形图上绘制负载平均值：
+
+```python
+from gpiozero import LEDBarGraph, LoadAverage
+from signal import pause
+
+la = LoadAverage(min_load_average=0, max_load_average=2)
+graph = LEDBarGraph(5, 6, 13, 19, 25, pwm=True)
+
+graph.source = la
+
+pause()
+```
+
+**参数：**
+
+- **load_average_file** ([str](https://docs.python.org/3.9/library/stdtypes.html#str)) - 从中读取负载平均值的文件。默认为 proc 文件 `/proc/loadavg`。指定的文件应在开头包含三个以空格分隔的负载平均值，分别表示 1 分钟、5 分钟和 15 分钟的平均值
+- **min_load_average** ([float](https://docs.python.org/3.9/library/functions.html#float)) - `value` 将读取 0.0 的负载平均值。默认为 0.0
+- **max_load_average** ([float](https://docs.python.org/3.9/library/functions.html#float)) - `value` 将读取 1.0 的负载平均值。默认为 1.0
+- **threshold** ([float](https://docs.python.org/3.9/library/functions.html#float)) - 超过此负载平均值时设备将被视为"活动"（参见 `is_active`）。默认为 0.8
+- **minutes** ([int](https://docs.python.org/3.9/library/functions.html#int)) - 计算平均负载的分钟数。必须为 1、5 或 15。默认为 5
+- **event_delay** ([float](https://docs.python.org/3.9/library/functions.html#float)) - 文件读取之间的秒数（默认为 10 秒）
+- **pin_factory** ([Factory](/gpiozero/api-pins) 或 None) - 参见 [API-引脚](/gpiozero/api-pins) 获取更多信息（这是高级功能，大多数用户可以忽略）
+
+<SourceProp propname="is_active"></SourceProp>
+
+当 `load_average` 超过 *threshold* 时返回 `True`。
+
+<SourceProp propname="load_average"></SourceProp>
+
+返回当前负载平均值。
+
+<SourceProp propname="value"></SourceProp>
+
+返回当前负载平均值作为 0.0（表示 *min_load_average* 值）和 1.0（表示 *max_load_average* 值）之间的值。这些分别默认为 0.0 和 1.0。
+
+<SourceProp propname="when_activated"></SourceProp>
+
+当设备从非活动状态变为活动状态（负载平均值达到 *threshold*）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_deactivated"></SourceProp>
+
+当设备从活动状态变为非活动状态（负载平均值降至 *threshold* 以下）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+### DiskUsage
+
+<SourceClass funname="gpiozero.DiskUsage" funargs="*args, **kwargs"></SourceClass>
+
+扩展 `PolledInternalDevice` 以提供一个在磁盘使用率超过 *threshold* 值时处于活动状态的设备。
+
+以下示例在 LED 条形图上绘制磁盘使用率：
+
+```python
+from gpiozero import LEDBarGraph, DiskUsage
+from signal import pause
+
+disk = DiskUsage()
+
+print(f'Current disk usage: {disk.usage}%')
+
+graph = LEDBarGraph(5, 6, 13, 19, 25, pwm=True)
+graph.source = disk
+
+pause()
+```
+
+**参数：**
+
+- **filesystem** ([str](https://docs.python.org/3.9/library/stdtypes.html#str)) - 需要计算磁盘使用率的文件系统内的路径。默认为 `/`，即根文件系统
+- **threshold** ([float](https://docs.python.org/3.9/library/functions.html#float)) - 超过此磁盘使用率百分比时设备将被视为"活动"（参见 `is_active`）。默认为 90.0
+- **event_delay** ([float](https://docs.python.org/3.9/library/functions.html#float)) - 文件读取之间的秒数（默认为 30 秒）
+- **pin_factory** ([Factory](/gpiozero/api-pins) 或 None) - 参见 [API-引脚](/gpiozero/api-pins) 获取更多信息（这是高级功能，大多数用户可以忽略）
+
+<SourceProp propname="is_active"></SourceProp>
+
+当磁盘 `usage` 超过 *threshold* 时返回 `True`。
+
+<SourceProp propname="usage"></SourceProp>
+
+返回当前磁盘使用率（百分比）。
+
+<SourceProp propname="value"></SourceProp>
+
+返回当前磁盘使用率作为 0.0 到 1.0 之间的值，通过将 `usage` 除以 100 获得。
+
+<SourceProp propname="when_activated"></SourceProp>
+
+当设备从非活动状态变为活动状态（磁盘使用率达到 *threshold*）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+<SourceProp propname="when_deactivated"></SourceProp>
+
+当设备从活动状态变为非活动状态（磁盘使用率降至 *threshold* 以下）时运行的函数。
+
+这可以设置为一个不接受（强制）参数的函数，或一个接受单个强制参数（以及任意多个可选参数）的 Python 函数。如果函数接受单个强制参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）以禁用事件。
+
+## 基类
+
+上述部分中的类派生自一系列基类，其中一些实际上是抽象的。这些类形成下图中显示的（部分）层次结构（抽象类的颜色比具体类浅）：
+
+<p align="center">
+  <img 
+    src="/gpiozeroimg/internal_device_hierarchy.svg" 
+    alt="内部设备层次结构"
+    className="diagram"
+    style={{maxWidth: '100%', height: 'auto'}}
+  />
+</p>
+
+以下部分记录了这些基类，供希望为自己的设备构建类的高级用户使用。
+
+### PolledInternalDevice
+
+<SourceClass funname="gpiozero.PolledInternalDevice" funargs="*args, **kwargs"></SourceClass>
+
+扩展 `InternalDevice` 以提供一个后台线程来轮询缺乏其他机制通知实例更改的内部设备。
+
+### InternalDevice
+
+<SourceClass funname="gpiozero.InternalDevice" funargs="*args, **kwargs"></SourceClass>
+
+扩展 `Device` 以提供没有特定硬件表示的设备的基础。这些实际上是伪设备，通常代表操作系统服务，如内部时钟、文件系统或网络设施。
+
+<Normal />

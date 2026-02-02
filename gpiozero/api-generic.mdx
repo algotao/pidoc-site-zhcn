@@ -1,0 +1,207 @@
+---
+sidebar_position: 20
+draft: false
+title: 19. API-通用类
+description: GPIO Zero的通用基类文档，包括Device、ValuesMixin、SourceMixin等核心基类和混入类的详细说明。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, 基类, Device, Mixin]
+last_update:
+  date: 2026-02-01
+---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-通用类
+
+GPIO Zero 类层次结构非常广泛。它包含几个基类（其中大多数记录在其对应的章节中）：
+
+- `Device` 是层次结构的根，实现了 `close()` 和上下文管理器处理程序等基本功能
+- `GPIODevice` 表示连接到单个 GPIO 引脚的单个设备
+- `SPIDevice` 表示通过 SPI 接口（实现为四个 GPIO 引脚）通信的设备
+- `InternalDevice` 表示完全内部于树莓派的设备（通常是操作系统相关服务）
+- `CompositeDevice` 表示由多个其他设备组成的设备，如 HAT
+
+还有几个 [混入类](https://en.wikipedia.org/wiki/Mixin) 用于在层次结构的多个点添加重要功能，如下图所示（混入类以紫色表示，而抽象类的阴影较浅）：
+
+![设备层次结构图](@site/static/gpiozeroimg/device_hierarchy.svg)
+
+## Device
+
+<SourceClass funname="gpiozero.Device" funargs="*args, **kwargs"></SourceClass>
+
+表示任意类型的单个设备：基于 GPIO 的、基于 SPI 的、基于 I2C 的等。这是设备层次结构的基类。它定义了适用于所有设备的基本服务（特别是 `is_active` 属性、`value` 属性和 `close()` 方法）。
+
+<SourceProp propname="pin_factory"></SourceProp>
+
+此属性同时存在于类级别（表示在未指定 *pin_factory* 参数时用于构造设备的默认引脚工厂）和实例级别（表示构造设备时使用的引脚工厂）。
+
+引脚工厂为设备提供各种功能，包括分配引脚、提供低级接口（如 SPI）以及时钟功能（查询和计算经过的时间）。
+
+<SourceProp propname="close" propargs=""></SourceProp>
+
+关闭设备并释放所有关联的资源（如 GPIO 引脚）。
+
+此方法是幂等的（可以在已关闭的设备上调用而不会产生任何副作用）。它主要用于命令行交互使用。它禁用设备并释放其引脚供另一个设备使用。
+
+您可以尝试通过简单地删除对象来实现此目的，但除非您已清理了对该对象的所有引用，否则可能无法正常工作（即使您已清理了所有引用，也无法保证垃圾回收器会在那时实际删除该对象）。相比之下，close 方法提供了确保对象被关闭的方法。
+
+例如，如果您有一个面包板，蜂鸣器连接到引脚 16，但后来想改接一个 LED：
+
+```python
+>>> from gpiozero import *
+>>> bz = Buzzer(16)
+>>> bz.on()
+>>> bz.off()
+>>> bz.close()
+>>> led = LED(16)
+>>> led.blink()
+```
+
+`Device` 的子类也可以使用 `with` 语句作为上下文管理器使用。例如：
+
+```python
+>>> from gpiozero import *
+>>> with Buzzer(16) as bz:
+...     bz.on()
+...
+>>> with LED(16) as led:
+...     led.on()
+...
+```
+
+<SourceProp propname="closed"></SourceProp>
+
+如果设备已关闭，则返回 `True`（参见 `close()` 方法）。一旦设备关闭，您就不能再使用任何其他方法或属性来控制或查询设备。
+
+<SourceProp propname="is_active"></SourceProp>
+
+如果设备当前处于活动状态，则返回 `True`，否则返回 `False`。此属性通常派生自 `value`。与 `value` 不同，它*始终*是布尔值。
+
+<SourceProp propname="value"></SourceProp>
+
+返回表示设备状态的值。通常，这是一个布尔值，或者是 0 到 1 之间的数字，但某些设备使用更大的范围（例如 -1 到 +1），而复合设备通常使用元组来返回其所有子组件的状态。
+
+## ValuesMixin
+
+<SourceClass funname="gpiozero.ValuesMixin" funargs="..."></SourceClass>
+
+向类添加 `values` 属性，该属性返回一个无限生成器，从 `value` 属性中读取值。很少需要直接使用此混入类，因为 GPIO Zero 中的所有基类都已包含它。
+
+:::note[注意]
+在父类列表中应将此混入类放在*首位*。
+:::
+
+<SourceProp propname="values"></SourceProp>
+
+一个从 `value` 读取的值的无限迭代器。
+
+## SourceMixin
+
+<SourceClass funname="gpiozero.SourceMixin" funargs="..."></SourceClass>
+
+向类添加 `source` 属性，给定一个可迭代对象或 `ValuesMixin` 的子类，将 `value` 设置为该可迭代对象的每个成员，直到耗尽。此混入类通常包含在新的输出设备中，以允许它们的状态由另一个设备驱动。
+
+:::note[注意]
+在父类列表中应将此混入类放在*首位*。
+:::
+
+<SourceProp propname="source"></SourceProp>
+
+用作 `value` 值源的可迭代对象。
+
+<SourceProp propname="source_delay"></SourceProp>
+
+用于从 `source` 读取值的循环中的延迟（以秒为单位）。默认为 0.01 秒，这通常足以将 CPU 使用率保持在最低水平，同时提供足够的响应速度。
+
+## SharedMixin
+
+<SourceClass funname="gpiozero.SharedMixin" funargs="..."></SourceClass>
+
+此混入类将类标记为"共享"。在这种情况下，元类（GPIOMeta）将使用 `_shared_key()` 将构造函数参数转换为不可变键，并检查是否有任何现有实例与该键匹配。如果匹配，构造函数将返回现有实例而不是新实例。内部引用计数器用于确定实例以这种方式被"构造"的次数。
+
+当调用 `close()` 时，内部引用计数器将递减，只有当计数器达到零时，实例才会真正关闭。
+
+<SourceProp propname="_shared_key" propargs="*args, **kwargs"></SourceProp>
+
+使用构造函数参数调用此方法以生成一个唯一的键（必须可存储在 `dict` 中，因此必须是不可变且可哈希的），表示可以共享的实例。子类必须重写此方法。
+
+## EventsMixin
+
+<SourceClass funname="gpiozero.EventsMixin" funargs="..."></SourceClass>
+
+根据所有设备共有的 `is_active` 属性的变化，向设备添加边缘检测的 `when_activated()` 和 `when_deactivated()` 事件。还添加了用于级别等待的 `wait_for_active()` 和 `wait_for_inactive()` 方法。
+
+:::note[注意]
+请注意，此混入类不提供实际触发其事件的方法；在设备状态更改时，应在子类中调用 `_fire_events()` 来触发事件。在初始化结束时也应调用一次以设置初始状态。
+:::
+
+<SourceProp propname="wait_for_active" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被激活或达到超时时间。
+
+| 参数 | 描述 |
+|------|------|
+| timeout（*float* 或 *None*） | 继续之前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备激活。 |
+
+<SourceProp propname="wait_for_inactive" propargs="timeout=None"></SourceProp>
+
+暂停脚本，直到设备被停用或达到超时时间。
+
+| 参数 | 描述 |
+|------|------|
+| timeout（*float* 或 *None*） | 继续之前等待的秒数。如果为 `None`（默认值），则无限期等待直到设备停用。 |
+
+<SourceProp propname="active_time"></SourceProp>
+
+设备已激活的时长（以秒为单位）。当设备处于非活动状态时，此值为 `None`。
+
+<SourceProp propname="inactive_time"></SourceProp>
+
+设备已停用的时长（以秒为单位）。当设备处于活动状态时，此值为 `None`。
+
+<SourceProp propname="when_activated"></SourceProp>
+
+当设备状态从非活动变为活动时要运行的函数。
+
+可以将其设置为不接受（必需）参数的函数，或接受单个必需参数（以及任意数量的可选参数）的 Python 函数。如果函数接受单个必需参数，则激活它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）可禁用该事件。
+
+<SourceProp propname="when_deactivated"></SourceProp>
+
+当设备状态从活动变为非活动时要运行的函数。
+
+可以将其设置为不接受（必需）参数的函数，或接受单个必需参数（以及任意数量的可选参数）的 Python 函数。如果函数接受单个必需参数，则停用它的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）可禁用该事件。
+
+## HoldMixin
+
+<SourceClass funname="gpiozero.HoldMixin" funargs="..."></SourceClass>
+
+扩展 `EventsMixin` 以添加 `when_held` 事件，以及在 `hold_repeat` 为 `True` 时以 `hold_time` 定义的间隔重复触发该事件的机制。
+
+<SourceProp propname="held_time"></SourceProp>
+
+设备被按住的时长（以秒为单位）。这是从 `when_held` 事件首次执行时开始计算的，而不是从设备激活时开始计算，这与 `active_time` 不同。如果设备当前未被按住，则为 `None`。
+
+<SourceProp propname="hold_repeat"></SourceProp>
+
+如果为 `True`，`when_held` 将以 `hold_time` 秒的间隔重复执行。
+
+<SourceProp propname="hold_time"></SourceProp>
+
+设备激活后等待多长时间（以秒为单位）后执行 `when_held` 处理程序。如果 `hold_repeat` 为 True，这也是 `when_held` 调用之间的时间间隔。
+
+<SourceProp propname="is_held"></SourceProp>
+
+当为 `True` 时，设备已激活至少 `hold_time` 秒。
+
+<SourceProp propname="when_held"></SourceProp>
+
+当设备保持活动状态达到 `hold_time` 秒时要运行的函数。
+
+可以将其设置为不接受（必需）参数的函数，或接受单个必需参数（以及任意数量的可选参数）的 Python 函数。如果函数接受单个必需参数，则激活的设备将作为该参数传递。
+
+将此属性设置为 `None`（默认值）可禁用该事件。
+
+<Normal />

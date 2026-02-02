@@ -1,0 +1,143 @@
+---
+sidebar_position: 24
+draft: false
+title: 23. API-树莓派信息
+description: GPIO Zero的树莓派信息API文档，包括查询树莓派硬件版本和引脚信息的功能。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, 硬件信息, 引脚信息, PiBoardInfo, HeaderInfo, PinInfo]
+last_update:
+  date: 2026-02-01
+---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-树莓派信息
+
+GPIO Zero 库还包含一个关于树莓派计算机各种版本的信息数据库。这在内部用于在使用非物理引脚时发出警告，或在具有物理上拉电阻的引脚上请求下拉时引发异常。以下函数和类可用于查询此数据库：
+
+## pi_info
+
+<SourceClass funname="gpiozero.pi_info" funargs="revision=None" />
+
+用于检索树莓派 *revision* 信息的已废弃函数。如果您希望检索有关脚本运行的开发板的信息，请按如下方式查询 `Factory.board_info` 属性：
+
+```python
+>>> from gpiozero import Device
+>>> Device.ensure_pin_factory()
+>>> Device.pin_factory.board_info
+PiBoardInfo(revision='a02082', model='3B', pcb_revision='1.2',
+released='2016Q1', soc='BCM2837', manufacturer='Sony', memory=1024,
+storage='MicroSD', usb=4, usb3=0, ethernet=1, eth_speed=100, wifi=True,
+bluetooth=True, csi=1, dsi=1, headers=..., board=...)
+```
+
+要获取特定树莓派开发板修订版本的信息，请使用 `PiBoardInfo.from_revision()` 构造函数。
+
+**参数：**
+
+- **revision** ([str](https://docs.python.org/3.9/library/stdtypes.html#str)) - 要返回其信息的 Pi 的修订版本。如果省略或为 `None`（默认），则库将尝试确定其运行所在 Pi 的型号并返回有关该型号的信息。
+
+## PiBoardInfo
+
+<SourceClass funname="gpiozero.PiBoardInfo" funargs="revision, model, pcb_revision, released, soc, manufacturer, memory, storage, usb, usb3, ethernet, eth_speed, wifi, bluetooth, csi, dsi, headers, board" />
+
+表示树莓派开发板信息的命名元组。
+
+## HeaderInfo
+
+<SourceClass funname="gpiozero.HeaderInfo" funargs="name, rows, columns, pins" />
+
+这是一个 `namedtuple()` 派生类，用于表示开发板上引脚接头的信息。该对象可以在格式字符串中使用各种自定义规范：
+
+```python
+from gpiozero.pins.native import NativeFactory
+
+factory = NativeFactory()
+j8 = factory.board_info.headers['J8']
+print(f'{j8}')
+print(f'{j8:full}')
+p1 = factory.board_info.headers['P1']
+print(f'{p1:col2}')
+print(f'{p1:row1}')
+```
+
+可以在格式规范前添加"color"和"mono"来强制使用 [ANSI 颜色代码](https://en.wikipedia.org/wiki/ANSI_escape_code)。如果两者都未指定，则仅当检测到 stdout 是 tty 时才使用 ANSI 代码。可以添加"rev"以反向顺序输出行或列：
+
+```python
+# 强制使用 ANSI 代码
+j8 = factory.board_info.headers['J8']
+print(f'{j8:color row2}')
+# 强制使用纯 ASCII
+print(f'{j8:mono row2}')
+# 以反向顺序输出
+print(f'{j8:color rev row1}')
+```
+
+以下属性已定义：
+
+<SourceProp propname="pprint" propargs="color=None" type="method" />
+
+美观打印接头引脚的图表。
+
+如果 *color* 为 `None`（默认），如果 stdout 是支持颜色的终端，图表将包含 ANSI 颜色代码。否则 *color* 可以设置为 `True` 或 `False` 来强制彩色或单色输出。
+
+<SourceProp propname="name" />
+
+接头的名称，通常与开发板上丝印的名称相同（例如"P1"或"J8"）。
+
+<SourceProp propname="rows" />
+
+接头上的行数。
+
+<SourceProp propname="columns" />
+
+接头上的列数。
+
+<SourceProp propname="pins" />
+
+将物理引脚号映射到 `PinInfo` 元组的字典。
+
+## PinInfo
+
+<SourceClass funname="gpiozero.PinInfo" funargs="number, name, names, pull, row, col, interfaces" />
+
+这是一个 `namedtuple()` 派生类，用于表示 GPIO 接头上引脚的信息。以下属性已定义：
+
+<SourceProp propname="number" />
+
+包含接头上物理引脚号的整数（按照惯例从 1 开始）。
+
+<SourceProp propname="name" />
+
+描述引脚功能的字符串。一些常见示例包括"GND"（连接到地的引脚）、"3V3"（输出 3.3 伏的引脚）、"GPIO9"（开发板编号方案中的 GPIO9）等。
+
+<SourceProp propname="names" />
+
+可用于通过 `BoardInfo.find_pin()` 识别此引脚的所有名称的集合。`name` 属性是此引脚的"典型"名称，将是此集合中的值之一。
+
+当"gpio"在 `interfaces` 中时，这些名称可以与 `Factory.pin()` 一起使用来构造表示此引脚的 `Pin` 实例。
+
+<SourceProp propname="pull" />
+
+指示引脚固定上拉（如果有）的字符串。如果引脚没有固定上拉，这是一个空字符串，但对于通常用于 I2C 的引脚（如树莓派上的 GPIO2 和 GPIO3），可能是"up"。
+
+<SourceProp propname="row" />
+
+指示引脚在接头中物理位置所在行的整数（从 1 开始）。
+
+<SourceProp propname="col" />
+
+指示引脚在接头中物理位置所在列的整数（从 1 开始）。
+
+<SourceProp propname="interfaces" />
+
+一个 `dict`，将此引脚可以成为其一部分的接口映射到该接口中该引脚的描述（例如，"i2c"可能映射到"I2C0 SDA"）。典型的键包括"gpio"、"spi"、"i2c"、"uart"、"pwm"、"smi"和"dpi"。
+
+<SourceProp propname="pull_up" />
+
+`pull` 的已废弃变体。
+
+<SourceProp propname="function" />
+
+`name` 的已废弃别名。
+
+<Normal />

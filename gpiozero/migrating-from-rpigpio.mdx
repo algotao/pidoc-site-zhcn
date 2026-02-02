@@ -1,7 +1,7 @@
 ---
 sidebar_position: 12
 draft: false
-title: 12. 从RPi.GPIO移植
+title: 11. 从RPi.GPIO移植
 description: 本文介绍从RPi.GPIO库向GPIO Zero库移植的相关内容。对比了两者在操作LED、按钮等设备上的不同方式，如RPi.GPIO需处理引脚编号和状态，GPIO Zero则通过设备类操作。还涵盖复合设备、PWM控制、引脚清理等方面，同时提及GPIO Zero提供更多功能，如对SPI设备支持、与GPIO引脚无关的设备类等，并解答了移植可能遇到的常见问题。
 keywords: [GPIO Zero, RPi.GPIO, 移植, LED, 按钮, 复合设备, PWM控制, 引脚清理, 设备类, 常见问题]
 last_update: 
@@ -19,7 +19,7 @@ GPIO Zero 提供了许多设备类，每个类都有专门针对该设备的特�
 
 除了特定的设备类，我们还提供基类 `InputDevice` 和 `OutputDevice`。这些类与 RPi.GPIO 中对应类的一个主要区别是，它们是类而不是函数，这意味着您需要初始化一个类，并提供其引脚编号，但之后您再也不需要使用该引脚编号，因为它已被对象存储。
 
-GPIO Zero 最初只是 RPi.GPIO 的顶层，但后来我们增加了对其他各种底层引脚库的支持。RPi.GPIO 目前是默认使用的引脚库。如需了解更多信息，请参阅 [更改引脚工厂](./api-pins.mdx)。
+GPIO Zero 最初只是 RPi.GPIO 的顶层，但后来我们增加了对其他各种底层引脚库的支持。RPi.GPIO 目前是默认使用的引脚库。如需了解更多信息，请参阅 [更改引脚工厂](./api-pins)。
 
 ## 输出设备
 
@@ -50,7 +50,7 @@ led.on()
 
 `OutputDevice` 是输出设备的基类，其使用方式与 RPi.GPIO 中的输出设备类似。
 
-请查看支持的 [输出设备](./api-output.mdx#todo) 的完整列表。其他输出设备也有类似的属性和方法名称。基类的命名有共性，如 `OutputDevice.is_active`，在设备类中有别名，如 `LED.is_lit`。
+请查看支持的 [输出设备](./api-output.mdx) 的完整列表。其他输出设备也有类似的属性和方法名称。基类的命名有共性，如 `OutputDevice.is_active`，在设备类中有别名，如 `LED.is_lit`。
 
 ## 输入设备
 
@@ -296,9 +296,9 @@ GPIO Zero 提供的不仅仅是 GPIO 设备支持，还包括对 [SPI设备](./a
 
 它还提供了与其他 GPIO 设备兼容但与 GPIO 引脚无关的设备类，如 `CPUTemperature`、`TimeOfDay`、`PingServer` 和 `LoadAverage`。
 
-GPIO Zero 支持多个引脚库。默认情况下使用 `RPi.GPIO` 控制引脚，但也可以选择使用其他库，如支持网络控制 GPIO 的 `pigpio`。更多信息，请参阅 [更改引脚工厂](./api-pins.mdx#todo) 和 [配置远程GPIO](./remote-gpio.mdx)。
+GPIO Zero 支持多个引脚库。默认情况下使用 `RPi.GPIO` 控制引脚，但也可以选择使用其他库，如支持网络控制 GPIO 的 `pigpio`。更多信息，请参阅 [API-引脚](./api-pins) 文档的"更改引脚工厂"部分和 [配置远程GPIO](./remote-gpio.mdx)。
 
-使用 [Mock引脚](./api-pins.mdx#todo) 可以在 PC 上运行 GPIO Zero，用于远程 GPIO 和测试目的。
+使用 [API-引脚](./api-pins) 文档中介绍的Mock引脚可以在 PC 上运行 GPIO Zero，用于远程 GPIO 和测试目的。
 
 该库的另一个功能是以逻辑方式配置连接在一起的设备，例如，在一行中可以说 LED 和按钮 "配对"，即按下按钮会打开 LED。请参阅 [源与值](./source-values.mdx) 中的相关内容。
 

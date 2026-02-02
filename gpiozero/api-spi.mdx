@@ -1,4 +1,361 @@
 ---
-sidebar_position: 30
-draft: true
+sidebar_position: 17
+draft: false
+title: 16. API-SPI设备
+description: SPI（串行外设接口）设备的API文档。包括模数转换器（ADC）如MCP3001、MCP3008等芯片的详细接口说明，支持硬件和软件两种实现方式。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, SPI, 模数转换器, ADC, MCP3008]
+last_update:
+  date: 2026-02-01
 ---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-SPI设备
+
+SPI 代表[串行外设接口](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus)，是允许兼容设备与树莓派通信的机制。SPI 是一种四线协议，通常需要四个引脚才能运行：
+
+- **时钟引脚**：提供时序信息。
+- **MOSI 引脚**（主出从入）：树莓派用于向设备发送信息。
+- **MISO 引脚**（主入从出）：树莓派用于从设备接收信息。
+- **选择引脚**：树莓派用于指示正在与哪个设备通信。最后一个引脚是必需的，因为多个设备可以共享时钟、MOSI 和 MISO 引脚，但每个选择引脚只能连接一个设备。
+
+gpiozero 库提供两种 SPI 实现：
+
+- **软件实现**：始终可用，可以使用任意四个 GPIO 引脚进行 SPI 通信，但速度较慢，并且不适用于所有设备。
+- **硬件实现**：仅在加载 SPI 内核模块且 Python spidev 库可用时才可用。它只能使用特定引脚进行 SPI 通信（GPIO11=时钟，GPIO10=MOSI，GPIO9=MISO，GPIO8 是设备 0 的选择引脚，GPIO7 是设备 1 的选择引脚）。但是，它非常快速并适用于所有设备。
+
+## SPI 关键字参数
+
+构造 SPI 设备时，有两种指定连接引脚的方案：
+
+**方案一：使用 port 和 device 参数**
+
+- *port* 参数必须为 0（树莓派上只有一个用户可访问的硬件 SPI 接口，使用 GPIO11 作为时钟引脚，GPIO10 作为 MOSI 引脚，GPIO9 作为 MISO 引脚）
+- *device* 参数必须为 0 或 1
+  - 如果 *device* 为 0，选择引脚将是 GPIO8
+  - 如果 *device* 为 1，选择引脚将是 GPIO7
+
+**方案二：指定具体引脚**
+
+可以指定 *clock_pin*、*mosi_pin*、*miso_pin* 和 *select_pin* 关键字参数。在这种情况下，引脚可以是任意 4 个 GPIO 引脚（请记住，SPI 设备可以共享时钟、MOSI 和 MISO 引脚，但不能共享选择引脚 - gpiozero 库将强制执行此限制）。
+
+:::caution
+不能混合这两种方案，即尝试同时指定 *port* 和 *clock_pin* 将导致抛出 `SPIBadArgs` 异常。
+:::
+
+**默认值：**
+
+- *port* 和 *device* 都默认为 0
+- *clock_pin* 默认为 11，*mosi_pin* 默认为 10，*miso_pin* 默认为 9，*select_pin* 默认为 8
+- 与其他基于 GPIO 的设备一样，您可以选择指定 *pin_factory* 参数来覆盖默认引脚工厂（更多信息请参阅 [API - Pins](./api-pins)）
+
+因此，以下构造函数都是等效的：
+
+```py
+from gpiozero import MCP3008
+
+MCP3008(channel=0)
+MCP3008(channel=0, device=0)
+MCP3008(channel=0, port=0, device=0)
+MCP3008(channel=0, select_pin=8)
+MCP3008(channel=0, clock_pin=11, mosi_pin=10, miso_pin=9, select_pin=8)
+```
+
+请注意，默认值描述了等效的引脚集，并且这些引脚与硬件实现兼容。无论您使用哪种方案，如果硬件实现可用且所选引脚兼容，gpiozero 都将尝试使用硬件实现，否则将退回到软件实现。
+
+## 模数转换器（ADC）
+
+以下类用于与它们命名的集成电路一起使用。本节中的所有类都是具体类（非抽象类）。
+
+### MCP3001
+
+<SourceClass funname="gpiozero.MCP3001" funargs="max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3001](http://www.farnell.com/datasheets/630400.pdf) 是一个 10 位模数转换器，有 1 个通道。请注意，MCP3001 始终以差分模式运行，测量 IN+ 相对于 IN- 的值。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的设备，为 -1 到 +1）。
+
+### MCP3002
+
+<SourceClass funname="gpiozero.MCP3002" funargs="channel=0, differential=False, max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3002](http://www.farnell.com/datasheets/1599363.pdf) 是一个 10 位模数转换器，有 2 个通道（0-1）。
+
+<SourceProp propname="channel"></SourceProp>
+
+要读取数据的通道。MCP3008/3208/3304 有 8 个通道（0-7），MCP3004/3204/3302 有 4 个通道（0-3），MCP3002/3202 有 2 个通道（0-1），MCP3001/3201/3301 只有 1 个通道。
+
+<SourceProp propname="differential"></SourceProp>
+
+如果为 `True`，设备以差分模式运行。在此模式下，读取一个通道（由 channel 属性指定）相对于第二个通道（由芯片设计隐含）的值。
+
+请参考设备数据手册以确定哪个通道用作相对基准值（例如，在差分模式下使用 `MCP3008` 时，通道 0 相对于通道 1 进行读取）。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的某些设备，为 -1 到 +1）。
+
+### MCP3004
+
+<SourceClass funname="gpiozero.MCP3004" funargs="channel=0, differential=False, max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3004](http://www.farnell.com/datasheets/808965.pdf) 是一个 10 位模数转换器，有 4 个通道（0-3）。
+
+<SourceProp propname="channel"></SourceProp>
+
+要读取数据的通道。MCP3008/3208/3304 有 8 个通道（0-7），MCP3004/3204/3302 有 4 个通道（0-3），MCP3002/3202 有 2 个通道（0-1），MCP3001/3201/3301 只有 1 个通道。
+
+<SourceProp propname="differential"></SourceProp>
+
+如果为 `True`，设备以差分模式运行。在此模式下，读取一个通道（由 channel 属性指定）相对于第二个通道（由芯片设计隐含）的值。
+
+请参考设备数据手册以确定哪个通道用作相对基准值（例如，在差分模式下使用 `MCP3008` 时，通道 0 相对于通道 1 进行读取）。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的某些设备，为 -1 到 +1）。
+
+### MCP3008
+
+<SourceClass funname="gpiozero.MCP3008" funargs="channel=0, differential=False, max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3008](http://www.farnell.com/datasheets/808965.pdf) 是一个 10 位模数转换器，有 8 个通道（0-7）。
+
+<SourceProp propname="channel"></SourceProp>
+
+要读取数据的通道。MCP3008/3208/3304 有 8 个通道（0-7），MCP3004/3204/3302 有 4 个通道（0-3），MCP3002/3202 有 2 个通道（0-1），MCP3001/3201/3301 只有 1 个通道。
+
+<SourceProp propname="differential"></SourceProp>
+
+如果为 `True`，设备以差分模式运行。在此模式下，读取一个通道（由 channel 属性指定）相对于第二个通道（由芯片设计隐含）的值。
+
+请参考设备数据手册以确定哪个通道用作相对基准值（例如，在差分模式下使用 `MCP3008` 时，通道 0 相对于通道 1 进行读取）。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的某些设备，为 -1 到 +1）。
+
+### MCP3201
+
+<SourceClass funname="gpiozero.MCP3201" funargs="max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3201](http://www.farnell.com/datasheets/1669366.pdf) 是一个 12 位模数转换器，有 1 个通道。请注意，MCP3201 始终以差分模式运行，测量 IN+ 相对于 IN- 的值。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的某些设备，为 -1 到 +1）。
+
+### MCP3202
+
+<SourceClass funname="gpiozero.MCP3202" funargs="channel=0, differential=False, max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3202](http://www.farnell.com/datasheets/1669376.pdf) 是一个 12 位模数转换器，有 2 个通道（0-1）。
+
+<SourceProp propname="channel"></SourceProp>
+
+要读取数据的通道。MCP3008/3208/3304 有 8 个通道（0-7），MCP3004/3204/3302 有 4 个通道（0-3），MCP3002/3202 有 2 个通道（0-1），MCP3001/3201/3301 只有 1 个通道。
+
+<SourceProp propname="differential"></SourceProp>
+
+如果为 `True`，设备以差分模式运行。在此模式下，读取一个通道（由 channel 属性指定）相对于第二个通道（由芯片设计隐含）的值。
+
+请参考设备数据手册以确定哪个通道用作相对基准值（例如，在差分模式下使用 `MCP3008` 时，通道 0 相对于通道 1 进行读取）。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的某些设备，为 -1 到 +1）。
+
+### MCP3204
+
+<SourceClass funname="gpiozero.MCP3204" funargs="channel=0, differential=False, max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3204](http://www.farnell.com/datasheets/808967.pdf) 是一个 12 位模数转换器，有 4 个通道（0-3）。
+
+<SourceProp propname="channel"></SourceProp>
+
+要读取数据的通道。MCP3008/3208/3304 有 8 个通道（0-7），MCP3004/3204/3302 有 4 个通道（0-3），MCP3002/3202 有 2 个通道（0-1），MCP3001/3201/3301 只有 1 个通道。
+
+<SourceProp propname="differential"></SourceProp>
+
+如果为 `True`，设备以差分模式运行。在此模式下，读取一个通道（由 channel 属性指定）相对于第二个通道（由芯片设计隐含）的值。
+
+请参考设备数据手册以确定哪个通道用作相对基准值（例如，在差分模式下使用 `MCP3008` 时，通道 0 相对于通道 1 进行读取）。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的某些设备，为 -1 到 +1）。
+
+### MCP3208
+
+<SourceClass funname="gpiozero.MCP3208" funargs="channel=0, differential=False, max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3208](http://www.farnell.com/datasheets/808967.pdf) 是一个 12 位模数转换器，有 8 个通道（0-7）。
+
+<SourceProp propname="channel"></SourceProp>
+
+要读取数据的通道。MCP3008/3208/3304 有 8 个通道（0-7），MCP3004/3204/3302 有 4 个通道（0-3），MCP3002/3202 有 2 个通道（0-1），MCP3001/3201/3301 只有 1 个通道。
+
+<SourceProp propname="differential"></SourceProp>
+
+如果为 `True`，设备以差分模式运行。在此模式下，读取一个通道（由 channel 属性指定）相对于第二个通道（由芯片设计隐含）的值。
+
+请参考设备数据手册以确定哪个通道用作相对基准值（例如，在差分模式下使用 `MCP3008` 时，通道 0 相对于通道 1 进行读取）。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的某些设备，为 -1 到 +1）。
+
+### MCP3301
+
+<SourceClass funname="gpiozero.MCP3301" funargs="max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3301](http://www.farnell.com/datasheets/1669397.pdf) 是一个有符号 13 位模数转换器。请注意，MCP3301 始终以差分模式运行，测量 IN+ 和 IN- 之间的差值。其输出值缩放为 -1 到 +1。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的设备，为 -1 到 +1）。
+
+### MCP3302
+
+<SourceClass funname="gpiozero.MCP3302" funargs="channel=0, differential=False, max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3302](http://www.farnell.com/datasheets/1486116.pdf) 是一个 12/13 位模数转换器，有 4 个通道（0-3）。在差分模式下运行时，设备输出一个有符号 13 位值，缩放为 -1 到 +1。在单端模式下运行时（默认），设备输出一个无符号 12 位值，缩放为 0 到 1。
+
+<SourceProp propname="channel"></SourceProp>
+
+要读取数据的通道。MCP3008/3208/3304 有 8 个通道（0-7），MCP3004/3204/3302 有 4 个通道（0-3），MCP3002/3202 有 2 个通道（0-1），MCP3001/3201/3301 只有 1 个通道。
+
+<SourceProp propname="differential"></SourceProp>
+
+如果为 `True`，设备以差分模式运行。在此模式下，读取一个通道（由 channel 属性指定）相对于第二个通道（由芯片设计隐含）的值。
+
+请参考设备数据手册以确定哪个通道用作相对基准值（例如，在差分模式下使用 `MCP3304` 时，通道 0 相对于通道 1 进行读取）。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的设备，为 -1 到 +1）。
+
+### MCP3304
+
+<SourceClass funname="gpiozero.MCP3304" funargs="channel=0, differential=False, max_voltage=3.3, **spi_args"></SourceClass>
+
+[MCP3304](http://www.farnell.com/datasheets/1486116.pdf) 是一个 12/13 位模数转换器，有 8 个通道（0-7）。在差分模式下运行时，设备输出一个有符号 13 位值，缩放为 -1 到 +1。在单端模式下运行时（默认），设备输出一个无符号 12 位值，缩放为 0 到 1。
+
+<SourceProp propname="channel"></SourceProp>
+
+要读取数据的通道。MCP3008/3208/3304 有 8 个通道（0-7），MCP3004/3204/3302 有 4 个通道（0-3），MCP3002/3202 有 2 个通道（0-1），MCP3001/3201/3301 只有 1 个通道。
+
+<SourceProp propname="differential"></SourceProp>
+
+如果为 `True`，设备以差分模式运行。在此模式下，读取一个通道（由 channel 属性指定）相对于第二个通道（由芯片设计隐含）的值。
+
+请参考设备数据手册以确定哪个通道用作相对基准值（例如，在差分模式下使用 `MCP3304` 时，通道 0 相对于通道 1 进行读取）。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的设备，为 -1 到 +1）。
+
+## 基类
+
+上述部分中的类派生自一系列基类，其中一些实际上是抽象的。这些类形成了下图中显示的（部分）层次结构（抽象类的阴影比具体类浅）：
+
+![SPI设备层次结构图](@site/static/gpiozeroimg/spi_device_hierarchy.svg)
+
+以下部分为希望为自己的设备构造类的高级用户记录这些基类。
+
+### AnalogInputDevice
+
+<SourceClass funname="gpiozero.AnalogInputDevice" funargs="bits, max_voltage=3.3, **spi_args"></SourceClass>
+
+表示连接到 SPI（串行接口）的模拟输入设备。
+
+典型的模拟输入设备是[模数转换器](https://en.wikipedia.org/wiki/Analog-to-digital_converter)（ADC）。为特定的 ADC 芯片提供了几个类，包括 `MCP3004`、`MCP3008`、`MCP3204` 和 `MCP3208`。
+
+以下代码演示读取连接到树莓派 SPI 引脚的 MCP3008 芯片的第一个通道：
+
+```py
+from gpiozero import MCP3008
+
+pot = MCP3008(0)
+print(pot.value)
+```
+
+`value` 属性被归一化，使其值始终在 0.0 和 1.0 之间（或在特殊情况下，如差分采样，为 -1 到 +1）。因此，您可以使用模拟输入来控制 `PWMLED` 的亮度，如下所示：
+
+```py
+from gpiozero import MCP3008, PWMLED
+
+pot = MCP3008(0)
+led = PWMLED(17)
+led.source = pot
+```
+
+`voltage` 属性报告 0.0 到 *max_voltage* 之间的值（默认为 3.3，即 GPIO 引脚的逻辑电平）。
+
+<SourceProp propname="bits"></SourceProp>
+
+设备/通道的位分辨率。
+
+<SourceProp propname="max_voltage"></SourceProp>
+
+将设备值设为 1 所需的电压。
+
+<SourceProp propname="raw_value"></SourceProp>
+
+从设备读取的原始值。
+
+<SourceProp propname="value"></SourceProp>
+
+从设备读取的当前值，缩放为 0 到 1 之间的值（或对于在差分模式下运行的某些设备，为 -1 到 +1）。
+
+<SourceProp propname="voltage"></SourceProp>
+
+从设备读取的当前电压。这将是一个介于 0 和构造函数中指定的 *max_voltage* 参数之间的值。
+
+### SPIDevice
+
+<SourceClass funname="gpiozero.SPIDevice" funargs="**spi_args"></SourceClass>
+
+扩展 `Device`。表示通过 SPI 协议通信的设备。
+
+有关可以与构造函数一起指定的关键字参数的信息，请参阅 [SPI 关键字参数](#spi-关键字参数)部分。
+
+<SourceProp propname="close()"></SourceProp>
+
+关闭设备并释放所有关联的资源（如 GPIO 引脚）。
+
+此方法是幂等的（可以在已关闭的设备上调用而没有任何副作用）。它主要用于命令行的交互式使用。它禁用设备并释放其引脚供其他设备使用。
+
+您可以尝试通过删除对象来实现这一点，但除非您已清理了对该对象的所有引用，否则这可能不起作用（即使您已清理了所有引用，仍然不能保证垃圾回收器会在那时实际删除该对象）。相比之下，close 方法提供了一种确保对象被关闭的方法。
+
+例如，如果您的面包板上有一个连接到引脚 16 的蜂鸣器，但随后希望连接一个 LED：
+
+```py
+>>> from gpiozero import *
+>>> bz = Buzzer(16)
+>>> bz.on()
+>>> bz.off()
+>>> bz.close()
+>>> led = LED(16)
+>>> led.blink()
+```
+
+`Device` 子类也可以使用 `with` 语句作为上下文管理器。例如：
+
+```py
+>>> from gpiozero import *
+>>> with Buzzer(16) as bz:
+...     bz.on()
+...
+>>> with LED(16) as led:
+...     led.on()
+...
+```
+
+<SourceProp propname="closed"></SourceProp>
+
+如果设备已关闭（请参阅 `close()` 方法），则返回 `True`。一旦设备关闭，您将无法再使用任何其他方法或属性来控制或查询设备。
+
+<Normal />

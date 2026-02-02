@@ -1,4 +1,903 @@
 ---
-sidebar_position: 30
-draft: true
+sidebar_position: 25
+draft: false
+title: 24. API-引脚
+description: GPIO引脚实现的API文档。介绍引脚工厂的概念、如何更改引脚工厂、模拟引脚的使用，以及各种引脚实现(RPi.GPIO、lgpio、pigpio、native、mock)的详细说明。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, GPIO Zero, 引脚, Pin, Factory, RPi.GPIO, pigpio, Mock]
+last_update:
+  date: 2026-02-01
 ---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-引脚
+
+从 1.1 版本开始，GPIO Zero 库大致可以分为两部分：引脚和连接到引脚的设备。大部分文档侧重于设备，因为引脚处于大多数用户不关心的底层。然而，一些用户可能希望利用替代 GPIO 实现的功能，或者（将来）使用 GPIO 扩展芯片。这就是库的引脚部分的用途。
+
+当你构造一个设备时，你传入一个引脚规格。这被传递给引脚 `Factory`，它将其转换为 `Pin` 实现。默认工厂可以通过 `Device.pin_factory` 查询（和更改）。然而，所有类（甚至内部设备）都在其构造函数中接受一个 `pin_factory` 关键字参数，允许在每个设备的基础上覆盖工厂（允许每个设备工厂的原因在 [远程 GPIO](./remote-gpio.mdx) 章节中变得明显）。
+
+这在以下流程图中说明：
+
+![设备引脚流程图](/gpiozeroimg/device_pin_flowchart.svg)
+
+默认工厂在第一个设备初始化时构造；如果无法构造默认工厂（例如，因为没有安装 GPIO 实现，或者所有实现由于某种原因无法加载），则会在构造时引发 `BadPinFactory` 异常。
+
+在导入 gpiozero 之后，直到构造 gpiozero 设备之前，引脚工厂是 `None`，但在第一次构造时，默认引脚工厂将生效：
+
+```python
+pi@raspberrypi:~ $ python3
+Python 3.7.3 (default, Apr  3 2019, 05:39:12)
+[GCC 8.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from gpiozero import Device, LED
+>>> print(Device.pin_factory)
+None
+>>> led = LED(2)
+>>> Device.pin_factory
+<gpiozero.pins.rpigpio.RPiGPIOFactory object at 0xb667ae30>
+>>> led.pin_factory
+<gpiozero.pins.rpigpio.RPiGPIOFactory object at 0xb6323530>
+```
+
+如上所述，在安装了 RPi.GPIO 库的树莓派上（假设没有设置环境变量），默认引脚工厂将是 `RPiGPIOFactory`。
+
+在 PC 上（没有安装引脚库且没有设置环境变量），导入将成功，但尝试创建设备将引发 `BadPinFactory`：
+
+```python
+ben@magicman:~ $ python3
+Python 3.6.8 (default, Aug 20 2019, 17:12:48)
+[GCC 8.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from gpiozero import Device, LED
+>>> print(Device.pin_factory)
+None
+>>> led = LED(2)
+...
+BadPinFactory: Unable to load any default pin factory!
+```
+
+## 更改引脚工厂 {#更改引脚工厂}
+
+可以通过为 `GPIOZERO_PIN_FACTORY` 环境变量指定值来替换默认引脚工厂。例如：
+
+```bash
+pi@raspberrypi:~ $ GPIOZERO_PIN_FACTORY=native python3
+Python 3.7.3 (default, Apr  3 2019, 05:39:12)
+[GCC 8.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from gpiozero import Device
+>>> Device._default_pin_factory()
+<gpiozero.pins.native.NativeFactory object at 0x762c26b0>
+```
+
+要为会话的其余部分设置 `GPIOZERO_PIN_FACTORY`，你可以 `export` 此值：
+
+```bash
+pi@raspberrypi:~ $ export GPIOZERO_PIN_FACTORY=native
+pi@raspberrypi:~ $ python3
+Python 3.7.3 (default, Apr  3 2019, 05:39:12)
+[GCC 8.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import gpiozero
+>>> Device._default_pin_factory()
+<gpiozero.pins.native.NativeFactory object at 0x762c26b0>
+>>> quit()
+pi@raspberrypi:~ $ python3
+Python 3.7.3 (default, Apr  3 2019, 05:39:12)
+[GCC 8.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import gpiozero
+>>> Device._default_pin_factory()
+<gpiozero.pins.native.NativeFactory object at 0x762c26b0>
+```
+
+如果你将 `export` 命令添加到你的 `~/.bashrc` 文件中，你还将为所有未来的会话设置默认引脚工厂。
+
+如果设置了环境变量，将使用相应的引脚工厂，否则将依次尝试使用四个 GPIO 引脚工厂中的每一个。
+
+下表列出了以下值以及相应的 `Factory` 和 `Pin` 类。工厂按默认尝试顺序列出。
+
+| 名称    | 工厂类                                    | 引脚类                                |
+|---------|-------------------------------------------|---------------------------------------|
+| lgpio   | `gpiozero.pins.lgpio.LGPIOFactory`        | `gpiozero.pins.lgpio.LGPIOPin`        |
+| rpigpio | `gpiozero.pins.rpigpio.RPiGPIOFactory`    | `gpiozero.pins.rpigpio.RPiGPIOPin`    |
+| pigpio  | `gpiozero.pins.pigpio.PiGPIOFactory`      | `gpiozero.pins.pigpio.PiGPIOPin`      |
+| native  | `gpiozero.pins.native.NativeFactory`      | `gpiozero.pins.native.NativePin`      |
+
+如果你需要从脚本中更改默认引脚工厂，可以将 `Device.pin_factory` 设置为要使用的新工厂实例：
+
+```python
+from gpiozero.pins.native import NativeFactory
+from gpiozero import Device, LED
+
+Device.pin_factory = NativeFactory()
+
+# 这些现在将隐式使用 NativePin 而不是 RPiGPIOPin
+led1 = LED(16)
+led2 = LED(17)
+```
+
+或使用上面提到的 `pin_factory` 关键字参数：
+
+```python
+from gpiozero.pins.native import NativeFactory
+from gpiozero import LED
+
+my_factory = NativeFactory()
+
+# 这将为 led1 使用 NativePin 而不是 RPiGPIOPin
+# 但 led2 将继续使用 RPiGPIOPin
+led1 = LED(16, pin_factory=my_factory)
+led2 = LED(17)
+```
+
+某些工厂可能从其他源获取默认信息。例如，要在名为 "remote-pi" 的远程 pi 上默认使用 `gpiozero.pins.pigpio.PiGPIOPin` 创建引脚，你可以在运行脚本时设置 `PIGPIO_ADDR` 环境变量：
+
+```bash
+$ GPIOZERO_PIN_FACTORY=pigpio PIGPIO_ADDR=remote-pi python3 my_script.py
+```
+
+像 `GPIOZERO_PIN_FACTORY` 值一样，这些也可以从你的 `~/.bashrc` 脚本中 export。
+
+:::warning
+机敏而调皮的读者可能会注意到可以混合工厂，例如为一个引脚使用 `RPiGPIOFactory`，为另一个引脚使用 `NativeFactory`。这是不受支持的，如果这导致你的脚本崩溃、你的组件失效或你的树莓派变成真正的树莓派，你只能怪自己。
+
+合理使用多个引脚工厂的方法在 [远程 GPIO](./remote-gpio.mdx) 中给出。
+:::
+
+## 模拟引脚 {#mock-pins}
+
+还有一个 `MockFactory`，它生成完全虚假的引脚。这最初是为希望在不必将物理设备连接到 Pi 的情况下为设备编写测试的 GPIO Zero 开发人员设计的。然而，事实证明，在没有 Pi 的情况下开发 GPIO Zero 脚本时，它们也很有用。此引脚工厂永远不会默认加载；必须明确指定，通过设置环境变量或在脚本中设置引脚工厂。例如：
+
+```bash
+pi@raspberrypi:~ $ GPIOZERO_PIN_FACTORY=mock python3
+```
+
+或：
+
+```python
+from gpiozero import Device, LED
+from gpiozero.pins.mock import MockFactory
+
+Device.pin_factory = MockFactory()
+
+led = LED(2)
+```
+
+你可以创建设备对象并按预期检查其值变化：
+
+```python
+pi@raspberrypi:~ $ GPIOZERO_PIN_FACTORY=mock python3
+Python 3.7.3 (default, Apr  3 2019, 05:39:12)
+[GCC 8.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from gpiozero import LED
+>>> led = LED(2)
+>>> led.value
+0
+>>> led.on()
+>>> led.value
+1
+```
+
+你甚至可以控制引脚状态变化来模拟设备行为：
+
+```python
+>>> from gpiozero import LED, Button
+
+# 构造连接到模拟引脚 16 和 17 的几个设备，并链接设备
+>>> led = LED(17)
+>>> btn = Button(16)
+>>> led.source = btn
+
+# 最初按钮未"按下"，因此 LED 应该关闭
+>>> led.value
+0
+
+# 将引脚驱动为低电平（这是按下按钮时在电气上会发生的情况）
+>>> btn.pin.drive_low()
+# LED 现在打开
+>>> led.value
+1
+
+>>> btn.pin.drive_high()
+# 按钮现在"释放"，因此 LED 应该再次关闭
+>>> led.value
+0
+```
+
+存在几个模拟引脚的子类，用于模拟其他各种事物（支持/不支持 PWM 的引脚、连接在一起的引脚、延迟后驱动为高电平的引脚等），例如，你必须使用 `MockPWMPin` 才能使用需要 PWM 的设备：
+
+```bash
+pi@raspberrypi:~ $ GPIOZERO_PIN_FACTORY=mock GPIOZERO_MOCK_PIN_CLASS=mockpwmpin python3
+```
+
+或：
+
+```python
+from gpiozero import Device, LED
+from gpiozero.pins.mock import MockFactory, MockPWMPin
+
+Device.pin_factory = MockFactory(pin_class=MockPWMPin)
+
+led = LED(2)
+```
+
+有兴趣的用户可以阅读 [GPIO Zero 测试套件](https://github.com/gpiozero/gpiozero/tree/master/tests) 以获取更多使用示例。
+
+## 基类
+
+### Factory
+
+<SourceClass funname="gpiozero.Factory" funargs="" />
+
+引脚工厂的抽象基类。
+
+<SourceProp propname="close" propargs="" type="method" />
+
+关闭引脚工厂。这应该清理工厂操作的所有资源。它通常在脚本终止时调用。
+
+<SourceProp propname="pin" propargs="name" type="method" />
+
+创建一个 `Pin` 派生类的实例，表示指定的引脚。
+
+<SourceProp propname="release_all" propargs="reserver" type="method" />
+
+释放所有 *reserver* 保留的引脚。这通常在 `close()` 期间调用，用于清理在构造期间进行的保留。
+
+<SourceProp propname="release_pins" propargs="reserver, *names" type="method" />
+
+释放 *reserver* 对引脚 *names* 的保留。这通常在 `close()` 期间调用，用于清理在构造期间进行的保留。释放当前未持有的保留将被静默忽略（以允许在失败/部分构造后进行清理）。
+
+<SourceProp propname="reserve_pins" propargs="requester, *names" type="method" />
+
+调用此方法表示设备保留使用指定引脚 *names* 的权利。这应该在设备构造期间完成。如果保留了引脚，你必须确保通过最终调用 `release_pins()` 来释放保留。
+
+<SourceProp propname="spi" propargs="**spi_args" type="method" />
+
+返回一个 `SPI` 接口的实例，用于指定的 SPI *port* 和 *device*，或用于指定的引脚（*clock_pin*、*mosi_pin*、*miso_pin* 和 *select_pin*）。只能使用其中一种方案；尝试将 *port* 和 *device* 与引脚号混合将引发 `SPIBadArgs`。
+
+<SourceProp propname="ticks" propargs="" type="method" />
+
+返回工厂的当前 ticks。参考点是未定义的，因此此方法的结果只有在与此方法返回的另一个值比较时才有意义。
+
+时间的格式也是任意的，时间是否在特定持续时间后回绕也是如此。Ticks 只应使用 `ticks_diff()` 方法进行比较。
+
+<SourceProp propname="ticks_diff" propargs="later, earlier" type="method" />
+
+返回两个 `ticks()` 结果之间的时间（以秒为单位）。参数的指定顺序与公式 *later* - *earlier* 中的顺序相同，但结果保证以秒为单位，并且即使在调用 `ticks()` 之间 ticks "回绕"，结果也保证为正。
+
+<SourceProp propname="board_info" />
+
+返回一个 `BoardInfo` 实例（或派生类），表示此工厂生成的实例将连接到的板。
+
+### Pin
+
+<SourceClass funname="gpiozero.Pin" funargs="" />
+
+表示连接到某种形式控制器（无论是 GPIO、SPI、ADC 等）的引脚的抽象基类。
+
+派生类应该覆盖属性的 getter 和 setter，以准确表示引脚的功能。派生类*必须*覆盖以下方法：
+
+- `_get_info()`
+- `_get_function()`
+- `_set_function()`
+- `_get_state()`
+
+派生类*可以*额外覆盖以下方法（如果适用）：
+
+- `close()`
+- `output_with_state()`
+- `input_with_pull()`
+- `_set_state()`
+- `_get_frequency()`
+- `_set_frequency()`
+- `_get_pull()`
+- `_set_pull()`
+- `_get_bounce()`
+- `_set_bounce()`
+- `_get_edges()`
+- `_set_edges()`
+- `_get_when_changed()`
+- `_set_when_changed()`
+
+<SourceProp propname="close" propargs="" type="method" />
+
+清理分配给引脚的资源。调用此方法后，此 `Pin` 实例不能再用于查询或控制引脚的状态。
+
+<SourceProp propname="input_with_pull" propargs="pull" type="method" />
+
+将引脚的功能设置为"输入"，并为引脚指定初始上拉。默认情况下，这等同于执行：
+
+```python
+pin.function = 'input'
+pin.pull = pull
+```
+
+但是，派生类可以覆盖此方法，以在配置引脚为输入和设置上拉/下拉之间提供尽可能小的延迟（这对于在某些配置中避免"毛刺"很重要）。
+
+<SourceProp propname="output_with_state" propargs="state" type="method" />
+
+将引脚的功能设置为"输出"，并为引脚指定初始状态。默认情况下，这等同于执行：
+
+```python
+pin.function = 'output'
+pin.state = state
+```
+
+但是，派生类可以覆盖此方法，以在配置引脚为输出和指定初始值之间提供尽可能小的延迟（这对于在低电平有效配置中避免"毛刺"很重要）。
+
+<SourceProp propname="bounce" />
+
+边缘检测当前使用的抖动检测（消除）量，以秒为单位。如果当前未使用抖动检测，则为 `None`。
+
+例如，如果 `edges` 当前为 "rising"，`bounce` 当前为 5/1000（5ms），则下面的波形尽管有三个上升沿，但只会触发 `when_changed` 两次：
+
+```text
+TIME 0...1...2...3...4...5...6...7...8...9...10..11..12 ms
+
+bounce elimination   |===================| |==============
+
+HIGH - - - - >       ,--. ,--------------. ,--.
+                     |  | |              | |  |
+                     |  | |              | |  |
+LOW  ----------------'  `-'              `-'  `-----------
+                     :                     :
+                     :                     :
+               when_changed          when_changed
+                   fires                 fires
+```
+
+如果引脚不支持边缘检测，尝试设置此属性将引发 `PinEdgeDetectUnsupported`。如果引脚支持边缘检测，类必须实现抖动检测，即使只是在软件中。
+
+<SourceProp propname="edges" />
+
+将触发执行分配给 `when_changed` 的函数或绑定方法的边缘。这可以是字符串 "both"（默认）、"rising"、"falling" 或 "none" 之一：
+
+```text
+HIGH - - - - >           ,--------------.
+                         |              |
+                         |              |
+LOW  --------------------'              `--------------
+                         :              :
+                         :              :
+Fires when_changed     "both"         "both"
+when edges is ...     "rising"       "falling"
+```
+
+如果引脚不支持边缘检测，尝试设置此属性将引发 `PinEdgeDetectUnsupported`。
+
+<SourceProp propname="frequency" />
+
+引脚的 PWM 实现的频率（以 Hz 为单位），如果当前未使用 PWM，则为 `None`。此值始终默认为 `None`，并且可以更改某些引脚类型以激活或停用 PWM。
+
+如果引脚不支持 PWM，尝试将此设置为 `None` 以外的值时将引发 `PinPWMUnsupported`。
+
+<SourceProp propname="function" />
+
+引脚的功能。此属性是一个字符串，指示引脚的当前功能或用途。通常这是字符串 "input" 或 "output"。但是，在某些情况下，它可以是其他字符串，指示非 GPIO 相关的功能。
+
+对于某些引脚类型（例如 GPIO 引脚），可以更改此属性以配置引脚的功能。如果为此属性指定了无效功能，将引发 `PinInvalidFunction`。
+
+<SourceProp propname="info" />
+
+返回与引脚关联的 `PinInfo`。这可用于确定引脚的物理属性，包括其在引脚头上的位置、固定上拉以及可用于识别它的各种规格。
+
+<SourceProp propname="pull" />
+
+引脚的上拉状态，表示为字符串。这通常是字符串 "up"、"down" 或 "floating" 之一，但底层硬件可能支持其他值。
+
+如果引脚不支持更改上拉状态（例如由于固定上拉电阻），尝试设置此属性将引发 `PinFixedPull`。如果底层硬件不支持指定的值，将引发 `PinInvalidPull`。
+
+<SourceProp propname="state" />
+
+引脚的状态。低电平为 0，高电平为 1。作为引脚的低级视图，在上拉情况下不执行交换（有关更多信息，请参见 `pull`）：
+
+```text
+HIGH - - - - >       ,----------------------
+                     |
+                     |
+LOW  ----------------'
+```
+
+实现模拟或类似模拟功能的派生类可以返回 0 到 1 之间的值。例如，实现 PWM 的引脚（其中 `frequency` 不是 `None`）返回 0.0 到 1.0 之间的值，表示当前 PWM 占空比。
+
+如果引脚当前配置为输入，并且尝试设置此属性，将引发 `PinSetInput`。如果为此属性指定了无效值，将引发 `PinInvalidState`。
+
+<SourceProp propname="when_changed" />
+
+当引脚状态改变时（更具体地说，当在引脚上检测到 `edges` 指定的边缘时）要调用的函数或绑定方法。函数或绑定方法必须接受两个参数：第一个将报告引脚状态改变时的 ticks（来自 `Factory.ticks()`），第二个将报告引脚的当前状态。
+
+:::warning
+根据硬件支持，状态*不保证准确*。例如，许多 GPIO 实现将提供一个中断，指示引脚状态何时改变，但不指示改变成什么。在这种情况下，引脚驱动程序简单地读取引脚的当前状态来提供此参数，但引脚的状态可能在中断*之后*已经改变。在依赖此参数时请谨慎。
+:::
+
+如果引脚不支持边缘检测，尝试设置此属性将引发 `PinEdgeDetectUnsupported`。
+
+### SPI
+
+<SourceClass funname="gpiozero.SPI" funargs="*args, **kwargs" />
+
+[串行外设接口](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus)（SPI）实现的抽象接口。派生类*必须*覆盖以下方法：
+
+- `transfer()`
+- `_get_clock_mode()`
+
+派生类*可以*覆盖以下方法（如果适用）：
+
+- `read()`
+- `write()`
+- `_set_clock_mode()`
+- `_get_lsb_first()`
+- `_set_lsb_first()`
+- `_get_select_high()`
+- `_set_select_high()`
+- `_get_bits_per_word()`
+- `_set_bits_per_word()`
+
+<SourceProp propname="read" propargs="n" type="method" />
+
+从 SPI 接口读取 *n* 个字的数据，将它们作为无符号整数序列返回，每个不大于接口配置的 `bits_per_word`。
+
+此方法通常用于具有半双工通信的只读设备。有关全双工通信，请参见 `transfer()`。
+
+<SourceProp propname="transfer" propargs="data" type="method" />
+
+将 *data* 写入 SPI 接口。*data* 必须是无符号整数字序列，每个字都将适合接口配置的 `bits_per_word`。该方法返回写入时从接口读取的字序列（全双工通信）。
+
+返回序列的长度决定了写入接口的 *data* 字数。返回序列中的每个字都是一个无符号整数，不大于接口配置的 `bits_per_word`。
+
+<SourceProp propname="write" propargs="data" type="method" />
+
+将 *data* 写入 SPI 接口。*data* 必须是无符号整数字序列，每个字都将适合接口配置的 `bits_per_word`。该方法返回写入接口的字数（可能小于或等于 *data* 的长度）。
+
+此方法通常用于具有半双工通信的只写设备。有关全双工通信，请参见 `transfer()`。
+
+<SourceProp propname="bits_per_word" />
+
+控制组成一个字的位数，从而控制字边界在数据流中出现的位置，以及一个字的最大值。默认为 8，意味着字实际上是字节。
+
+一些实现不支持非字节大小的字。
+
+<SourceProp propname="clock_mode" />
+
+表示根据以下表格组合的 `clock_polarity` 和 `clock_phase` 属性的值：
+
+| mode | polarity (CPOL) | phase (CPHA) |
+|------|-----------------|--------------|
+| 0    | False           | False        |
+| 1    | False           | True         |
+| 2    | True            | False        |
+| 3    | True            | True         |
+
+调整此值会同时调整 `clock_polarity` 和 `clock_phase` 属性。
+
+<SourceProp propname="clock_phase" />
+
+SPI 时钟引脚的相位。如果为 `False`（默认），当时钟引脚激活时从 MISO 引脚读取数据。将其设置为 `True` 将导致在时钟引脚停用时从 MISO 引脚读取数据。在许多数据表中，这被记录为 CPHA 值。当时钟被认为激活时，时钟边缘是上升还是下降由 `clock_polarity` 属性控制（对应于 CPOL）。
+
+下图显示了当 `clock_polarity` 为 `False` 且 `clock_phase` 为 `False`（默认）时读取数据的时机，等同于 CPHA 0：
+
+```text
+    ,---.   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.
+CLK |   |   |   |   |   |   |   |   |   |   |   |   |   |
+    |   |   |   |   |   |   |   |   |   |   |   |   |   |
+----'   `---'   `---'   `---'   `---'   `---'   `---'   `-------
+    :       :       :       :       :       :       :
+MISO---.   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.
+  /     \ /     \ /     \ /     \ /     \ /     \ /     \
+-{  Bit  X  Bit  X  Bit  X  Bit  X  Bit  X  Bit  X  Bit  }------
+  \     / \     / \     / \     / \     / \     / \     /
+   `---'   `---'   `---'   `---'   `---'   `---'   `---'
+```
+
+下图显示了当 `clock_polarity` 为 `False` 但 `clock_phase` 为 `True` 时读取数据的时机，等同于 CPHA 1：
+
+```text
+    ,---.   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.
+CLK |   |   |   |   |   |   |   |   |   |   |   |   |   |
+    |   |   |   |   |   |   |   |   |   |   |   |   |   |
+----'   `---'   `---'   `---'   `---'   `---'   `---'   `-------
+        :       :       :       :       :       :       :
+MISO   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.
+      /     \ /     \ /     \ /     \ /     \ /     \ /     \
+-----{  Bit  X  Bit  X  Bit  X  Bit  X  Bit  X  Bit  X  Bit  }--
+      \     / \     / \     / \     / \     / \     / \     /
+       `---'   `---'   `---'   `---'   `---'   `---'   `---'
+```
+
+<SourceProp propname="clock_polarity" />
+
+SPI 时钟引脚的极性。如果为 `False`（默认），时钟引脚将空闲为低，并脉冲为高。将其设置为 `True` 将导致时钟引脚空闲为高，并脉冲为低。在许多数据表中，这被记录为 CPOL 值。
+
+下图显示了当 `clock_polarity` 为 `False`（默认）时的波形，等同于 CPOL 0：
+
+```text
+       on      on      on      on      on      on      on
+      ,---.   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.
+CLK   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+      |   |   |   |   |   |   |   |   |   |   |   |   |   |
+------'   `---'   `---'   `---'   `---'   `---'   `---'   `------
+idle       off     off     off     off     off     off       idle
+```
+
+下图显示了当 `clock_polarity` 为 `True` 时的波形，等同于 CPOL 1：
+
+```text
+idle       off     off     off     off     off     off       idle
+------.   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.   ,------
+      |   |   |   |   |   |   |   |   |   |   |   |   |   |
+CLK   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+      `---'   `---'   `---'   `---'   `---'   `---'   `---'
+       on      on      on      on      on      on      on
+```
+
+<SourceProp propname="lsb_first" />
+
+控制字是否按 LSB（最低有效位优先）顺序读取和写入。默认为 `False`，表示字按 MSB（最高有效位优先）顺序读取和写入。实际上，这控制连接的[位端序](https://en.wikipedia.org/wiki/Endianness#Bit_endianness)。
+
+下图显示了一个包含数字 5（二进制 0101）的字在 MISO 上传输，`bits_per_word` 设置为 4，`clock_mode` 设置为 0，当 `lsb_first` 为 `False`（默认）时：
+
+```text
+    ,---.   ,---.   ,---.   ,---.
+CLK |   |   |   |   |   |   |   |
+    |   |   |   |   |   |   |   |
+----'   `---'   `---'   `---'   `-----
+    :     ,-------. :     ,-------.
+MISO:     | :     | :     | :     |
+    :     | :     | :     | :     |
+----------' :     `-------' :     `----
+    :       :       :       :
+   MSB                     LSB
+```
+
+现在 `lsb_first` 设置为 `True`（所有其他参数相同）：
+
+```text
+    ,---.   ,---.   ,---.   ,---.
+CLK |   |   |   |   |   |   |   |
+    |   |   |   |   |   |   |   |
+----'   `---'   `---'   `---'   `-----
+  ,-------. :     ,-------. :
+MISO:     | :     | :     | :
+  | :     | :     | :     | :
+--' :     `-------' :     `-----------
+    :       :       :       :
+   LSB                     MSB
+```
+
+<SourceProp propname="rate" />
+
+控制 SPI 接口的速度，以 Hz（或波特率）为单位。
+
+请注意，大多数软件 SPI 实现会忽略此属性，如果尝试设置它，将引发 `SPIFixedRate`，因为它们没有速率控制（它们只是尽可能快地位敲击，因为通常这不是很快，引入限制速率的措施只会将它们减慢到无用的程度）。
+
+<SourceProp propname="select_high" />
+
+如果为 `False`（默认），当片选线被拉低时，认为片选是活动的。当设置为 `True` 时，当片选线被驱动为高时，认为片选是活动的。
+
+下图显示了当 `clock_polarity` 为 `False` 且 `select_high` 为 `False`（默认）时片选线和时钟的波形：
+
+```text
+---.                                                     ,------
+__ |                                                     |
+CS |      chip is selected, and will react to clock      |  idle
+   `-----------------------------------------------------'
+
+    ,---.   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.
+CLK |   |   |   |   |   |   |   |   |   |   |   |   |   |
+    |   |   |   |   |   |   |   |   |   |   |   |   |   |
+----'   `---'   `---'   `---'   `---'   `---'   `---'   `-------
+```
+
+当 `select_high` 为 `True` 时：
+
+```text
+   ,-----------------------------------------------------.
+CS |      chip is selected, and will react to clock      |  idle
+   |                                                     |
+---'                                                     `------
+
+    ,---.   ,---.   ,---.   ,---.   ,---.   ,---.   ,---.
+CLK |   |   |   |   |   |   |   |   |   |   |   |   |   |
+    |   |   |   |   |   |   |   |   |   |   |   |   |   |
+----'   `---'   `---'   `---'   `---'   `---'   `---'   `-------
+```
+
+### PiFactory
+
+<SourceClass funname="gpiozero.pins.pi.PiFactory" funargs="" />
+
+扩展 `Factory`。表示连接到树莓派的硬件的抽象基类。这构成了 `LocalPiFactory` 的基础。
+
+<SourceProp propname="close" propargs="" type="method" />
+
+关闭引脚工厂。这应该清理工厂操作的所有资源。它通常在脚本终止时调用。
+
+<SourceProp propname="pin" propargs="name" type="method" />
+
+创建一个 `Pin` 派生类的实例，表示指定的引脚。
+
+:::warning
+派生类必须确保表示相同硬件的引脚实例是相同的；即，对同一引脚规格的两次单独调用 `pin()` 必须返回相同的对象。
+:::
+
+<SourceProp propname="spi" propargs="**spi_args" type="method" />
+
+返回一个 SPI 接口，用于指定的 SPI *port* 和 *device*，或用于指定的引脚（*clock_pin*、*mosi_pin*、*miso_pin* 和 *select_pin*）。只能使用其中一种方案；尝试将 *port* 和 *device* 与引脚号混合将引发 `SPIBadArgs`。
+
+如果指定的引脚与硬件 SPI 引脚匹配（时钟在 GPIO11，MOSI 在 GPIO10，MISO 在 GPIO9，片选在 GPIO8 或 GPIO7），并且可以导入 spidev 模块，则将返回基于硬件的接口（使用 spidev）。否则，将返回基于软件的接口，它将使用简单的位敲击进行通信。
+
+两种接口具有相同的 API，支持时钟极性和相位属性，并且可以处理半双工和全双工通信，但硬件接口明显更快（尽管对于许多更简单的设备来说这并不重要）。
+
+### PiPin
+
+<SourceClass funname="gpiozero.pins.pi.PiPin" funargs="factory, info" />
+
+扩展 `Pin`。表示连接到树莓派的多功能 GPIO 引脚的抽象基类。派生类*必须*覆盖以下方法：
+
+- `_get_function()`
+- `_set_function()`
+- `_get_state()`
+- `_call_when_changed()`
+- `_enable_event_detect()`
+- `_disable_event_detect()`
+
+派生类*可以*额外覆盖以下方法（如果适用）：
+
+- `close()`
+- `output_with_state()`
+- `input_with_pull()`
+- `_set_state()`
+- `_get_frequency()`
+- `_set_frequency()`
+- `_get_pull()`
+- `_set_pull()`
+- `_get_bounce()`
+- `_set_bounce()`
+- `_get_edges()`
+- `_set_edges()`
+
+<SourceProp propname="info" />
+
+返回与引脚关联的 `PinInfo`。这可用于确定引脚的物理属性，包括其在引脚头上的位置、固定上拉以及可用于识别它的各种规格。
+
+### LocalPiFactory
+
+<SourceClass funname="gpiozero.pins.local.LocalPiFactory" funargs="" />
+
+扩展 `PiFactory`。表示本地连接到 Pi 的引脚的抽象基类。这构成了仅限本地的引脚接口的基类（`RPiGPIOPin`、`LGPIOPin` 和 `NativePin`）。
+
+<SourceProp propname="ticks" propargs="" type="method" />
+
+返回工厂的当前 ticks。参考点是未定义的，因此此方法的结果只有在与此方法返回的另一个值比较时才有意义。
+
+时间的格式也是任意的，时间是否在特定持续时间后回绕也是如此。Ticks 只应使用 `ticks_diff()` 方法进行比较。
+
+<SourceProp propname="ticks_diff" propargs="later, earlier" type="method" />
+
+返回两个 `ticks()` 结果之间的时间（以秒为单位）。参数的指定顺序与公式 *later* - *earlier* 中的顺序相同，但结果保证以秒为单位，并且即使在调用 `ticks()` 之间 ticks "回绕"，结果也保证为正。
+
+### LocalPiPin
+
+<SourceClass funname="gpiozero.pins.local.LocalPiPin" funargs="factory, info" />
+
+扩展 `PiPin`。表示连接到本地树莓派的多功能 GPIO 引脚的抽象基类。
+
+## RPi.GPIO
+
+### RPiGPIOFactory
+
+<SourceClass funname="gpiozero.pins.rpigpio.RPiGPIOFactory" funargs="" />
+
+扩展 `LocalPiFactory`。使用 [RPi.GPIO](https://pypi.python.org/pypi/RPi.GPIO) 库与 Pi 的 GPIO 引脚交互。如果安装了 RPi.GPIO 库，这是默认的引脚实现。支持所有功能，包括 PWM（通过软件）。
+
+因为这是默认的引脚实现，你可以在大多数操作中简单地指定一个整数作为引脚，例如：
+
+```python
+from gpiozero import LED
+
+led = LED(12)
+```
+
+但是，如果你愿意，你也可以手动构造 RPi.GPIO 引脚：
+
+```python
+from gpiozero.pins.rpigpio import RPiGPIOFactory
+from gpiozero import LED
+
+factory = RPiGPIOFactory()
+led = LED(12, pin_factory=factory)
+```
+
+### RPiGPIOPin
+
+<SourceClass funname="gpiozero.pins.rpigpio.RPiGPIOPin" funargs="factory, info" />
+
+扩展 `LocalPiPin`。[RPi.GPIO](https://pypi.python.org/pypi/RPi.GPIO) 库的引脚实现。有关更多信息，请参见 `RPiGPIOFactory`。
+
+## lgpio
+
+### LGPIOFactory
+
+<SourceClass funname="gpiozero.pins.lgpio.LGPIOFactory" funargs="chip=None" />
+
+扩展 `LocalPiFactory`。使用 [lgpio](http://abyz.me.uk/lg/py_lgpio.html) 库与本地计算机的 GPIO 引脚交互。lgpio 库只是与 Linux gpiochip 设备通信；它不是特定于树莓派的，尽管此类目前是在假设它运行在树莓派上的情况下构建的。
+
+你可以像这样手动构造 lgpio 引脚：
+
+```python
+from gpiozero.pins.lgpio import LGPIOFactory
+from gpiozero import LED
+
+factory = LGPIOFactory(chip=0)
+led = LED(12, pin_factory=factory)
+```
+
+工厂构造函数的 *chip* 参数指定要尝试打开的 gpiochip 设备。它默认为 0，因此通常不需要指定（上面的示例只是为了完整性而包含它）。
+
+lgpio 库依赖于对 `/dev/gpiochip*` 设备的访问。如果你遇到问题，请检查你的用户是否对你尝试打开的特定 gpiochip 设备（默认为 0）具有读/写访问权限。
+
+### LGPIOPin
+
+<SourceClass funname="gpiozero.pins.lgpio.LGPIOPin" funargs="factory, info" />
+
+扩展 `LocalPiPin`。[lgpio](http://abyz.me.uk/lg/py_lgpio.html) 库的引脚实现。有关更多信息，请参见 `LGPIOFactory`。
+
+## PiGPIO
+
+### PiGPIOFactory
+
+<SourceClass funname="gpiozero.pins.pigpio.PiGPIOFactory" funargs="host=None, port=None" />
+
+扩展 `PiFactory`。使用 [pigpio](http://abyz.me.uk/rpi/pigpio/) 库与 Pi 的 GPIO 引脚交互。pigpio 库依赖于以 root 身份运行的守护进程（**pigpiod**）来提供对 GPIO 引脚的访问，并通过网络套接字与此守护进程通信。
+
+虽然这确实意味着只有守护进程本身应该控制引脚，但该架构确实有几个优点：
+
+- 引脚可以从另一台机器远程控制（另一台机器甚至不必是树莓派；它只需要安装 [pigpio](http://abyz.me.uk/rpi/pigpio/) 客户端库）
+- 守护进程通过 DMA 控制器支持硬件 PWM
+- 你的脚本本身不需要 root 权限；它只需要能够与守护进程通信
+
+你可以像这样手动构造 pigpio 引脚：
+
+```python
+from gpiozero.pins.pigpio import PiGPIOFactory
+from gpiozero import LED
+
+factory = PiGPIOFactory()
+led = LED(12, pin_factory=factory)
+```
+
+这对于控制远程机器上的引脚特别有用。要实现这一点，只需在构造引脚时指定 host（以及可选的 port）：
+
+```python
+from gpiozero.pins.pigpio import PiGPIOFactory
+from gpiozero import LED
+
+factory = PiGPIOFactory(host='192.168.0.2')
+led = LED(12, pin_factory=factory)
+```
+
+:::note
+在某些情况下，特别是在使用 PWM 时，确实似乎有可能使守护进程进入"异常"状态。我们非常有兴趣听取任何与此相关的错误报告（这可能是我们引脚实现中的错误）。目前的解决方法是简单地重新启动 **pigpiod** 守护进程。
+:::
+
+### PiGPIOPin
+
+<SourceClass funname="gpiozero.pins.pigpio.PiGPIOPin" funargs="factory, info" />
+
+扩展 `PiPin`。[pigpio](http://abyz.me.uk/rpi/pigpio/) 库的引脚实现。有关更多信息，请参见 `PiGPIOFactory`。
+
+## Native
+
+### NativeFactory
+
+<SourceClass funname="gpiozero.pins.native.NativeFactory" funargs="" />
+
+扩展 `LocalPiFactory`。使用内置的纯 Python 实现与 Pi 的 GPIO 引脚交互。如果没有发现第三方库，这是默认的引脚实现。
+
+:::warning
+此实现目前*不*支持 PWM。尝试使用任何请求 PWM 的类将引发异常。
+:::
+
+你可以像这样手动构造 native 引脚实例：
+
+```python
+from gpiozero.pins.native import NativeFactory
+from gpiozero import LED
+
+factory = NativeFactory()
+led = LED(12, pin_factory=factory)
+```
+
+### NativePin
+
+<SourceClass funname="gpiozero.pins.native.NativePin" funargs="factory, info" />
+
+扩展 `LocalPiPin`。Native 引脚实现。有关更多信息，请参见 `NativeFactory`。
+
+### Native2835Pin
+
+<SourceClass funname="gpiozero.pins.native.Native2835Pin" funargs="factory, info" />
+
+扩展 `NativePin`，用于 Pi 4 之前的 Pi 硬件（Pi 0、1、2、3 和 3+）。
+
+### Native2711Pin
+
+<SourceClass funname="gpiozero.pins.native.Native2711Pin" funargs="factory, info" />
+
+扩展 `NativePin`，用于 Pi 4 硬件（撰写本文时为 Pi 4、CM4、Pi 400）。
+
+## Mock
+
+### MockFactory
+
+<SourceClass funname="gpiozero.pins.mock.MockFactory" funargs="revision=None, pin_class=None" />
+
+用于生成模拟引脚的工厂。
+
+*revision* 参数指定模拟工厂假装成什么版本的 Pi（这会影响 `Factory.board_info` 属性的结果以及假定上拉电阻的位置）。
+
+*pin_class* 属性指定默认情况下 `pin()` 方法将生成的模拟引脚类。可以在构造后通过修改 `pin_class` 属性来更改。
+
+<SourceProp propname="pin_class" />
+
+此属性存储在使用 `pin()` 方法构造引脚时将使用的 `MockPin` 类（或派生类）（如果没有使用 *pin_class* 参数覆盖它）。它在构造时默认为构造函数中 *pin_class* 参数的值，如果未指定则为 `MockPin`。
+
+<SourceProp propname="ticks" propargs="" type="method" />
+
+返回工厂的当前 ticks。参考点是未定义的，因此此方法的结果只有在与此方法返回的另一个值比较时才有意义。
+
+时间的格式也是任意的，时间是否在特定持续时间后回绕也是如此。Ticks 只应使用 `ticks_diff()` 方法进行比较。
+
+<SourceProp propname="ticks_diff" propargs="later, earlier" type="method" />
+
+返回两个 `ticks()` 结果之间的时间（以秒为单位）。参数的指定顺序与公式 *later* - *earlier* 中的顺序相同，但结果保证以秒为单位，并且即使在调用 `ticks()` 之间 ticks "回绕"，结果也保证为正。
+
+<SourceProp propname="pin" propargs="name, pin_class=None, **kwargs" type="method" />
+
+`MockFactory` 的 pin 方法另外接受一个 *pin_class* 属性，可用于覆盖类的 `pin_class` 属性。任何额外的关键字参数将传递给引脚构造函数（对于像 `MockConnectedPin` 这样期望用另一个引脚构造的东西很有用）。
+
+<SourceProp propname="reset" propargs="" type="method" />
+
+清除引脚和保留集。这主要在测试套件中使用，以确保引脚工厂在下一组测试运行之前处于"干净"状态。
+
+### MockPin
+
+<SourceClass funname="gpiozero.pins.mock.MockPin" funargs="factory, info" />
+
+主要用于测试的模拟引脚。此类*不*支持 PWM。
+
+### MockPWMPin
+
+<SourceClass funname="gpiozero.pins.mock.MockPWMPin" funargs="factory, info" />
+
+`MockPin` 的派生类，添加了 PWM 支持。
+
+### MockConnectedPin
+
+<SourceClass funname="gpiozero.pins.mock.MockConnectedPin" funargs="factory, info, input_pin=None" />
+
+`MockPin` 的派生类，模拟连接到另一个模拟引脚的引脚。这在测试套件的"真实引脚"部分中用于检查一个引脚是否可以影响另一个引脚。
+
+### MockChargingPin
+
+<SourceClass funname="gpiozero.pins.mock.MockChargingPin" funargs="factory, info, charge_time=0.01" />
+
+`MockPin` 的派生类，模拟一个在设置为输入时等待预定时间然后驱动自身为高的引脚（就好像连接到例如使用 LDR 和电容器来计时充电速率的典型电路）。
+
+### MockTriggerPin
+
+<SourceClass funname="gpiozero.pins.mock.MockTriggerPin" funargs="factory, info, echo_pin=None, echo_time=0.04" />
+
+`MockPin` 的派生类，旨在与另一个 `MockPin` 一起使用以模拟距离传感器。将 *echo_pin* 设置为相应的引脚实例。当此引脚被驱动为高时，它将触发回声引脚在回声时间内驱动为高。
+
+### MockSPIDevice
+
+<SourceClass funname="gpiozero.pins.mock.MockSPIDevice" funargs="clock_pin, mosi_pin=None, miso_pin=None, select_pin=None, *, clock_polarity=False, clock_phase=False, lsb_first=False, bits_per_word=8, select_high=False, pin_factory=None" />
+
+此类用于测试 `SPIDevice` 实现。它可用于模拟简单 SPI 设备的从端，例如 MCP3xxx 系列 ADC。
+
+派生类应覆盖 `on_start()` 和/或 `on_bit()` 方法以响应 SPI 接口事件。`rx_word()` 和 `tx_word()` 方法可用于在这些方法中促进通信。然后可以将此类派生类作为 `MockFactory` 构造函数的 *spi_class* 参数传递，以将实例附加到 `SPIDevice` 请求的任何 SPI 接口。
+
+<Normal />

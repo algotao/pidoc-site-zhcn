@@ -1,7 +1,7 @@
 ---
 sidebar_position: 9
 draft: false
-title: 9. 命令行工具
+title: 8. 命令行工具
 description: 本文介绍了GPIO Zero软件包中的命令行工具，包括pinout和pintest。pinout用于查询Raspberry Pi不同版本的GPIO引脚信息，能输出电路板描述、ASCII图和针脚颜色匹配列表，可通过选项指定版本、输出颜色等，还支持查询远程Pi信息。pintest用于测试Pi上GPIO引脚功能，可测试所有或部分引脚，能避免损坏，测试有问题会报告并返回特定代码，使用时要确保引脚未连接设备。
 keywords: [GPIO Zero, 命令行工具, pinout, pintest, Raspberry Pi, GPIO引脚, 电路板信息, 引脚测试, 环境变量]
 last_update: 
@@ -229,7 +229,7 @@ pintest --exclude GPIO7,GPIO8,GPIO9,GPIO10,GPIO11
 
 GPIO Zero 提供的所有实用程序都接受以下环境变量：
 
-- gpiozero_pin_factory
+- GPIOZERO_PIN_FACTORY
 
     与 GPIO 引脚通信时使用的库。默认先尝试加载 lgpio，然后是 RPi.GPIO，最后是 pigpio，最后使用本地 Python 实现。有效值包括 `lgpio`、`rpigpio`、`pigpio`、`native` 和 `mock`。后者在非 Pi 平台上最有用，因为它模拟的是 Raspberry Pi 型号 3B（默认情况下）。
 

@@ -1,0 +1,89 @@
+---
+sidebar_position: 23
+draft: false
+title: 22. API-音调
+description: GPIO Zero的音调API文档，用于TonalBuzzer的Tone类说明。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, 音调, Tone, 蜂鸣器, MIDI]
+last_update:
+  date: 2026-02-01
+---
+import Normal from "./_normal.mdx";
+import {SourceClass,SourceProp} from "/js/gpiozeroutils.js";
+
+# API-音调
+
+GPIO Zero 包含一个 `Tone` 类，旨在与 `TonalBuzzer` 一起使用。此类位于 GPIO Zero 的 `tones` 模块中，通常按如下方式导入：
+
+```python
+from gpiozero.tones import Tone
+```
+
+## Tone
+
+<SourceClass funname="gpiozero.tones.Tone" funargs="value=None, *, frequency=None, midi=None, note=None" />
+
+以各种音乐记号表示声音的频率。
+
+`Tone` 类可与 `TonalBuzzer` 类一起使用，以便轻松表示音乐音调。该类可以以多种方式构造。例如，作为以 [Hz](https://en.wikipedia.org/wiki/Hertz) 为单位的直接频率（这是内部存储格式），作为整数 MIDI 音符，或作为音乐音符的字符串表示。
+
+以下所有构造函数都是构造典型调音音符 [concert A](https://en.wikipedia.org/wiki/Concert_pitch)（440Hz，即 MIDI 音符 #69）的等效方式：
+
+```python
+>>> from gpiozero.tones import Tone
+>>> Tone(440.0)
+>>> Tone(69)
+>>> Tone('A4')
+```
+
+如果您不想让构造函数猜测您使用的格式（在低频率端，从 128Hz 往下，频率和 MIDI 音符之间存在一些歧义），您可以使用显式构造函数 `from_frequency()`、`from_midi()` 或 `from_note()`，或者在构造时指定关键字参数：
+
+```python
+>>> Tone.from_frequency(440)
+>>> Tone.from_midi(69)
+>>> Tone.from_note('A4')
+>>> Tone(frequency=440)
+>>> Tone(midi=69)
+>>> Tone(note='A4')
+```
+
+提供了几个属性以允许转换为任何支持的构造格式：`frequency`、`midi` 和 `note`。提供了 `up()` 和 `down()` 方法来步进到相邻的 MIDI 音符。
+
+:::warning
+目前 `Tone` 派生自 `float`，在大多数情况下（加法、减法等）可以用作浮点数。API 的这一部分尚未被视为"稳定"；即我们可能会在未来版本中决定增强/更改此行为。
+:::
+
+<SourceProp propname="from_frequency" propargs="freq" type="method" />
+
+从以 [Hz](https://en.wikipedia.org/wiki/Hertz) 指定的频率构造 `Tone`，该频率必须是 `0 < freq <= 20000` 范围内的正浮点值。
+
+<SourceProp propname="from_midi" propargs="midi_note" type="method" />
+
+从 MIDI 音符构造 `Tone`，该音符必须是 0 到 127 范围内的整数。作为参考，A4（[concert A](https://en.wikipedia.org/wiki/Concert_pitch)，通常用于调音）是 MIDI 音符 #69。
+
+<SourceProp propname="from_note" propargs="note" type="method" />
+
+从音乐音符构造 `Tone`，该音符必须由大写字母 A 到 G 组成，后跟可选的半音修饰符（"b"表示降号，"#"表示升号，或它们的 Unicode 等效字符），然后是八度数（0 到 9）。
+
+例如，[concert A](https://en.wikipedia.org/wiki/Concert_pitch)，典型的 440Hz 调音音符，将表示为"A4"。比它高一个半音的将是"A#4"或"Bb4"。也接受升号和降号的 Unicode 表示。
+
+<SourceProp propname="down" propargs="n=1" type="method" />
+
+返回比此频率低 *n* 个半音的 `Tone`（*n* 默认为 1）。
+
+<SourceProp propname="up" propargs="n=1" type="method" />
+
+返回比此频率高 *n* 个半音的 `Tone`（*n* 默认为 1）。
+
+<SourceProp propname="frequency" />
+
+返回音调的频率，以 [Hz](https://en.wikipedia.org/wiki/Hertz) 为单位。
+
+<SourceProp propname="midi" />
+
+返回与音调频率最接近的 MIDI 音符。这将是 0 到 127 范围内的整数。如果频率超出 MIDI 音符表示的范围（大约 8Hz 到 12.5KHz），将引发 `ValueError` 异常。
+
+<SourceProp propname="note" />
+
+返回与音调频率最接近的音符。这将是 `from_note()` 接受的格式的字符串。如果频率超出此格式表示的范围（"A0"大约是 27.5Hz，"G9"大约是 12.5KHz），将引发 `ValueError` 异常。
+
+<Normal />

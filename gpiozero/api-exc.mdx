@@ -1,0 +1,491 @@
+---
+sidebar_position: 25
+draft: false
+title: 25. API-异常
+description: GPIO Zero的异常类文档，包括所有库定义的异常类型和继承层次结构。
+keywords: [树莓派, GPIO, Python, Raspberry Pi, gpiozero, 异常, 错误处理]
+last_update:
+  date: 2026-02-01
+---
+import Normal from "./_normal.mdx";
+import {SourceClass} from "/js/gpiozeroutils.js";
+
+# API-异常
+
+GPIO Zero 定义了以下异常。请注意，异常层次结构中大量使用了多重继承，以便更轻松地测试异常。例如，要捕获 GPIO Zero 代码生成的任何异常：
+
+```python
+from gpiozero import *
+
+led = PWMLED(17)
+try:
+    led.value = 2
+except GPIOZeroError:
+    print('A GPIO Zero error occurred')
+```
+
+由于所有 GPIO Zero 的异常都继承自 `GPIOZeroError`，因此这将起作用。但是，某些特定错误具有多个父类。例如，如果将超出范围的值传递给 `OutputDevice.value`，您会期望引发 `ValueError`。实际上，将引发 `OutputDeviceBadValue` 错误。但是，请注意，它既继承自 `GPIOZeroError`（间接），又继承自 `ValueError`，因此您仍然可以执行显而易见的操作：
+
+```python
+from gpiozero import *
+
+led = PWMLED(17)
+try:
+    led.value = 2
+except ValueError:
+    print('Bad value specified')
+```
+
+## 错误
+
+### GPIOZeroError
+
+<SourceClass funname="gpiozero.GPIOZeroError" funargs="" />
+
+**基类：** `Exception`
+
+GPIO Zero 中所有异常的基类。
+
+### DeviceClosed
+
+<SourceClass funname="gpiozero.DeviceClosed" funargs="" />
+
+**基类：** `GPIOZeroError`
+
+尝试对已关闭的设备执行操作时引发的错误。
+
+### BadEventHandler
+
+<SourceClass funname="gpiozero.BadEventHandler" funargs="" />
+
+**基类：** `GPIOZeroError`, `ValueError`
+
+指定具有不兼容原型的事件处理程序时引发的错误。
+
+### BadWaitTime
+
+<SourceClass funname="gpiozero.BadWaitTime" funargs="" />
+
+**基类：** `GPIOZeroError`, `ValueError`
+
+指定了无效等待时间时引发的错误。
+
+### BadQueueLen
+
+<SourceClass funname="gpiozero.BadQueueLen" funargs="" />
+
+**基类：** `GPIOZeroError`, `ValueError`
+
+指定了非正数队列长度时引发的错误。
+
+### BadPinFactory
+
+<SourceClass funname="gpiozero.BadPinFactory" funargs="" />
+
+**基类：** `GPIOZeroError`, `ImportError`
+
+指定了未知的引脚工厂名称时引发的错误。
+
+### ZombieThread
+
+<SourceClass funname="gpiozero.ZombieThread" funargs="" />
+
+**基类：** `GPIOZeroError`, `RuntimeError`
+
+线程未能在给定超时时间内终止时引发的错误。
+
+### CompositeDeviceError
+
+<SourceClass funname="gpiozero.CompositeDeviceError" funargs="" />
+
+**基类：** `GPIOZeroError`
+
+CompositeDevice 层次结构特有错误的基类。
+
+### CompositeDeviceBadName
+
+<SourceClass funname="gpiozero.CompositeDeviceBadName" funargs="" />
+
+**基类：** `CompositeDeviceError`, `ValueError`
+
+使用保留名称构造复合设备时引发的错误。
+
+### CompositeDeviceBadOrder
+
+<SourceClass funname="gpiozero.CompositeDeviceBadOrder" funargs="" />
+
+**基类：** `CompositeDeviceError`, `ValueError`
+
+使用不完整的顺序构造复合设备时引发的错误。
+
+### CompositeDeviceBadDevice
+
+<SourceClass funname="gpiozero.CompositeDeviceBadDevice" funargs="" />
+
+**基类：** `CompositeDeviceError`, `ValueError`
+
+当使用不继承自 `Device` 的对象构造复合设备时引发的错误。
+
+### EnergenieSocketMissing
+
+<SourceClass funname="gpiozero.EnergenieSocketMissing" funargs="" />
+
+**基类：** `CompositeDeviceError`, `ValueError`
+
+未指定插座编号时引发的错误。
+
+### EnergenieBadSocket
+
+<SourceClass funname="gpiozero.EnergenieBadSocket" funargs="" />
+
+**基类：** `CompositeDeviceError`, `ValueError`
+
+向 `Energenie` 传递无效插座编号时引发的错误。
+
+### SPIError
+
+<SourceClass funname="gpiozero.SPIError" funargs="" />
+
+**基类：** `GPIOZeroError`
+
+与 SPI 实现相关的错误的基类。
+
+### SPIBadArgs
+
+<SourceClass funname="gpiozero.SPIBadArgs" funargs="" />
+
+**基类：** `SPIError`, `ValueError`
+
+构造 `SPIDevice` 时给出无效参数时引发的错误。
+
+### SPIBadChannel
+
+<SourceClass funname="gpiozero.SPIBadChannel" funargs="" />
+
+**基类：** `SPIError`, `ValueError`
+
+向 `AnalogInputDevice` 给出无效通道时引发的错误。
+
+### SPIFixedClockMode
+
+<SourceClass funname="gpiozero.SPIFixedClockMode" funargs="" />
+
+**基类：** `SPIError`, `AttributeError`
+
+SPI 时钟模式无法更改时引发的错误。
+
+### SPIInvalidClockMode
+
+<SourceClass funname="gpiozero.SPIInvalidClockMode" funargs="" />
+
+**基类：** `SPIError`, `ValueError`
+
+向 SPI 实现给出无效时钟模式时引发的错误。
+
+### SPIFixedBitOrder
+
+<SourceClass funname="gpiozero.SPIFixedBitOrder" funargs="" />
+
+**基类：** `SPIError`, `AttributeError`
+
+SPI 位端序无法更改时引发的错误。
+
+### SPIFixedSelect
+
+<SourceClass funname="gpiozero.SPIFixedSelect" funargs="" />
+
+**基类：** `SPIError`, `AttributeError`
+
+SPI 片选极性无法更改时引发的错误。
+
+### SPIFixedWordSize
+
+<SourceClass funname="gpiozero.SPIFixedWordSize" funargs="" />
+
+**基类：** `SPIError`, `AttributeError`
+
+每字的位数无法更改时引发的错误。
+
+### SPIInvalidWordSize
+
+<SourceClass funname="gpiozero.SPIInvalidWordSize" funargs="" />
+
+**基类：** `SPIError`, `ValueError`
+
+指定了无效（超出范围）的每字位数时引发的错误。
+
+### GPIODeviceError
+
+<SourceClass funname="gpiozero.GPIODeviceError" funargs="" />
+
+**基类：** `GPIOZeroError`
+
+GPIODevice 层次结构特有错误的基类。
+
+### GPIODeviceClosed
+
+<SourceClass funname="gpiozero.GPIODeviceClosed" funargs="" />
+
+**基类：** `GPIODeviceError`, `DeviceClosed`
+
+`DeviceClosed` 的已弃用子类。
+
+### GPIOPinInUse
+
+<SourceClass funname="gpiozero.GPIOPinInUse" funargs="" />
+
+**基类：** `GPIODeviceError`
+
+尝试使用另一个设备已使用的引脚时引发的错误。
+
+### GPIOPinMissing
+
+<SourceClass funname="gpiozero.GPIOPinMissing" funargs="" />
+
+**基类：** `GPIODeviceError`, `ValueError`
+
+未给出引脚规范时引发的错误。
+
+### InputDeviceError
+
+<SourceClass funname="gpiozero.InputDeviceError" funargs="" />
+
+**基类：** `GPIODeviceError`
+
+InputDevice 层次结构特有错误的基类。
+
+### OutputDeviceError
+
+<SourceClass funname="gpiozero.OutputDeviceError" funargs="" />
+
+**基类：** `GPIODeviceError`
+
+OutputDevice 层次结构特有错误的基类。
+
+### OutputDeviceBadValue
+
+<SourceClass funname="gpiozero.OutputDeviceBadValue" funargs="" />
+
+**基类：** `OutputDeviceError`, `ValueError`
+
+将 `value` 设置为无效值时引发的错误。
+
+### PinError
+
+<SourceClass funname="gpiozero.PinError" funargs="" />
+
+**基类：** `GPIOZeroError`
+
+与引脚实现相关的错误的基类。
+
+### PinInvalidFunction
+
+<SourceClass funname="gpiozero.PinInvalidFunction" funargs="" />
+
+**基类：** `PinError`, `ValueError`
+
+尝试将引脚的功能更改为无效值时引发的错误。
+
+### PinInvalidState
+
+<SourceClass funname="gpiozero.PinInvalidState" funargs="" />
+
+**基类：** `PinError`, `ValueError`
+
+尝试为引脚分配无效状态时引发的错误。
+
+### PinInvalidPull
+
+<SourceClass funname="gpiozero.PinInvalidPull" funargs="" />
+
+**基类：** `PinError`, `ValueError`
+
+尝试为引脚分配无效的上拉电阻时引发的错误。
+
+### PinInvalidEdges
+
+<SourceClass funname="gpiozero.PinInvalidEdges" funargs="" />
+
+**基类：** `PinError`, `ValueError`
+
+尝试为引脚分配无效的边缘检测时引发的错误。
+
+### PinInvalidBounce
+
+<SourceClass funname="gpiozero.PinInvalidBounce" funargs="" />
+
+**基类：** `PinError`, `ValueError`
+
+尝试为引脚分配无效的防抖时间时引发的错误。
+
+### PinSetInput
+
+<SourceClass funname="gpiozero.PinSetInput" funargs="" />
+
+**基类：** `PinError`, `AttributeError`
+
+尝试设置只读引脚时引发的错误。
+
+### PinFixedPull
+
+<SourceClass funname="gpiozero.PinFixedPull" funargs="" />
+
+**基类：** `PinError`, `AttributeError`
+
+尝试设置具有固定上拉电阻的引脚的上拉电阻时引发的错误。
+
+### PinEdgeDetectUnsupported
+
+<SourceClass funname="gpiozero.PinEdgeDetectUnsupported" funargs="" />
+
+**基类：** `PinError`, `AttributeError`
+
+尝试在不支持的引脚上使用边缘检测时引发的错误。
+
+### PinUnsupported
+
+<SourceClass funname="gpiozero.PinUnsupported" funargs="" />
+
+**基类：** `PinError`, `NotImplementedError`
+
+尝试在不支持的引脚上获取引脚接口时引发的错误。
+
+### PinSPIUnsupported
+
+<SourceClass funname="gpiozero.PinSPIUnsupported" funargs="" />
+
+**基类：** `PinError`, `NotImplementedError`
+
+尝试在不支持的引脚上获取 SPI 接口时引发的错误。
+
+### PinPWMError
+
+<SourceClass funname="gpiozero.PinPWMError" funargs="" />
+
+**基类：** `PinError`
+
+与 PWM 实现相关的错误的基类。
+
+### PinPWMUnsupported
+
+<SourceClass funname="gpiozero.PinPWMUnsupported" funargs="" />
+
+**基类：** `PinPWMError`, `AttributeError`
+
+尝试在不支持的引脚上激活 PWM 时引发的错误。
+
+### PinPWMFixedValue
+
+<SourceClass funname="gpiozero.PinPWMFixedValue" funargs="" />
+
+**基类：** `PinPWMError`, `AttributeError`
+
+尝试在输入引脚上初始化 PWM 时引发的错误。
+
+### PinUnknownPi
+
+<SourceClass funname="gpiozero.PinUnknownPi" funargs="" />
+
+**基类：** `PinError`, `RuntimeError`
+
+当 gpiozero 无法识别树莓派的修订版本时引发的错误。
+
+### PinMultiplePins
+
+<SourceClass funname="gpiozero.PinMultiplePins" funargs="" />
+
+**基类：** `PinError`, `RuntimeError`
+
+多个引脚支持请求的功能时引发的错误。
+
+### PinNoPins
+
+<SourceClass funname="gpiozero.PinNoPins" funargs="" />
+
+**基类：** `PinError`, `RuntimeError`
+
+没有引脚支持请求的功能时引发的错误。
+
+### PinInvalidPin
+
+<SourceClass funname="gpiozero.PinInvalidPin" funargs="" />
+
+**基类：** `PinError`, `ValueError`
+
+提供了无效的引脚规范时引发的错误。
+
+## 警告
+
+### GPIOZeroWarning
+
+<SourceClass funname="gpiozero.GPIOZeroWarning" funargs="" />
+
+**基类：** `Warning`
+
+GPIO Zero 中所有警告的基类。
+
+### DistanceSensorNoEcho
+
+<SourceClass funname="gpiozero.DistanceSensorNoEcho" funargs="" />
+
+**基类：** `GPIOZeroWarning`
+
+当距离传感器完全没有看到回声时引发的警告。
+
+### SPIWarning
+
+<SourceClass funname="gpiozero.SPIWarning" funargs="" />
+
+**基类：** `GPIOZeroWarning`
+
+与 SPI 实现相关的警告的基类。
+
+### SPISoftwareFallback
+
+<SourceClass funname="gpiozero.SPISoftwareFallback" funargs="" />
+
+**基类：** `SPIWarning`
+
+当回退到 SPI 软件实现时引发的警告。
+
+### PinWarning
+
+<SourceClass funname="gpiozero.PinWarning" funargs="" />
+
+**基类：** `GPIOZeroWarning`
+
+与引脚实现相关的警告的基类。
+
+### PinFactoryFallback
+
+<SourceClass funname="gpiozero.PinFactoryFallback" funargs="" />
+
+**基类：** `PinWarning`
+
+当默认引脚工厂加载失败并尝试回退时引发的警告。
+
+### PinNonPhysical
+
+<SourceClass funname="gpiozero.PinNonPhysical" funargs="" />
+
+**基类：** `PinWarning`
+
+在构造函数中指定非物理引脚时引发的警告。
+
+### ThresholdOutOfRange
+
+<SourceClass funname="gpiozero.ThresholdOutOfRange" funargs="" />
+
+**基类：** `GPIOZeroWarning`
+
+阈值超出最小值和最大值指定的范围时引发的警告。
+
+### CallbackSetToNone
+
+<SourceClass funname="gpiozero.CallbackSetToNone" funargs="" />
+
+**基类：** `GPIOZeroWarning`
+
+当回调被设置为 None 而其先前值也为 None 时引发的警告。
+
+<Normal />
