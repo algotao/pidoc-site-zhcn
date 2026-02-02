@@ -56,7 +56,7 @@ None
 BadPinFactory: Unable to load any default pin factory!
 ```
 
-## 更改引脚工厂 {#更改引脚工厂}
+## 更改引脚工厂
 
 可以通过为 `GPIOZERO_PIN_FACTORY` 环境变量指定值来替换默认引脚工厂。例如：
 
@@ -145,7 +145,7 @@ $ GPIOZERO_PIN_FACTORY=pigpio PIGPIO_ADDR=remote-pi python3 my_script.py
 合理使用多个引脚工厂的方法在 [远程 GPIO](./remote-gpio.mdx) 中给出。
 :::
 
-## 模拟引脚 {#mock-pins}
+## 模拟引脚
 
 还有一个 `MockFactory`，它生成完全虚假的引脚。这最初是为希望在不必将物理设备连接到 Pi 的情况下为设备编写测试的 GPIO Zero 开发人员设计的。然而，事实证明，在没有 Pi 的情况下开发 GPIO Zero 脚本时，它们也很有用。此引脚工厂永远不会默认加载；必须明确指定，通过设置环境变量或在脚本中设置引脚工厂。例如：
 
