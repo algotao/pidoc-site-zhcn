@@ -30,11 +30,11 @@ const OSConfig = {
             desc: "Ubuntu 的最新 LTS 版本。LTS 代表长期支持，这意味着五年的免费安全和维护更新。",
             extos: [
                 {
-                    title: "Ubuntu 24.04.3 LTS Desktop(桌面)",
-                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.3-preinstalled-desktop-arm64+raspi.img.xz",
-                    release_date: "2025-08-07",
+                    title: "Ubuntu 24.04.4 LTS Desktop(桌面)",
+                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.4-preinstalled-desktop-arm64+raspi.img.xz",
+                    release_date: "2026-02-12",
                     system: "64位",
-                    image_size: "2,781MB",
+                    image_size: "2,833MB",
                     compatible_list: [
                         { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
                         { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
@@ -44,11 +44,11 @@ const OSConfig = {
                     ],
                 },
                 {
-                    title: "Ubuntu 24.04.3 LTS Server(64位)",
-                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.3-preinstalled-server-arm64+raspi.img.xz",
-                    release_date: "2025-08-07",
+                    title: "Ubuntu 24.04.4 LTS Server(64位)",
+                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.4-preinstalled-server-arm64+raspi.img.xz",
+                    release_date: "2026-02-12",
                     system: "64位",
-                    image_size: "1,175MB",
+                    image_size: "1,198MB",
                     compatible_list: [
                         { name: "3B", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" },
                         { name: "3B+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" },
