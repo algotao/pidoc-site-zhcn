@@ -26,7 +26,7 @@ const OSConfig = {
     os: [
         {
             id: "ubuntu-2404-lts",
-            title: "Ubuntu 24.04.3 LTS (推荐)",
+            title: "Ubuntu 24.04.4 LTS (推荐)",
             desc: "Ubuntu 的最新 LTS 版本。LTS 代表长期支持，这意味着五年的免费安全和维护更新。",
             extos: [
                 {
