@@ -8,13 +8,29 @@ import Normal from "../_normal.mdx";
 
 # 随时掌握你的树莓派状态
 
-`PiDoc` 是由本站提供的树莓派CPU负载、网络、磁盘、温度等监测的一站式信息工具，还可以通过本站公网堡垒机中转 ssh 的方式随时访问树莓派。适用于持续运行树莓派的用户或是使用树莓派的开发者。如您有一台或多台树莓派，通过监测工具可很好的随时掌握其运行状态。
+`PiDoc` 是由本站提供的树莓派的一站式信息工具，还可以通过本站公网堡垒机中转 ssh 的方式随时访问树莓派。适用于持续运行树莓派的用户或是使用树莓派的开发者。如您有一台或多台树莓派，通过PiDoc工具可很好的随时掌握其运行状态。
 
-交流QQ群：498908352 (反馈问题、提供建议等)
+请到 [Pidoc远程管理网站](https://remote.pidoc.cn/) 注册一个账号，并按照指引接入新设备。
 
-* 实时监控：随时查看设备状态
-* 网页SSH：随时随地远程访问
-* 堡垒SSH：高级功能应用
+*交流QQ群：498908352 (反馈问题、提供建议等)*
+
+## 功能
+* **实时监控**：`CPU负载`、`网络`、`磁盘`、`温度` 等监测
+* **网页终端**：在世界任何地方安全访问您的树莓派
+* **堡垒SSH**：提供双层防护，以SSH Proxy 的方式提供堡垒SSH
+* **本地转发**：将远程树莓派的端口映射到本地，实现 `VNC连接`、`我的世界` 游戏连接等
+
+### 带宽规则
+
+* **独享2Mbps**：每个设备固定2Mbps基础带宽（独享）
+* **共享100Mbps**：100Mbps全局共享加速池（所有用户共享）
+* **动态分配**：根据实际使用情况动态调整带宽，极速能达 `102Mbps`
+* **加速条件**： 设备低带宽时积累加速流量，当有需要时消耗加速流量
+
+
+:::tip
+以上功能为提供给网友的便利措施，`均不收费`。整体资源有限，请合理使用。
+:::
 
 <img src="/img/pidoc/monitor.png" width="100%" alt="监控图表" />
 
@@ -22,84 +38,17 @@ import Normal from "../_normal.mdx";
 
 去 [Pidoc远程管理网站](https://remote.pidoc.cn/)  注册一个账号。
 
-<img src="/img/pidoc/reg.png" width="40%" alt="注册" />
+<img src="/img/pidoc/reg.png" width="30%" alt="注册" />
 
 
 注册需要邮箱，收到验证邮件点击内容中的"验证邮箱"或复制链接到浏览器中打开以验证邮箱。
-<img src="/img/pidoc/mailreg.png" width="50%" alt="邮件验证" />
+<img src="/img/pidoc/mailauth.png" width="50%" alt="邮件验证" />
 
-## 安装
+## 在树莓派安装 PiDoc
 
 将以下命令复制到树莓派的bash窗口执行即可：
 ```sh
 curl -fsSL https://dl.pidoc.cn/remote/install.sh | bash
-```
-
-安装过程输出示例：
-```
-$ curl -fsSL https://dl.pidoc.cn/remote/install.sh | bash
-=========================================
-Pidoc Endpoint 快速安装脚本
-=========================================
-
-正在检查最新版本...
-最新版本: 2.0.2
-
-检测到架构: arm64
-下载地址: https://dl.pidoc.cn/remote/pidoc_2.0.2_arm64.deb
-
-正在下载 pidoc_2.0.2_arm64.deb...
-下载地址: https://dl.pidoc.cn/remote/pidoc_2.0.2_arm64.deb
-pidoc_2.0.2_arm64.deb   100%[==================================>]   2.32M  12.3MB/s    in 0.2s    
-✓ 下载完成
-
-正在安装...
-需要 root 权限进行安装
-Note, selecting 'pidoc' instead of './pidoc_2.0.2_arm64.deb'
-Installing:
-  pidoc
-
-Summary:
-  Upgrading: 0, Installing: 1, Removing: 0, Not Upgrading: 7
-  Download size: 0 B / 2,428 kB
-  Space needed: 0 B / 88.1 GB available
-
-Get:1 /tmp/tmp.TYcbnu4WRf/pidoc_2.0.2_arm64.deb pidoc arm64 2.0.2 [2,428 kB]
-Selecting previously unselected package pidoc.
-(Reading database ... 122301 files and directories currently installed.)
-Preparing to unpack .../pidoc_2.0.2_arm64.deb ...
-Unpacking pidoc (2.0.2) ...
-Setting up pidoc (2.0.2) ...
-Pidoc Endpoint 安装完成！
-
-使用方法：
-  1. 命令行模式：
-     pidoc run -key <您的密钥>
-
-  2. 服务模式（推荐）：
-     sudo pidoc service install <您的密钥>
-
-  查看帮助：
-     pidoc help
-
-
-=========================================
-安装完成！
-=========================================
-
-使用方法：
-
-1. 命令行模式：
-   pidoc run -key <您的密钥>
-
-2. 服务模式（推荐）：
-   sudo pidoc service install <您的密钥>
-
-3. 查看帮助：
-   pidoc help
-
-获取密钥: https://remote.pidoc.cn
-=========================================
 ```
 
 检查是否安装成功，可执行下面的命令：
@@ -149,7 +98,6 @@ $ sudo pidoc service install 5woUns**********
 <img src="/img/pidoc/add_list.png" width="80%" alt="设备已接入" />
 
 
-
 ## 查看指标监控
 
 指标监控提供的信息有：
@@ -165,7 +113,7 @@ $ sudo pidoc service install 5woUns**********
 更多指标已上报待展示，敬请期待。
 
 
-## 网页SSH
+## 网页终端
 
 为了解决树莓派在内网环境中无法控制的问题，`PiDoc`工具开发了 `网页SSH` 功能。在页面左侧导航栏中点击 `SSH连接` 会打开一个网页SSH页面新窗口。
 
@@ -203,10 +151,82 @@ Host remote.pidoc.cn            #代理跳转主机下的详细配置
     Port 64422                  #代理主机端口，这里我们使用 `64422`。
 ```
 
-在页面左侧导航栏中点击 `堡垒密钥` 会打开一个堡垒密钥的列表页面。你可以在此页面管理堡垒密钥。
+在页面左侧导航栏中点击 `密钥管理` 会打开一个堡垒密钥的列表页面。你可以在此页面管理堡垒密钥。
 
 
 <img src="/img/pidoc/bastion_ssh.png" width="80%" alt="堡垒SSH" />
+
+## 本地转发
+
+本地转发功能可以将远程树莓派的端口映射到本地，实现 VNC 连接、我的世界 游戏连接等。该功能需要PidocAgent 客户端支持。
+
+下载：[PidocAgent Win64 V0.1.0](https://dl.pidoc.cn/remote/pidocagent-0.1.0-windows-amd64.zip)
+
+### 客户端登录
+
+登录 Agent 需要在 [Pidoc远程管理网站](https://remote.pidoc.cn/) 中生成 Agent Token。然后将 Token 填写到 Pidoc Agent 客户端的登录信息中。
+
+#### 生成 Token
+<img src="/img/pidoc/create_agent_token.png" width="80%" alt="生成 Agent Token" />
+
+#### 登录 Agent
+
+在 Windows 中打开 Pidoc Agent 客户端，填入 Token 登录。
+
+<img src="/img/pidoc/agent_login.png" width="30%" alt="登录 Agent，填入 Token" />
+<p />
+
+登录成功后将显示设备列表。
+<img src="/img/pidoc/agent_dev_list.png" width="30%" alt="Agent显示设备列表" />
+
+
+
+### VNC 连接
+
+在端口转发功能中添加新的转发规则。
+<img src="/img/pidoc/forward.png" width="30%" alt="端口转发" />
+<p />
+
+树莓派的 VNC 端口默认为 5900，所以这里我们填入 5900。
+<img src="/img/pidoc/forward_add_vnc.png" width="30%" alt="添加VNC端口转发" />
+<p />
+
+点击 右箭头，运行转发规则。
+<img src="/img/pidoc/forward_run_vnc.png" width="30%" alt="运行VNC端口转发" />
+<p />
+
+转发规则运行中。
+<img src="/img/pidoc/forward_running_vnc.png" width="30%" alt="VNC端口转发运行中" />
+
+<p />
+
+:::tip
+现在就可以通过 VNC 客户端连接到树莓派了，地址为 `localhost:5900`。
+:::
+
+### SSH 连接
+
+在端口转发功能中添加新的转发规则。
+<img src="/img/pidoc/forward.png" width="30%" alt="端口转发" />
+<p />
+
+由于 SSH 端口的编号较小，在某些情况下本地可能已被占用或是没有权限，所以这里我们源端口填入 60022 以避免冲突。
+树莓派的 SSH 端口默认为 22，所以这里我们目标端口填入 22。
+<img src="/img/pidoc/forward_add_ssh.png" width="30%" alt="添加SSH端口转发" />
+<p />
+
+点击 右箭头，运行转发规则。
+<img src="/img/pidoc/forward_run_ssh.png" width="30%" alt="运行SSH端口转发" />
+<p />
+
+转发规则运行中。
+<img src="/img/pidoc/forward_running_ssh.png" width="30%" alt="SSH端口转发运行中" />
+
+<p />
+
+:::tip
+现在就可以通过 SSH 客户端连接到树莓派了，地址为 `localhost:22`。
+:::
 
 ## 卸载
 
