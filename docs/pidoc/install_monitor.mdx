@@ -4,6 +4,8 @@ title: 随时掌握你的树莓派状态
 description: PiDoc远程指标监测工具，提供树莓派的CPU负载、网络、磁盘、温度等监测的一站式信息。同时还能提供远程ssh功能，解决校园网等环境不能设置静态IP的问题。
 keywords: [树莓派, 监测, PiDoc, 内网穿透, 静态IP]
 ---
+import TabItem from '@theme/TabItem';
+import Tabs from '@theme/Tabs';
 import Normal from "../_normal.mdx";
 
 # 随时掌握你的树莓派状态
@@ -98,6 +100,16 @@ $ sudo pidoc service install 5woUns**********
 <img src="/img/pidoc/add_list.png" width="80%" alt="设备已接入" />
 
 
+### 设备别名
+
+每台新设备加入时，会使用设备类型及序列号自动生成一个设备别名。树莓派的前缀为 `rpi-`，香橙派的前缀为 `opi-`。 如果设备的序列号为 `123456789` ，则设备会显示为 `rpi-123456789` 或 香橙派 的 `opi-123456789`。
+
+:::tip
+设备别名可以更改，点击设备名称旁的铅笔图标即可修改。建议将其修改为便于自己识别的名称。
+:::
+
+修改后的设备别名必须具有唯一性，因为在进行跳转时会使用别名寻找对应设备。
+
 ## 查看指标监控
 
 指标监控提供的信息有：
@@ -125,36 +137,149 @@ $ sudo pidoc service install 5woUns**********
 
 如果您想使用 SSH 的 scp 传输文件，或是想通过 VSCode等等 IDE远程访问树莓派，可以使用 `堡垒SSH` 功能。
 
-堡垒SSH 本质上是一个 SSH 代理，它会将您的请求转发到树莓派上。对于该功能的使用需要您有一定的SSH配置知识，本处将不赘述。
+堡垒SSH 本质上是一个 SSH 代理，它会将您的请求转发到树莓派上。对于该功能的使用需要您有一定的SSH配置知识。
+
+### 创建堡垒密钥
+
+1. 在页面左侧导航栏中点击 `密钥管理` 会打开一个堡垒密钥的列表页面。你可以在此页面管理堡垒密钥。
+    <img src="/img/pidoc/bastion_ssh.png" width="80%" alt="堡垒SSH" />
+
+2. 如果您已经有常用的密钥对，则可以直接使用。
+    <img src="/img/pidoc/bastion_ssh_exist_key.png" width="40%" alt="使用已有公钥" />
+
+3. 否则，您可以点击 `创建密钥` 按钮创建一个新的密钥对。该密钥对为 `ED25519` 类型。
+    <img src="/img/pidoc/bastion_ssh_new_key.png" width="40%" alt="创建新密钥对" />
+    <img src="/img/pidoc/bastion_ssh_show_key.png" width="60%" alt="显示密钥对" />
+
+:::important[重要]
+请妥善保管您的 `私钥`，不要泄露给他人。私钥仅展示一次，请确保您已经复制并保存好私钥。
+
+建议将私钥文件保存到名为 `id_ed25519_bastion` 的文件（无扩展名），并放置到 `%USERPROFILE%\.ssh\` 目录。
+:::
+
+### 创建 SSH config 文件
+
+SSH config 文件是 SSH 客户端的配置文件，用于存储 SSH 连接的配置信息。在 Windows 上，SSH config 文件位于 `%USERPROFILE%\.ssh\config`。
+
+下面的命令会在当前用户下检查 .ssh 是否已经存在，如不存在则创建一个。随后并打开或创建一个 SSH config 文件。
+
+<Tabs>
+
+<TabItem value="Windows 命令行">
+
+```powershell
+(if not exist "%USERPROFILE%\.ssh" mkdir "%USERPROFILE%\.ssh") & notepad "%USERPROFILE%\.ssh\config"
+```
+</TabItem>
+
+<TabItem value="Windows PowerShell">
+
+```powershell
+if (-not (Test-Path "$env:USERPROFILE\.ssh")) { New-Item -Path "$env:USERPROFILE\.ssh" -ItemType Directory -Force | Out-Null }; notepad "$env:USERPROFILE\.ssh\config"
+```
+
+</TabItem>
+
+</Tabs>
+
+### 配置 SSH config 文件
+
+堡垒机基本信息。地址 `remote.pidoc.cn`，端口 `64422`，用户名任意。
+
+目标设备使用主机别名进行连接（设备管理中的第一列，别名可以更改），端口请指定为 OpenSSH 的服务端口，一般为 `22`。
 
 SSH config文件示例：
 ```
+# 堡垒使用主机别名进行连接（设备管理中的第一列，别名可以更改），这里我们使用 `rpi-5`。
 Host rpi-5
+    # 树莓派SSH用户名，请根据您的实际情况修改
     User pi
+    # 树莓派SSH端口，请根据您的实际情况修改
     Port 22
+    # 树莓派的私钥文件路径
+    IdentityFile ~/.ssh/id_rsa
+    # 指定代理跳转的主机配置项，这里我们使用 `remote.pidoc.cn`
     ProxyJump remote.pidoc.cn
 
+# 代理跳转主机下配置
 Host remote.pidoc.cn
-    HostName remote.pidoc.cn
+    # 代理主机端口，这里我们使用 `64422`。
     Port 64422
+    # 堡垒机的私钥文件路径
+    IdentityFile ~/.ssh/id_rsa_bastion
 ```
 
-信息解读：
-```
-Host rpi-5                      #堡垒使用主机别名进行连接（设备管理中的第一列，别名可以更改），这里我们使用 `rpi-5`。
-    User pi                     #树莓派SSH用户名
-    Port 22                     #树莓派SSH端口
-    ProxyJump remote.pidoc.cn   #指定代理跳转的主机配置项，这里我们使用 `remote.pidoc.cn`。
+### SSH 登录树莓派
 
-Host remote.pidoc.cn            #代理跳转主机下的详细配置
-    HostName remote.pidoc.cn    #代理主机域名，这里我们使用 `remote.pidoc.cn`。
-    Port 64422                  #代理主机端口，这里我们使用 `64422`。
+```sh
+# SSH登录树莓派，这里我们使用 `rpi-5`作为示例。
+ssh rpi-5
 ```
 
-在页面左侧导航栏中点击 `密钥管理` 会打开一个堡垒密钥的列表页面。你可以在此页面管理堡垒密钥。
+第一次登录可能会出现下面的提示信息，请输入 `yes`。
+```
+PS C:\Users\testuser\.ssh> ssh rpi-5
+The authenticity of host '[remote.pidoc.cn]:64422 ([101.43.71.125]:64422)' can't be established.
+ED25519 key fingerprint is SHA256:cpqRJXY7CJxrq1yxkU5MOBNKG9TKhsJlH6QduB7uetY.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+```
 
+如果登录成功，则会显示树莓派的欢迎信息。
 
-<img src="/img/pidoc/bastion_ssh.png" width="80%" alt="堡垒SSH" />
+如果登录失败，请检查 SSH config 文件是否正确配置。
+
+如果无法确认问题在哪里，请使用下面命令进行调试。
+
+```sh
+# 使用-v参数可以显示详细信息，这里我们使用 `rpi-5`作为示例。
+ssh -v rpi-5
+```
+
+### 多台设备的简化配置
+
+如果您有多台树莓派，则可使用 SSH Config 通配机制，这样是无须为每一台设备指定登录信息，除非该设备需要特殊配置。
+```
+# 堡垒使用主机别名进行连接，使用*号可通配。
+Host rpi-*
+    # 树莓派SSH用户名，请根据您的实际情况修改
+    User pi
+    # 树莓派SSH端口，请根据您的实际情况修改
+    Port 22
+    # 树莓派的私钥文件路径
+    IdentityFile ~/.ssh/id_rsa
+    # 指定代理跳转的主机配置项，这里我们使用 `remote.pidoc.cn`
+    ProxyJump remote.pidoc.cn
+
+# 代理跳转主机下配置
+Host remote.pidoc.cn
+    # 代理主机端口，这里我们使用 `64422`。
+    Port 64422
+    # 堡垒机的私钥文件路径
+    IdentityFile ~/.ssh/id_rsa_bastion
+```
+
+### scp 传输文件
+
+```sh
+# scp 传输文件，这里我们使用 `rpi-5`作为示例。
+
+# 从本地传输文件到远程树莓派
+scp ./localfile.txt rpi-5:/home/pi/
+
+# 从远程树莓派传输文件到本地
+scp rpi-5:/home/pi/remotefile.txt ./
+
+```
+
+### VS Code 远程开发
+
+VSCode 远程开发需要安装 [Remote SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) 插件。
+
+插件安装完成后，从左侧导航栏中点击 `Remote-SSH` 插件图标。在远程资源管理器中 `远程(隧道/SSH)` 选择您的设备，点击右箭头以VS Code 远程模式打开新窗口。
+
+<img src="/img/pidoc/vscode_remote_ssh.png" width="50%" alt="VSCode 远程开发" />
+
 
 ## 本地转发
 
@@ -238,5 +363,59 @@ PidocAgent 在Beta阶段，如遇问题请入群反馈。
 ```sh
 sudo apt remove pidoc
 ```
+
+## 故障排查
+
+如果失败可以考虑检查：
+1. 树莓派 SSH 服务未启动或端口不对
+2. 登录 https://remote.pidoc.cn 检查：设备是否显示在线（绿色状态）？
+3. 点击设备查看详情，确认 SSH 端口确实是 22？
+4. 树莓派上的 sshd 服务是否运行？
+5. 在树莓派本地执行：
+```sh
+sudo systemctl status ssh
+sudo netstat -tlnp | grep 22
+```
+
+如果还是卡住，检查树莓派上的 pidoc 客户端（堡垒机代理）是否正常运行：
+```sh
+# 在树莓派上执行
+sudo systemctl status pidoc    # 或类似名称的服务
+ps aux | grep -i pidoc
+ps aux | grep -i remote
+pidoc.cn 的客户端通常是一个反向 SSH 隧道。检查：
+# 查看是否有到 remote.pidoc.cn 的连接
+sudo netstat -tnp | grep 64422
+sudo ss -tnp | grep pidoc
+sudo systemctl restart pidoc
+```
+
+## 安全性
+
+
+### 架构概览
+Pidoc 及其组件是一个三层SSH隧道架构的内网穿透和远程访问平台,包含:
+
+1. Pidoc(客户端) - 安装在您的设备上
+2. Pidoc Proxy(跳板服务器) - 部署在公网的中转服务器
+3. 用户SSH终端 - 您用来访问设备的工具(SSH客户端、浏览器WebSSH 或 Pidoc Agent)
+
+### 三重加密保护
++ 第一层：Pidoc ↔ Proxy (Ed25519公钥认证 + SSH加密)
++ 第二层：用户 ↔ Proxy (多种认证 + SSH加密)
++ 第三层：Proxy ↔ 目标SSH服务 (透明转发)
+
+### 安全特性
++ ✅ 端到端SSH加密 - 所有数据在SSH协议层加密传输
++ ✅ 公钥认证 - 密码永不通过网络传输
++ ✅ 密钥绑定 - 每个设备使用唯一密钥，无法冒充
++ ✅ 双重加密(Web模式) - TLS + SSH协议栈
++ ✅ 用户隔离 - 每个用户只能访问自己的设备
+
+### 为什么是安全的?
++ 无单点解密风险 - Proxy只负责路由,不能解密用户SSH会话
++ 零信任架构 - 每一层都需要独立认证和加密
++ 私钥不出设备 - 私钥永远留在Endpoint本地
++ 标准协议 - 基于OpenSSH，经过长期安全验证
 
 <Normal />

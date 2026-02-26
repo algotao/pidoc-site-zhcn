@@ -142,7 +142,7 @@ const config = {
       prism: {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
-        additionalLanguages: ['protobuf', 'http', 'bash', 'cmake', 'ini', 'php', 'python', 'csharp', 'cpp', 'json', 'kotlin'],
+        additionalLanguages: ['protobuf', 'http', 'bash', 'cmake', 'ini', 'php', 'python', 'csharp', 'cpp', 'json', 'kotlin', 'powershell'],
       },
       typesense: {
         // Replace this with the name of your index/collection.
