@@ -152,9 +152,9 @@ $ sudo pidoc service install 5woUns**********
     <img src="/img/pidoc/bastion_ssh_show_key.png" width="60%" alt="显示密钥对" />
 
 :::important[重要]
-请妥善保管您的 `私钥`，不要泄露给他人。私钥仅展示一次，请确保您已经复制并保存好私钥。
+请妥善保管您的 `私钥`，不要泄露给他人。下载窗口关闭后将无法再次获取，请确保您已经下载好私钥。
 
-建议将私钥文件保存到名为 `id_ed25519_bastion` 的文件（无扩展名），并放置到 `%USERPROFILE%\.ssh\` 目录。
+建议将私钥文件放置到 `%USERPROFILE%\.ssh\` 目录。
 :::
 
 ### 创建 SSH config 文件
@@ -205,8 +205,8 @@ Host rpi-5
 Host remote.pidoc.cn
     # 代理主机端口，这里我们使用 `64422`。
     Port 64422
-    # 堡垒机的私钥文件路径
-    IdentityFile ~/.ssh/id_rsa_bastion
+    # 堡垒机的私钥文件路径，请改为您的实际情况
+    IdentityFile ~/.ssh/id_ed25519_bastion
 ```
 
 ### SSH 登录树莓派
