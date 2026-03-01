@@ -5,7 +5,7 @@ title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等
 description: 本文详细介绍了如何在不连接显示器、键盘和鼠标的情况下远程访问和控制树莓派。涵盖了通过本地网络和互联网进行远程控制的方法，包括SSH、VNC、Raspberry Pi Connect等工具的使用。还提供了查找树莓派IP地址的多种方法，以及通过SCP、rsync、NFS、Samba等协议共享文件和文件夹的详细步骤。此外，文章还介绍了如何设置网络文件系统、Apache网络服务器以及通过网络启动树莓派的方法。
 keywords: [远程访问, 树莓派, SSH, VNC, Raspberry Pi Connect, IP地址, 文件共享, SCP, rsync, NFS, Samba, 网络文件系统, Apache, 网络启动, IPv6, 本地网络, 互联网]
 last_update: 
-  date: 2025-12-20
+  date: 2026-03-01
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -23,6 +23,7 @@ import TabItem from '@theme/TabItem';
 - [SSH](#使用-ssh-访问远程终端)
 - [VNC](#使用-vnc-共享屏幕)
 - [Raspberry Pi Connect](#使用-raspberry-pi-connect-远程访问)
+- [本站为国内用户提供的 PiDoc](#使用-pidoc-远程访问)
 
 SSH (**S**ecure **SH**ell)可安全访问 Raspberry Pi 上的终端会话。VNC（**V**irtual **N**etwork **C**omputing ）可让您安全地访问 Raspberry Pi 上的桌面屏幕共享。您只需要另一台电脑、本地网络和 Raspberry Pi 的本地 [IP地址](https://en.wikipedia.org/wiki/IP_address)。Raspberry Pi Connect 可以安全地共享 Raspberry Pi 的屏幕，无需确定本地 IP 地址。
 
@@ -486,6 +487,14 @@ sudo raspi-config
 Connect 包括在运行 Wayland 窗口服务器的 Raspberry Pi 型号上进行屏幕共享的功能，以及在所有 Raspberry Pi 型号上进行远程 shell（终端）访问的功能。
 
 更多信息，请参阅 [Connect 文档](../services/connect.mdx)。
+
+## 使用 Pidoc 远程访问
+
+`PiDoc` 是由本站提供的树莓派的一站式信息工具，其提供了设备指标监控。还可以通过本站公网堡垒机中转 ssh 的方式随时访问树莓派。适用于持续运行树莓派的用户或是使用树莓派的开发者。如您有一台或多台树莓派，通过PiDoc工具可很好的随时掌握其运行状态。
+
+服务器位于国内，提供更稳定的连接，更高的传输带宽。欢迎免费使用。
+
+更多信息，请参阅 [随时掌握你的树莓派状态](../pidoc/install_monitor.mdx)。
 
 ## 使用 SCP 共享文件
 
