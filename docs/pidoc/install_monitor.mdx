@@ -390,8 +390,29 @@ sudo ss -tnp | grep pidoc
 sudo systemctl restart pidoc
 ```
 
-## 安全性
+## 兼容性
 
+Pidoc 支持的设备类型及操作系统包括但不限于（需基于或兼容 Debian 12/13）：
+
+| 设备 | Debian 12 | Debian 13 | Ubuntu 22 | Ubuntu 24 | Armbian |
+| --- | :-: | :-: | :-: | :-: | :-: |
+| Raspberry Pi 5 | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Raspberry Pi 4 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Raspberry Pi 3 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Orange Pi CM4 | ✅ | ✅ | - | - | ✅ |
+| Alientek QuarkPI-CA2 | ✅ | - | - | - | - |
+| NanoPi R4S | - | - | - | - | ✅ |
+| Arduino UNO Q | - | ✅ | - | - | - |
+
+:::note[说明]
+- 通过兼容性验证的设备和操作系统均为实际测试通过的版本。你手头的设备或操作系统可能与此列表不同，但只要满足兼容性要求，也应该能够正常工作。
+- **Ubuntu 22.04**: 不支持树莓派5，因 Ubuntu 从 23.10 起才开始支持树莓派5
+- **Armbian**: 适用于香橙派等开发板，基于 Debian/Ubuntu
+- ✅ 支持 | ❌ 不支持 | - 未测试或不适用
+:::
+
+
+## 安全性
 
 ### 架构概览
 Pidoc 及其组件是一个三层SSH隧道架构的内网穿透和远程访问平台,包含:
