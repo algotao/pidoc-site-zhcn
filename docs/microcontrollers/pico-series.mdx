@@ -1,264 +1,474 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 draft: false
-description: Raspberry Pi Pico系列微控制器包含多个型号，如Pico、Pico 2、Pico W等，分别搭载RP2040和RP2350芯片，具备丰富的外设接口与无线连接能力。Pico 2为第二代产品，性能更高，支持双核Cortex-M33处理器、高达150MHz主频、520KB SRAM与4MB闪存，并集成多种通信接口与低功耗模式。Pico 2 W更增加了2.4GHz Wi-Fi与蓝牙5.2功能。Pico 1系列包括Pico、Pico H（带排针）、Pico W和Pico WH，使用RP2040芯片，功能稍逊但依然强大，支持Wi-Fi与蓝牙的型号通过外挂英飞凌CYW43439模块实现。所有型号均支持USB拖放编程、GPIO扩展、PWM、ADC、I2C、SPI、UART等功能，适用于各种嵌入式与物联网项目。官方提供详细的开发文档、SDK（C/C++与MicroPython）、原理图、设计文件与实用工具如Picotool，便于开发与调试。
-keywords: [Raspberry Pi Pico, Pico 2, Pico 2 W, Pico W, Pico H, RP2040, RP2350, 微控制器, 嵌入式开发, IoT, Wi-Fi, 蓝牙, GPIO, USB编程, C/C++ SDK, MicroPython, STM, 低功耗, 开发板, 英飞凌CYW43439, 数据手册, 原理图, Fritzing, 调试工具, Picotool]
+description: Raspberry Pi Pico系列微控制器包含多个型号，如Pico、Pico 2、Pico W等，分别搭载RP2040和RP2350芯片，具备丰富的外设接口与无线连接能力。
+keywords: [Raspberry Pi Pico, Pico 2, Pico 2 W, Pico W, Pico H, RP2040, RP2350, 微控制器, 嵌入式开发, IoT, Wi-Fi, 蓝牙, GPIO, USB编程, C/C++ SDK, MicroPython, 低功耗, 开发板, 英飞凌CYW43439, 数据手册, Fritzing, 调试工具, Picotool, SWD]
 last_update: 
-  date: 2025-10-03
+  date: 2026-03-15
 ---
 import Normal from "../_normal.mdx";
 
 # Pico 系列微控制器
 
-Pico 系列设备根据产品世代分为**系列**。
+Raspberry Pi Pico 是一款使用 Raspberry Pi [微控制器](./microcontroller-chips)（**RP2040** 或 **RP2350**）的开发板。Raspberry Pi Pico 使用 **MicroPython**、**C** 或 **C++** 进行编程，与其他 Raspberry Pi 设备不同，它不运行 Linux 也不支持可移动存储。相反，Raspberry Pi Pico 通过将二进制文件烧录到板载闪存来进行编程。
 
-最初的 Raspberry Pi Pico 系列被称为 Pico 或 Pico 1，有四个变体：
+Raspberry Pi Pico 系列有两代产品：
 
-* Pico
-* Pico H
-* Pico W
-* Pico WH
+* [Raspberry Pi Pico](#raspberry-pi-pico)（Pico 1）
+* [Raspberry Pi Pico 2](#raspberry-pi-pico-2)
 
-第二代 Raspberry Pi Pico 系列被称为 Pico 2。Pico 2 有两种型号：
+每一代都有四种变体，区别在于：
 
-* Pico 2
-* Pico 2 W
+* **无线连接**。名称中包含 **W** 后缀的变体具有 Wi-Fi 和蓝牙功能。
+* **预焊接排针**。变体可以是齿形模块（用于直接焊接）或带有预焊接排针。
 
-## Pico 2 系列
+## Raspberry Pi Pico
 
-<img src="/img/microcontrollers/pico-series/pico-2.png" alt="Pico2" width="75%" />
+第一代 Raspberry Pi Pico 基于 [RP2040](./microcontroller-chips#rp2040) 微控制器芯片。它有四种变体，如下表所示。有关变体的更多详情，请参阅[非无线 Raspberry Pi Pico 开发板](#非无线-raspberry-pi-pico-开发板)（Raspberry Pi **Pico** 和 **Pico H**）和[无线 Raspberry Pi Pico 开发板](#无线-raspberry-pi-pico-开发板)（Raspberry Pi **Pico W** 和 **Pico WH**）。
 
-### Raspberry Pi Pico 2
+**表 1. Raspberry Pi Pico 变体**
 
-Raspberry Pi Pico 2 是一款低成本、高性能的微控制器板，具有灵活的数字接口。主要功能包括
+| | 无线 | 排针 |
+| --- | :---: | :---: |
+| Raspberry Pi **Pico** | 否 | 否 |
+| Raspberry Pi **Pico H** | 否 | 是（预焊接） |
+| Raspberry Pi **Pico W** | 是（Wi-Fi 和蓝牙） | 否 |
+| Raspberry Pi **Pico WH** | 是（Wi-Fi 和蓝牙） | 是（预焊接） |
 
-* [RP2350](./silicon.mdx#rp2350) 英国树莓派设计的微控制器芯片
-* 双 Cortex-M33 或 Hazard3 处理器，频率高达 150MHz
-* 520KB SRAM 和 4MB 板载闪存
-* USB 1.1，支持设备和主机
-* 低功耗睡眠和休眠模式
-* 通过 USB 使用大容量存储器进行拖放编程
-* 26× 多功能 GPIO 引脚，其中 3 个可用于 ADC
-* 2× SPI、2× I2C、2× UART、3× 12 位 500ksps 模数转换器 (ADC)、24× 可控 PWM 通道
-* 2× 带 4 个警报的定时器，1× AON 定时器
-* 温度传感器
-* 3 × 可编程 IO (PIO) 块，共 12 个状态机，用于定制外设支持
-  * 灵活的用户可编程高速 IO
-  * 可模拟 SD 卡和 VGA 等接口
+下图从顶部视角展示了四种 Raspberry Pi Pico 变体。从外观上看，这些变体最明显的区别在于：
 
-Raspberry Pi Pico 2 以齿形模块的形式提供，可直接焊接到载板上，而 带针座的 Pico 2 则带有预焊接的接头。
+* 是否有无线组件。
+* 是否有预焊接排针。
+* 串行线调试（SWD）接口的位置和类型。
 
-:::tip
-两块板都有一个三针串行线调试 (SWD) 接头。不过，带针座的 Pico 2 将其分解为一个小的、带键的 [3-针连接器](https://datasheets.raspberrypi.com/debug/debug-connector-specification.pdf)，而 Pico 有三个邻近电路板边缘的蓖状通孔引脚。
+有关这些差异的更多信息，请参阅[非无线 Raspberry Pi Pico 开发板](#非无线-raspberry-pi-pico-开发板)和[无线 Raspberry Pi Pico 开发板](#无线-raspberry-pi-pico-开发板)。
+
+<img src="/img/microcontrollers/pico-series/pico-1s.png" alt="四种 Raspberry Pi Pico 变体；从左到右：Raspberry Pi Pico、Raspberry Pi Pico H、Raspberry Pi Pico W 和 Raspberry Pi Pico WH" width="75%" />
+
+*图 1. 四种 Raspberry Pi Pico 变体；从左到右：Raspberry Pi **Pico**、Raspberry Pi **Pico H**、Raspberry Pi **Pico W** 和 Raspberry Pi **Pico WH***
+
+### 非无线 Raspberry Pi Pico 开发板
+
+Raspberry Pi **Pico** 和 **Pico H** 是基于 RP2040 芯片的第一代非无线微控制器开发板。两块开发板的硬件功能完全相同，唯一的物理差异是 Raspberry Pi Pico H 上有预焊接的排针，以及开发板底部调试连接器的样式。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
+
+Raspberry Pi Pico 和 Pico H 的引脚布局和板载布局与 Raspberry Pi **Pico 2** 和 **带排针的 Pico 2** 相同。有关更多信息，请参阅[非无线开发板布局](#非无线开发板布局)。
+
+#### 主要特性
+
+Raspberry Pi **Pico** 和 **Pico H** 提供以下主要特性：
+
+* **RP2040 微控制器芯片**，包括：
+  * 双核 M0+ 处理器。
+  * 灵活的时钟频率高达 133 MHz。
+  * 264 kB SRAM。
+  * 支持设备和主机的 USB 1.1 控制器和 PHY。
+  * 低功耗睡眠和休眠模式。
+  * 精确的时钟和定时器。
+  * 片上加速浮点库。
+  * 温度传感器。
+  * 8 个可编程 I/O（PIO）状态机，用于定制外设支持。
+    * 灵活的、用户可编程的高速 I/O。
+    * 可模拟 SD 卡和 VGA 等接口。
+
+* **开发板特性**：
+  * 通过 USB 使用大容量存储器进行拖放编程。
+  * 2 MB 板载闪存。
+  * 26 个多功能 GPIO 引脚。有关更多信息，请参阅[非无线开发板布局](#非无线开发板布局)。
+  * 调试连接器。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
+
+* **外设接口**：
+  * 2 × SPI
+  * 2 × I2C
+  * 2 × UART
+  * 3 × 12 位 ADC
+  * 16 个 PWM 通道
+
+#### 非无线 Raspberry Pi Pico 开发板的资源
+
+Raspberry Pi 提供与 Raspberry Pi Pico 和 Pico H 相关的额外技术文档：
+
+* [RP2040 数据手册：Raspberry Pi 微控制器](https://pip.raspberrypi.com/documents/RP-008371-DS)
+* [Raspberry Pi Pico 数据手册：基于 RP2040 的微控制器开发板](https://pip.raspberrypi.com/documents/RP-008307-DS)
+* [使用 RP2040 进行硬件设计：使用 RP2040 微控制器构建电路板和产品](https://pip.raspberrypi.com/documents/RP-008279-DS)
+* [Raspberry Pi Pico 系列入门：使用 Raspberry Pi Pico 系列和其他基于 Raspberry Pi 微控制器的开发板进行 C/C++ 开发](https://pip.raspberrypi.com/documents/RP-008276-DS)
+
+此外，Raspberry Pi 提供以下支持硬件设计的资源：
+
+* [设计文件](https://pip.raspberrypi.com/documents/RP-008379-DS)（Cadence Allegro）：用于研究或复制电路板布局的 PCB 设计文件。
+* [STEP 文件](https://pip.raspberrypi.com/documents/RP-008311-DS)：用于外壳和机械设计的电路板三维 CAD 模型。
+* [Fritzing](https://fritzing.org) 零件：用于 Fritzing（一种电子设计工具，用于布局和原理图）的组件：
+    * [Raspberry Pi Pico 的 Fritzing 零件](https://pip.raspberrypi.com/documents/RP-008310-DS)
+    * [Raspberry Pi Pico H 的 Fritzing 零件](https://pip.raspberrypi.com/documents/RP-008314-DS)
+
+:::important[重要]
+Raspberry Pi Pico 和 Pico H 的设计文件完全开放，没有任何限制。Raspberry Pi 授予任何人使用、复制、修改和分发这些设计的权限，可用于任何目的，无论是否收费。设计按"原样"提供，作者不对设计作任何担保，包括所有关于适销性和适用性的默示担保。在任何情况下，作者都不对因使用或执行设计而产生的任何特殊、直接、间接或后果性损害或任何损害负责，无论是在合同诉讼、疏忽还是其他侵权行为中。
 :::
 
-#### 引脚布局和设计文件
+### 无线 Raspberry Pi Pico 开发板
 
-<img src="/img/microcontrollers/pico-series/pico-2-r4-pinout.svg" alt="引脚布局图" />
+Raspberry Pi **Pico W** 和 **Pico WH** 是基于 RP2040 芯片的第一代无线微控制器开发板。两块开发板的硬件功能完全相同，唯一的物理差异是 Raspberry Pi Pico WH 上有预焊接的排针，以及微控制器下方调试连接器的样式。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
 
-* 下载 [引脚布局图](https://datasheets.raspberrypi.com/pico/Pico-2-Pinout.pdf) (PDF)
-* 下载 [STEP 文件](https://datasheets.raspberrypi.com/pico/Pico-2-step-20240708.zip)
-* 下载 [Fritzing 零件](https://datasheets.raspberrypi.com/pico/Pico-2-Fritzing-20240708.fzpz) 用于 Raspberry Pi Pico
+Raspberry Pi Pico W 和 Pico WH 的引脚布局和板载布局与 Raspberry Pi **Pico 2 W** 和 **带排针的 Pico 2 W** 相同。有关更多信息，请参阅[无线开发板布局](#无线开发板布局)。
 
-:::tip
-有关 Fritzing 的更多信息，请访问 [fritzing.org](https://fritzing.org/) 网站。
+#### 主要特性
+
+Raspberry Pi **Pico W** 和 **Pico WH** 提供与 Raspberry Pi **Pico** 和 **Pico H** 相同的主要特性，但增加了无线功能。具体来说，Raspberry Pi Pico W 和 Pico WH 提供以下主要特性：
+
+* **RP2040 微控制器芯片**，包括：
+  * 双核 M0+ 处理器。
+  * 灵活的时钟频率高达 133 MHz。
+  * 264 kB SRAM。
+  * 支持设备和主机的 USB 1.1 控制器和 PHY。
+  * 低功耗睡眠和休眠模式。
+  * 精确的时钟和定时器。
+  * 片上加速浮点库。
+  * 温度传感器。
+  * 8 个可编程 I/O（PIO）状态机，用于定制外设支持。
+    * 灵活的、用户可编程的高速 I/O。
+    * 可模拟 SD 卡和 VGA 等接口。
+
+* **开发板特性**：
+  * 通过 USB 使用大容量存储器进行拖放编程。
+  * 2 MB 板载闪存。
+  * 26 个多功能 GPIO 引脚。有关更多信息，请参阅[无线开发板布局](#无线开发板布局)。
+  * 调试连接器。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
+
+* **外设接口**：
+  * 2 × SPI
+  * 2 × I2C
+  * 2 × UART
+  * 3 × 12 位 ADC
+  * 16 个 PWM 通道
+
+* **无线连接**：
+  * Wi-Fi（802.11n）：
+    * 单频（2.4 GHz）。
+    * WPA3，一种现代无线连接安全协议。
+    * 软接入点，可广播 Wi-Fi 网络，最多支持四个客户端。
+  * 蓝牙 5.2：
+    * 支持蓝牙低功耗（BLE）中央和外设角色。
+    * 支持蓝牙经典模式。
+
+有关 Raspberry Pi Pico W 和 Pico WH 的无线硬件和功能的更多信息，请参阅[无线型号](#无线型号)。
+
+#### 无线 Raspberry Pi Pico 开发板的资源
+
+Raspberry Pi 提供与 Raspberry Pi Pico W 和 Pico WH 相关的额外技术文档：
+
+* [RP2040 数据手册：Raspberry Pi 微控制器](https://pip.raspberrypi.com/documents/RP-008373-DS)
+* [Raspberry Pi Pico W 数据手册：基于 RP2040 的微控制器开发板](https://pip.raspberrypi.com/documents/RP-008312-DS)
+* [使用 RP2040 进行硬件设计：使用 RP2040 微控制器构建电路板和产品](https://pip.raspberrypi.com/documents/RP-008279-DS)
+* [使用 Raspberry Pi Pico W 系列连接互联网：在 W 系列设备上使用 C/C++ 或 MicroPython 上网](https://pip.raspberrypi.com/documents/RP-008257-DS)
+
+此外，Raspberry Pi 提供以下支持硬件设计的资源：
+
+* [设计文件](https://pip.raspberrypi.com/documents/RP-008380-DS)（Cadence Allegro）：用于研究或复制电路板布局的 PCB 设计文件。
+* [STEP 文件](https://pip.raspberrypi.com/documents/RP-008318-DS)：用于外壳和机械设计的电路板三维 CAD 模型。
+* [Fritzing](https://fritzing.org) 零件：用于 Fritzing（一种电子设计工具）的组件：[Raspberry Pi Pico W 的 Fritzing 零件](https://pip.raspberrypi.com/documents/RP-008316-DS)。
+
+:::important[重要]
+Raspberry Pi Pico W 和 Pico WH 的设计文件完全开放，没有任何限制。Raspberry Pi 授予任何人使用、复制、修改和分发这些设计的权限，可用于任何目的，无论是否收费。设计按"原样"提供，作者不对设计作任何担保，包括所有关于适销性和适用性的默示担保。在任何情况下，作者都不对因使用或执行设计而产生的任何特殊、直接、间接或后果性损害或任何损害负责，无论是在合同诉讼、疏忽还是其他侵权行为中。
 :::
 
-### Raspberry Pi Pico 2 W
+## Raspberry Pi Pico 2
 
-Raspberry Pi Pico 2 W 为 Pico 2 硬件添加了使用英飞凌 CYW43439 的板载单频 2.4GHz 无线接口（802.11n）。板载 2.4GHz 无线接口具有以下功能：
+Raspberry Pi Pico 2 基于 [RP2350](./microcontroller-chips#rp2350) 微控制器芯片。它有四种变体，如下表所示。与 Raspberry Pi **Pico H** 和 **Pico WH** 不同，"headers"（排针）没有缩写为"**H**"。
 
-* 无线 (802.11n)，单频 (2.4 GHz)
-* WPA3
-* 软接入点，最多支持四个客户端
-* 蓝牙 5.2
-  * 支持蓝牙 LE 中央和外设功能
-  * 支持蓝牙经典
+**表 2. Raspberry Pi Pico 2 变体**
 
-板载天线由 ABRACON（原 ProAnt）授权提供。无线接口通过 SPI 连接到 [RP2350](./silicon.mdx#rp2350)微控制器。
+| | 无线 | 排针 |
+| --- | :---: | :---: |
+| Raspberry Pi **Pico 2** | 否 | 否 |
+| Raspberry Pi **带排针的 Pico 2** | 否 | 是（预焊接） |
+| Raspberry Pi **Pico 2 W** | 是（Wi-Fi 和蓝牙） | 否 |
+| Raspberry Pi **带排针的 Pico 2 W** | 是（Wi-Fi 和蓝牙） | 是（预焊接） |
 
-由于引脚限制，部分无线接口引脚是共享的。CLK 与 VSYS 监视器共享，因此只有在没有 SPI 交易时，才能通过 ADC 读取 VSYS。英飞凌 CYW43439 DIN/DOUT 和 IRQ 均共享 RP2350 上的一个引脚。只有当 SPI 交易没有进行时，才适合检查 IRQ。接口的运行频率通常为 33MHz。
+下图从顶部视角展示了四种 Raspberry Pi Pico 2 变体。从外观上看，这些变体最明显的区别在于：
 
-为获得最佳无线性能，请将天线放置在自由空间中。例如，天线下方或附近的金属会降低增益和带宽性能。在天线两侧添加接地金属可以提高天线的带宽。
+* 是否有无线组件。
+* 是否有预焊接排针。
+* 串行线调试（SWD）接口的位置和类型。
 
-`libcyw43` 授权用于非商业用途。不过，Pico 2 W 用户以及其他任何围绕 RP2350 和 CYW43439 构建产品的人都可以免费获得 [商业使用许可](https://github.com/georgerobotics/cyw43-driver/blob/195dfcc10bb6f379e3dea45147590db2203d3c7b/LICENSE.RP)。
+有关这些差异的更多信息，请参阅[非无线 Raspberry Pi Pico 2 开发板](#非无线-raspberry-pi-pico-2-开发板)和[无线 Raspberry Pi Pico 2 开发板](#无线-raspberry-pi-pico-2-开发板)。
 
-除 [标准 BTstack 许可](https://github.com/bluekitchen/btstack/blob/master/LICENSE)条款外，[补充许可](https://github.com/raspberrypi/pico-sdk/blob/master/src/rp2_common/pico_btstack/LICENSE.RP) 还涵盖 BTstack 与 Raspberry Pi Pico 2 W 的商业用途。
+<img src="/img/microcontrollers/pico-series/pico-2s.png" alt="四种 Raspberry Pi Pico 2 变体" width="75%" />
 
-#### 引脚布局和设计文件
+*图 2. 四种 Raspberry Pi Pico 2 变体；从左到右：Raspberry Pi **Pico 2**、Raspberry Pi **带排针的 Pico 2**、Raspberry Pi **Pico 2 W** 和 Raspberry Pi **带排针的 Pico 2 W***
 
-<img src="/img/microcontrollers/pico-series/pico2w-pinout.svg" alt="引脚布局图" />
+### 非无线 Raspberry Pi Pico 2 开发板
 
-* [Pinout Diagram](https://datasheets.raspberrypi.com/picow/pico-2-w-pinout.pdf) (PDF)
-* [原理图](https://datasheets.raspberrypi.com/picow/pico-2-w-schematic.pdf)
+Raspberry Pi **Pico 2** 和 **带排针的 Pico 2** 是基于 RP2350 芯片的非无线微控制器开发板。两块开发板的硬件功能完全相同，唯一的物理差异是 Raspberry Pi **带排针的 Pico 2** 上有预焊接的排针，以及开发板底部调试连接器的样式。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
 
-## Pico 1 系列
+Raspberry Pi **Pico 2** 和 **带排针的 Pico 2** 的引脚布局和板载布局与 Raspberry Pi **Pico** 和 **Pico H** 相同。有关更多信息，请参阅[非无线开发板布局](#非无线开发板布局)。
 
-<img src="/img/microcontrollers/pico-series/pico-1s.png" alt="Pico1s" width="75%" />
+#### 主要特性
 
-Raspberry Pi Pico 1 系列由四块电路板组成：Raspberry Pi Pico（最左）、Pico H（左中）、Pico W（右中）和 Pico WH（最右）。
+Raspberry Pi **Pico 2** 和 **带排针的 Pico 2** 提供以下主要特性：
 
-### Raspberry Pi Pico 和 Pico H
+* **RP2350 微控制器芯片**，包括：
+  * 可选择的 CPU 架构，可并行运行任务。有关更多信息，请参阅[架构切换](./microcontroller-chips#架构切换)：
+    * 双核 Arm Cortex-M33。
+    * 双核 Hazard3 RISC-V 处理器。
+  * 灵活的时钟频率高达 150 MHz。
+  * 520 kB SRAM。
+  * 支持设备和主机的 USB 1.1 控制器和 PHY。
+  * 低功耗睡眠和休眠模式。
+  * 精确的时钟和定时器。
+  * 温度传感器。
+  * 12 个可编程 I/O（PIO）状态机，用于定制外设支持。
+    * 灵活的、用户可编程的高速 I/O。
+    * 可模拟 SD 卡和 VGA 等接口。
 
-Raspberry Pi Pico 是一款低成本、高性能的微控制器板，具有灵活的数字接口。主要功能包括
+* **开发板特性**：
+  * 通过 USB 使用大容量存储器进行拖放编程。
+  * 4 MB 板载闪存。
+  * 26 个多功能 GPIO 引脚。有关更多信息，请参阅[非无线开发板布局](#非无线开发板布局)。
+  * 与 Raspberry Pi Pico 1 的硬件和软件兼容性。
+  * 2 个带 4 个警报的定时器和 1 个 AON 定时器。
+  * 调试连接器。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
 
-* [RP2040](./silicon.mdx#rp2040) 由英国 Raspberry Pi 公司设计的微控制器芯片
-* 双核 Arm Cortex M0+ 处理器，灵活的时钟频率高达 133 MHz
-* 264KB SRAM 和 2MB 板载闪存
-* USB 1.1，支持设备和主机
-* 低功耗睡眠和休眠模式
-* 通过 USB 使用大容量存储器进行拖放编程
-* 26 × 多功能 GPIO 引脚
-* 2 × SPI、2 × I2C、2 × UART、3 × 12 位 ADC、16 × 可控 PWM 通道
-* 精确的片上时钟和定时器
-* 温度传感器
-* 片上加速浮点库
-* 8 × 用于定制外设支持的可编程 I/O (PIO) 状态机
+* **外设接口**：
+  * 2 × SPI
+  * 2 × I2C
+  * 2 × UART
+  * 3 × 12 位 ADC
+  * 16 个 PWM 通道
 
-Raspberry Pi Pico 以齿形模块的形式提供，可以直接焊接到载板上，而 Pico H 则带有预焊接的接头。
+#### 资源
 
-:::tip
-两块板都有一个三针串行线调试（SWD）接头。不过，Pico H 将其分解为一个小的、带键的 [3-针连接器](https://datasheets.raspberrypi.com/debug/debug-connector-specification.pdf)，而 Pico 则有三个邻近电路板边缘的浇铸通孔针脚。
+Raspberry Pi 提供与 Raspberry Pi Pico 2 和带排针的 Pico 2 相关的额外技术文档：
+
+* [RP2350 数据手册：Raspberry Pi 微控制器](https://pip.raspberrypi.com/documents/RP-008373-DS)
+* [Raspberry Pi Pico 2 数据手册：基于 RP2350 的微控制器开发板](https://pip.raspberrypi.com/documents/RP-008299-DS)
+* [使用 RP2350 进行硬件设计：使用 RP2350 微控制器构建电路板和产品](https://pip.raspberrypi.com/documents/RP-008280-DS)
+* [Raspberry Pi Pico 系列入门：使用 Raspberry Pi Pico 系列和其他基于 Raspberry Pi 微控制器的开发板进行 C/C++ 开发](https://pip.raspberrypi.com/documents/RP-008276-DS)
+
+此外，Raspberry Pi 提供以下支持硬件设计的资源：
+
+* [STEP 文件](https://pip.raspberrypi.com/documents/RP-008303-DS)：用于外壳和机械设计的电路板三维 CAD 模型。
+* [Fritzing](https://fritzing.org) 零件：用于 Fritzing（一种电子设计工具）的组件：[Raspberry Pi Pico 2 的 Fritzing 零件](https://pip.raspberrypi.com/documents/RP-008300-DS)。
+
+:::important[重要]
+Raspberry Pi Pico 2 和带排针的 Pico 2 的设计文件完全开放，没有任何限制。Raspberry Pi 授予任何人使用、复制、修改和分发这些设计的权限，可用于任何目的，无论是否收费。设计按"原样"提供，作者不对设计作任何担保，包括所有关于适销性和适用性的默示担保。在任何情况下，作者都不对因使用或执行设计而产生的任何特殊、直接、间接或后果性损害或任何损害负责，无论是在合同诉讼、疏忽还是其他侵权行为中。
 :::
 
-#### 引脚布局和设计文件
+### 无线 Raspberry Pi Pico 2 开发板
 
-<img src="/img/microcontrollers/pico-series/pico-pinout.svg" alt="引脚布局图" />
+Raspberry Pi **Pico 2 W** 和 **带排针的 Pico 2 W** 是基于 RP2350 芯片的无线微控制器开发板。两块开发板的硬件功能完全相同，唯一的物理差异是 Raspberry Pi 带排针的 Pico 2 W 上有预焊接的排针，以及微控制器下方调试连接器的样式。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
 
-* 下载 [引脚布局图](https://datasheets.raspberrypi.com/pico/Pico-R3-A4-Pinout.pdf) (PDF)
-* 下载 [设计文件](https://datasheets.raspberrypi.com/pico/RPi-Pico-R3-PUBLIC-20200119.zip) (Cadence Allegro)
-* 下载 [STEP 文件](https://datasheets.raspberrypi.com/pico/Pico-R3-step.zip)
-* 下载 [Fritzing 零件](https://datasheets.raspberrypi.com/pico/Pico-R3-Fritzing.fzpz) for Raspberry Pi Pico
-* 下载 [Fritzing 零件](https://datasheets.raspberrypi.com/pico/PicoH-Fritzing.fzpz) for Raspberry Pi Pico H
+Raspberry Pi **Pico 2 W** 和 **带排针的 Pico 2 W** 的引脚布局和板载布局与 Raspberry Pi **Pico W** 和 **Pico WH** 相同。有关更多信息，请参阅[无线开发板布局](#无线开发板布局)。
 
-:::tip
-有关 Fritzing 的更多信息，请访问 [fritzing.org](https://fritzing.org/) 网站。
+#### 主要特性
+
+Raspberry Pi **Pico 2 W** 和 **带排针的 Pico 2 W** 提供与 Raspberry Pi **Pico 2** 和 **带排针的 Pico 2** 相同的主要特性，但增加了无线功能。具体来说，Raspberry Pi Pico 2 W 和带排针的 Pico 2 W 提供以下主要特性：
+
+* **RP2350 微控制器芯片**，包括：
+  * 可选择的 CPU 架构，可并行运行任务。有关更多信息，请参阅[架构切换](./microcontroller-chips#架构切换)：
+    * 双核 Arm Cortex-M33。
+    * 双核 Hazard3 RISC-V 处理器。
+  * 灵活的时钟频率高达 150 MHz。
+  * 520 kB SRAM。
+  * 支持设备和主机的 USB 1.1 控制器和 PHY。
+  * 低功耗睡眠和休眠模式。
+  * 精确的时钟和定时器。
+  * 温度传感器。
+  * 12 个可编程 I/O（PIO）状态机，用于定制外设支持。
+    * 灵活的、用户可编程的高速 I/O。
+    * 可模拟 SD 卡和 VGA 等接口。
+
+* **开发板特性**：
+  * 通过 USB 使用大容量存储器进行拖放编程。
+  * 4 MB 板载闪存。
+  * 26 个多功能 GPIO 引脚。有关更多信息，请参阅[无线开发板布局](#无线开发板布局)。
+  * 与 Raspberry Pi Pico 1 的硬件和软件兼容性。
+  * 2 个带 4 个警报的定时器和 1 个 AON 定时器。
+  * 调试连接器。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
+
+* **外设接口**：
+  * 2 × SPI
+  * 2 × I2C
+  * 2 × UART
+  * 3 × 12 位 ADC
+  * 16 个 PWM 通道
+
+* **无线连接**：
+  * Wi-Fi（802.11n）：
+    * 单频（2.4 GHz）。
+    * WPA3，一种现代无线连接安全协议。
+    * 软接入点，可广播 Wi-Fi 网络，最多支持四个客户端。
+  * 蓝牙 5.2：
+    * 支持蓝牙低功耗（BLE）中央和外设角色。
+    * 支持蓝牙经典模式。
+
+有关 Raspberry Pi Pico 2 W 和带排针的 Pico 2 W 的无线硬件和功能的更多信息，请参阅[无线型号](#无线型号)。
+
+#### 无线 Raspberry Pi Pico 2 开发板的资源
+
+Raspberry Pi 提供与 Raspberry Pi Pico 2 W 和带排针的 Pico 2 W 相关的额外技术文档：
+
+* [RP2350 数据手册：Raspberry Pi 微控制器](https://pip.raspberrypi.com/documents/RP-008373-DS)
+* [Raspberry Pi Pico 2 W 数据手册：基于 RP2350 的微控制器开发板](https://pip.raspberrypi.com/documents/RP-008304-DS)
+* [使用 RP2350 进行硬件设计：使用 RP2350 微控制器构建电路板和产品](https://pip.raspberrypi.com/documents/RP-008280-DS)
+* [使用 Raspberry Pi Pico W 系列连接互联网：在 W 系列设备上使用 C/C++ 或 MicroPython 上网](https://pip.raspberrypi.com/documents/RP-008257-DS)
+
+此外，Raspberry Pi 提供[原理图](https://pip.raspberrypi.com/documents/RP-008306-DS)以支持硬件设计。
+
+:::important[重要]
+Raspberry Pi Pico 2 W 和带排针的 Pico 2 W 的设计文件完全开放，没有任何限制。Raspberry Pi 授予任何人使用、复制、修改和分发这些设计的权限，可用于任何目的，无论是否收费。设计按"原样"提供，作者不对设计作任何担保，包括所有关于适销性和适用性的默示担保。在任何情况下，作者都不对因使用或执行设计而产生的任何特殊、直接、间接或后果性损害或任何损害负责，无论是在合同诉讼、疏忽还是其他侵权行为中。
 :::
 
-### Raspberry Pi Pico W 和 Pico WH
+## 无线型号
 
-Raspberry Pi Pico W 在保留 Pico 外形尺寸的同时，使用英飞凌 CYW43439 增加了板载单频 2.4GHz 无线接口（802.11n）。板载 2.4GHz 无线接口具有以下功能：
+无线 Raspberry Pi Pico 型号（Raspberry Pi **Pico W**、**Pico WH**、**Pico 2 W** 和 **带排针的 Pico 2 W**）将 Wi-Fi 和蓝牙连接直接集成到开发板中，使其适用于连接和物联网应用，无需外部无线模块。
 
-* 无线（802.11n），单频（2.4 千兆赫）
-* WPA3
-* 软接入点，最多支持四个客户端
-* 蓝牙 5.2
-  * 支持蓝牙 LE 中央和外设功能
-  * 支持蓝牙 Classic
+### 无线硬件和天线
 
-天线是 ABRACON（前身为 ProAnt）授权的板载天线。CYW43439 无线芯片通过通过 SPI 连接到 [RP2040](./silicon.mdx#rp2040) 微控制器。
+无线 Raspberry Pi Pico 型号使用 **Infineon CYW43439** 无线芯片，通过运行速度高达 33 MHz 的 SPI 接口连接到板载微控制器。无线 Raspberry Pi Pico 型号还配备了来自 **ABRACON**（前身为 ProAnt）授权的板载天线。
 
-由于引脚限制，部分无线接口引脚是共享的。CLK 与 VSYS 监视器共享，因此只有在没有 SPI 交易时，才能通过 ADC 读取 VSYS。英飞凌 CYW43439 DIN/DOUT 和 IRQ 均共享 RP2040 上的一个引脚。只有当 SPI 交互没有进行时，才适合检查 IRQ。接口的运行频率通常为 33MHz。
+由于此无线子系统共享部分引脚，因此一些接口信号与其他开发板功能是复用的。
 
-为获得最佳无线性能，天线应位于自由空间。例如，在天线下方或附近放置金属会降低天线的增益和带宽性能。在天线两侧添加接地金属可提高天线的带宽。
+* SPI 时钟线（`CLK`）与 `VSYS` 电压监视器共享，因此只有在没有 SPI 事务进行时，ADC 才能读取 `VSYS`。
+* Infineon CYW43439 的 `DIN/OUT` 和 `IRQ` 信号共享一个引脚，因此只有在没有 SPI 事务进行时才能检查中断请求（IRQ）。
 
-`libcyw43` 授权用于非商业用途。不过，Pico W 用户以及围绕 RP2040 和 CYW43439 构建产品的其他任何人都可以免费获得 [商业使用许可](https://github.com/georgerobotics/cyw43-driver/blob/195dfcc10bb6f379e3dea45147590db2203d3c7b/LICENSE.RP）。
+为获得最佳无线性能，请保持天线周围的空间畅通。在天线附近或下方放置金属会显著降低信号增益和带宽；沿天线两侧放置接地金属可以改善天线的带宽。
 
-除 [标准 BTstack 许可](https://github.com/bluekitchen/btstack/blob/master/LICENSE) 条款外，[补充许可](https://github.com/raspberrypi/pico-sdk/blob/master/src/rp2_common/pico_btstack/LICENSE.RP) 还涵盖 BTstack 与 Raspberry Pi Pico W 或 Raspberry Pi Pico WH 的商业使用。
+### 无线软件许可
 
-#### 引脚和设计文件
+软件库 `libcyw43` 和 `BTstack` 可免费用于非商业项目。但是，Raspberry Pi 已为 Raspberry Pi Pico 和微控制器用户协商了特殊的商业权利。这意味着用户可以免费获得商业使用许可，适用于以下项目：
 
-<img src="/img/microcontrollers/pico-series/picow-pinout.svg" alt="引脚布局图" />
+* 无线 Raspberry Pi Pico 开发板（Raspberry Pi **Pico W**、**Pico WH**、**Pico 2 W** 和 **带排针的 Pico 2 W**）。
+* **RP2040** 和 **CYW43439** 的组合，或 **RP2350** 和 **CYW43439** 的组合。
 
-* 下载 [引脚布局图](https://datasheets.raspberrypi.com/picow/PicoW-A4-Pinout.pdf) (PDF)
-* 下载 [设计文件](https://datasheets.raspberrypi.com/picow/RPi-PicoW-PUBLIC-20220607.zip) (Cadence Allegro)
-* 下载 [STEP 文件](https://datasheets.raspberrypi.com/picow/PicoW-step.zip)
-* 下载 [Fritzing 零件](https://datasheets.raspberrypi.com/picow/PicoW-Fritzing.fzpz) for Raspberry Pi Pico W
+## 开发板布局
 
+Raspberry Pi Pico 开发板为微控制器芯片提供了最少的外部电路。本节描述 Raspberry Pi Pico 开发板的物理布局和引脚分配（引脚布局）。非无线 Raspberry Pi Pico 开发板共享相同的布局和引脚布局，无线 Raspberry Pi Pico 开发板也是如此。
 
-## 文档
+### 非无线开发板布局
 
-Pico 系列和其他基于 Raspberry Pi 微控制器的电路板的文档。
+下面两幅图从顶部视角展示了非无线 Raspberry Pi Pico 和 Pico 2 开发板，包括其引脚布局。除了细微的外观差异外，所有非无线开发板的主要布局相同：Raspberry Pi **Pico**、**Pico H**、**Pico 2** 和 **带排针的 Pico 2**。这些非无线开发板之间唯一的主要外观差异是是否有预焊接排针，以及 SWD 接口的具体性质；有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
 
-### RP2350
+<img src="/img/microcontrollers/pico-series/pico-pinout.svg" alt="非无线 Raspberry Pi Pico 开发板的引脚布局和板载布局图" />
 
-[RP2350数据表](https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf)<br />
-&emsp;&emsp;Raspberry Pi 的微控制器
+*图 3. 非无线 Raspberry Pi Pico 开发板的引脚布局和板载布局图*
 
-[使用 RP2350 的硬件设计](https://datasheets.raspberrypi.com/rp2350/hardware-design-with-rp2350.pdf)<br />
-&emsp;&emsp;使用 RP2350 微控制器构建电路板和产品
+<img src="/img/microcontrollers/pico-series/pico-2-r4-pinout.svg" alt="非无线 Raspberry Pi Pico 2 开发板的引脚布局和板载布局图" />
 
-### RP2040
+*图 4. 非无线 Raspberry Pi Pico 2 开发板的引脚布局和板载布局图*
 
-[RP2040数据表](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)<br />
-&emsp;&emsp;Raspberry Pi 的微控制器
+概括来说，非无线 Raspberry Pi Pico 开发板的布局如下：
 
-[使用 RP2040 进行硬件设计](https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf)<br />
-&emsp;&emsp;使用 RP2040 微控制器构建电路板和产品
+* 用于供电和数据的 Micro USB 端口位于开发板顶部边缘。
+* LED（连接到 `GP25`）位于 Micro USB 端口左侧。
+* **BOOTSEL** 按钮位于 USB 端口下方、开发板左侧。
+* 微控制器芯片位于开发板中间位置附近。
+* **DEBUG** 焊盘（SWD 接口）位于开发板底部边缘。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
+* 40 个引脚位于开发板左右两侧边缘，每侧 20 个。有关更多信息，请参阅[引脚功能](#引脚功能)。
 
-### Raspberry Pi Pico 2
+### 无线开发板布局
 
-[Raspberry Pi Pico 2 数据表](https://datasheets.raspberrypi.com/pico/pico-2-datasheet.pdf)<br />
-&emsp;&emsp;基于 RP2350 的微控制器电路板
+下面两幅图从顶部视角展示了无线 Raspberry Pi Pico 和 Pico 2 开发板，包括其引脚布局。除了细微的外观差异外，所有无线开发板的主要布局相同：Raspberry Pi **Pico W**、**Pico WH**、**Pico 2 W** 和 **带排针的 Pico 2 W**。这些无线开发板之间唯一的主要外观差异是是否有预焊接排针，以及 SWD 接口的具体性质；有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
 
-[Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)<br />
-&emsp;&emsp;使用 Raspberry Pi Pico 系列设备和其他基于 Raspberry Pi 微控制器的电路板进行 C/C++ 开发
+<img src="/img/microcontrollers/pico-series/picow-pinout.svg" alt="无线 Raspberry Pi Pico 开发板的引脚布局和板载布局图" />
 
-### Raspberry Pi Pico
+*图 5. 无线 Raspberry Pi Pico 开发板的引脚布局和板载布局图*
 
-[Raspberry Pi Pico 数据表](https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf)<br />
-&emsp;&emsp;基于 RP2040 的微控制器板
+<img src="/img/microcontrollers/pico-series/pico2w-pinout.svg" alt="无线 Raspberry Pi Pico 2 开发板的引脚布局和板载布局图" />
 
-[Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)<br />
-&emsp;&emsp;使用 Raspberry Pico 和其他基于 RP2040 的微控制器板进行 C/C++ 开发
+*图 6. 无线 Raspberry Pi Pico 2 开发板的引脚布局和板载布局图*
 
-### Raspberry Pi Pico 2 W
+概括来说，无线 Raspberry Pi Pico 开发板的布局如下：
 
-[Raspberry Pi Pico 2 W 数据表](https://datasheets.raspberrypi.com/picow/pico-2-w-datasheet.pdf)<br />
-&emsp;&emsp;基于 RP2350 的无线微控制器板
+* 用于供电和数据的 Micro USB 端口位于开发板顶部边缘。
+* LED（通过 `WL_GPIO0` 连接到无线芯片）位于 Micro USB 端口左侧。
+* **BOOTSEL** 按钮位于 USB 端口下方、开发板左侧。
+* 微控制器芯片位于开发板中间位置附近。
+* **DEBUG** 焊盘（SWD 接口）位于微控制器下方、开发板右侧。有关更多信息，请参阅[调试连接器（SWD）](#调试连接器swd)。
+* 40 个引脚位于开发板左右两侧边缘，每侧 20 个。有关更多信息，请参阅[引脚功能](#引脚功能)。
 
-[用 Raspberry Pi Pico W 系列连接互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)<br />
-&emsp;&emsp;使用 C/C++ 或 MicroPython 让 Raspberry Pi Pico W 系列上网
+### 引脚功能
 
-### Raspberry Pi Pico W
+大多数微控制器引脚都引出到开发板左右两侧边缘的用户 I/O 引脚。四个微控制器 I/O 引脚用于内部功能：驱动 LED、板载开关模式电源（SMPS）电源控制和感测系统电压。除了接地（`GND`）引脚外，非无线 Pico 开发板左右两侧的 40 个引脚包括：
 
-[Raspberry Pi Pico W 数据表](https://datasheets.raspberrypi.com/picow/pico-w-datasheet.pdf)<br />
-&emsp;&emsp;基于 RP2040 的无线微控制器板
+* 26 个 GPIO 引脚，具有可配置为不同项目需求的重叠功能（SPI、I2C、UART 等）。
+* 电源引脚位于开发板右上角，包括：
+    * `3V3(OUT)` 位于引脚 36（3.3 V 稳压输出）。
+    * `VSYS` 位于引脚 39（2 V 至 5 V 系统输入）。
+    * `VBUS` 位于引脚 40（来自 USB 的 5 V 输入）。
+* 特殊用途引脚：
+    * `3V3_EN` 位于引脚 37。将此引脚拉低会关闭 Raspberry Pi Pico。
+    * `ADC_VREF` 位于引脚 35。为 ADC 转换器提供参考电压。
+    * `AGND` 位于引脚 33（也是 `GND` 引脚）。模拟接地，用于为传感器提供无噪声接地。
+    * `RUN` 位于引脚 30。微控制器复位引脚。
 
-[用 Raspberry Pi Pico W 系列连接互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)<br />
-&emsp;&emsp;使用 C/C++ 或 MicroPython 让 Raspberry Pi Pico W 系列上网
+## 调试连接器（SWD）
 
-### 软件开发
+所有 Raspberry Pi Pico 开发板都包含一个三针 **串行线调试（SWD）** 接头，这是用于对开发板上内置微控制器进行编程和调试的连接器。
 
-[Raspberry Pico C/C++ SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf)<br />
-&emsp;&emsp;用于在 RP2040 微控制器上进行 C/C++ 开发的库和工具
+三针连接器始终携带 `SWDIO`（串行线调试数据）、`GND`（接地）和 `SWCLK`（串行线调试时钟）。此连接器上没有电源引脚。您的 Raspberry Pi Pico 开发板必须通过 USB 或 `VSYS` 单独供电。
 
-[Raspberry Pico Python SDK](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-python-sdk.pdf)<br />
-&emsp;&emsp;用于 RP2040 微控制器的 MicroPython 环境
+连接器的位置和类型因开发板变体而异，汇总见下表。要比较 SWD 接头之间的外观差异，请参阅 [Raspberry Pi Pico](#raspberry-pi-pico) 介绍中的图 1 和 [Raspberry Pi Pico 2](#raspberry-pi-pico-2) 介绍中的图 2。
 
-Raspberry Pico C/C++的API级Doxygen文档 SDK 的 API 级 Doxygen 文档 [作为微型网站](https://rpltd.io/pico-doxygen)。
+**表 3. 基于 Raspberry Pi Pico 开发板变体的调试连接器位置和类型**
+
+| | 位置 | 类型 |
+| --- | --- | --- |
+| Raspberry Pi **Pico** 和 **Pico 2** | 开发板底部边缘 | 三个齿形通孔焊盘 |
+| Raspberry Pi **Pico H** 和 **带排针的 Pico 2** | 开发板底部边缘 | 带键三针连接器（JST 式） |
+| Raspberry Pi **Pico W** 和 **Pico 2 W** | 中央，微控制器芯片正下方 | 三个通孔焊盘 |
+| Raspberry Pi **Pico WH** 和 **带排针的 Pico 2 W** | 中央，微控制器芯片正下方 | 带键三针连接器（JST 式） |
+
+### 调试连接器位置
+
+调试连接器的位置取决于开发板是非无线还是无线变体：
+
+* 在非无线变体（Raspberry Pi **Pico**、**Pico H**、**Pico 2** 和 **带排针的 Pico 2**）上，连接器位于开发板底部。有关显示非无线开发板上调试连接器位置的图表，请参阅[非无线开发板布局](#非无线开发板布局)。
+* 在无线变体（Raspberry Pi **Pico W**、**Pico WH**、**Pico 2 W** 和 **带排针的 Pico 2 W**）上，连接器位于微控制器芯片下方、靠近开发板中间的位置。有关显示无线开发板上调试连接器位置的图表，请参阅[无线开发板布局](#无线开发板布局)。
+
+### 调试连接器类型
+
+连接器类型取决于开发板是否有预焊接排针：
+
+* 没有预焊接排针的开发板（Raspberry Pi **Pico**、**Pico W**、**Pico 2** 和 **Pico 2 W**）使用三个齿形通孔焊盘。
+* 有预焊接排针的开发板（Raspberry Pi **Pico H**、**Pico WH**、**带排针的 Pico 2** 和 **带排针的 Pico 2 W**）使用小型带键三针连接器（JST 式）。有关此连接器的信息，请参阅 [Raspberry Pi 3 针调试连接器规格](https://pip.raspberrypi.com/documents/RP-008189-DS)。
+
+带排针的 Raspberry Pi Pico 开发板上的调试连接器无需修改即可与 Raspberry Pi Debug Probe 配合使用。有关更多信息，请参阅 [Debug Probe](./debug-probe)。
 
 ## 软件实用程序
 
-### 您的 Pico 系列设备上有什么？
+本节描述可用于 Raspberry Pi Pico 系列设备的软件工具和实用程序，包括用于设备检查、调试和闪存管理的工具。
 
-如果您不确定在 Raspberry Pi Pico 系列设备中编入了什么程序，并且该程序是使用 Pico C/C++ SDK构建的程序，它通常会在二进制文件中嵌入名称和其他有用信息。您可以使用 [Picotool](https://github.com/raspberrypi/picotool) 命令行实用程序查找这些详细信息。我们的 [Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)文档中提供了如何使用 Picotool 的完整说明。
+### 识别已编程的内容
 
-* 访问 [Picotool Github 代码库](https://github.com/raspberrypi/picotool)。
+如果您不确定 Raspberry Pi Pico 上当前编程了什么，并且该程序是使用 Pico C 或 C++ SDK 构建的，二进制文件通常包含应用程序名称和版本信息等元数据。
 
-### 使用其他 Pico 系列设备进行调试
+使用 `picotool` 命令行工具来提取和显示此信息。有关更多信息，请参阅我们的 [picotool GitHub 存储库](https://github.com/raspberrypi/picotool)。有关完整使用说明，请参阅 [Raspberry Pi Pico 系列入门：使用 Raspberry Pi Pico 系列和其他基于 Raspberry Pi 微控制器的开发板进行 C/C++ 开发](https://pip.raspberrypi.com/documents/RP-008276-DS)。
 
-您可以使用一个 Pico 系列设备调试另一个 Pico 系列设备。您可以通过 `debugprobe` 实现这一功能，该应用程序允许 Pico 充当 USB → SWD 和 UART 转换器。
+### 使用 Pico 系列设备进行调试
 
-您可以在 [debugprobe GitHub 存储库](https://github.com/raspberrypi/debugprobe/releases/latest) 中找到最新发布的固件。
+一个 Raspberry Pi Pico 系列设备可以通过运行 `debugprobe` 来调试另一个设备，这使 Raspberry Pi Pico 能够充当 USB 转 SWD 和 UART 转换器。要安装 `debugprobe` 固件：
 
-从最新版本中下载 `debugprobe_on_pico.uf2`（适用于 Pico）或 `debugprobe_on_pico2.uf2`（适用于 Pico 2）。
+1. 从 debugprobe GitHub 存储库下载最新固件版本：
+    * `debugprobe_on_pico.uf2` 适用于第一代 Raspberry Pi Pico。
+    * `debugprobe_on_pico2.uf2` 适用于 Raspberry Pi Pico 2。
+2. 在您打算用作调试器的 Raspberry Pi Pico 上，在将其连接到计算机的同时按住 **BOOTSEL** 按钮。一个名为 **RPI-RP2** 的 USB 大容量存储设备将出现并作为卷挂载。
+3. 将适当的 UF2 文件复制到挂载的卷。传输完成后，卷会自动弹出。
+4. 等待设备重新启动。您的设备现在运行 `debugprobe` 固件，您可以开始将其用作调试器。
 
-将调试器设备插入计算机时按住 BOOTSEL 按钮，挂载名为 "RPI-RP2" 的卷。
+有关更详细的说明，请参阅 [Raspberry Pi Pico 系列入门：使用 Raspberry Pi Pico 系列和其他基于 Raspberry Pi 微控制器的开发板进行 C/C++ 开发](https://pip.raspberrypi.com/documents/RP-008276-DS)。
 
-将 UF2 文件复制到加密卷上。文件复制到设备后，加密卷将自动卸载。
+### 重置闪存
 
-设备将重新启动，并运行更新版的 `debugprobe` 固件。现在可以进行调试了。
+`BOOTSEL` 模式存在于 Raspberry Pi Pico 开发板上微控制器芯片内的只读存储器中；它无法被重写。因此，在连接开发板时按住 **BOOTSEL** 按钮始终会将设备显示为 USB 大容量存储设备，确保开发板不会因软件而永久变砖。
 
-:::tip
-有关如何使用调试器的说明，请参阅 [Raspberry Pi Pico 系列入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)。
-:::
+如果您想擦除外部闪存，可以在 Raspberry Pi Pico 设备处于 `BOOTSEL` 模式时将特殊的 [UF2 文件](https://pip.raspberrypi.com/documents/RP-008273-DS) 复制到设备。有关擦除外部闪存的代码，请参阅我们的 [pico-examples GitHub 存储库](https://github.com/raspberrypi/pico-examples/blob/master/flash/nuke/nuke.c)。
 
-### 复位闪存
+### 软件开发资源
 
-对于 Pico 系列设备，BOOTSEL 模式存在于 RP2040 或 RP2350 芯片内的只读存储器中，不会被意外覆盖。无论如何，只要在插入 Pico 时按住 BOOTSEL 按钮，它就会显示为一个驱动器，您可以将新的 UF2 文件拖入其中。无法通过软件使电路板变砖。不过，在某些情况下，您可能需要确保闪存为空。为此，您可以在 Pico 处于大容量存储模式时，将一个特殊的 UF2 二进制文件拖放到 Pico 上。
+Raspberry Pi 提供与 Raspberry Pi Pico 开发相关的额外技术文档：
 
-* 下载 [UF2 文件](https://datasheets.raspberrypi.com/soft/flash_nuke.uf2)
-* 查看 [Github上的代码](https://github.com/raspberrypi/pico-examples/blob/master/flash/nuke/nuke.c)
+* [Raspberry Pi Pico C/C++ SDK：用于在 Raspberry Pi 微控制器上进行 C/C++ 开发的库和工具](https://pip.raspberrypi.com/documents/RP-009085-KB)
+* [Raspberry Pi Pico 系列 Python SDK：用于 Raspberry Pi 微控制器的 MicroPython 环境](https://pip.raspberrypi.com/documents/RP-008355-DS)
+
+有关 Raspberry Pi Pico C/C++ SDK 的 API 级 Doxygen 文档，请参阅 [Pico C SDK](./pico-sdk)。
 
 <Normal />

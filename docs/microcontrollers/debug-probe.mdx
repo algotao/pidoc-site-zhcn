@@ -1,10 +1,10 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 draft: false
 description: 树莓派官方调试探针（Debug-Probe）是一款即插即用的USB调试工具，支持ARM SWD（串行线调试）和UART串口功能，兼容CMSIS-DAP标准，适用于Windows/macOS/Linux平台。它无需焊接即可调试树莓派Pico等RP2040芯片设备，提供3.3V I/O电压、5个状态LED（含电源和活动指示灯），并配备多种转接线缆（如JST-SH转0.1英寸接头）。通过OpenOCD和GDB可实现二进制文件上传、断点调试及串口通信（如UART0数据转发至CDC UART）。支持固件升级（UF2文件），并提供开源原理图与机械图纸。配套VS Code扩展简化开发流程，适用于嵌入式开发与故障排查。
 keywords: [树莓派调试探针, Raspberry Pi Debug Probe, SWD调试, UART串口, CMSIS-DAP, OpenOCD, GDB, RP2040, Pico调试, ARM调试, USB调试工具, 嵌入式开发, 固件升级, VS Code扩展, JST-SH线缆, 串口通信, CDC UART, 开源硬件]
 last_update: 
-  date: 2025-11-15
+  date: 2026-03-15
 ---
 import Normal from "../_normal.mdx";
 
@@ -86,7 +86,7 @@ OpenOCD 会在目标连接时打开两个 DAP LED 指示灯，并在调用 `DAP_
 
 在Raspberry Pi操作系统、大多数Linux发行版、macOS和Microsoft Windows上，建议安装我们的VS Code扩展。该扩展包包含OpenOCD、ARM工具链、GDB以及Pico系列微控制器的寄存器定义。
 
-请参阅我们的指南 [Raspberry Pi Pico 入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)的第 3 章。
+请参阅我们的指南 [Raspberry Pi Pico 入门](https://pip.raspberrypi.com/documents/RP-008276-DS)的第 3 章。
 
 或者，可以按照指南中的附录 C 手动安装工具。
 
@@ -101,7 +101,7 @@ OpenOCD 会在目标连接时打开两个 DAP LED 指示灯，并在调用 `DAP_
 
 随后使用GDB对Pico上运行的二进制文件进行调试。
 
-我们建议使用 Raspberry Pi Pico VSCode 扩展，该扩展集成了 OpenOCD 和 GDB 的使用，用于上传和调试程序。有关更多信息，请参阅 [Raspberry Pi Pico 入门](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) 的第 4 章。
+我们建议使用 Raspberry Pi Pico VSCode 扩展，该扩展集成了 OpenOCD 和 GDB 的使用，用于上传和调试程序。有关更多信息，请参阅 [Raspberry Pi Pico 入门](https://pip.raspberrypi.com/documents/RP-008276-DS) 的第 4 章。
 
 ### 独立程序上传
 
@@ -183,7 +183,7 @@ minicom -b 115200 -o -D /dev/ttyACM0
 
 要测试串行通信，您可以构建并上传 "Hello World "示例应用程序。
 
-将目录更改为 `pico-examples` 树中的 `hello_world` 目录，然后运行 `make`。然后，使用 `openocd` 将其上传到 树莓派Pico。有关构建 `hello_serial` 示例程序的完整步骤，请参阅[《树莓派Pico 入门》](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)第 4 章。
+将目录更改为 `pico-examples` 树中的 `hello_world` 目录，然后运行 `make`。然后，使用 `openocd` 将其上传到 树莓派Pico。有关构建 `hello_serial` 示例程序的完整步骤，请参阅[《树莓派Pico 入门》](https://pip.raspberrypi.com/documents/RP-008276-DS)第 4 章。
 
 ```sh
 cd pico-examples
@@ -203,6 +203,81 @@ minicom -b 115200 -o -D /dev/ttyACM0
 <img src="/img/microcontrollers/debug-probe/description.jpg" alt="描述" width="70%" />
 
 该描述中的唯一序列号意味着在 Windows 系统中，每个设备的 COM 端口编号都是 "粘性 "的，这将允许您编写 `udev` 规则，将命名的设备节点与特定调试探针关联起来。
+
+## RTT 连接
+
+您还可以配置应用程序通过 SWD 接口直接发送输出，而无需 UART 连接。这使用了一种称为 Segger 实时传输（RTT）的机制。
+
+要实现这一点，您必须在应用程序中启用 RTT stdio 驱动程序，并通过调试探针连接到 RTT。
+
+:::note[注意]
+您必须使用应用程序的**调试构建版本**才能通过 SWD 发送输出。
+:::
+
+### 启用 RTT stdio 驱动程序
+
+C/C++ SDK 提供了用于 RTT 的 stdio 驱动程序，就像用于 UART 和 USB 的驱动程序一样。有关更多信息，请参阅 [pico_stdio_rtt](./pico-sdk#pico_stdio_rtt)。
+
+要在构建中启用该驱动程序，请在 **CMakeLists.txt** 文件中包含以下行（或链接到 **pico_stdio_rtt**，效果相同）：
+
+```cmake
+pico_enable_stdio_rtt(<your_project_name> 1)
+```
+
+调用 `stdio_init_all()` 后，应用程序使用 `printf()` 发送的任何输出都将发送到 RTT。如果您还想将输出复制到 UART，也可以同时启用该功能。
+
+### 从 VSCode 连接到 RTT
+
+RTT 受 OpenOCD 和 VSCode [Cortex-Debug](https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug) 扩展支持；这两者都是作为[安装工具](#安装工具)的一部分设置的。
+
+要为调试会话启用 RTT，请在其启动配置中添加一个部分。打开项目的 `.vscode` 文件夹，并将以下行添加到 `launch.json` 文件中，将它们放在适当的配置部分，例如 `"Pico Debug (Cortex-Debug)"`：
+
+```json
+"rttConfig": {
+    "enabled": true,
+    "address": "auto",
+    "decoders": [
+        {
+            "label": "",
+            "port": 0,
+            "type": "console"
+        }
+    ]
+}
+```
+
+有关更多信息，请参阅 [cortex-debug 启动属性](https://github.com/Marus/cortex-debug/blob/master/debug_attributes.md)。
+
+如果您现在在启用了 RTT 的应用程序上启动调试会话并打开 **TERMINAL** 选项卡，您将在右侧看到一个列表，其中包括 `RTT Ch:0 console`。选择它以查看应用程序发送到 `pico_stdio_rtt` 驱动程序的输出。
+
+### 在独立调试会话中连接到 RTT
+
+如果您按照[独立调试会话](#独立调试会话)中所述使用独立调试会话，可以通过完成以下步骤连接到 RTT：
+
+1. 构建并上传启用了 RTT 的应用程序。
+2. 连接调试探针并在单独的终端中启动 `openocd` 和 `gdb`。有关更多信息，请参阅[独立调试会话](#独立调试会话)。
+3. 在 `gdb` 提示符下输入以下命令：
+
+```gdb
+(gdb) target remote localhost:3333
+(gdb) monitor reset init
+(gdb) monitor rtt setup 0x20000000 2048 "SEGGER RTT"
+(gdb) monitor rtt start
+(gdb) monitor rtt server start 60000 0
+(gdb) continue
+```
+
+:::note[注意]
+以 `monitor` 为前缀的 `gdb` 命令会传递给 `openocd`。有关此处使用的命令的更多信息，请参阅 OpenOCD 手册的[第 15.6 节](https://openocd.org/doc/html/General-Commands.html)。
+:::
+
+OpenOCD 会在目标上搜索 RTT 控制块，然后在端口 60000 上创建本地 TCP 套接字。
+
+4. 打开第三个窗口，使用 `nc`（netcat）或类似工具连接到本地套接字，以查看应用程序的 RTT 输出：
+
+```sh
+nc localhost 60000
+```
 
 ## 更新调试探针的固件
 调试探针的固件是由 Raspberry Pi 发布的 UF2 文件。

@@ -1,0 +1,75 @@
+---
+sidebar_position: 2
+draft: false
+title: 无线模块
+description: Raspberry Pi 无线模块（RM2）为 Pico 等微控制器提供 Wi-Fi 和蓝牙连接。
+keywords: [Raspberry Pi, RM2, 无线模块, Wi-Fi, 蓝牙, Pico, 微控制器]
+last_update:
+  date: 2026-03-13
+---
+import Normal from "../_normal.mdx";
+
+# 无线模块
+
+Raspberry Pi 创建了两款无线模块，其中只有一款可作为独立的微控制器配件购买：
+
+* **Raspberry Pi Radio Module 1 (RM1)** 内置于 Raspberry Pi 4 和 5 以及计算模块 4 和 5 中。它不作为独立的无线模块提供，也不单独销售。
+* **Raspberry Pi Radio Module 2 (RM2)** 是一款独立的无线模块，旨在为 Raspberry Pi [微控制器](./microcontroller-chips)添加无线连接。为了增加灵活性，它还提供 GPIO 扩展选项。
+
+本页仅介绍 RM2。
+
+## RM2 主要特性 {#rm2-主要特性}
+
+<img src="/img/microcontrollers/radio-modules/RM2.png" alt="Raspberry Pi Radio Module 2 (RM2)" width="50%" />
+
+RM2 是一款紧凑、自包含的 Wi-Fi 和蓝牙无线模块，提供可靠的 **2.4 GHz Wi-Fi (802.11b/g/n)** 和 **蓝牙 5.2** 连接。具体来说，RM2 提供以下主要特性：
+
+* **Wi-Fi 支持。** Wi-Fi 4 (802.11b/g/n)，单频段 (2.4 GHz)。
+* **蓝牙 5.2 支持。** 蓝牙经典和低功耗蓝牙 (BLE)。
+* **紧凑的外形尺寸。** 使用 **Infineon CYW43439** 组合芯片，采用 1 x 1 单板配置。
+* **安全焊接。** 城堡形引脚，适用于多种安装方式。
+* **兼容性。** 与 Pico W 和 Pico 2 W SDK 完全软件兼容。
+* **简单的 GPIO 扩展器。** 三个主机控制的 GPIO，提供额外的 I/O 功能。
+* **模块化无线认证（特定地区）。** 简化合规要求。有关更多信息，请参阅[合规性](#合规性)。
+* **最小的 I/O 开销。** 低引脚数 gSPI 主机接口，允许以最少的 I/O 需求进行简化集成。
+* **高效的单天线设计：**
+    * SISO（单输入单输出）配置支持高效的单天线无线性能。
+    * Wi-Fi 和蓝牙共享 2.4 GHz 天线。
+* **连接性。** 集成内部 PA 和 LNA，提供信号范围和可靠性。
+* **速度。** 支持 20 MHz 信道，数据速率高达 96 Mbps（PHY 速率）。
+* **宽工作温度范围。** –30°C 至 +70°C。
+* **低功耗：**
+    * IEEE 省电 (PM1 DTIM1 平均速率 1)：1.19 mA
+    * 接收活动速率 MCS7（在 -50 dBm 时）：43 mA
+    * 发送活动速率 MCS7（在 16 dBm 时）：271 mA
+
+## 技术规格
+
+机械图显示了 RM2 的大致形状和尺寸。
+
+RM2 尺寸约为 14.5 x 16.5 mm，厚度约为 2.55 mm。RM2 的 PCB 由阻燃 FR4 材料制成，具有 21 个边缘电镀城堡形引脚，可安全焊接到其他电路板上。该模块使用 1.5 mm 间距的镀金触点，以实现可靠的电气连接。
+
+<img src="/img/microcontrollers/radio-modules/mechanical-rm2.png" alt="Raspberry Pi Radio Module 2 (RM2) 机械图" width="75%" />
+
+*从顶部和侧面看的 Raspberry Pi Radio Module 2 (RM2) 机械图；尺寸以毫米 (mm) 为单位，为近似值*
+
+## 合规性 {#合规性}
+
+RM2 旨在符合国际无线电法规，在主要全球市场提供预认证批准。RM2 由 Raspberry Pi 进行完整测试和调谐，这意味着其设计不需要在您的生产线上进行进一步的射频调谐或模块编程。您可以通过我们的[产品信息门户 (PIP)](https://pip.raspberrypi.com/)访问相关的产品测试报告、认证和集成测试软件。
+
+RM2 已获准在以下地区使用：
+
+* 欧盟 (EU)
+* 英国 (UK)
+* 美国 (USA)
+* 加拿大
+* 印度
+* 马来西亚
+
+在**欧盟**、**英国**、**美国**和**加拿大**，主机设备（集成 RM2 的产品）的制造商可以利用 RM2 的现有认证来简化和减少额外的审批要求。这称为**完全模块化批准**，意味着您不必在这些地区进行完整的无线电认证；您可以将 RM2 集成到您的产品中，只需最少的额外测试。
+
+在**印度**和**马来西亚**，不授予模块化批准。这意味着 RM2 的认证仅适用于无线模块本身；它不延伸到集成它的主机设备。任何包含 RM2 的主机设备都必须获得自己的单独批准。
+
+如果您需要模块集成方面的支持，或者您计划在上述地区以外的地区使用 RM2，请联系全球市场准入团队：gma@raspberrypi.com。
+
+<Normal />

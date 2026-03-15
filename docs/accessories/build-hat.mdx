@@ -4,7 +4,7 @@ draft: false
 description: 树莓派Build HAT是一款专为乐高®教育设计的附加板，通过40引脚GPIO接口与树莓派连接，支持控制SPIKE™系列乐高® Technic™电机和传感器（如距离、颜色、力传感器及多尺寸编码电机）。它兼容所有40引脚GPIO树莓派（包括Zero系列和键盘系列设备），需外接8V电源驱动电机，并提供Python和.NET两种编程库。Build HAT板载RP2040微控制器管理底层控制，支持即插即用，简化乐高®机械结构的编程与交互，适用于STEM教育、机器人开发等场景。
 keywords: [树莓派Build HAT, 乐高® Technic™, 乐高® SPIKE™, 电机控制, 传感器, Python库, .NET框架, RP2040微控制器, 40引脚GPIO, 乐高®教育, STEM教育, 机器人开发]
 last_update: 
-  date: 2025-12-20
+  date: 2026-03-15
 ---
 import Normal from "../_normal.mdx";
 
@@ -41,7 +41,7 @@ HAT 可与所有 40 引脚 GPIO Raspberry Pi 电路板配合使用，包括 Zero
 - 最多可控制 4 个 乐高® Technic™ 电机和 SPIKE™ 产品组合中的传感器
 - 易于使用的 [Python 库](https://buildhat.readthedocs.io/)，可控制您的 乐高® Technic™ 设备
 - 可安装在任何带有 40 针 GPIO 接头的树莓派计算机上
-- 板载 [RP2040](../microcontrollers/silicon.mdx) 微控制器管理 乐高® Technic™ 设备的底层控制
+- 板载 [RP2040](../microcontrollers/microcontroller-chips) 微控制器管理 乐高® Technic™ 设备的底层控制
 - [可单独提供](https://raspberrypi.com/products/build-hat-power-supply)外部 8V PSU，为 Build HAT 和树莓派供电
 
 :::note[注意]
@@ -270,7 +270,7 @@ Hello World!
 任何文本编辑器都可以编辑 C# 代码，包括预装的集成开发环境/文本编辑器 Geany。[Visual Studio Code](https://code.visualstudio.com/docs/setup/raspberry-pi/)（通常称为 "VS Code"）也是一种常用的替代方法。
 
 ### .NET使用Build HAT
-树莓派Build HAT 在乐高®术语中称为 "Brick"(砖块)，您可以使用 [Build HAT 串行协议](https://datasheets.raspberrypi.com/build-hat/build-hat-serial-protocol.pdf)直接从 .NET 与它对话。
+树莓派Build HAT 在乐高®术语中称为 "Brick"(砖块)，您可以使用 [Build HAT 串行协议](https://pip.raspberrypi.com/documents/RP-008140-DS)直接从 .NET 与它对话。
 
 您可以如下创建一个 `brick` 对象、
 
@@ -706,12 +706,12 @@ while(!console.KeyAvailable)
 ## 更多资源
 
 您可以下载以下文档、
-- [树莓派 Build HAT 串行协议](https://datasheets.raspberrypi.com/build-hat/build-hat-serial-protocol.pdf)
-- [树莓派 Build HAT Python 库](https://datasheets.raspberrypi.com/build-hat/build-hat-python-library.pdf)
+- [树莓派 Build HAT 串行协议](https://pip.raspberrypi.com/documents/RP-008140-DS)
+- [树莓派 Build HAT Python 库](https://pip.raspberrypi.com/documents/RP-008139-DS)
 
 以及 Python 库文档的完整详细信息，也可在 [ReadTheDocs](https://buildhat.readthedocs.io/) 上找到。您可以在 [.NET IoT](https://github.com/dotnet/iot/tree/main/src/devices/BuildHat) Github 存储库中找到有关 .NET 库的更多信息。
 
-您还可以关注树莓派基金会的项目、
+您还可以关注树莓派基金会的项目
 
 - [乐高® 游戏控制器](https://projects.raspberrypi.org/en/projects/lego-game-controller)
 - [乐高®机器人汽车](https://projects.raspberrypi.org/en/projects/lego-robot-car)

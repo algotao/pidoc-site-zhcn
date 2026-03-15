@@ -1,0 +1,77 @@
+---
+sidebar_position: 13
+draft: false
+title: I/O 控制器
+description: 树莓派 I/O 控制器芯片
+keywords: [树莓派, RP1, I/O控制器]
+---
+import Normal from "../_normal.mdx";
+
+# RP1 I/O 控制器
+
+**RP1** 是一款内置于新一代树莓派计算机中的自研芯片，用于管理外设，如 USB、以太网、GPIO 和存储接口。它通过将高速串行接口从更昂贵的工艺节点上移出，来补充主处理器的功能。
+
+<iframe width="80%" height="400" src="https://www.youtube.com/embed/aioB40BGQYU" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+
+与树莓派[微控制器](../microcontrollers/microcontroller-chips)不同，RP1 不是一个独立芯片；它是内置于树莓派 5 和计算模块 5 中的 I/O 控制器。作为内置 I/O 控制器，RP1 不单独销售，但人们确实会为它编写软件，这就是为什么在此对其进行描述。
+
+:::note[注意]
+RP1 并非第一代树莓派单板计算机（Raspberry Pi Model B）的缩写。
+:::
+
+## RP1 概述
+
+RP1 采用 BGA 封装，尺寸约为 12 x 12 mm，引脚间距为 0.65 mm。它通过 PCIe 2.0 x4 链路连接到树莓派 5 和计算模块 5 上的主 CPU（BCM2712），并处理大部分外部 I/O。
+
+RP1 通过管理外设和从主 CPU 卸载 I/O 任务来补充主处理器。这延续了树莓派传统的双芯片架构，其中 CPU 负责核心处理，而配套芯片（在本例中为 RP1）负责管理外设。有关更多信息，请参阅[外设接口](#外设接口)。
+
+RP1 还集成了多个内部系统组件，以支持高性能、低延迟的 I/O 操作。有关更多信息，请参阅[内部特性](#内部特性)。
+
+RP1 包含专用的多媒体和音频硬件，以支持显示输出、摄像头和基本音频功能。有关更多信息，请参阅[多媒体和音频组件](#多媒体和音频组件)。
+
+## 外设接口
+
+RP1 提供以下外设接口：
+
+* 4 通道 PCIe 2.0 端点
+* 千兆以太网 MAC
+* 两个 USB 主机控制器（与树莓派 4 相比，可用 USB 带宽增加一倍以上），每个控制器包含：
+    * 一个 USB 3.0 端口
+    * 一个 USB 2.0 端口
+* 两个 SDIO/eMMC 接口（在树莓派 5 上未使用）
+* 两个 4 通道 MIPI 收发器，支持 DSI 和 CSI-2，用于显示和摄像头接口
+* 低速外设，包括：
+    * SPI
+    * UART
+    * I2C
+    * PWM
+    * GPIO
+    * I2S
+
+## 内部特性
+
+RP1 集成了以下内部系统组件：
+
+* 两个 Cortex M3 处理器，配有紧耦合存储器
+* 8 通道 DMA 控制器
+* 多个 PLL
+* 12 位 ADC，带温度传感器
+* 64 kB 共享 SRAM
+* 定时发生器
+
+## 多媒体和音频组件
+
+RP1 包含以下多媒体和音频模块，用于视频输出和无需外部编解码器的简单音频生成：
+
+* 视频 DAC（3 通道，支持 PAL/NTSC 和 VGA；树莓派 5 上仅使用一个复合通道）。
+* DPI 视频帧生成器，用于连接到 GPIO 引脚的显示器。
+* CSI-2 接收器、DMA 和 ISP 前端，用于连接到 MIPI 端口的摄像头的帧处理和统计生成。
+* DSI DMA 和发射器，用于连接到 MIPI 端口的显示器。
+* Delta-sigma PWM 音频输出。
+* PDM 麦克风时钟发生器和立体声比特流输入。
+
+## RP1 命名
+
+树莓派芯片遵循以 **RP** 开头的命名约定，表示"Raspberry Pi"，后跟一个数字。I/O 控制器名称中的数字表示芯片的代数，因为这是第一款嵌入式 I/O 控制器芯片。
+
+<Normal />
