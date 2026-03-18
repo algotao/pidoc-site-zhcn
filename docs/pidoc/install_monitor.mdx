@@ -357,6 +357,38 @@ PidocAgent 在Beta阶段，如遇问题请入群反馈。
 现在就可以通过 SSH 客户端连接到树莓派了，地址为 `localhost:22`。
 :::
 
+## 配置文件
+
+PiDoc 配置文件位于 `/etc/pidoc/pidoc.json`，该文件在执行 `pidoc service install` 时自动生成。
+
+
+标准安装后的配置文件仅有一个密钥字段，示例如下：
+```json
+{
+  "private_key": "5woUnsa2BGl3CGWXy20ovB2dUXG95gKz2wZKBu0kdds="
+}
+```
+
+PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功能描述如下。
+
+| 字段名 | 类型 | 描述 | 支持的版本 |
+| --- | --- | --- | --- |
+| private_key | string | 私钥，用于加密通信。该密钥在管理界面的 `设备管理`--`增加` 中生成。 | 2.0.0 |
+| websocket | boolean | 是否启用 WebSocket。在一些网络环境中，需要启用 WebSocket 穿越防火墙。 | 2.0.6 |
+| server_addr | string | 堡垒机服务器地址。当前仅有 `remote.pidoc.cn:3322` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
+| websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://remote.pidoc.cn/api/endpoint/ws-tunnel` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
+| forward_port_whitelist | array of int | 端口转发白名单，用于限制端口转发的范围以提升安全性。 | 2.0.7 |
+
+```json
+{
+  "private_key": "5woUnsa2BGl3CGWXy20ovB2dUXG95gKz2wZKBu0kdds=",
+  "websocket": true,
+  "server_addr": "remote.pidoc.cn:3322",
+  "websocket_url": "wss://remote.pidoc.cn/api/endpoint/ws-tunnel",
+  "forward_port_whitelist": [22, 5900]
+}
+```
+
 ## 卸载
 
 请使用如下命令：
