@@ -63,6 +63,16 @@ pidoc version
 Pidoc Endpoint v2.0.2
 ```
 
+### 安装特定版本
+
+可以指定版本号安装。如当前设备已安装PiDoc，则指定版本不能小于已安装版本。例如安装 v2.0.6 版本：
+
+```sh
+PIDOC_VERSION=2.0.6 bash <(curl -sSL https://dl.pidoc.cn/remote/install.sh)
+```
+
+各种版本及架构可在 [这里](https://dl.pidoc.cn/remote/) 查看。
+
 ## 接入新设备
 
 登录 [Pidoc远程管理网站](https://remote.pidoc.cn/) ，在 **设备管理** 页面点击 **增加** 按钮。

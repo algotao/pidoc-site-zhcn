@@ -85,7 +85,7 @@ const config = {
           },
           { to: '/downloads/', label: '软件下载', position: 'left' },
           { to: '/gpiozero/', label: 'GPIO Zero', position: 'left' },
-          { to: '/docs/pidoc/install_monitor/', label: 'PiDoc工具', position: 'left' },
+          { to: '/docs/pidoc/install_monitor/', label: '免费远程管理', position: 'left' },
           { to: '/blog/', label: '日志', position: 'left' },
           {
             href: 'https://github.com/algotao/pidoc-site-zhcn',
