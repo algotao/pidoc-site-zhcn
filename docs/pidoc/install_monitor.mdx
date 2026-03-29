@@ -388,6 +388,10 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
 | server_addr | string | 堡垒机服务器地址。当前仅有 `remote.pidoc.cn:3322` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://remote.pidoc.cn/api/endpoint/ws-tunnel` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | forward_port_whitelist | array of int | 端口转发白名单，用于限制端口转发的范围以提升安全性。 | 2.0.7 |
+| client_id | string | 自定义客户端ID（可选，为空则自动获取设备序列号）。同一账号下的多个设备的客户端ID不能相同 | 2.0.8 |
+| http_proxy_enabled | boolean | 是否启用 HTTP 代理 | 2.0.9 |
+| http_proxy_listen | string | HTTP 代理监听地址（默认 localhost:38090） | 2.0.9 |
+| http_proxy_domains | array of string | HTTP 代理允许的域名列表，白名单由服务端控制，本地只做为备份措施。不在列表中的域名由pidoc本地转发。 | 2.0.9 |
 
 ```json
 {
@@ -395,7 +399,11 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
   "websocket": true,
   "server_addr": "remote.pidoc.cn:3322",
   "websocket_url": "wss://remote.pidoc.cn/api/endpoint/ws-tunnel",
-  "forward_port_whitelist": [22, 5900]
+  "forward_port_whitelist": [22, 5900],
+  "client_id": "my-custom-client-id",
+  "http_proxy_enabled": true,
+  "http_proxy_listen": "localhost:38090",
+  "http_proxy_domains": ["*.github.com", "*.githubusercontent.com"]
 }
 ```
 
