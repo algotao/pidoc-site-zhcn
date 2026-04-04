@@ -135,13 +135,29 @@ $ sudo pidoc service install 5woUns**********
 更多指标已上报待展示，敬请期待。
 
 
-## 网页终端
+## 网页SSH终端
 
 为了解决树莓派在内网环境中无法控制的问题，`PiDoc`工具开发了 `网页SSH` 功能。在页面左侧导航栏中点击 `SSH连接` 会打开一个网页SSH页面新窗口。
+
+点击Tab **+** 号或页面中间的 **新建连接** ，然后选择 **SSH终端**。
 
 请根据您设备的实际情况选择填写 **用户名**、**端口**，选择 **密码认证** 或 **私钥认证**。
 
 <img src="/img/pidoc/web_ssh.png" width="80%" alt="网页SSH" />
+
+## 网页SFTP文件
+
+为了解决树莓派在内网环境中无法控制的问题，`PiDoc`工具开发了 `网页SFTP` 功能。在页面左侧导航栏中点击 `SSH连接` 会打开一个网页SSH页面新窗口。
+
+点击Tab **+** 号或页面中间的 **新建连接** ，然后选择 **SFTP文件**。
+
+请根据您设备的实际情况选择填写 **用户名**、**端口**，选择 **密码认证** 或 **私钥认证**。
+
+<img src="/img/pidoc/web_sftp.png" width="80%" alt="网页SFTP" />
+
+连接成功后将看到服务器的文件列表。你可以切换目录、支持文件多选、支持文件拖放上传、支持文件下载。
+
+<img src="/img/pidoc/web_sftp_1.png" width="80%" alt="网页SFTP" />
 
 ## 堡垒SSH
 
@@ -367,9 +383,52 @@ PidocAgent 在Beta阶段，如遇问题请入群反馈。
 现在就可以通过 SSH 客户端连接到树莓派了，地址为 `localhost:22`。
 :::
 
+## github稳定访问
+
+在某些网络环境中，访问 github.com 可能存在稳定性差、速度慢等问题。其中一个原因是163骨干网由境外回程极为拥堵，造成使用体验不佳。
+
+`PiDoc 2.0.9` 版本开始支持 github 访问线路优化。本站租用了 CN2 GIA 商业线路，提升访问 github 回程的稳定性，实测速度约为稳定的 1.1MB/s。
+
+编辑配置文件 `/etc/pidoc/config.json`，启用配置项
+
+```json
+{
+  "private_key": "你设备的密钥，无须更改",
+  "http_proxy_enabled": true,  // 启用 HTTP 代理
+  "http_proxy_listen": "localhost:38090", // HTTP 代理监听地址
+  "http_proxy_domains": ["*.github.com", "*.githubusercontent.com"]  // HTTP 代理域名白名单。该配置为本地逻辑分支，确定是否直连。实际白名单仍由后端控制。
+}
+```
+
+然后，重启服务
+```sh
+sudo systemctl restart pidoc
+```
+
+使用如下命令测试是否能否能稳定访问 github
+```sh
+https_proxy=http://localhost:38090 curl https://github.com
+```
+
+如能看到输出HTML，则表示可以稳定访问 github。
+
+配置 git 程序使用代理，且只对 github.com 和 githubusercontent.com 域名生效。
+
+```sh
+git config --global http.https://github.com.proxy http://localhost:38090
+git config --global http.https://githubusercontent.com.proxy http://localhost:38090
+```
+
+:::warning
+1. 未使用VPN等技术，您的访问源/目等元组信息仍置于监管规则之下。（它不是 “翻墙” 或 “科学上网”）
+2. 如您所在运营商阻塞了目标地址，则使用该功能也无法访问目标地址。它只提升稳定性，不提升穿越能力。
+3. 如您无须设置即可稳定访问 github，则不要启用该项功能。带宽为商业付费，有一定成本。
+4. 请尽量不要设置为系统级的代理，避免在pidoc程序未运行时影响当前设备访问网络。
+:::
+
 ## 配置文件
 
-PiDoc 配置文件位于 `/etc/pidoc/pidoc.json`，该文件在执行 `pidoc service install` 时自动生成。
+PiDoc 配置文件位于 `/etc/pidoc/config.json`，该文件在执行 `pidoc service install` 时自动生成。
 
 
 标准安装后的配置文件仅有一个密钥字段，示例如下：
@@ -384,8 +443,8 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
 | 字段名 | 类型 | 描述 | 支持的版本 |
 | --- | --- | --- | --- |
 | private_key | string | 私钥，用于加密通信。该密钥在管理界面的 `设备管理`--`增加` 中生成。 | 2.0.0 |
-| websocket | boolean | 是否启用 WebSocket。在一些网络环境中，需要启用 WebSocket 穿越防火墙。 | 2.0.6 |
 | server_addr | string | 堡垒机服务器地址。当前仅有 `remote.pidoc.cn:3322` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
+| websocket | boolean | 是否启用 WebSocket。在一些网络环境中，需要启用 WebSocket 穿越防火墙。 | 2.0.6 |
 | websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://remote.pidoc.cn/api/endpoint/ws-tunnel` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | forward_port_whitelist | array of int | 端口转发白名单，用于限制端口转发的范围以提升安全性。 | 2.0.7 |
 | client_id | string | 自定义客户端ID（可选，为空则自动获取设备序列号）。同一账号下的多个设备的客户端ID不能相同 | 2.0.8 |
@@ -396,8 +455,8 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
 ```json
 {
   "private_key": "5woUnsa2BGl3CGWXy20ovB2dUXG95gKz2wZKBu0kdds=",
-  "websocket": true,
   "server_addr": "remote.pidoc.cn:3322",
+  "websocket": true,
   "websocket_url": "wss://remote.pidoc.cn/api/endpoint/ws-tunnel",
   "forward_port_whitelist": [22, 5900],
   "client_id": "my-custom-client-id",
@@ -433,7 +492,7 @@ sudo netstat -tlnp | grep 22
 sudo systemctl status pidoc    # 或类似名称的服务
 ps aux | grep -i pidoc
 ps aux | grep -i remote
-pidoc.cn 的客户端通常是一个反向 SSH 隧道。检查：
+#pidoc.cn 的客户端通常是一个反向 SSH 隧道。检查：
 # 查看是否有到 remote.pidoc.cn 的连接
 sudo netstat -tnp | grep 64422
 sudo ss -tnp | grep pidoc

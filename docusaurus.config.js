@@ -114,6 +114,14 @@ const config = {
             title: '关联',
             items: [
               {
+                label: '树莓派官方设计合作商・上海晶珩',
+                href: 'https://edatec.cn/zh',
+              },
+              {
+                label: '树莓派官方授权店',
+                href: 'https://edatec.taobao.com/',
+              },
+              {
                 label: '树莓派官方文档(英文版)',
                 href: 'https://www.raspberrypi.com/documentation/',
               },
