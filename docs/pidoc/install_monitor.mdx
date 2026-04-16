@@ -12,7 +12,7 @@ import Normal from "../_normal.mdx";
 
 `PiDoc` 是由本站提供的树莓派（也[兼容](#兼容性)其他派）的一站式信息工具，其提供了设备指标监控。还可以通过本站公网堡垒机中转 ssh 的方式随时访问树莓派。适用于持续运行树莓派的用户或是使用树莓派的开发者。如您有一台或多台树莓派，通过PiDoc工具可很好的随时掌握其运行状态。
 
-请到 [Pidoc远程管理网站](https://remote.pidoc.cn/) 注册一个账号，并按照指引接入新设备。
+请到 [Pidoc远程管理网站](https://ops.pidoc.cn/) 注册一个账号，并按照指引接入新设备。
 
 *交流QQ群：498908352 (反馈问题、提供建议等)*
 
@@ -38,7 +38,7 @@ import Normal from "../_normal.mdx";
 
 ## 注册
 
-去 [Pidoc远程管理网站](https://remote.pidoc.cn/)  注册一个账号。
+去 [Pidoc远程管理网站](https://ops.pidoc.cn/)  注册一个账号。
 
 <img src="/img/pidoc/reg.png" width="30%" alt="注册" />
 
@@ -75,7 +75,7 @@ PIDOC_VERSION=2.0.6 bash <(curl -sSL https://dl.pidoc.cn/remote/install.sh)
 
 ## 接入新设备
 
-登录 [Pidoc远程管理网站](https://remote.pidoc.cn/) ，在 **设备管理** 页面点击 **增加** 按钮。
+登录 [Pidoc远程管理网站](https://ops.pidoc.cn/) ，在 **设备管理** 页面点击 **增加** 按钮。
 <img src="/img/pidoc/add_dev.png" width="80%" alt="接入新设备" />
 
 复制命令行并在安装好Pidoc程序的树莓派上执行。
@@ -210,7 +210,7 @@ if (-not (Test-Path "$env:USERPROFILE\.ssh")) { New-Item -Path "$env:USERPROFILE
 
 ### 配置 SSH config 文件
 
-堡垒机基本信息。地址 `remote.pidoc.cn`，端口 `64422`，用户名任意。
+堡垒机基本信息。地址 `ops.pidoc.cn`，端口 `64422`，用户名任意。
 
 目标设备使用主机别名进行连接（设备管理中的第一列，别名可以更改），端口请指定为 OpenSSH 的服务端口，一般为 `22`。
 
@@ -224,11 +224,11 @@ Host rpi-5
     Port 22
     # 树莓派的私钥文件路径
     IdentityFile ~/.ssh/id_rsa
-    # 指定代理跳转的主机配置项，这里我们使用 `remote.pidoc.cn`
-    ProxyJump remote.pidoc.cn
+    # 指定代理跳转的主机配置项，这里我们使用 `ops.pidoc.cn`
+    ProxyJump ops.pidoc.cn
 
 # 代理跳转主机下配置
-Host remote.pidoc.cn
+Host ops.pidoc.cn
     # 代理主机端口，这里我们使用 `64422`。
     Port 64422
     # 堡垒机的私钥文件路径，请改为您的实际情况
@@ -245,7 +245,7 @@ ssh rpi-5
 第一次登录可能会出现下面的提示信息，请输入 `yes`。
 ```
 PS C:\Users\testuser\.ssh> ssh rpi-5
-The authenticity of host '[remote.pidoc.cn]:64422 ([101.43.71.125]:64422)' can't be established.
+The authenticity of host '[ops.pidoc.cn]:64422 ([101.43.71.125]:64422)' can't be established.
 ED25519 key fingerprint is SHA256:cpqRJXY7CJxrq1yxkU5MOBNKG9TKhsJlH6QduB7uetY.
 This key is not known by any other names.
 Are you sure you want to continue connecting (yes/no/[fingerprint])?
@@ -274,11 +274,11 @@ Host rpi-*
     Port 22
     # 树莓派的私钥文件路径
     IdentityFile ~/.ssh/id_rsa
-    # 指定代理跳转的主机配置项，这里我们使用 `remote.pidoc.cn`
-    ProxyJump remote.pidoc.cn
+    # 指定代理跳转的主机配置项，这里我们使用 `ops.pidoc.cn`
+    ProxyJump ops.pidoc.cn
 
 # 代理跳转主机下配置
-Host remote.pidoc.cn
+Host ops.pidoc.cn
     # 代理主机端口，这里我们使用 `64422`。
     Port 64422
     # 堡垒机的私钥文件路径
@@ -319,7 +319,7 @@ PidocAgent 在Beta阶段，如遇问题请入群反馈。
 
 ### 客户端登录
 
-登录 Agent 需要在 [Pidoc远程管理网站](https://remote.pidoc.cn/) 中生成 Agent Token。然后将 Token 填写到 Pidoc Agent 客户端的登录信息中。
+登录 Agent 需要在 [Pidoc远程管理网站](https://ops.pidoc.cn/) 中生成 Agent Token。然后将 Token 填写到 Pidoc Agent 客户端的登录信息中。
 
 #### 生成 Token
 <img src="/img/pidoc/create_agent_token.png" width="80%" alt="生成 Agent Token" />
@@ -443,9 +443,9 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
 | 字段名 | 类型 | 描述 | 支持的版本 |
 | --- | --- | --- | --- |
 | private_key | string | 私钥，用于加密通信。该密钥在管理界面的 `设备管理`--`增加` 中生成。 | 2.0.0 |
-| server_addr | string | 堡垒机服务器地址。当前仅有 `remote.pidoc.cn:3322` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
+| server_addr | string | 堡垒机服务器地址。当前仅有 `ops.pidoc.cn:3322` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | websocket | boolean | 是否启用 WebSocket。在一些网络环境中，需要启用 WebSocket 穿越防火墙。 | 2.0.6 |
-| websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://remote.pidoc.cn/api/endpoint/ws-tunnel` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
+| websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://ops.pidoc.cn/api/endpoint/ws-tunnel` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | forward_port_whitelist | array of int | 端口转发白名单，用于限制端口转发的范围以提升安全性。 | 2.0.7 |
 | client_id | string | 自定义客户端ID（可选，为空则自动获取设备序列号）。同一账号下的多个设备的客户端ID不能相同 | 2.0.8 |
 | http_proxy_enabled | boolean | 是否启用 HTTP 代理 | 2.0.9 |
@@ -455,9 +455,9 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
 ```json
 {
   "private_key": "5woUnsa2BGl3CGWXy20ovB2dUXG95gKz2wZKBu0kdds=",
-  "server_addr": "remote.pidoc.cn:3322",
+  "server_addr": "ops.pidoc.cn:3322",
   "websocket": true,
-  "websocket_url": "wss://remote.pidoc.cn/api/endpoint/ws-tunnel",
+  "websocket_url": "wss://ops.pidoc.cn/api/endpoint/ws-tunnel",
   "forward_port_whitelist": [22, 5900],
   "client_id": "my-custom-client-id",
   "http_proxy_enabled": true,
@@ -477,7 +477,7 @@ sudo apt remove pidoc
 
 如果失败可以考虑检查：
 1. 树莓派 SSH 服务未启动或端口不对
-2. 登录 https://remote.pidoc.cn 检查：设备是否显示在线（绿色状态）？
+2. 登录 https://ops.pidoc.cn 检查：设备是否显示在线（绿色状态）？
 3. 点击设备查看详情，确认 SSH 端口确实是 22？
 4. 树莓派上的 sshd 服务是否运行？
 5. 在树莓派本地执行：
@@ -493,7 +493,7 @@ sudo systemctl status pidoc    # 或类似名称的服务
 ps aux | grep -i pidoc
 ps aux | grep -i remote
 #pidoc.cn 的客户端通常是一个反向 SSH 隧道。检查：
-# 查看是否有到 remote.pidoc.cn 的连接
+# 查看是否有到 ops.pidoc.cn 的连接
 sudo netstat -tnp | grep 64422
 sudo ss -tnp | grep pidoc
 sudo systemctl restart pidoc
