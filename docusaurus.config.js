@@ -36,7 +36,8 @@ const config = {
   },
   scripts: [
     { src: '/js-sdk-pro.min.js', async: false },
-    { src: '/js/51la.js', async: false }
+    { src: '/js/51la.js', async: false },
+    { src: '/js/bing.js', async: false }
   ],
   presets: [
     [
@@ -65,7 +66,6 @@ const config = {
       },
     ],
   ],
-  themes: ['docusaurus-theme-search-typesense'],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -85,8 +85,9 @@ const config = {
           },
           { to: '/downloads/', label: '软件下载', position: 'left' },
           { to: '/gpiozero/', label: 'GPIO Zero', position: 'left' },
-          { to: '/docs/pidoc/install_monitor/', label: '免费远程管理', position: 'left' },
-          { to: '/blog/', label: '日志', position: 'left' },
+          { to: '/docs/pidoc/install_monitor/', label: '免费远程', position: 'left' },
+          { to: 'https://edatec.taobao.com/', label: '树莓派官方授权店', position: 'left', className: 'nav-shop-link' },
+          { to: 'https://edatec.cn/', label: '工业树莓派制造商・上海晶珩', position: 'left', className: 'nav-shop-link' },
           {
             href: 'https://github.com/algotao/pidoc-site-zhcn',
             label: 'GitHub',
@@ -114,7 +115,7 @@ const config = {
             title: '关联',
             items: [
               {
-                label: '树莓派官方设计合作商・上海晶珩',
+                label: '工业树莓派制造商・上海晶珩',
                 href: 'https://edatec.cn/zh',
               },
               {
@@ -151,23 +152,6 @@ const config = {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
         additionalLanguages: ['protobuf', 'http', 'bash', 'cmake', 'ini', 'php', 'python', 'csharp', 'cpp', 'json', 'kotlin', 'powershell'],
-      },
-      typesense: {
-        // Replace this with the name of your index/collection.
-        // It should match the "index_name" entry in the scraper's "config.json" file.
-        typesenseCollectionName: 'pidoc',
-        typesenseServerConfig: {
-          nodes: [
-            {
-              host: 'search.pidoc.cn',
-              port: 443,
-              protocol: 'https',
-            },
-          ],
-          apiKey: 'wlJD7HhRRcMzJFuacoO4bh3VVnyljsgU',
-        },
-        typesenseSearchParameters: {},
-        contextualSearch: true,
       },
       metadata: [
         { name: 'shenma-site-verification', content: '124a8035166290a4e81d78c346cfff1e_1712642854' },

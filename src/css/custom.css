@@ -222,3 +222,23 @@ pre {
 [data-theme='dark'] .source-prop-args {
   color: #8be9fd;
 }
+
+/* ===============================================
+   导航栏商店链接红色样式
+   =============================================== */
+.navbar__link.nav-shop-link {
+  color: #e74c3c !important;
+  font-weight: 600;
+}
+
+.navbar__link.nav-shop-link:hover {
+  color: #c0392b !important;
+}
+
+[data-theme='dark'] .navbar__link.nav-shop-link {
+  color: #ff6b6b !important;
+}
+
+[data-theme='dark'] .navbar__link.nav-shop-link:hover {
+  color: #ff4757 !important;
+}
