@@ -50,7 +50,7 @@ import Normal from "../_normal.mdx";
 
 将以下命令复制到树莓派的bash窗口执行即可：
 ```sh
-curl -fsSL https://dl.pidoc.cn/remote/install.sh | bash
+curl -fsSL https://dl.pidoc.cn/pidoc/install.sh | bash
 ```
 
 检查是否安装成功，可执行下面的命令：
@@ -68,10 +68,10 @@ Pidoc Endpoint v2.0.2
 可以指定版本号安装。如当前设备已安装PiDoc，则指定版本不能小于已安装版本。例如安装 v2.0.6 版本：
 
 ```sh
-PIDOC_VERSION=2.0.6 bash <(curl -sSL https://dl.pidoc.cn/remote/install.sh)
+PIDOC_VERSION=2.0.6 bash <(curl -sSL https://dl.pidoc.cn/pidoc/install.sh)
 ```
 
-各种版本及架构可在 [这里](https://dl.pidoc.cn/remote/) 查看。
+各种版本及架构可在 [这里](https://dl.pidoc.cn/pidoc/) 查看。
 
 ## 接入新设备
 
@@ -311,7 +311,7 @@ VSCode 远程开发需要安装 [Remote SSH](https://marketplace.visualstudio.co
 
 本地转发功能可以将远程树莓派的端口映射到本地，实现 VNC 连接、我的世界 游戏连接等。该功能需要PidocAgent 客户端支持。
 
-下载：[PidocAgent Win64 V0.1.0](https://dl.pidoc.cn/remote/pidocagent-0.1.0-windows-amd64.zip)
+下载：[PidocAgent Win64 V0.1.0](https://dl.pidoc.cn/pidoc/pidocagent-0.1.0-windows-amd64.zip)
 
 :::warning
 PidocAgent 在Beta阶段，如遇问题请入群反馈。
