@@ -1489,7 +1489,7 @@ nvme0n1     259:0    0 232.9G  0 disk
 ### 故障排除
 如果启动过程失败，请在 [rpi-eeprom Github 代码库](https://github.com/raspberrypi/rpi-eeprom)中提交问题，请确认包含了控制台和启动过程中屏幕上显示的任何内容。
 
-## HTTP启动
+## HTTP启动 {#http启动}
 网络安装功能通过以太网使用 HTTP 引导树莓派进入嵌入式[树莓派Imager](./getting-started.mdx#使用-imager-安装)。
 
 除网络安装外，您还可以使用[启动模式](#boot_order) `7` 通过 HTTP 下载的文件显式启动设备。即使[禁用了启动时的网络安装](#net_install_enabled)，您仍然可以使用它。
