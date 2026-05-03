@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update: 
-  date: 2026-04-11
+  date: 2026-05-03
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -574,8 +574,8 @@ Raspberry Pi 电脑分为几个不同的**系列**：
 
 ### 树莓派1B+
 - [原理图，修订版 1.2](https://pip.raspberrypi.com/documents/RP-008353-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008352-DS)
-- [机械制图，DXF](https://pip.raspberrypi.com/documents/RP-008351-DS)
+- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008351-DS)
+- [机械制图，DXF](https://pip.raspberrypi.com/documents/RP-008352-DS)
 
 :::note[注意]
 树莓派3A+的机械图也适用于树莓派1A+。
@@ -759,60 +759,47 @@ Raspberry Pi 5 风扇连接器是一个 1 毫米间距的 JST-SH 插座，包含
 您可以在 [rpi-eeprom GitHub 代码库](https://github.com/raspberrypi/rpi-eeprom/) 中找到用于创建 `rpi-eeprom` 的脚本和预编译二进制文件。
 :::
 
-### 诊断
-如果在启动过程中发生错误，则会通过绿色 LED 显示 [错误代码](./configuration.mdx#led警告闪烁代码)。较新版本的 bootloader 将在所有 HDMI 显示屏上显示 [诊断信息](#启动诊断)。
+### 重置 Raspberry Pi 引导加载程序 {#bootloader_reset}
+本节提供通过重新刷写引导加载程序来重置它的说明。通常在系统无法启动时恢复系统，或重置引导加载程序配置时会这样做。
 
-### 更新 bootloader
-有多种方法可以更新树莓派的bootloader。
+如果您不是要重置引导加载程序，而是想升级引导加载程序版本或选择不同的启动顺序，请参阅 **配置** 页面的 [更新引导加载程序](./configuration.mdx#update-bootloader-version)。
 
-#### 旗舰型号自 Raspberry Pi 4B 开始；计算模块自 CM5 开始；键盘型号自 Pi 400 开始
-Raspberry Pi OS 会自动更新 bootloader 以修复重要错误。要手动更新 bootloader 或更改启动顺序，请使用[raspi-config](./configuration.mdx#raspi-config)。
+以下说明仅适用于在板载 SPI flash EEPROM 中存储引导加载程序的较新树莓派型号：
 
-:::tip
-Compute Module 4 和 Compute Module 4S 不支持自动引导加载程序更新，因为引导rom 无法从 eMMC 加载 `recovery.bin` 文件。推荐的更新机制是 `rpiboot` 或通过 `flashrom` - 请参阅 `rpi-eeprom-update -h` 获取更多信息。
+* 自树莓派 4B 起的旗舰单板计算机 (SBC)。
+* 自 CM4 起的计算模块（包括 CM4S）。
+* 所有键盘电脑（树莓派 400、500 和 500+）。
+
+在其他树莓派型号上，引导 ROM 始终会加载位于启动介质引导分区中的 `bootcode.bin` 文件。
+
+#### 诊断引导加载程序问题 {#bootloader_diagnostics}
+
+如果您的树莓派设备无法启动，引导加载程序会通过以下方式提供反馈：
+
+* **LED 活动。** 树莓派上的绿色 LED 可通过特定的闪烁模式指示特定错误。请查看 [LED 警告闪烁代码](./configuration.mdx#led警告闪烁代码) 以根据闪烁模式识别错误。例如，绿色 LED 短闪七次表示未找到内核镜像。
+* **HDMI 诊断屏幕。** 在较新的设备上，引导加载程序可以在启动期间通过 HDMI 显示诊断屏幕。如果您的树莓派连接了显示器，该屏幕会提供引导加载程序版本和构建日期、检测到的启动顺序以及在操作系统加载失败时的具体错误代码等信息。更多信息请参阅 [启动诊断](#启动诊断)。
+
+#### 重新刷写引导加载程序 {#bootloader_reflash}
+如果您的系统无法启动或您想重置引导加载程序配置，请重新刷写引导加载程序。重新刷写引导加载程序会清除可能导致树莓派无法启动的本地引导加载程序配置。
+
+:::note
+您也可以通过 USB `rpiboot` 重新刷写引导加载程序。此方法通常用于批量配置计算模块。通过 USB 重新刷写引导加载程序也是 CM4 和 CM4S 唯一可用的选项。更多信息请参阅 [计算模块硬件](./compute-module.mdx#计算模块-eeprom-bootloader)。
 :::
 
-#### 使用树莓派Imager更新bootloader
-树莓派Imager提供了一个用于更新 bootloader 和选择启动模式的GUI。
+要在您的树莓派设备上重新刷写引导加载程序：
 
-1. 下载 [树莓派Imager](/downloads/)。
-2. 选择一张未使用的SD卡。刻录工具将覆盖该SD卡上的所有数据。
-3. 将SD卡插入运行 Imager 的计算机。
-4. 启动树莓派 Imager。
-5. 在**设备**选项卡中，从列表中选择您的树莓派型号。点击**下一步**。
-6. 在**操作系统**选项卡中，选择**其他实用工具映像**
+1. 将一个备用或空白的 microSD 存储设备连接到您的主机电脑。
+2. 在主机电脑上找到并打开 Imager。
+3. 在 **设备** 选项卡中，从列表中选择您的树莓派型号，然后选择 **下一步**。
+4. 在 **操作系统** 选项卡中，滚动到列表底部并选择 **Misc utility images > Bootloader > SD Card Boot**，然后选择 **下一步**。
+5. 在 **存储** 选项卡中，选择您的存储设备，然后选择 **下一步**。
+6. 在 **写入** 选项卡中，选择 **写入**。
+7. 选择 **我已知晓，擦除并写入**；等待写入完成，然后选择 **完成**。
+8. 从主机电脑中弹出存储设备，然后插入您的树莓派。
+9. 通过接通电源启动树莓派。
+10. 当绿色活动 LED 以稳定模式闪烁且 HDMI 显示屏显示绿色屏幕后，断开电源关闭树莓派并弹出启动介质。
 
-<img src="/img/computers/raspberry-pi/misc-utility-images.png" width="60%" alt="其他工具映像" />
-
-7. 根据您的树莓派版本选择**Bootloader**。
-
-<img src="/img/computers/raspberry-pi/bootloader-family-select.png" width="60%" alt="为您的bootloader选择一个系列" />
-
-8. 选择启动模式。我们推荐 **SD卡启动**。点击 **下一步**。
-
-<img src="/img/computers/raspberry-pi/bootloader-storage-select.png" width="60%" alt="选择您要从中启动的存储" />
-
-9. 在 **存储** 选项卡中选择您的SD卡。点击 **下一步**。.
-10. 在 **写入** 选项卡中确认设置，点击 **写入** 继续。
-11. 系统将提示确认是否覆盖SD卡数据。继续操作请选择 **我已知晓，擦除并写入**。
-12. 等待 Imager 完成SD卡写入与验证.
-13. 将SD卡插入需更新 bootloader 的树莓派设备.
-14. 使用新镜像启动树莓派并等待至少十秒.
-15. 当绿色活动指示灯以稳定模式闪烁且HDMI显示屏呈现绿色背景时，即表示引导程序写入成功.
-16. 关闭树莓派电源并取出SD卡
-
-
-#### 使用raspi-config更新bootloader
-
-要从树莓派OS中更改启动模式或bootloader版本，请运行[raspi-config](./configuration.mdx#raspi-config)
-1. [更新](./os.mdx#升级软件)树莓派OS以获取最新版本的`rpi-eeprom`软件包
-2. 运行`sudo raspi-config`
-3. 选择`Advanced Options`
-4. 选择`Bootloader Version`
-5. 选择`Default`出厂默认设置 或 `Latest`最新稳定的bootloader版本
-6. 运行 `sudo reboot` 重启
-
-### 更新 bootloader 配置
+### 更新 bootloader 配置 {#更新-bootloader}
 
 `default` (默认) 版本的 bootloader 代表最新的出厂默认固件映像。它提供关键错误修复和硬件支持，并在 `latest` 版本中的功能经过测试后定期更新。
 
@@ -1210,7 +1197,7 @@ vcgencmd otp_dump | grep 17:
 
 ### 从USB大容量存储设备启动
 
-[操作步骤](./getting-started.mdx#安装操作系统)与 SD 卡相同 - 向 USB 存储设备刷入操作系统。
+[操作步骤](./getting-started.mdx#将操作系统安装到启动介质上)与 SD 卡相同 - 向 USB 存储设备刷入操作系统。
 
 准备好存储设备后，将硬盘连接到树莓派并启动它，注意外置硬盘需要额外的 USB 电源。
 
@@ -1503,7 +1490,7 @@ nvme0n1     259:0    0 232.9G  0 disk
 如果启动过程失败，请在 [rpi-eeprom Github 代码库](https://github.com/raspberrypi/rpi-eeprom)中提交问题，请确认包含了控制台和启动过程中屏幕上显示的任何内容。
 
 ## HTTP启动
-网络安装功能通过以太网使用 HTTP 引导树莓派进入嵌入式[树莓派Imager](./getting-started.mdx#使用imager工具安装)。
+网络安装功能通过以太网使用 HTTP 引导树莓派进入嵌入式[树莓派Imager](./getting-started.mdx#使用-imager-安装)。
 
 除网络安装外，您还可以使用[启动模式](#boot_order) `7` 通过 HTTP 下载的文件显式启动设备。即使[禁用了启动时的网络安装](#net_install_enabled)，您仍然可以使用它。
 
@@ -2086,7 +2073,7 @@ MAC_ADDRESS_OTP=0,1
 
 默认值：`net_install`
 
-#### IMAGER_REPO_URL
+#### IMAGER_REPO_URL {#IMAGER_REPO_URL}
 
 树莓派 Imager 应用程序通过启动时下载的JSON文件进行配置。默认情况下，树莓派映像程序使用位于 https://downloads.raspberrypi.com/os_list_imagingutility_v4.json 的JSON文件。
 
@@ -3636,7 +3623,7 @@ SCLK : 核心时钟/CDIV
 #### Linux驱动程序
 默认的 Linux 驱动程序是 `spi-bcm2835`。
 
-SPI0 默认禁用。要启用它，请使用 [raspi-config](./configuration.mdx#raspi-config)，或确保 [/boot/firmware/config.txt](./config-txt.mdx#什么是configtxt) 中的 `dtparam=spi=on` 一行未被注释。默认情况下，它使用 2 条芯片选择线，但可以使用 `dtoverlay=spi0-1cs` 将其减少到 1 条。`dtoverlay=spi0-2cs` 也存在，在不带任何参数的情况下，它等同于 `dtparam=spi=on`。
+SPI0 默认禁用。要启用它，请使用 [raspi-config](./configuration.mdx#交互式-raspi-config-文本用户界面-tui)，或确保 [/boot/firmware/config.txt](./config-txt.mdx#什么是configtxt) 中的 `dtparam=spi=on` 一行未被注释。默认情况下，它使用 2 条芯片选择线，但可以使用 `dtoverlay=spi0-1cs` 将其减少到 1 条。`dtoverlay=spi0-2cs` 也存在，在不带任何参数的情况下，它等同于 `dtparam=spi=on`。
 
 要启用 SPI1，可以使用 1、2 或 3 条芯片选择线。在 `/boot/firmware/config.txt` 中添加相应行：
 

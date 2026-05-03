@@ -5,14 +5,17 @@ title_meta: 树莓派旧版系统config.txt配置文件详解
 description: 深入了解树莓派的旧版config.txt配置选项，这些选项在树莓派OS Bookworm中已不再使用，但对旧版操作系统用户和裸机开发者仍具参考价值。本文详细介绍了启动选项、GPIO控制、超频设置、内存与视频配置、HDMI模式、旧版杂项选项等，帮助用户在特定场景下进行系统优化和故障排除。
 keywords: [树莓派, config.txt, 旧版配置, 启动选项, GPIO控制, 超频, 内存配置, 视频选项, HDMI模式, 旧版杂项选项, 树莓派OS Bookworm]
 last_update: 
-  date: 2025-10-03
+  date: 2026-05-03
 ---
 import Normal from "../_normal.mdx";
 
 # 旧版config.txt
 
 ## 旧版选项
-这里描述的 `config.txt` 选项被视为遗留设置，树莓派OS Bookworm 并不使用它们，官方也不再支持它们。它们要么与固件图形驱动程序等旧版软件有关，要么已被弃用，要么大多数人都不太可能使用。不过，由于它们对旧版操作系统用户或进行裸机开发的人员可能仍有帮助，因此在此保留记录。
+
+此处描述的 `config.txt` 选项不适用于 Raspberry Pi OS *Bookworm* 及更高版本，且不再获得官方支持。
+
+不过，由于这些选项在进行裸机开发时仍可能对您有所帮助，因此我们仍在此处保留相关文档。
 
 ## 旧版启动选项
 
@@ -708,9 +711,10 @@ dpi_timings=<h_active_pixels> <h_sync_polarity> <h_front_porch> <h_sync_pulse> <
 将 `hdmi_ignore_hotplug` 设置为 `1` 时，HDMI 热插拔信号将被视为未断言，因此看起来像是未连接 HDMI 显示器。因此，即使连接了显示器，HDMI 输出也将被禁用。
 
 #### disable_overscan
+
 `disable_overscan` 的默认值为 `0`，这使得高清 CEA 模式的左、右、上、下边缘的默认过扫描值分别为 48、标清 CEA 模式的 32 和 DMT 模式的 0。
 
-将 `disable_overscan` 设为 1 可禁用固件设置的默认[过扫描](./configuration.mdx#欠扫描underscan)值。
+将 `disable_overscan` 设置为 `1`，以禁用固件设定的默认超扫描值。
 
 #### overscan_left
 `overscan_left` 命令用于指定在固件默认的屏幕左边缘过扫描值基础上增加的像素数。默认值为 `0`。

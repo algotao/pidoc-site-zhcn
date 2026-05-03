@@ -5,7 +5,7 @@ title_meta: 在树莓派OS上使用音视频播放软件、安装Python
 description: 全面解析树莓派官方操作系统Raspberry Pi OS！基于Debian优化，支持35,000+软件包，提供软件管理（APT命令）、固件升级（rpi-update）、多媒体播放（VLC工具）、硬件控制（GPIO/VC命令）等核心功能，附Python开发指南与无障碍工具，助您高效开发与个性化配置树莓派设备。
 keywords: [Raspberry Pi OS, 树莓派操作系统, Debian系统, APT软件管理, 树莓派固件升级, VLC媒体播放, 树莓派GPIO控制, Python编程树莓派, 树莓派无障碍工具, 树莓派多媒体工具]
 last_update: 
-  date: 2025-12-20
+  date: 2026-05-03
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -15,197 +15,204 @@ import TabItem from '@theme/TabItem';
 
 ## 介绍
 
-Raspberry Pi OS 是基于 Debian 的免费操作系统，针对 Raspberry Pi 硬件进行了优化。Raspberry Pi OS 支持超过 35,000 个 Debian 软件包。我们建议大多数 Raspberry Pi 使用 Raspberry Pi OS。
+Raspberry Pi OS 是 Raspberry Pi 计算机的官方操作系统 (OS)，免费提供。我们建议大多数 Raspberry Pi 使用场景使用 Raspberry Pi OS。
 
-由于 Raspberry Pi OS 源自 Debian，它遵循 [Debian发布周期](https://wiki.debian.org/DebianReleases) 的交错版本。大约每两年发布一次。
+Raspberry Pi OS 基于 **Debian** Linux 发行版，支持超过 69,000 个 Debian 软件包。Raspberry Pi 遵循 [Debian 发布周期](https://wiki.debian.org/DebianReleases) 的交错版本，大约每两年发布一次。最新版本的 Raspberry Pi OS 基于 [Debian Trixie](https://www.raspberrypi.com/news/trixie-the-new-version-of-raspberry-pi-os/)。前一版本基于 [Debian Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/)。
 
-最新版本的树莓派操作系统基于[Debian Trixie](https://www.raspberrypi.com/news/trixie-the-new-version-of-raspberry-pi-os/)。前一版本基于[Debian Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/)。
+## 操作系统安装
 
-## 获取树莓派操作系统
+Raspberry Pi OS 通过 Raspberry Pi Imager 安装，Imager 可在 Windows、Mac 和 Linux 上使用。相关说明请参阅 [使用 Imager 安装](./getting-started.mdx#使用-imager-安装)。您也可以直接从 [我们的网站](http://raspberrypi.com/software/operating-systems) 下载 Raspberry Pi OS 的磁盘镜像（开箱即用的文件），然后将其写入 SD 卡开始使用您的树莓派。
 
-您可通过树莓派映像工具获取树莓派操作系统。
-您也可在 [操作系统镜像](/downloads/operating-systems/) 获取树莓派操作系统镜像。
+如果您正在运行旧版 **Raspberry Pi OS**，想要使用最新主版本，请不要执行就地更新（在不重新安装的情况下更新当前系统）。而应通过安装 Raspberry Pi OS 的新镜像重新开始。相关说明请参阅 [使用 Imager 安装](./getting-started.mdx#使用-imager-安装)。
 
-我们提供以下版本的 64 位和 32 位操作系统：
+:::warning
+请备份旧系统中您不想丢失的任何重要文件。安装新操作系统会覆盖 SD 卡上的所有数据。
+:::
 
-* **带桌面的树莓派操作系统**。这是树莓派映像工具中显示的默认版本，包含 Chromium 网页浏览器、Firefox 网页浏览器、VLC 媒体播放器和 Thonny Python 环境等应用程序。
-* **带桌面环境及推荐软件的树莓派操作系统**。树莓派映像工具中标注为 `Raspberry Pi OS 完整版`。额外包含LibreOffice办公套件、KiCad电路设计软件、Scratch编程环境等众多应用。
-* **树莓派操作系统精简版**。此版本不提供图形化桌面体验，适用于无显示器的服务器等场景。我们建议树莓派 1、2 及 Zero 计算机使用此版本。
+### 版本
 
-若您当前运行的是旧版树莓派操作系统，且希望升级至最新主版本，我们建议不要进行就地升级。请重新使用新镜像进行安装。更多信息请参阅 [将操作系统升级到新的主版本](#将操作系统升级到新的主版本)。
+Raspberry Pi OS 提供三个版本：
 
-## 升级软件
+* **Raspberry Pi OS**（带基础软件的桌面版）是 Raspberry Pi Imager 中推荐的版本。它提供图形桌面环境，包含 Chromium 与 Firefox 网页浏览器、VLC 媒体播放器和 Thonny Python 环境等应用程序。
+* **Raspberry Pi OS Full**（带基础软件和推荐应用的桌面版），提供与默认 **Raspberry Pi OS** 版本相同的图形桌面环境和应用程序，但还包含 LibreOffice 办公套件、KiCad、Scratch 编程环境以及许多其他应用程序。
+* **Raspberry Pi OS Lite**（仅命令行版，不含图形桌面）。此版本适合无显示器的服务器、嵌入式系统或较旧的树莓派型号，例如初代 Raspberry Pi、Raspberry Pi 2 和 Raspberry Pi Zero。
 
-始终将 Raspberry Pi 上运行的软件更新到最新版本。这将确保您的设备安全，避免 [漏洞](https://cve.mitre.org/index.html)，并确保您获得最新的错误修复。
+### 体系结构
 
-### 使用 APT 管理软件包
+Raspberry Pi OS 提供 64 位和 32 位两种版本。请根据您的树莓派硬件选择最合适的版本：
 
-[高级软件包工具（APT）](https://en.wikipedia.org/wiki/APT_(software)) 是在 Raspberry Pi 操作系统中安装、更新和删除软件的推荐方法。您可以通过 `apt` CLI 访问 APT。
+* **64 位** 版本适用于具有 64 位处理器的较新树莓派型号，如 Raspberry Pi 3、4 和 5。它可以运行 64 位和 32 位软件，也能处理更多内存 (RAM)，对计算密集型任务运行速度更快。
+* **32 位** 版本适用于具有 32 位处理器的较旧树莓派型号，如初代 Raspberry Pi、Raspberry Pi 2 和 Raspberry Pi Zero。它占用的内存更少，可能与较旧的软件和硬件有更好的兼容性。
 
-#### 安装更新
+## 管理软件和固件更新 {#升级软件}
 
-`apt` 会在 `/etc/apt/sources.list` 文件中存储软件源列表。安装软件前，请运行以下命令，使用 `/etc/apt/sources.list` 更新*本地软件包列表：
+有两种方式可以更新您当前的操作系统：
+
+* **基于 APT**。我们建议大多数用户采用此方式。可用它更新当前 Raspberry Pi OS 安装的软件、内核以及稳定版固件。相关说明请参阅 [更新当前的树莓派软件](#update-software)。
+* **`rpi-update`**。用于实验或预发布版本的内核与固件测试、开发或特定错误修复。相关说明请参阅 [更新预发布固件](#rpi-update)。
+
+常规固件更新已包含在 APT 更新中（`raspi-firmware` 软件包）；`rpi-update` 仅适用于开发者与测试人员，或在 Raspberry Pi 工程师明确建议时使用。
+
+如果您希望从旧版 Raspberry Pi OS 升级到新版（例如从 Bookworm 升级到 Trixie），而非更新当前操作系统，请使用新镜像重新安装操作系统。相关说明请参阅 [升级到新的主版本](#upgrade)。
+
+### 更新当前的树莓派软件 {#update-software}
+
+请保持您树莓派上软件的最新状态。这有助于保护您的树莓派免受 [漏洞](https://cve.mitre.org/index.html) 攻击，并确保您获得最新的错误修复。同时也会更新您的 Linux 内核和固件。
+
+以下说明描述的是如何在您当前运行的 Raspberry Pi OS 主版本内（例如 Trixie）更新 **现有** 的安装。这不会将您的 Raspberry Pi OS 升级到新的主版本（例如从 Bookworm 升级到 Trixie）。关于升级操作系统的说明请参阅 [升级到新的主版本](#upgrade)。
+
+我们推荐使用 APT 来保持树莓派软件最新。您也可以使用 APT 查找特定软件包或工具、检查软件包元数据、安装或卸载特定软件包。相关说明请参阅 [管理软件包](#manage-software)。
+
+要使用 APT 以最新的修复、Linux 内核及固件更新您当前的树莓派软件，请定期运行以下命令：
+
+1. **更新软件包列表。** APT 在 `/etc/apt/sources.list` 和 `/etc/apt/sources.list.d/` 中维护可用软件源的列表；运行以下命令刷新可用软件包列表：
+
+   ```sh
+   sudo apt update
+   ```
+
+2. **将已安装的软件包更新到最新版本。** 既然您已经知道有哪些新版本可用，运行以下命令下载并安装更新。由于 Raspberry Pi OS 对软件包依赖的调整比 Debian 更频繁，我们推荐使用 `full-upgrade` 而不是标准的 `upgrade`：
+
+   ```sh
+   sudo apt full-upgrade
+   ```
+
+在继续更新之前，请检查您是否有足够的空闲磁盘空间。如果 `sudo apt full-upgrade` 提示需要额外空间才能完成更新，您可以使用 `df -h` 来检查系统至少拥有那么多可用空间。然后您可以按 [清理文件](#clean) 中所述清理已下载的文件以释放更多空间。
+
+### 更新预发布固件 {#rpi-update}
+
+`rpi-update` 是一个命令行工具，用于在树莓派上安装实验性或预发布版本的固件。在树莓派 4 和 5 上，它还会更新 EEPROM 引导加载程序。
+
+`rpi-update` 会下载最新预发布版本的 Linux 内核、其匹配的模块、设备树文件以及最新版本的 VideoCore 固件。然后将这些文件安装到现有的 Raspberry Pi OS 安装中。
+
+:::warning
+预发布固件不能保证正常工作，可能会引入不稳定性，使您的系统不可靠或无法启动。
+:::
+
+`rpi-update` 使用的所有源数据均来自 [rpi-firmware 仓库](https://github.com/raspberrypi/rpi-firmware)，该仓库包含官方 [固件仓库](https://github.com/raspberrypi/firmware) 数据的一个子集。
+
+`rpi-update` 适用于开发者和工程师进行测试、开发以及特定错误修复。在大多数情况下，您不需要使用 `rpi-update`，仅在 Raspberry Pi 工程师推荐时才应使用；对于常规更新，我们强烈建议您使用 APT，具体参阅 [更新当前的树莓派软件](#update-software)。
+
+1. 备份您的系统。
+2. 运行以下命令以启动更新：
+
+   ```sh
+   sudo rpi-update
+   ```
+
+3. 重启树莓派以使更改生效：
+
+   ```sh
+   sudo reboot
+   ```
+
+更多信息请参阅 [更新 Raspberry Pi 固件](https://pip.raspberrypi.com/documents/RP-003476-WP)。
+
+### 将固件降级到最新的稳定版本 {#downgrade}
+
+如果更新到最新的预发布固件导致问题，您可以恢复到最后一个稳定版固件，然后重启以使降级生效：
 
 ```sh
 sudo apt update
+sudo apt install --reinstall raspi-firmware
+sudo reboot
 ```
 
-运行以下命令将所有已安装的软件包升级到最新版本：
+这会重新安装 Raspberry Pi OS 中官方支持的固件，恢复系统稳定性。
 
-```sh
-sudo apt full-upgrade
-```
-:::tip
-与 Debian 不同，Raspberry Pi OS 正在持续开发中。因此，软件包依赖关系有时会发生变化，所以你应该始终使用 `full-upgrade` 而不是标准的 `upgrade`。
-:::
+### 管理软件包 {#manage-software}
 
-定期运行这些命令以保持软件最新。使用 `apt` 保持 Raspberry Pi OS 的最新版本，也能保持 Linux 内核和固件的最新版本，因为 Raspberry Pi 将它们作为 Debian 软件包发布。
+在终端中，**APT** 是用于在当前运行的 Raspberry Pi OS 中安装、更新和卸载软件的默认包管理器。您可通过诸如 `apt-cache` 和 `apt install` 等终端命令对其进行控制。
 
-当 Raspberry Pi 发布新的 Raspberry Pi OS 主版本时，上述命令不会将你的操作系统升级到新的主版本。要升级到新的主版本，请遵循我们的 [操作系统升级说明](#升级软件)。
+在桌面环境中，您可以使用 **首选项 > 添加/删除软件** 工具通过图形界面管理软件。
 
 #### 搜索软件
 
-要在归档文件中搜索软件包，请向 `apt-cache search` 传递搜索关键字：
+要查找特定软件包或工具，使用 `apt-cache search` 加关键字。这会返回名称和描述中包含该关键字的软件包列表。例如，显示所有与 `raspi` 相关的软件包：
 
 ```sh
-apt-cache search <关键字
+apt-cache search raspi
 ```
 
-例如，请看下面对关键字 "raspi "的搜索：
+#### 查看软件包详细信息
 
-```
-$ apt-cache search raspi
-raspi3-firmware - Raspberry Pi 2 and 3 GPU firmware and bootloaders
-libcamera-apps - libcamera-apps
-libcamera-apps-lite - libcamera-apps-lite
-python-picamera - Pure Python interface to the Raspberry Pi's camera module.
-python-picamera-docs - Documentation for the Python interface to the RPi's camera module.
-python3-picamera - Pure Python interface to the Raspberry Pi's camera module.
-raspi-config - Raspberry Pi configuration tool
-raspi-gpio - Dump the state of the BCM270x GPIOs
-raspi-gpio-dbgsym - debug symbols for raspi-gpio
-raspinfo - Dump information about the Pi
-rc-gui - raspi-config GUI
-raspi-copies-and-fills - ARM-accelerated versions of selected functions from string.h
-raspi-copies-and-fills-dbgsym - debug symbols for raspi-copies-and-fills
-```
-
-搜索返回了多个名称或描述包含关键字的软件包。
-
-使用以下命令查看软件包的详细信息：
+要查看某个软件包的详细信息，使用 `apt-cache show` 加软件包名。这会显示软件包版本、大小、依赖等信息。例如，查看 `raspi-config` 软件包的详细信息：
 
 ```sh
-apt-cache show <package-name>
+apt-cache show raspi-config
 ```
-
-例如，下面是对 `raspi-config` 软件包的查询：
-
-```
-$ apt-cache show raspi-config
-Package: raspi-config
-Version: 20210212
-Architecture: all
-Maintainer: Serge Schneider <serge@raspberrypi.org>
-Installed-Size: 121
-Depends: whiptail, parted, lua5.1, alsa-utils, psmisc, initramfs-tools
-Recommends: triggerhappy, iw
-Priority: optional
-Section: utils
-Filename: pool/main/r/raspi-config/raspi-config_20210212_all.deb
-Size: 27976
-SHA256: 772d4fd3c6d8c9da47ac56012b74e7828b53c8521ff1c47266bb38ec71750c10
-SHA1: 08254c976a8260bde914c2df72f92ffb9317fef6
-MD5sum: 80aaac13be6a9b455c822edb91cf8ea2
-Description: Raspberry Pi configuration tool
- A simple configuration tool for common Raspberry Pi administrative tasks
-Description-md5: 19630c04463bfe7193152448b53d85a0
-```
-
-使用此命令验证软件包的维护者、版本和大小是否符合您的期望。
 
 #### 安装软件包
 
-要在 Raspberry Pi 上安装软件包，请将软件包的名称传递给以下命令：
+要在树莓派上安装特定软件包，使用 `sudo apt install` 加软件包名：
 
-```
+```sh
 sudo apt install <package-name>
 ```
 
-`apt` 将显示软件包将占用的磁盘空间。输入 **Y**，然后按 **Enter** 确认安装软件包。在上述命令中添加 `-y` 标志，即可跳过确认步骤。
+这会返回该软件包所需的磁盘空间，并要求您确认安装。要确认安装，请输入 `Y` 并按 **Enter** 或 **Return**。要跳过确认提示并在安装时自动回答 "yes"，请在命令中加上 `-y`：
+
+```sh
+sudo apt install -y <package-name>
+```
 
 #### 卸载软件包
 
-要从 Raspberry Pi 上卸载软件包，请将软件包名称传入以下命令：
+要在树莓派上卸载特定软件包，使用 `sudo apt remove` 加软件包名：
 
 ```sh
 sudo apt remove <package-name>
 ```
 
-:::tip
-要完全删除软件包的所有痕迹，包括配置文件，请使用 `purge` 而不是 `remove` 。
-:::
+这会返回卸载该软件包将释放的磁盘空间，并要求您确认卸载。要确认，请输入 `Y` 并按 **Enter** 或 **Return**。要跳过确认提示并在卸载时自动回答 "yes"，请在命令中加上 `-y`：
 
-`apt` 将显示删除软件包将释放的磁盘空间。
-输入 **Y**，然后按 **Enter** 确认删除软件包。在上述命令中添加 `-y` 标志可跳过这一确认步骤。
+```sh
+sudo apt remove -y <package-name>
+```
 
-### 管理 apt 磁盘使用情况
+要完全移除软件包的所有痕迹，包括配置文件，请使用 `purge` 而不是 `remove`：
 
-在运行之前，`sudo apt full-upgrade` 会显示为完成升级而需要下载并存储在磁盘上的数据量。要检查是否有足够的可用磁盘空间，请运行以下命令：
+```sh
+sudo apt purge <package-name>
+```
+
+#### 检查磁盘空间
+
+在树莓派上安装或更新软件之前，使用以下命令检查可用存储空间：
 
 ```sh
 df -h
 ```
 
-`apt` 将下载的软件包 (`.deb`) 文件存储在 `/var/cache/apt/archives` 中。在安装过程中，`apt` 会下载这些软件包，然后将软件包中的文件复制到正确的安装位置。根据所安装软件的不同，软件包文件可能会占用大量空间。要删除任何残留的软件包文件，请运行以下命令：
+#### 清理文件 {#clean}
+
+APT 会将下载的软件包（`.deb` 文件）存储在 `/var/cache/apt/archives` 中。在安装期间，APT 会下载这些软件包，然后将其中的文件复制到正确的安装位置。根据您已安装的软件不同，软件包文件可能会占用大量磁盘空间。使用以下命令删除旧的已下载软件包文件：
 
 ```sh
 sudo apt clean
 ```
 
-### 将操作系统升级到新的主版本
+### 升级到新的主版本 {#upgrade}
 
-:::warning
-在尝试主版本升级之前，请做好备份。
-:::
+我们强烈建议使用全新安装来升级树莓派的操作系统版本（例如从 Bookworm 升级到 Trixie），而不是在现有启动介质上进行原地升级。这涉及使用 **Raspberry Pi Imager** 将新的操作系统镜像烧录到新的启动介质。
 
-要将 Raspberry Pi 上的操作系统升级到新的主版本，请将新版本映像到第二张 SD 卡上。使用 USB SD 读卡器或网络存储设备将当前安装的文件和配置复制到新的 SD 卡上。然后，将新的 SD 卡插入 Raspberry Pi 的插槽，启动。
+以下说明要求：
 
-### 升级固件
+* 一台用作启动介质的新存储设备（通常为 microSD 卡），以及将其连接到电脑的方法（例如 USB 读卡器）。
+* 一台用于向新启动介质写入新操作系统镜像的电脑，并用于在启动介质之间存储和移动数据。
 
-:::warning
-在尝试固件升级之前，请做好备份。
-:::
+以下说明假设您使用 microSD 卡作为新启动介质，并使用 Raspberry Pi Imager 将新操作系统镜像安装到该启动介质。如果您使用其他类型的存储设备，请相应调整步骤。
 
-:::warning
-预发布版本的软件不能保证正常工作。除非 Raspberry Pi 工程师建议，否则不要在任何系统上使用 `rpi-update`。这会导致系统不可靠或损坏。请勿将 `rpi-update` 用作任何定期更新过程的一部分。
-:::
+1. **创建当前启动介质的备份。**
 
-要将 Raspberry Pi 上的固件更新到最新版本，请使用 [`rpi-update`](https://github.com/raspberrypi/rpi-update)。
+   :::warning
+   此步骤将永久删除您选择使用的存储设备上的所有文件。请在继续之前将它们备份。
+   :::
 
-`rpi-update` 会下载最新预发布版本的 Linux 内核、其匹配模块、设备树文件和最新版本的 VideoCore 固件。然后将这些文件安装到现有的 Raspberry Pi OS 安装中。
-
-`rpi-update` 使用的所有源数据都来自 [`rpi-firmware`资源库](https://github.com/raspberrypi/rpi-firmware)。该版本库包含 [官方固件版本库](https://github.com/raspberrypi/firmware)中数据的子集。
-
-以根用户身份运行 `rpi-update` 启动更新。更新完成后，重启 Raspberry Pi 以使更改生效：
-
-```sh
-sudo rpi-update
-sudo reboot
-```
-:::note[白皮书]
-[更新 Raspberry Pi 固件](https://pip.raspberrypi.com/documents/RP-003476-WP-Updating-Pi-firmware.pdf)。
-
-本白皮书记录了如何更新 Raspberry Pi OS 映像中的 VideoCore 固件。
-:::
-
-### 将固件降级到最新的稳定版本
-
-如果您将固件更新到最新版本并遇到问题，请使用以下命令返回到上一个稳定固件版本：
-
-```sh
-sudo apt update
-sudo apt install --reinstall raspi-firmware
-```
+2. **使用新操作系统准备新的存储设备。** 在新的存储设备上，以最新版 Raspberry Pi OS 安装新的操作系统镜像。具体说明请参阅 [使用 Imager 安装](./getting-started.mdx#使用-imager-安装)。
+3. **复制您现有的文件和配置。** 使用存储设备复制树莓派上的任何重要文件。
+4. **将新启动介质插入树莓派。** 将包含新操作系统的存储设备插入树莓派。
+5. **启动树莓派。** 为树莓派接通电源并开机。
 
 ### 将树莓派精简版系统转换为桌面版系统
 
@@ -252,7 +259,7 @@ sudo reboot
 
 您现在已安装构成树莓派操作系统桌面版的全部软件包。
 
-若需恢复至树莓派操作系统精简版，可卸载这些软件包。若希望保留已安装的桌面软件包同时体验精简版功能，请使用 [raspi-config](./configuration.mdx#raspi-config) 工具将树莓派设置为启动时进入命令行界面。
+若需恢复至树莓派操作系统精简版，可卸载这些软件包。若希望保留已安装的桌面软件包同时体验精简版功能，请使用 [raspi-config](./configuration.mdx#交互式-raspi-config-文本用户界面-tui) 工具将树莓派设置为启动时进入命令行界面。
 
 您也可通过Raspberry Pi主菜单选择**首选项 > 推荐软件**，安装Raspberry Pi OS完整版内置的推荐应用程序。
 
@@ -529,7 +536,7 @@ sudo apt install python3-build-hat
 
 #### Bookworm 对 pip 安装的更改
 
-在旧版本的 Raspberry Pi OS 中，您可以使用 `pip` 直接将库安装到系统版本的 Python 中。从 Raspberry Pi OS _Bookworm_ 开始，用户不能直接将库安装到 Python 的系统版本中。
+从 Raspberry Pi OS _Bookworm_ 开始，您无法直接将库安装到系统版本的 Python 中。
 
 取而代之的是 [将库安装到虚拟环境 (`venv`)](#在虚拟环境中使用-pip)。要在系统级别为所有用户安装库，请使用 [使用 `apt` 安装](#使用-apt-安装-python-软件包)。
 

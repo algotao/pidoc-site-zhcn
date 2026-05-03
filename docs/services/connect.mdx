@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update: 
-  date: 2026-04-11
+  date: 2026-05-03
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -77,7 +77,7 @@ rpi-connect off
 
 在树莓派设备上启动 Connect 后，您必须将设备与 Connect 账户关联。
 
-若您使用树莓派映像工具在设备上安装树莓派操作系统，则可能已完成设备与 Connect 账户的绑定。更多信息请参阅 [使用映像工具安装](../computers/getting-started.mdx#使用imager工具安装)。
+若您使用树莓派映像工具在设备上安装树莓派操作系统，则可能已完成设备与 Connect 账户的绑定。更多信息请参阅 [使用映像工具安装](../computers/getting-started.mdx#使用-imager-安装)。
 
 
 <Tabs>
@@ -361,6 +361,10 @@ Connect 面板列出了与您的 Connect 账号关联的所有设备，并显示
 
 ## 更新
 
+:::warning
+升级 Connect 会断开正在进行的任何屏幕共享或远程 shell 会话。除非您以不会因断开而中断的方式运行命令（例如使用 `screen` 或 `tmux`），否则不建议使用远程 shell 升级 Connect。
+:::
+
 要更新到最新版本的 Connect，请运行以下命令：
 
 ```sh
@@ -368,9 +372,7 @@ sudo apt update
 sudo apt install --only-upgrade rpi-connect
 ```
 
-```tip
 如果安装了 Connect Lite，请将上述命令中的 `rpi-connect` 替换为 `rpi-connect-lite`。
-```
 
 ## 从 Connect 中断开设备连接
 
@@ -419,28 +421,68 @@ sudo apt remove --purge rpi-connect
 1. 在提示中选择*将它们全部转移到此组织？*链接。
 2. 选择*转移 x 台设备*（其中"x"为设备数量），确认将计费设备添加到组织账户。
 
-### 邀请用户
+### 管理用户 {#manage-users}
 
-仅管理员可邀请其他用户加入组织。邀请步骤如下：.
+您必须是管理员才能邀请用户加入、从组织中移除用户或更改用户在组织中的角色。
 
-1. 打开页面顶部的**用户**选项卡。此处显示组织所有成员的姓名、邮箱、角色及加入日期。
+邀请用户的步骤：
 
-    <img src="/img/services/connect/users.png" alt="用户" width="70%" />
+1. 登录您的 Raspberry Pi Connect 账户。
 
-2. 选择**邀请他人**以添加新用户。
+2. 点击导航菜单左上角的**账户切换图标**（两个相对的箭头），然后从列表中选择您的组织。
 
-    <img src="/img/services/connect/invite-user.png" alt="邀请用户" width="70%" />
+3. 选择页面顶部的**用户**选项卡，然后点击**邀请他人**。
 
-3. 从下拉菜单选择**角色**。组织成员可选两种角色：
+    <img src="/img/services/connect/users.png" alt="Raspberry Pi Connect 界面，显示与组织 Connect 账户关联的用户。" width="100%" />
 
-    * **成员**：可远程访问组织内所有设备，但无法修改组织设置。
-    * **管理员**：可远程访问组织内所有设备并修改组织设置。该角色还将接收涉及敏感操作的全局通知邮件，例如新增设备或管理API访问令牌。
+4. 从下拉菜单中选择**角色**。
 
-4. 输入您要发送邀请的邮箱地址。
+    组织成员可选两种角色：
 
-5. 选择**发送邀请**。
+    * **成员**：可远程访问组织内所有设备，但无法对组织进行任何修改。
+    * **管理员**：可远程访问组织内所有设备并修改组织设置。该角色还将接收涉及敏感操作的全局通知邮件，例如新增设备或新的管理 API 访问令牌。
 
-被邀请者无需使用该邮箱登录，可通过任意有效树莓派ID加入。
+5. 输入您要发送邀请的邮箱地址。
+
+6. 选择**发送邀请**。
+
+    <img src="/img/services/connect/invite-user.png" alt="Connect 界面，显示邀请用户页面，包含角色下拉菜单、邮箱地址和发送邀请按钮。" width="100%" />
+
+    邀请邮件会发送至您在第 5 步提供的邮箱地址。用户可通过邮件中的邀请链接加入，并可使用该邮箱或任何有效的 Raspberry Pi ID 登录。
+
+移除用户的步骤：
+
+1. 登录您的 Raspberry Pi Connect 账户。
+
+2. 点击导航菜单左上角的**账户切换图标**（两个相对的箭头），然后从列表中选择您的组织。
+
+3. 选择页面顶部的**用户**选项卡。
+
+    此处会显示组织的所有成员。
+
+4. 在要移除的用户旁边，点击**更多选项图标**（三个垂直排列的点），然后选择**移除...**。
+
+    弹出确认窗口。
+
+5. 如果您确认要移除该用户，请选择**移除用户**。
+
+    该用户会立即从组织中移除，其与贵组织的 shell 与屏幕共享会话会在几分钟内终止。
+
+更改用户角色的步骤：
+
+1. 登录您的 Raspberry Pi Connect 账户。
+
+2. 点击导航菜单左上角的**账户切换图标**（两个相对的箭头），然后从列表中选择您的组织。
+
+3. 选择页面顶部的**用户**选项卡。
+
+    此处会显示组织的所有成员。
+
+4. 在要更改角色的用户旁边，点击**更多选项图标**（三个垂直排列的点），然后选择**更改角色...**。
+
+5. 从下拉菜单中为该用户选择要分配的角色，然后选择**更改角色**。
+
+    用户角色已更改，并显示确认页面。
 
 ### 将树莓派设备关联至组织
 
@@ -471,6 +513,64 @@ sudo apt remove --purge rpi-connect
 6. 选择目标接收账户。
 
 7. 点击**转移**。
+
+### 标记设备 {#tag-devices}
+
+标签帮助您对组织中的设备进行分类和查找。例如，您可以按位置（`london`、`leeds`）、环境（`production`、`staging`）或功能（`point-of-sale`、`kiosk`）对设备打标签。
+
+标签会显示在设备页面和设备列表中设备名称下方。
+
+您必须是管理员才能添加或移除标签。
+
+要为设备添加或移除标签：
+
+1. 从设备列表中选择设备。
+
+2. 从设备页面右上角打开**设置**下拉菜单。
+
+3. 选择**编辑标签...**
+
+    <img src="/img/services/connect/tagging.png" alt="编辑标签对话框，显示已应用的标签以及带有建议的自动补全下拉菜单。" width="100%" />
+
+    * 要添加标签，请在文本框中输入。您可以从下拉菜单中选择已有标签，或输入新标签名称并选择 **创建** 选项。
+    * 要移除标签，请选择标签旁的 **x**。
+
+4. 完成后选择**完成**。
+
+每台设备最多支持 10 个标签。标签名称不得超过 30 个字符，且只能包含小写字母、数字、连字符和下划线。
+
+### 搜索和筛选设备 {#search-filter-devices}
+
+设备列表顶部的搜索栏让您可以结合自由文本搜索和结构化筛选查找设备。
+
+要按设备名称或序列号搜索，在搜索栏中输入任意文本。结果会随输入自动更新。
+
+要按特定属性筛选，输入限定符后跟冒号和值。可用的限定符有：
+
+| 限定符 | 说明 |
+|--------|------|
+| `model:` | 按树莓派型号筛选（例如 `model:5`、`model:4b`） |
+| `memory:` | 按 RAM 大小筛选（例如 `memory:4gb`、`memory:512mb`） |
+| `os:` | 按操作系统筛选（例如 `os:raspios-13`） |
+| `tag:` | 按标签筛选（例如 `tag:kiosk`、`tag:production`） |
+
+:::note
+`model:`、`memory:` 和 `os:` 限定符仅能查找运行 Connect 客户端 2.9.0 及更高版本的设备。要更新设备上的 Connect，请参阅 [更新](#更新)。
+:::
+
+您可以在一次查询中组合多个筛选和自由文本。例如，`model:5 tag:production dashboard` 可查找名称中带有 "dashboard"、标签为 `production` 的树莓派 5 设备。
+
+<img src="/img/services/connect/filters.png" alt="设备列表，搜索栏中已应用 model 和 tag 筛选。" width="100%" />
+
+当您开始在搜索栏中输入时，下拉菜单会建议可用的限定符和值。从下拉菜单中选择一个限定符可查看其可用值，然后选择一个值将其作为筛选添加。已应用的筛选会显示在搜索栏中。
+
+要移除筛选，选择它旁边的 **x** 或按 **Backspace**。
+
+多次使用 `tag:` 限定符可查找同时具有 **所有** 指定标签的设备。例如，`tag:production tag:kiosk` 仅返回同时具有 `production` 和 `kiosk` 标签的设备。
+
+:::tip
+在列表中任何设备上选择标签可快速将其添加为筛选。
+:::
 
 ### 设置订阅服务
 
@@ -518,6 +618,38 @@ sudo apt remove --purge rpi-connect
 
 若需更改组织名称，请在**常规**部分输入新名称。此操作不会影响您的设备或组织成员。
 
+#### 要求双因素认证 {#require-2fa}
+
+您可以要求组织的所有成员在其 Raspberry Pi ID 上启用双因素认证（2FA）。这能为贵组织设备的访问增加一层保护，防止成员账户被泄露后被用于访问组织设备。
+
+启用 2FA 要求的步骤：
+
+1. 登录 Raspberry Pi Connect。
+2. 在左上角的**账户切换**图标中选择您的组织账户。
+3. 选择**设置**选项卡，然后选择**要求双因素认证**。
+
+   页面会显示通知，确认组织设置已成功更新。
+
+<img src="/img/services/connect/organisation-authentication.png" alt="Connect 组织设置的认证部分，显示 要求双因素认证 按钮。" width="100%" />
+
+这会启动 14 天的宽限期。在宽限期内，我们会向尚未启用 2FA 的组织成员显示横幅。
+
+宽限期结束后，仍未启用 2FA 的成员将被阻止访问贵组织。在他们启用 Raspberry Pi ID 的 2FA 之前，他们将无法访问组织的设备或其他资源。
+
+<img src="/img/services/connect/organisation-2fa-required.png" alt="在宽限期结束后，面向未启用 2FA 的成员显示的双因素认证要求页面，并包含启用 Raspberry Pi ID 2FA 的链接。" width="100%" />
+
+禁用 2FA 要求的步骤：
+
+1. 登录 Raspberry Pi Connect。
+2. 在左上角的**账户切换**图标中选择您的组织账户。
+3. 选择**设置**选项卡，然后选择**停止要求双因素认证**。
+
+   页面会显示通知，确认组织设置已成功更新。
+
+:::note
+禁用后再重新启用 2FA 要求会重置 14 天宽限期。
+:::
+
 #### 创建授权密钥
 
 若需通过 [Connect 自动关联设备](#将-raspberry-pi-设备与-connect-账户连接起来)（无需网页界面）进行操作，请创建授权密钥。在**授权密钥**区域选择**新建**，填写描述及有效期（以天为单位）。
@@ -538,6 +670,106 @@ sudo apt remove --purge rpi-connect
 
 管理API支持您无需Connect网页界面即可自动管理组织。向管理API发送请求时，必须使用有效的管理API访问令牌进行身份验证。基础URL为 https://api.connect.raspberrypi.com。
 
+#### 创建设备身份 {#device-identities}
+
+设备身份（Device identities）让您无需交互式登录即可预先将树莓派设备认证到组织。与授权密钥不同，设备身份可多次使用，并依赖存储在设备一次性可编程内存中的私钥。
+
+创建设备身份是免费的。您仅在设备首次通过认证连接到组织的 Connect 账户时开始计费，这使得设备身份非常适合在部署前预配置 Connect 的组织场景。
+
+请求必须包含 `X-Connect-Identity-Signature` 标头。要生成该标头，请构造一个以换行分隔的有效载荷，按顺序包含：
+
+* HTTP 请求方法（例如 `POST`）
+* 完整的请求 URL
+* `Authorization: <值>`
+* `Content-Type: <值>`
+* `Accept: <值>`（如果您的 HTTP 客户端会发送此标头）
+* HTTP 请求正文的 SHA256 十六进制摘要（下面 `POST` 所示的 JSON 请求正文）
+
+使用设备的私钥，以 ECDSA with SHA256 对此有效载荷进行签名，然后进行 Base64 编码。
+
+例如，一个注册设备身份的请求会产生以下有效载荷：
+
+```
+POST
+https://api.connect.raspberrypi.com/organisation/device-identities
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+Accept: */*
+<HTTP 请求正文的 SHA256 十六进制摘要>
+```
+
+在设备上，使用 [rpi-fw-crypto](https://github.com/raspberrypi/utils/tree/master/rpifwcrypto) 对有效载荷进行签名。例如，将有效载荷写入 `payload.txt` 后：
+
+```sh
+rpi-fw-crypto sign --in payload.txt --key-id 1 --alg ec | base64 -w 0
+```
+
+输出即为 `X-Connect-Identity-Signature` 标头的值。
+
+要为您的组织创建设备身份，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换以下代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌
+* `signaturehere`：此请求的 `X-Connect-Identity-Signature` 值
+* `-----BEGIN PUBLIC KEY-----...`：设备的 PEM 编码公钥
+* `my-device-identity`：设备身份的描述，可在组织审计日志中看到
+* `pi5-001`：交换身份时分配给设备的名称（可选，默认为设备的主机名）
+
+```http
+POST /organisation/device-identities HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+X-Connect-Identity-Signature: signaturehere
+
+{
+    "public_key": "-----BEGIN PUBLIC KEY-----...",
+    "description": "my-device-identity",
+    "device_name": "pi5-001"
+}
+```
+
+curl 示例：
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' --header 'X-Connect-Identity-Signature: signaturehere' --header 'Content-Type: application/json' --data '{"public_key":"-----BEGIN PUBLIC KEY-----...","description":"my-device-identity","device_name":"pi5-001"}' https://api.connect.raspberrypi.com/organisation/device-identities
+```
+
+若成功，您会收到 **201 Created** 响应，其中包含 JSON 格式的设备身份。例如：
+
+```http
+HTTP/2 201
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "096ce472-2cbd-412a-8295-6c03a1a07ba4",
+    "description": "my-device-identity",
+    "device_name": "pi5-001",
+    "created_at": "2026-02-25T16:09:52Z",
+    "public_key": "-----BEGIN PUBLIC KEY-----..."
+}
+```
+
+响应包含以下字段：
+
+* **id**：设备身份的唯一标识符。
+* **description**：用于创建设备身份的描述。
+* **device_name**：交换身份时分配给设备的名称。
+* **created_at**：创建设备身份的日期和时间（ISO 8601 格式）。
+* **public_key**：设备身份对应的 PEM 编码公钥。
+
+如果您的管理 API 访问令牌无效，会返回 **401 Unauthorized**。
+
+如果设备身份无法创建，会返回 **422 Unprocessable Content** 响应：
+
+```http
+HTTP/2 422
+Content-Type: application/json; charset=utf-8
+
+{"message":"Validation failed: Public key is invalid"}
+```
+
 #### 创建授权密钥
 
 若需自动生成 [通过Connect连接设备](#将-raspberry-pi-设备与-connect-账户连接起来) 的授权密钥，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
@@ -548,26 +780,44 @@ sudo apt remove --purge rpi-connect
 * `my-auth-key`：认证密钥描述
 * `1`：认证密钥有效期天数（可选，默认1天）
 * `pi5-001`：使用此密钥添加设备时使用的名称（可选，默认为设备的主机名）
+* `production`、`kiosk`：交换授权密钥时应用到设备的标签（可选）。每个标签只能包含小写字母、数字、连字符和下划线，最多 30 个字符。每个授权密钥最多可应用 10 个标签。
 
 <Tabs>
+<TabItem value="json" label="JSON">
+
+```http
+POST /organisation/auth-keys HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+
+{
+    "description": "my-auth-key",
+    "ttl_days": 1,
+    "device_name": "pi5-001",
+    "tags": ["production", "kiosk"]
+}
+```
+
+</TabItem>
 <TabItem value="http" label="HTTP">
 
 HTTP请求：
-+
+
 ```http
 POST /organisation/auth-keys HTTP/1.1
 Host: api.connect.raspberrypi.com
 Authorization: Bearer rporg_accesstokenhere
 Content-Type: application/x-www-form-urlencoded
 
-description=my-auth-key&ttl_days=1&device_name=pi5-001
+description=my-auth-key&ttl_days=1&device_name=pi5-001&tags[]=production&tags[]=kiosk
 ```
 
 </TabItem>
 <TabItem value="curl" label="curl">
 
 ```sh
-curl --header 'Authorization: Bearer rporg_accesstokenhere' --data-urlencode 'description=my-auth-key' --data-urlencode 'ttl_days=1' --data-urlencode 'device_name=pi5-001' https://api.connect.raspberrypi.com/organisation/auth-keys
+curl --header 'Authorization: Bearer rporg_accesstokenhere' --data-urlencode 'description=my-auth-key' --data-urlencode 'ttl_days=1' --data-urlencode 'device_name=pi5-001' --data-urlencode 'tags[]=production' --data-urlencode 'tags[]=kiosk' https://api.connect.raspberrypi.com/organisation/auth-keys
 ```
 
 </TabItem>
@@ -580,15 +830,24 @@ curl --header 'Authorization: Bearer rporg_accesstokenhere' --data-urlencode 'de
 HTTP/2 201
 Content-Type: application/json; charset=utf-8
 
-{"id":"12345","description":"my-auth-key","secret":"rpoak_123456","expires_at":"2025-01-01T00:00:30Z"}
+{
+    "id": "12345",
+    "description": "my-auth-key",
+    "device_name": "pi5-001",
+    "tags": ["production", "kiosk"],
+    "secret": "rpoak_123456",
+    "expires_at": "2025-01-01T00:00:30Z"
+}
 ```
 
 响应包含以下字段：
 
-**id**：认证密钥的唯一标识符。
-**description**：创建认证密钥时使用的描述信息。
-**secret**：以 `rpoak_` 为前缀的随机令牌。
-**expires_at**：密钥过期日期与时间（ISO 8601格式）。
+* **id**：认证密钥的唯一标识符。
+* **description**：创建认证密钥时使用的描述信息。
+* **device_name**：交换授权密钥时分配给设备的名称。
+* **tags**：交换授权密钥时应用到设备的标签。
+* **secret**：以 `rpoak_` 为前缀的随机令牌。
+* **expires_at**：密钥过期日期与时间（ISO 8601格式）。
 
 在过期前可使用 `secret` 进行 [设备与Connect的关联](#将-raspberry-pi-设备与-connect-账户连接起来)。
 
@@ -646,7 +905,8 @@ Content-Type: application/json; charset=utf-8
         {
             "id": "69739b44-ebb2-468e-9e24-08126dec4925",
             "name": "raspberrypi5",
-            "serial_number": "ea636879c4d47a37"
+            "serial_number": "ea636879c4d47a37",
+            "tags": ["production", "kiosk"]
         }
     ],
     "meta": {
@@ -668,6 +928,7 @@ Content-Type: application/json; charset=utf-8
 **id**：设备的唯一标识符。
 **name**：设备名称。
 **serial_number**：设备序列号。
+**tags**：应用于该设备的标签。
 
 `meta` 对象包含以下字段：
 

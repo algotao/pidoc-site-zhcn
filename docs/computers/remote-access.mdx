@@ -207,7 +207,7 @@ Fing 应用程序是一款免费的智能手机网络扫描程序。它适用于
 
 在全新安装的 Raspberry Pi OS 上配置 SSH：
 
-1. 按照 [Install with Imager](./getting-started.mdx#使用imager工具安装) 指南中的说明操作。
+1. 按照 [Install with Imager](./getting-started.mdx#使用-imager-安装) 指南中的说明操作。
 2. 在 **自定义>远程访问** 选项卡中，将 **启用SSH** 开关切换至激活状态。
 3. 选择 **使用密码认证**，即可使用与物理操作树莓派时相同的用户名和密码登录。选择 **使用公钥认证**，则需[配置SSH密钥](./remote-access.mdx#手动配置-ssh-密钥)以实现基于SSH密钥的认证登录。
 
@@ -288,7 +288,7 @@ Geany &
 
 使用树莓派映像工具配置操作系统映像时，可预先配置SSH密钥以使用运行工具所在计算机上的现有密钥。.
 
-1. 参照[使用Imager安装](./getting-started.mdx#使用imager工具安装)指南配置启动映像。
+1. 参照[使用Imager安装](./getting-started.mdx#使用-imager-安装)指南配置启动映像。
 2. 在 **远程访问** 选项卡中，将 *启用SSH* 开关切换至激活状态。.
 3. 选择 *使用公钥认证*。
   * 若您已在`~/.ssh/id_rsa.pub`存储SSH公钥，Imager将自动填充该公钥至文本框。
@@ -402,7 +402,7 @@ chmod 644 .ssh/authorized_keys
 
 现在无需输入密码即可连接到 Raspberry Pi。
 
-## 使用 VNC 共享屏幕
+## 使用 VNC 共享屏幕 {#使用-vnc-共享屏幕}
 
 有时，使用设备工作并不方便。虚拟网络计算（VNC）允许你从另一个设备控制一个设备的桌面。
 
@@ -438,7 +438,7 @@ Raspberry Pi OS 支持以图形方式和命令行方式启用 VNC 服务器。
 
 #### 在命令行上启用 VNC 服务器
 
-使用 [raspi-config](./configuration.mdx#raspi-config) 在命令行上启用 VNC 服务器。
+使用 [raspi-config](./configuration.mdx#交互式-raspi-config-文本用户界面-tui) 在命令行上启用 VNC 服务器。
 
 1. 用以下一行打开 `raspi-config`：
 ```sh
