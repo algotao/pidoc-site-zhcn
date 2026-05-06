@@ -60,7 +60,7 @@ pidoc version
 
 如安装正常，则会显示出pidoc的版本号，例如：
 ```
-Pidoc Endpoint v2.0.2
+Pidoc Endpoint v2.0.10
 ```
 
 ### 安装特定版本
@@ -68,7 +68,7 @@ Pidoc Endpoint v2.0.2
 可以指定版本号安装。如当前设备已安装PiDoc，则指定版本不能小于已安装版本。例如安装 v2.0.6 版本：
 
 ```sh
-PIDOC_VERSION=2.0.6 bash <(curl -sSL https://dl.pidoc.cn/pidoc/install.sh)
+PIDOC_VERSION=2.0.10 bash <(curl -sSL https://dl.pidoc.cn/pidoc/install.sh)
 ```
 
 各种版本及架构可在 [这里](https://dl.pidoc.cn/pidoc/) 查看。
@@ -383,49 +383,6 @@ PidocAgent 在Beta阶段，如遇问题请入群反馈。
 现在就可以通过 SSH 客户端连接到树莓派了，地址为 `localhost:22`。
 :::
 
-## github稳定访问
-
-在某些网络环境中，访问 github.com 可能存在稳定性差、速度慢等问题。其中一个原因是163骨干网由境外回程极为拥堵，造成使用体验不佳。
-
-`PiDoc 2.0.9` 版本开始支持 github 访问线路优化。本站租用了 CN2 GIA 商业线路，提升访问 github 回程的稳定性，实测速度约为稳定的 1.1MB/s。
-
-编辑配置文件 `/etc/pidoc/config.json`，启用配置项
-
-```json
-{
-  "private_key": "你设备的密钥，无须更改",
-  "http_proxy_enabled": true,  // 启用 HTTP 代理
-  "http_proxy_listen": "localhost:38090", // HTTP 代理监听地址
-  "http_proxy_domains": ["*.github.com", "*.githubusercontent.com"]  // HTTP 代理域名白名单。该配置为本地逻辑分支，确定是否直连。实际白名单仍由后端控制。
-}
-```
-
-然后，重启服务
-```sh
-sudo systemctl restart pidoc
-```
-
-使用如下命令测试是否能否能稳定访问 github
-```sh
-https_proxy=http://localhost:38090 curl https://github.com
-```
-
-如能看到输出HTML，则表示可以稳定访问 github。
-
-配置 git 程序使用代理，且只对 github.com 和 githubusercontent.com 域名生效。
-
-```sh
-git config --global http.https://github.com.proxy http://localhost:38090
-git config --global http.https://githubusercontent.com.proxy http://localhost:38090
-```
-
-:::warning
-1. 未使用VPN等技术，您的访问源/目等元组信息仍置于监管规则之下。（它不是 “翻墙” 或 “科学上网”）
-2. 如您所在运营商阻塞了目标地址，则使用该功能也无法访问目标地址。它只提升稳定性，不提升穿越能力。
-3. 如您无须设置即可稳定访问 github，则不要启用该项功能。带宽为商业付费，有一定成本。
-4. 请尽量不要设置为系统级的代理，避免在pidoc程序未运行时影响当前设备访问网络。
-:::
-
 ## 配置文件
 
 PiDoc 配置文件位于 `/etc/pidoc/config.json`，该文件在执行 `pidoc service install` 时自动生成。
@@ -448,9 +405,6 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
 | websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://ops.pidoc.cn/api/endpoint/ws-tunnel` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | forward_port_whitelist | array of int | 端口转发白名单，用于限制端口转发的范围以提升安全性。 | 2.0.7 |
 | client_id | string | 自定义客户端ID（可选，为空则自动获取设备序列号）。同一账号下的多个设备的客户端ID不能相同 | 2.0.8 |
-| http_proxy_enabled | boolean | 是否启用 HTTP 代理 | 2.0.9 |
-| http_proxy_listen | string | HTTP 代理监听地址（默认 localhost:38090） | 2.0.9 |
-| http_proxy_domains | array of string | HTTP 代理允许的域名列表，白名单由服务端控制，本地只做为备份措施。不在列表中的域名由pidoc本地转发。 | 2.0.9 |
 
 ```json
 {
@@ -460,9 +414,6 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
   "websocket_url": "wss://ops.pidoc.cn/api/endpoint/ws-tunnel",
   "forward_port_whitelist": [22, 5900],
   "client_id": "my-custom-client-id",
-  "http_proxy_enabled": true,
-  "http_proxy_listen": "localhost:38090",
-  "http_proxy_domains": ["*.github.com", "*.githubusercontent.com"]
 }
 ```
 

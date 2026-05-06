@@ -224,21 +224,41 @@ pre {
 }
 
 /* ===============================================
-   导航栏商店链接红色样式
+   导航栏商店链接蓝色样式
    =============================================== */
 .navbar__link.nav-shop-link {
-  color: #e74c3c !important;
+  color: #2980b9 !important;
   font-weight: 600;
 }
 
 .navbar__link.nav-shop-link:hover {
-  color: #c0392b !important;
+  color: #1a5276 !important;
 }
 
 [data-theme='dark'] .navbar__link.nav-shop-link {
-  color: #ff6b6b !important;
+  color: #3498db !important;
 }
 
 [data-theme='dark'] .navbar__link.nav-shop-link:hover {
+  color: #5dade2 !important;
+}
+
+/* ===============================================
+   导航栏免费远程链接红色样式
+   =============================================== */
+.navbar__link.nav-free-link {
+  color: #e74c3c !important;
+  font-weight: 600;
+}
+
+.navbar__link.nav-free-link:hover {
+  color: #c0392b !important;
+}
+
+[data-theme='dark'] .navbar__link.nav-free-link {
+  color: #ff6b6b !important;
+}
+
+[data-theme='dark'] .navbar__link.nav-free-link:hover {
   color: #ff4757 !important;
 }
