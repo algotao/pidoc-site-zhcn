@@ -300,7 +300,7 @@ VSCode 远程开发需要安装 [Remote SSH](https://marketplace.visualstudio.co
 
 本地转发功能可以将远程设备的端口映射到本地，实现 VNC 连接、我的世界 游戏连接等。该功能需要PidocDesktop 客户端支持。
 
-下载：[PidocDesktop Win64 V0.1.1](https://dl.pidoc.cn/pidoc/pidocdesktop-0.1.1-windows-amd64.zip)
+下载：[PidocDesktop Win64 V0.1.2](https://dl.pidoc.cn/pidoc/pidocdesktop-0.1.2-windows-amd64.zip)
 
 :::warning
 PidocDesktop 在Beta阶段，如遇问题请入群反馈。
@@ -402,7 +402,7 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
 | private_key | string | 私钥，用于加密通信。该密钥在管理界面的 `设备管理`--`增加` 中生成。 | 2.0.0 |
 | server_addr | string | 堡垒机服务器地址。当前仅有 `ops.pidoc.cn:3322` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | websocket | boolean | 是否启用 WebSocket。在一些网络环境中，需要启用 WebSocket 穿越防火墙。 | 2.0.6 |
-| websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://ops.pidoc.cn/api/endpoint/ws-tunnel` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
+| websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://ops.pidoc.cn/ws` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | forward_port_whitelist | array of int | 端口转发白名单，用于限制端口转发的范围以提升安全性。 | 2.0.7 |
 | client_id | string | 自定义客户端ID（可选，为空则自动获取设备序列号）。同一账号下的多个设备的客户端ID不能相同 | 2.0.8 |
 
