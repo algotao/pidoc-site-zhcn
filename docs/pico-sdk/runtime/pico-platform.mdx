@@ -1,0 +1,432 @@
+---
+sidebar_position: 16
+draft: false
+description: 为 RP2 系列设备/架构提供针对底层编译器/平台特定内容的通用抽象的宏、定义（以及在非汇编代码中包含时的函数）。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK platform]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+为 RP2 系列设备/架构提供针对底层编译器/平台特定内容的通用抽象的宏、定义（以及在非汇编代码中包含时的函数）。
+
+### 详细描述
+
+用于访问 CPU 寄存器的宏和定义。
+
+此头文件可被汇编代码包含。
+
+此头文件可被汇编代码包含。
+
+### 宏
+
+* `#define __fast_mul(a, b)`
+* `#define __isr`
+* `#define __force_inline __always_inline`
+* `#define count_of(a) (sizeof(a)/sizeof\((a)[0]))`
+* `#define [MAX](a, b) \((a)>(b)?(a):(b))`
+* `#define [MIN](a, b) \((b)>(a)?(a):(b))`
+* `#define __check_type_compatible(type_a, type_b) [static]_assert(__builtin_types_compatible_p`(type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));`
+* `#define __after_data(group) __attribute__\((section(".after_data." group)))`
+* `#define __scratch_x(group) __attribute__\((section(".scratch_x." group)))`
+* `#define __scratch_y(group) __attribute__\((section(".scratch_y." group)))`
+* `#define __uninitialized_ram(group) __attribute__\((section(".uninitialized_data." #group))) group`
+* `#define __in_flash(group) __attribute__\((section(".flashdata." group)))`
+* `#define __no_inline_not_in_flash_func(func_name) __noinline` __not_in_flash_func(func_name)`
+
+### 函数
+
+- `static void busy_wait_at_least_cycles (uint32_t minimum_cycles)`: 忙等待至少给定数量的时钟周期的辅助方法。
+`static __force_inline void __breakpoint (void)`<br/>&emsp;执行断点指令。
+
+`static __force_inline uint get_core_num (void)`<br/>&emsp;获取当前核心编号。
+
+`static __force_inline uint __get_current_exception (void)`<br/>&emsp;获取此核心上当前的异常级别。
+
+`static __force_inline bool pico_processor_state_is_nonsecure (void)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;如果当前在 NonSecure 状态下执行则返回 true（仅 Arm）。
+
+`uint8_t rp2350_chip_version (void)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;返回 RP2350 芯片版本号。
+
+`static uint8_t rp2040_chip_version (void)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;为兼容性返回 RP2040 芯片版本号。
+- `static uint8_t rp2040_rom_version (void)`: 返回 RP2040 ROM 版本号。
+`static __force_inline int32_t __mul_instruction (int32_t a, int32_t b)<br/>&emsp;使用汇编 MUL` 指令将两个整数相乘。
+
+`static __force_inline void tight_loop_contents (void)`<br/>&emsp;用于紧密循环体的空操作函数。
+
+`static __always_inline void __compiler_memory_barrier (void)`<br/>&emsp;确保编译器不会将内存访问移过此方法调用。
+- `void panic_unsupported (void)`: 以"Unsupported"消息触发 panic。
+`void panic (const char *fmt,...)`<br/>&emsp;显示 panic 消息并停止执行。
+
+### 宏定义文档
+
+#### `__fast_mul`
+
+```c
+#define __fast_mul(a, b) __builtin_choose_expr(__builtin_constant_p(b) && !__builtin_constant_p(a), \
+    (__builtin_popcount(b) >= 2 ? __mul_instruction(a,b) : (a)*(b)), \
+    (a)*(b))
+```
+
+使用最快方式将两个整数值相乘。
+
+高效地将值 a 与可能为常量的值 b 相乘。
+
+如果 b 是已知常量且非零或非 2 的幂次，则使用 mul 指令而非 gcc 默认的移位和加法组合（后者通常较慢）。如果 b 是 2 的幂次，则显然优先使用单次移位。
+
+**参数**
+
+- `a`: 第一个操作数
+- `b`: 第二个操作数
+
+**返回**
+
+a `*` b
+#### `__isr`
+
+`#define __isr`
+
+中断处理函数的标记。
+
+例如，名为 my_interrupt_handler 的 IRQ 处理函数：
+
+```c
+void __isr my_interrupt_handler(void) {
+```
+#### `__force_inline`
+
+`#define __force_inline __always_inline`
+
+强制内联函数（无论优化级别）的属性。
+
+例如，此处的 my_function 将始终被内联：
+
+```c
+int __force_inline my_function(int x) {
+```
+#### count_of
+
+`#define count_of(a) (sizeof(a)/sizeof\((a)[0]))`
+
+用于确定数组元素数量的宏。
+#### MAX
+
+`#define MAX(a, b) \((a)>(b)?(a):(b))`
+
+返回两个可比较值中较大值的宏。
+#### MIN
+
+`#define MIN(a, b) \((b)>(a)?(a):(b))`
+
+返回两个可比较值中较小值的宏。
+#### `__check_type_compatible`
+
+`#define __check_type_compatible(type_a, type_b) [static]_assert(__builtin_types_compatible_p`(type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));`
+
+用于断言两个类型等价的工具宏。
+
+此宏可在其他宏中与 `typeof` 配合使用，断言两个参数的类型等价（或单个参数为预期类型）。
+#### `__after_data`
+
+`#define __after_data(group) __attribute__\((section(".after_data." group)))`
+
+用于在 `.data` 节之后的 RAM 中放置数据的节属性宏。
+
+例如，一个放置在 .data 节之后的 400 元素 `uint32_t` 数组：
+
+```c
+uint32_t __after_data("my_group_name") a_big_array[400];
+```
+
+节属性为 `.after_data.<group>`。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+#### `__scratch_x`
+
+`#define __scratch_x(group) __attribute__\((section(".scratch_x." group)))`
+
+用于不在 flash 中放置（即放置在 RAM 中）的节属性宏。
+
+例如，一个放置在 RAM 中的 3 元素 `uint32_t 数组（即使它是 static const）：
+
+```c
+static const uint32_t __not_in_flash("my_group_name") an_array[3];
+```
+
+节属性为 `.time_critical.<group>`。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
+用于在 SRAM bank 4（称为"scratch X"）中放置数据的节属性宏。
+
+Scratch X 通常用于仅被一个核心访问的关键数据和函数（当只有一个核心访问该 RAM bank 时，不存在停顿机会）。
+
+例如，一个放置在"scratch X"中的 `uint32_t` 变量：
+
+```c
+uint32_t __scratch_x("my_group_name") foo = 23;
+```
+
+节属性为 `.scratch_x.<group>`。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+#### `__scratch_y`
+
+`#define __scratch_y(group) __attribute__\((section(".scratch_y." group)))`
+
+用于在 SRAM bank 5（称为"scratch Y"）中放置数据的节属性宏。
+
+Scratch Y 通常用于仅被一个核心访问的关键数据和函数（当只有一个核心访问该 RAM bank 时，不存在停顿机会）。
+
+例如，一个放置在"scratch Y"中的 `uint32_t` 变量：
+
+```c
+uint32_t __scratch_y("my_group_name") foo = 23;
+```
+
+节属性为 `.scratch_y.<group>`。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+#### `__uninitialized_ram`
+
+`#define __uninitialized_ram(group) __attribute__\((section(".uninitialized_data." #group))) group`
+
+用于标记不需要初始化的数据的节属性宏。
+
+以此方式标记的数据在复位后将保留其值（通常，未初始化数据——在 .bss 节中——在运行时初始化期间会被清零）。
+
+例如，一个在程序因复位重启后仍保留其值的 `uint32_t` foo：
+
+```c
+uint32_t __uninitialized_ram(foo);
+```
+
+节属性为 `.uninitialized_data.<group>`。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+#### `__in_flash`
+
+`#define __in_flash(group) __attribute__\((section(".flashdata." group)))`
+
+在 COPY_TO_RAM 二进制文件中也强制放置在 flash 中的节属性宏。
+
+例如，一个明确放置在 flash 中的 `uint32_t` 变量（如果尝试写入它将会发生硬故障！）：
+
+```c
+uint32_t __in_flash("my_group_name") foo = 23;
+```
+
+节属性为 `.flashdata.<group>`。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+#### `__no_inline_not_in_flash_func`
+
+`#define __no_inline_not_in_flash_func(func_name) __noinline` __not_in_flash_func(func_name)`
+
+指示函数不应存储在 flash 中。
+
+修饰函数名，使该函数从 RAM 执行（假设编译器未将其内联到 flash 函数中）。
+
+例如，一个接受 int 参数的函数 my_func：
+
+```c
+void __not_in_flash_func(my_func)(int some_arg) {
+```
+
+函数被放置在 `.time_critical.<func_name>` 链接器节中。
+
+**参见**
+
+`__no_inline_not_in_flash_func`
+
+指示函数对时间/延迟敏感，不应从 flash 运行。
+
+修饰函数名，使该函数从 RAM 执行（假设编译器未将其内联到 flash 函数中），以避免可能的 flash 延迟。目前此宏的实现与 `__not_in_flash_func 相同，但语义不同，`__time_critical_func` 将来可能会受到特殊处理，以减少从 flash 函数调用此类函数的开销。
+
+例如，一个接受 int 参数的函数 my_func：
+
+```c
+void __time_critical_func(my_func)(int some_arg) {
+```
+
+函数被放置在 `.time_critical.<func_name>` 链接器节中。
+
+**参见**
+
+`__not_in_flash_func`
+
+指示函数不应存储在 flash 中且不应被内联。
+
+修饰函数名，使该函数从 RAM 执行，并明确标记为 noinline 以防止编译器将其内联到 flash 函数中。
+
+例如，一个接受 int 参数的函数 my_func：
+
+```c
+void __no_inline_not_in_flash_func(my_func)(int some_arg) {
+```
+
+函数被放置在 `.time_critical.<func_name>` 链接器节中。
+
+### 函数文档
+
+#### `__breakpoint`
+
+`static __force_inline void __breakpoint (void) [static]`
+
+执行断点指令。
+
+#### `__compiler_memory_barrier`
+
+`static __always_inline void __compiler_memory_barrier (void) [static]`
+
+确保编译器不会将内存访问移过此方法调用。
+
+例如在以下代码中：
+
+```c
+*some_memory_location = var_a;
+__compiler_memory_barrier();
+uint32_t var_b = *some_other_memory_location
+```
+
+编译器不会将从 `some_other_memory_location` 的读取移到内存屏障之前（否则它可能会这样做——甚至移到内存写入之前！）。
+
+#### `__get_current_exception`
+
+`static __force_inline uint __get_current_exception (void) [static]`
+
+获取此核心上当前的异常级别。
+
+在 Cortex-M 上，这是架构参考手册中定义的异常编号，在中断处理程序内等于 VTABLE_FIRST_IRQ + irq num（VTABLE_FIRST_IRQ 在 platform_defs.h 中定义）。
+
+在 Hazard3 上，若在外部 IRQ 处理程序内（或该处理程序引发的故障中），此函数返回 VTABLE_FIRST_IRQ + irq num，否则返回 0，与 Cortex-M 的值大体对齐。
+
+**返回**
+
+若 CPU 正在处理异常则返回异常编号，否则返回 0。
+
+#### `__mul_instruction`
+
+`static __force_inline int32_t __mul_instruction (int32_t a, int32_t b) [static]`
+
+使用汇编 `MUL` 指令将两个整数相乘。
+
+无论操作数取值如何，都使用 ARM mul 指令将 a 与 b 相乘（编译器可能会选择移位/加法组合），即这是一个单周期操作。
+
+**参数**
+
+- `a`: 第一个操作数
+- `b`: 第二个操作数
+
+**返回**
+
+a `*` b
+
+#### busy_wait_at_least_cycles
+
+`static void busy_wait_at_least_cycles (uint32_t minimum_cycles) [inline], [static]`
+
+忙等待至少给定数量的时钟周期的辅助方法。
+
+此方法可用于引入极短的延迟。
+
+此方法在紧密循环中忙等待给定数量的系统时钟周期。总等待时间精度仅在 2 个周期以内，且此方法使用循环计数器而非硬件定时器，因此若在忙等待期间调用核心处理了中断，该方法的实际等待时间将始终比预期更长；当然，可以禁用中断来避免这种情况。
+
+如需将实际时间转换为周期数，可使用 clock_get_hz(clk_sys) 确定每秒时钟周期数。
+
+**参数**
+
+- `minimum_cycles`: 要延迟的最少系统时钟周期数
+
+#### get_core_num
+
+`static __force_inline uint get_core_num (void) [static]`
+
+获取当前核心编号。
+
+**返回**
+
+发起调用的核心编号。
+
+#### panic
+
+`void panic (const char * fmt, ...)`
+
+显示 panic 消息并停止执行。
+
+会尝试将消息输出到所有已注册的 STDOUT 驱动程序，之后此方法执行 BKPT 指令。
+
+**参数**
+
+- `fmt`: 格式字符串（类似 printf）
+- `...`: 类似 printf 的参数
+
+#### panic_unsupported
+
+`void panic_unsupported (void)`
+
+以"Unsupported"消息触发 panic。
+
+**参见**
+
+
+#### pico_processor_state_is_nonsecure <span className="chip-tag rp2350">RP2350</span>
+
+`static __force_inline bool pico_processor_state_is_nonsecure (void) [static]`
+
+如果当前在 NonSecure 状态下执行则返回 true（仅 Arm）。
+
+**返回**
+
+若当前在 Arm 处理器的 NonSecure 状态下执行则返回 true。
+
+#### rp2040_chip_version <span className="chip-tag rp2350">RP2350</span>
+
+`static uint8_t rp2040_chip_version (void) [inline], [static]`
+
+为兼容性返回 RP2040 芯片版本号。
+
+**返回**
+
+2（RP2040 B2 中修复的勘误在 RP2350 中均已修复）。
+
+#### rp2040_rom_version
+
+`static uint8_t rp2040_rom_version (void) [inline], [static]`
+
+返回 RP2040 ROM 版本号。
+
+**返回**
+
+RP2040 ROM 版本号（RP2040-B0 为 1，RP2040-B1 为 2，RP2040-B2 为 3）。
+
+#### rp2350_chip_version <span className="chip-tag rp2350">RP2350</span>
+
+`uint8_t rp2350_chip_version (void)`
+
+返回 RP2350 芯片版本号。
+
+**返回**
+
+RP2350 芯片版本号（B0/B1 为 1，B2 为 2）。
+
+#### tight_loop_contents
+
+`static __force_inline void tight_loop_contents (void) [static]`
+
+用于紧密循环体的空操作函数。
+
+此空操作函数旨在被任何紧密硬件轮询循环调用。普遍使用此函数可以更容易地找到紧密循环，并且将来可能会添加 #ifdef 化的锁死调试支持。
+
+<Normal />

@@ -1,0 +1,89 @@
+---
+sidebar_position: 8
+draft: false
+description: 随机数生成器 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK rand]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+随机数生成器 API。
+
+### 详细描述
+
+此模块在运行时利用多种可能的熵源生成随机数，并使用这些来源修改软件实现的 128 位"伪随机数生成器（PRNG）"的状态。
+
+要提供的随机数（32 至 128 位）从 PRNG 中读取，以帮助提供较大的数值空间。
+
+以下（多种）熵源可用（质量各异），每种均由一个 `#define` 启用：
+
+* 环形振荡器（ROSC）（PICO_RAND_ENTROPY_SRC_ROSC == 1）：每次从环形振荡器的"随机位"中采样 PICO_RAND_ROSC_BIT_SAMPLE_COUNT 位并混入。如果 ROSC 已关闭，或处理器正在从 ROSC 运行，则不应使用此选项。
+
+ROSC 位采样的最大吞吐量由 PICO_RAND_MIN_ROSC_BIT_SAMPLE_TIME_US 控制，默认为 10 微秒，即每秒 100,000 位。
+
+* 时间（PICO_RAND_ENTROPY_SRC_TIME == 1）：每次混入 64 位微秒定时器的值。
+
+* 总线性能计数器（PICO_RAND_ENTROPY_SRC_BUS_PERF_COUNTER == 1）：每次混入总线架构的一个性能计数器。
+
+所有熵源在应用到 PRNG 状态机之前都经过哈希处理。
+
+*第一次*请求随机数时，必须为 128 位 PRNG 状态设置种子。也有多种熵源可用于种子操作：
+
+* 环形振荡器（ROSC）（PICO_RAND_SEED_ENTROPY_SRC_ROSC == 1）：从环形振荡器的"随机位"采集 64 位并混入种子。
+
+* 时间（PICO_RAND_SEED_ENTROPY_SRC_TIME == 1）：将 64 位微秒定时器混入种子。
+
+* 板卡标识符（PICO_RAND_SEED_ENTROPY_SRC_BOARD_ID == 1）：通过 `pico_get_unique_board_id` 获取的板卡 ID 混入种子。
+
+* RAM 哈希（PICO_RAND_SEED_ENTROPY_SRC_RAM_HASH）：对 RAM 子集的内容进行哈希并混入。RAM 的初始内容在上电时是不确定的，因此可提供合理的熵来源。默认情况下对 RAM 的最后 1K（通常包含 core 0 栈）进行哈希，这也可以在每次热重置后提供差异。
+
+使用默认设置时，种子生成大约需要 1 毫秒，之后生成随机数通常需要 10 到 20 微秒。
+
+pico_rand 的方法可以从任意核心或 IRQ 中安全调用，但在后一种情况下需注意，调用可能会阻塞数微秒以等待更多熵。
+
+### 函数
+
+`void get_rand_128 (rng_128_t *rand128)`<br/>&emsp;获取 128 位随机数。
+- `uint64_t get_rand_64 (void)`: 获取 64 位随机数。
+- `uint32_t get_rand_32 (void)`: 获取 32 位随机数。
+
+### 函数文档
+
+#### get_rand_128
+
+`void get_rand_128 (rng_128_t * rand128)`
+
+获取 128 位随机数。
+
+此方法可以从任意核心或 IRQ 中安全调用，但在后一种情况下需注意，调用可能会阻塞数微秒以等待更多熵。
+
+**参数**
+
+- `rand128`: 指向用于接收 128 位随机数的存储区域的指针
+
+#### get_rand_32
+
+`uint32_t get_rand_32 (void)`
+
+获取 32 位随机数。
+
+此方法可以从任意核心或 IRQ 中安全调用，但在后一种情况下需注意，调用可能会阻塞数微秒以等待更多熵。
+
+**返回**
+
+32 位随机数。
+
+#### get_rand_64
+
+`uint64_t get_rand_64 (void)`
+
+获取 64 位随机数。
+
+此方法可以从任意核心或 IRQ 中安全调用，但在后一种情况下需注意，调用可能会阻塞数微秒以等待更多熵。
+
+**返回**
+
+64 位随机数。
+
+<Normal />

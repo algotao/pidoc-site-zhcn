@@ -1,0 +1,195 @@
+---
+sidebar_position: 9
+draft: false
+description: 低级 Flash 编程和擦除 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK flash]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+低级 Flash 编程和擦除 API。
+
+### 详细描述
+
+注意，如果您同时使用两个核心，并且另一个核心正在并发地从 flash 执行代码，这些函数是*不安全*的。在这种情况下，您必须执行自己的同步，确保在 flash 编程期间不会发生 XIP 访问。一种方法是使用 [lockout] 函数。
+
+同样，如果您的中断处理程序或中断向量表位于 flash 中，这些函数也是*不安全*的，因此在这种情况下必须在调用前禁用中断。
+
+如果未定义 PICO_NO_FLASH=1（即程序是从 flash 运行的），这些函数将在 SRAM 中制作第二阶段引导加载程序的静态副本，并在编程或擦除 flash 后使用它重新进入就地执行（XIP）模式，以便可以安全地从 flash 驻留代码中调用它们。
+
+**示例**
+
+```c title="flash_program.c"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "pico/stdlib.h"
+#include "pico/flash.h"
+#include "hardware/flash.h"
+
+// We're going to erase and reprogram a region 256k from the start of flash.
+// Once done, we can access this at XIP_BASE + 256k.
+#define FLASH_TARGET_OFFSET (256 * 1024)
+
+const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
+
+void print_buf(const uint8_t *buf, size_t len) {
+    for (size_t i = 0; i < len; ++i) {
+        printf("%02x", buf[i]);
+        if (i % 16 == 15)
+            printf("\n");
+        else
+            printf(" ");
+    }
+}
+
+// This function will be called when it's safe to call flash_range_erase
+static void call_flash_range_erase(void *param) {
+    uint32_t offset = (uint32_t)param;
+    flash_range_erase(offset, FLASH_SECTOR_SIZE);
+}
+
+// This function will be called when it's safe to call flash_range_program
+static void call_flash_range_program(void *param) {
+    uint32_t offset = ((uintptr_t*)param)[0];
+    const uint8_t *data = (const uint8_t *)((uintptr_t*)param)[1];
+    flash_range_program(offset, data, FLASH_PAGE_SIZE);
+}
+
+int main() {
+    stdio_init_all();
+    uint8_t random_data[FLASH_PAGE_SIZE];
+    for (uint i = 0; i < FLASH_PAGE_SIZE; ++i)
+        random_data[i] = rand() >> 16;
+
+    printf("Generated random data:\n");
+    print_buf(random_data, FLASH_PAGE_SIZE);
+
+    // Note that a whole number of sectors must be erased at a time.
+    printf("\nErasing target region...\n");
+
+    // Flash is "execute in place" and so will be in use when any code that is stored in flash runs, e.g. an interrupt handler
+    // or code running on a different core.
+    // Calling flash_range_erase or flash_range_program at the same time as flash is running code would cause a crash.
+    // flash_safe_execute disables interrupts and tries to cooperate with the other core to ensure flash is not in use
+    // See the documentation for flash_safe_execute and its assumptions and limitations
+    int rc = flash_safe_execute(call_flash_range_erase, (void*)FLASH_TARGET_OFFSET, UINT32_MAX);
+    hard_assert(rc == PICO_OK);
+
+    printf("Done. Read back target region:\n");
+    print_buf(flash_target_contents, FLASH_PAGE_SIZE);
+
+    printf("\nProgramming target region...\n");
+    uintptr_t params[] = { FLASH_TARGET_OFFSET, (uintptr_t)random_data};
+    rc = flash_safe_execute(call_flash_range_program, params, UINT32_MAX);
+    hard_assert(rc == PICO_OK);
+    printf("Done. Read back target region:\n");
+    print_buf(flash_target_contents, FLASH_PAGE_SIZE);
+
+    bool mismatch = false;
+    for (uint i = 0; i < FLASH_PAGE_SIZE; ++i) {
+        if (random_data[i] != flash_target_contents[i])
+            mismatch = true;
+    }
+    if (mismatch)
+        printf("Programming failed!\n");
+    else
+        printf("Programming successful!\n");
+}
+```
+
+### 函数
+
+- `void flash_start_xip (void)`: 初始化 QSPI 接口和外部 QSPI 设备以用于就地执行（XIP）。
+- `void flash_range_erase (uint32_t flash_offs, size_t count)`: 擦除 flash 区域。
+`void flash_range_program (uint32_t flash_offs, const uint8_t *data, size_t count)`<br/>&emsp;编程 flash。
+
+`void flash_get_unique_id (uint8_t *id_out)`<br/>&emsp;获取 flash 的唯一 64 位标识符。
+
+`void flash_do_cmd (const uint8_t **txbuf, uint8_t **rxbuf, size_t count)`<br/>&emsp;执行双向 flash 命令。
+
+### 函数文档
+
+#### flash_do_cmd
+
+`void flash_do_cmd (const uint8_t ** txbuf, uint8_t ** rxbuf, size_t count)`
+
+执行双向 flash 命令。
+
+底层函数，用于在连接到 QSPI 接口的 flash 设备上执行串行命令。字节从 txbuf 同时发送，并从 rxbuf 接收。因此，两个缓冲区的长度必须相同，即 count（整个事务的长度）。这对于读取 flash 芯片的元数据（如设备 ID 或 SFDP 参数）非常有用。
+
+每条命令执行后会刷新 XIP 缓存，以防 flash 状态被修改。与其他 hardware_flash 函数一样，命令执行过程中 flash 无法用于就地执行传输，因此并发进入 flash 驻留的中断处理程序或在第二个核心上执行 flash 代码将导致致命错误。为避免这些风险，建议仅在启动阶段（主应用程序开始运行之前）使用此函数提取 flash 元数据：请参阅 pico_get_unique_id() 的实现作为示例。
+
+**参数**
+
+- `txbuf`: 指向将发送到 flash 的字节缓冲区的指针
+- `rxbuf`: 指向接收来自 flash 数据的字节缓冲区的指针。txbuf 和 rxbuf 可以是同一个缓冲区。
+- `count`: txbuf 和 rxbuf 的字节长度
+
+#### flash_get_unique_id
+
+`void flash_get_unique_id (uint8_t * id_out)`
+
+获取 flash 的唯一 64 位标识符。
+
+使用标准的 4Bh RUID 指令从连接到 QSPI 接口的 flash 设备中读取 64 位唯一标识符。由于 MCU 与该 flash 是一一对应的关系，这也可以作为电路板的唯一标识符。
+
+**参数**
+
+- `id_out`: 指向 8 字节缓冲区的指针，ID 将写入该缓冲区
+
+#### flash_range_erase
+
+`void flash_range_erase (uint32_t flash_offs, size_t count)`
+
+擦除 flash 区域。
+
+**参数**
+
+- `flash_offs`: flash 中擦除起始位置的字节偏移量。必须对齐到 4096 字节的 flash 扇区。
+- `count`: 要擦除的字节数。必须是 4096 字节（一个扇区）的整数倍。
+
+擦除 flash 扇区会将该扇区中所有页的所有位设置为 1。然后可以对扇区中的 flash 页进行"编程"，将某些位改为 0。一旦某位被设置为 0，只能通过再次擦除整个扇区才能将其改回 1。
+
+#### flash_range_program
+
+`void flash_range_program (uint32_t flash_offs, const uint8_t * data, size_t count)`
+
+编程 flash。
+
+**参数**
+
+- `flash_offs`: 要编程的第一个字节的 flash 地址。必须对齐到 256 字节的 flash 页。
+- `data`: 指向要编程到 flash 的数据的指针
+- `count`: 要编程的字节数。必须是 256 字节（一页）的整数倍。
+
+编程 flash 页实际上是将某些位从 1 改为 0。将 0 位改回 1 的唯一方式是"擦除"该页所在的整个扇区。因此，在调用 flash_range_program 之前，可能需要确保已调用 flash_range_erase。
+
+#### flash_start_xip
+
+`void flash_start_xip (void)`
+
+初始化 QSPI 接口和外部 QSPI 设备以用于就地执行（XIP）。
+
+此函数执行与引导 ROM 定位 flash 二进制文件并启动它、以及该 flash 二进制文件执行 SDK crt0 过程中通常发生的相同首次 flash 设置。具体包括：
+
+* 将 QSPI pad 初始化为默认状态，并（非 RP2040）禁用 pad 隔离锁存器
+
+* 向连接的 QSPI 设备发送硬编码序列，使其返回串行命令状态
+
+* 刷新 XIP 缓存
+
+* 将 QSPI 接口配置为低速 03h 读取
+
+* 如果这不是 PICO_NO_FLASH=1 二进制文件：
+
+  * （RP2040）从 RAM 的前 256 字节加载 boot2 阶段并执行
+
+  * （非 RP2040）执行由引导 ROM 或 crt0 存储在引导 RAM 中的 XIP 设置函数
+
+这对于在 PICO_NO_FLASH=1 二进制文件上初始化 flash 最为有用。（尽管名称如此，这种二进制类型实际上意味着"预加载到 RAM"，设备上仍然可能存在 flash。）
+
+此函数不保留 QSPI 接口状态或 pad 状态。这与本库中大多数其他函数不同，后者至少会保留 QSPI pad 状态。但是，在 RP2350 上，如果您未通过 FLASH_DEVINFO 选择引导 ROM CS1 支持，此函数会保留 QMI 窗口 1 的配置。
+
+<Normal />

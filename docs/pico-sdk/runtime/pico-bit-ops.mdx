@@ -1,0 +1,53 @@
+---
+sidebar_position: 5
+draft: false
+description: 优化的位操作函数。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK bit ops]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+优化的位操作函数。
+
+### 详细描述
+
+此外还提供编译器内置函数 `__builtin_popcount、__builtin_clz 和 `__bulitin_ctz` 的替代实现。
+
+### 函数
+
+`uint32_t __rev (uint32_t bits)`<br/>&emsp;反转 32 位字中的比特位。
+
+`uint64_t __revll (uint64_t bits)`<br/>&emsp;反转 64 位双字中的比特位。
+
+### 函数文档
+
+#### `__rev`
+
+`uint32_t __rev (uint32_t bits)`
+
+反转 32 位字中的比特位。
+
+**参数**
+
+- `bits`: 32 位输入
+
+**返回值**
+
+反转后的 32 位输入比特
+
+#### `__revll`
+
+`uint64_t __revll (uint64_t bits)`
+
+反转 64 位双字中的比特位。
+
+**参数**
+
+- `bits`: 64 位输入
+
+**返回值**
+
+反转后的 64 位输入比特
+
+<Normal />

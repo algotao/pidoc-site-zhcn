@@ -1,0 +1,232 @@
+---
+sidebar_position: 10
+draft: false
+description: 提供对板载状态 LED 的访问。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK status led]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+提供对板载状态 LED 的访问。
+
+### 详细描述
+
+开发板通常可以访问一个或两个板载状态 LED，这些 LED 通过板卡头文件进行配置（PICO_DEFAULT_LED_PIN、CYW43_WL_GPIO_LED_PIN 和/或 PICO_DEFAULT_WS2812_PIN）。此库隐藏了底层细节，使你无需修改代码即可在所有开发板上使用状态 LED。
+
+如果你的开发板同时有单色 LED 和彩色 LED，可以使用 `status_led_ API 独立控制单色 LED，使用 colored_status_led_` API 独立控制彩色 LED。
+
+### 宏
+
+* `#define [PICO_COLORED_STATUS_LED_COLOR_FROM_RGB](r, g, b) \(((r) 
+* `#define [PICO_COLORED_STATUS_LED_COLOR_FROM_WRGB](w, r, g, b) \(((w) 
+
+### 函数
+
+- `bool status_led_init (void)`: 初始化状态 LED。
+`bool status_led_init_with_context (struct async_context *context)`<br/>&emsp;初始化状态 LED。
+- `static bool colored_status_led_supported (void): 判断 `colored_status_led_` API 是否受支持（即是否存在彩色状态 LED，且其使用未通过将 PICO_COLORED_STATUS_LED_AVAILABLE 设为 0 来禁用）。
+- `static bool status_led_via_colored_status_led (void): 判断彩色状态 LED 是否被用于单色 `status_led_` API。
+- `static bool status_led_supported (void): 判断单色 `status_led_ API 是否受支持（即是否存在普通 LED 且其使用未被禁用，或者彩色状态 LED 是否被用于单色 status_led_` API）。
+- `bool colored_status_led_set_state (bool led_on)`: 开启或关闭彩色状态 LED。
+- `bool colored_status_led_get_state (void)`: 获取彩色状态 LED 的状态。
+- `bool colored_status_led_set_on_with_color (uint32_t color)`: 以指定颜色开启彩色状态 LED。
+- `uint32_t colored_status_led_get_on_color (void)`: 获取状态 LED 亮起时使用的颜色值。
+- `static bool status_led_set_state (bool led_on)`: 开启或关闭状态 LED。
+- `static bool status_led_get_state ()`: 获取状态 LED 的状态。
+- `void status_led_deinit ()`: 反初始化状态 LED。
+
+### 宏定义文档
+
+#### PICO_COLORED_STATUS_LED_COLOR_FROM_RGB
+
+`#define PICO_COLORED_STATUS_LED_COLOR_FROM_RGB(r, g, b) \(((r)
+
+为 /ref colored_status_led_set_on_with_color 生成 RGB 颜色值。
+#### PICO_COLORED_STATUS_LED_COLOR_FROM_WRGB
+
+`#define PICO_COLORED_STATUS_LED_COLOR_FROM_WRGB(w, r, g, b) \(((w)
+
+为 `colored_status_led_set_on_with_color` 生成 WRGB 颜色值。
+
+如果你的硬件不支持白色像素，白色分量将被忽略。
+
+### 函数文档
+
+#### colored_status_led_get_on_color
+
+`uint32_t colored_status_led_get_on_color (void)`
+
+获取状态 LED 亮起时使用的颜色值。
+
+如果你的硬件不支持彩色状态 LED（PICO_DEFAULT_WS2812_PIN），此函数始终返回 0x0。
+
+**返回**
+
+彩色状态 LED 亮起时使用的颜色，格式为 0xWWRRGGBB。
+
+#### colored_status_led_get_state
+
+`bool colored_status_led_get_state (void)`
+
+获取彩色状态 LED 的状态。
+
+如果你的硬件不支持彩色状态 LED（PICO_DEFAULT_WS2812_PIN），此函数返回 false。
+
+**返回**
+
+若彩色状态 LED 亮起返回 true，若彩色状态 LED 熄灭返回 false。
+
+#### colored_status_led_set_on_with_color
+
+`bool colored_status_led_set_on_with_color (uint32_t color)`
+
+以指定颜色开启彩色状态 LED。
+
+如果你的硬件不支持彩色状态 LED（PICO_DEFAULT_WS2812_PIN），此函数不执行任何操作并返回 false。
+
+**参数**
+
+- `color`: 彩色状态 LED 亮起时使用的颜色，格式为 0xWWRRGGBB。
+
+**返回**
+
+若彩色状态 LED 设置成功返回 true，失败则返回 false。
+
+#### colored_status_led_set_state
+
+`bool colored_status_led_set_state (bool led_on)`
+
+开启或关闭彩色状态 LED。
+
+如果你的硬件不支持彩色状态 LED（PICO_DEFAULT_WS2812_PIN），此函数不执行任何操作并返回 false。
+
+**参数**
+
+- `led_on`: 传 true 开启彩色 LED，传 false 关闭彩色 LED。
+
+**返回**
+
+若彩色状态 LED 设置成功返回 true，否则返回 false。
+
+#### colored_status_led_supported
+
+`static bool colored_status_led_supported (void) [inline], [static]`
+
+判断 `colored_status_led_` API 是否受支持（即是否存在彩色状态 LED，且其使用未通过将 PICO_COLORED_STATUS_LED_AVAILABLE 设为 0 来禁用）。
+
+**返回**
+
+若彩色状态 LED API 可用且预期能产生可见效果，返回 true。
+
+**另请参阅**
+
+PICO_COLORED_STATUS_LED_AVAILABLE
+
+#### status_led_deinit
+
+`void status_led_deinit `
+
+反初始化状态 LED。
+
+当不再需要状态 LED 时，对其进行反初始化。
+
+#### status_led_get_state
+
+`static bool status_led_get_state  [inline], [static]`
+
+获取状态 LED 的状态。
+
+如果你的硬件不支持状态 LED，此函数始终返回 false。
+
+**返回**
+
+若状态 LED 亮起返回 true，若状态 LED 熄灭返回 false。
+
+#### status_led_init
+
+`bool status_led_init (void)`
+
+初始化状态 LED。
+
+初始化状态 LED 及其所需资源以备使用。在某些设备上（如 Pico W、Pico 2 W），访问状态 LED 需要与 WiFi 芯片通信，这需要一个 `async_context。此方法将为你创建一个 async_context`。
+
+然而，应用程序应只使用单个 `async_context 实例与 WiFi 芯片通信。如果应用程序已有 async context（例如由 cyw43_arch_init 创建），则应使用 status_led_init_with_context 并将已创建的 `async_context` 传入。
+
+使用任何其他 pico_status_led 函数前，必须先调用此函数（或 `status_led_init_with_context）。
+
+**返回**
+
+若 LED 初始化成功返回 true，否则返回 false。
+
+**另请参阅**
+
+
+#### status_led_init_with_context
+
+`bool status_led_init_with_context (struct async_context * context)`
+
+初始化状态 LED。
+
+初始化状态 LED 及其所需资源以备使用。
+
+使用任何其他 pico_status_led 函数前，必须先调用此函数（或 `status_led_init）。
+
+**参数**
+
+- `context: 用于与状态 LED 通信的 async_context`（例如在 Pico W 或 Pico 2 W 上）。
+
+**返回**
+
+若 LED 初始化成功返回 true，否则返回 false。
+
+**另请参阅**
+
+
+#### status_led_set_state
+
+`static bool status_led_set_state (bool led_on) [inline], [static]`
+
+开启或关闭状态 LED。
+
+如果你的硬件不支持状态 LED，此函数不执行任何操作并返回 false。
+
+**参数**
+
+- `led_on`: 传 true 开启 LED，传 false 关闭 LED。
+
+**返回**
+
+若状态 LED 设置成功返回 true，否则返回 false。
+
+#### status_led_supported
+
+`static bool status_led_supported (void) [inline], [static]`
+
+判断单色 `status_led_ API 是否受支持（即是否存在普通 LED 且其使用未通过将 PICO_STATUS_LED_AVAILABLE 设为 0 来禁用，或者彩色状态 LED 是否被用于单色 status_led_` API）。
+
+**返回**
+
+若单色状态 LED API 可用且预期能产生可见效果，返回 true。
+
+**另请参阅**
+
+PICO_STATUS_LED_AVAILABLE
+
+PICO_STATUS_LED_VIA_COLORED_STATUS_LED
+
+#### status_led_via_colored_status_led
+
+`static bool status_led_via_colored_status_led (void) [inline], [static]`
+
+判断彩色状态 LED 是否被用于单色 `status_led_` API。
+
+**返回**
+
+若彩色状态 LED 被用于单色 `status_led_` API 返回 true。
+
+**另请参阅**
+
+PICO_STATUS_LED_VIA_COLORED_STATUS_LED
+
+<Normal />

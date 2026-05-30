@@ -1,0 +1,84 @@
+---
+sidebar_position: 14
+draft: false
+description: 唯一设备 ID 访问 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK unique id]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+唯一设备 ID 访问 API。
+
+### 详细描述
+
+RP2040 没有板载唯一标识符（所有 RP2040 芯片实例完全相同，没有持久状态）。然而，RP2040 从串行 NOR Flash 设备启动，这些设备作为标准特性具有至少 64 位的唯一 ID，且 RP2040 与 Flash 之间存在 1:1 的对应关系，因此它适合用作 RP2040 开发板的唯一标识符。
+
+此库在 main 之前注入对 hardware_flash 库中 flash_get_unique_id 函数的调用，并将结果存储在静态位置，随时可通过 pico_get_unique_id() 安全访问。
+
+这避免了 hardware_flash API 的一些陷阱——该 API 在调用时需要禁用任何驻留在 Flash 中的中断例程。
+
+对于使用 RP2350 的开发板，唯一标识符在启动时从 OTP 内存中读取。
+
+### 宏
+
+* `#define [PICO_UNIQUE_BOARD_ID_INIT_PRIORITY] 1000`
+
+### 函数
+
+`void pico_get_unique_board_id (pico_unique_board_id_t *id_out)`<br/>&emsp;获取唯一 ID。
+
+`void pico_get_unique_board_id_string (char *id_out, uint len)`<br/>&emsp;以字符串格式获取唯一 ID。
+
+### 宏定义文档
+
+#### PICO_UNIQUE_BOARD_ID_INIT_PRIORITY
+
+`#define PICO_UNIQUE_BOARD_ID_INIT_PRIORITY 1000`
+
+静态初始化顺序。
+
+此宏定义了 pico_unique_id 的 init_priority。默认值为 1000，有效范围为 101-65535。将其设为 -1 可将优先级设为无，从而使其排在 65535 之后。更改此值将使 unique_id 在静态初始化顺序中更早或更晚初始化。这对于 pico-sdk 的 C++ 使用者最为有用。
+
+参见 [https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-constructor-function-attribute](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-constructor-function-attribute) 和 [https://gcc.gnu.org/onlinedocs/gcc/C_002b_002b-Attributes.html#index-init_005fpriority-variable-attribute](https://gcc.gnu.org/onlinedocs/gcc/C_002b_002b-Attributes.html#index-init_005fpriority-variable-attribute)。
+
+以下是 C++ 静态初始化器的示例，分别在 pico_unique_id 加载之前和之后运行：
+
+[[gnu::init_priority(500)]] my_class before_instance; [[gnu::init_priority(2000)]] my_class after_instance;
+
+### 函数文档
+
+#### pico_get_unique_board_id
+
+`void pico_get_unique_board_id (pico_unique_board_id_t * id_out)`
+
+获取唯一 ID。
+
+获取唯一的 64 位设备标识符。
+
+对于基于 RP2040 的开发板，唯一标识符在启动时从外部 NOR Flash 设备获取；对于 PICO_NO_FLASH 版本，唯一标识符设置为全 0xEE。
+
+对于基于 RP2350 的开发板，唯一标识符在启动时从 OTP 内存获取。
+
+**参数**
+
+- `id_out: 指向 pico_unique_board_id_t` 结构的指针，标识符将被写入此处
+
+#### pico_get_unique_board_id_string
+
+`void pico_get_unique_board_id_string (char * id_out, uint len)`
+
+以字符串格式获取唯一 ID。
+
+以 0 结尾的 ASCII 十六进制字符串格式获取唯一的 64 位设备标识符。
+
+对于基于 RP2040 的开发板，唯一标识符在启动时从外部 NOR Flash 设备获取；对于 PICO_NO_FLASH 版本，唯一标识符设置为全 0xEE。
+
+对于基于 RP2350 的开发板，唯一标识符在启动时从 OTP 内存获取。
+
+**参数**
+
+- `id_out`: 指向大小为 len 的字符缓冲区的指针，标识符将被写入此处
+- `len: id_out 的大小。完整序列号需要 len >= 2 *` PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1
+
+<Normal />

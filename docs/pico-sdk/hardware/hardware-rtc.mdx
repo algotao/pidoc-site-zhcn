@@ -1,0 +1,158 @@
+---
+sidebar_position: 23
+draft: false
+description: 硬件实时时钟 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK rtc]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件实时时钟 API。
+
+### 详细描述
+
+RTC 以人类可读的格式跟踪时间，并在时间等于预设值时生成事件。可以将其理解为数字时钟，而非大多数计算机使用的 epoch 时间。共有七个字段，分别对应年（12 位）、月（4 位）、日（5 位）、星期（3 位）、时（5 位）、分（6 位）和秒（6 位），数据以二进制格式存储。
+
+**另请参阅**
+
+
+**示例**
+
+```c title="hello_rtc.c"
+#include <stdio.h>
+#include "hardware/rtc.h"
+#include "pico/stdlib.h"
+#include "pico/util/datetime.h"
+
+int main() {
+    stdio_init_all();
+    printf("Hello RTC!\n");
+
+    char datetime_buf[256];
+    char *datetime_str = &datetime_buf[0];
+
+    // Start on Friday 5th of June 2020 15:45:00
+    datetime_t t = {
+            .year  = 2020,
+            .month = 06,
+            .day   = 05,
+            .dotw  = 5, // 0 is Sunday, so 5 is Friday
+            .hour  = 15,
+            .min   = 45,
+            .sec   = 00
+    };
+
+    // Start the RTC
+    rtc_init();
+    rtc_set_datetime(&t);
+
+    // clk_sys is >2000x faster than clk_rtc, so datetime is not updated immediately when rtc_get_datetime() is called.
+    // The delay is up to 3 RTC clock cycles (which is 64us with the default clock settings)
+    sleep_us(64);
+
+    // Print the time
+    while (true) {
+        rtc_get_datetime(&t);
+        datetime_to_str(datetime_str, sizeof(datetime_buf), &t);
+        printf("\r%s      ", datetime_str);
+        sleep_ms(100);
+    }
+}
+```
+
+### 类型定义
+
+`typedef void(* rtc_callback_t)(void)`
+
+### 函数
+
+- `void rtc_init (void)`: 初始化 RTC 系统。
+`bool rtc_set_datetime (const datetime_t *t)`<br/>&emsp;将 RTC 设置为指定时间。
+
+`bool rtc_get_datetime (datetime_t *t)`<br/>&emsp;从 RTC 获取当前时间。
+- `bool rtc_running (void)`: RTC 是否正在运行？
+`void rtc_set_alarm (const datetime_t *t, rtc_callback_t user_callback)`<br/>&emsp;设置未来某个时间，RTC 届时将调用用户提供的回调函数。
+- `void rtc_enable_alarm (void)`: 启用 RTC 闹钟（如果未激活）
+- `void rtc_disable_alarm (void)`: 禁用 RTC 闹钟（如果已激活）
+
+### 类型定义文档
+
+#### rtc_callback_t
+
+`typedef void(* rtc_callback_t) (void)`
+
+RTC 闹钟的回调函数类型
+
+**另请参阅**
+
+`rtc_set_alarm()`
+
+### 函数文档
+
+#### rtc_disable_alarm
+
+`void rtc_disable_alarm (void)`
+
+禁用 RTC 闹钟（如果已激活）
+
+#### rtc_enable_alarm
+
+`void rtc_enable_alarm (void)`
+
+启用 RTC 闹钟（如果未激活）
+
+#### rtc_get_datetime
+
+`bool rtc_get_datetime (datetime_t * t)`
+
+从 RTC 获取当前时间。
+
+**参数**
+
+- `t: 指向 datetime_t` 结构体的指针，用于接收当前 RTC 时间
+
+**返回值**
+
+若 datetime 有效则返回 true，若 RTC 未运行则返回 false。
+
+#### rtc_init
+
+`void rtc_init (void)`
+
+初始化 RTC 系统。
+
+#### rtc_running
+
+`bool rtc_running (void)`
+
+RTC 是否正在运行？
+
+#### rtc_set_alarm
+
+`void rtc_set_alarm (const datetime_t *` t, rtc_callback_t user_callback)`
+
+设置未来某个时间，RTC 届时将调用用户提供的回调函数。
+
+**参数**
+
+- `t: 指向 datetime_t` 结构体的指针，包含未来触发闹钟的时间。设置为 -1 的字段将不参与匹配。
+- `user_callback: 指向闹钟触发时调用的 rtc_callback_t` 的指针
+
+#### rtc_set_datetime
+
+`bool rtc_set_datetime (const datetime_t * t)`
+
+将 RTC 设置为指定时间。
+
+注意，设置 RTC 日期和时间后，后续读取（例如通过 `rtc_get_datetime()`）可能不会立即反映新设置，需等待最多三个 RTC 时钟域周期。使用默认 RTC 时钟配置时，这对应约 64 微秒的延迟。
+
+**参数**
+
+- `t: 指向包含要设置时间的 datetime_t` 结构体的指针
+
+**返回值**
+
+若设置成功则返回 true，若传入的 datetime 无效则返回 false。
+
+<Normal />

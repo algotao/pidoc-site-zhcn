@@ -1,0 +1,70 @@
+---
+sidebar_position: 16
+draft: false
+description: 锁相环控制 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK pll]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+锁相环控制 API。
+
+### 详细描述
+
+RP2040 中有两个 PLL，分别为：
+
+* pll_sys - 用于生成最高 133MHz 的系统时钟
+
+* pll_usb - 用于生成 48MHz 的 USB 参考时钟
+
+有关 PLL 计算方法的详细信息，请参阅 RP2040 数据手册。
+
+### 宏
+
+* `#define [PLL_RESET_NUM](pll)`
+
+### 函数
+
+- `void pll_init (PLL pll, uint ref_div, uint vco_freq, uint post_div1, uint post_div2)`: 初始化指定的 PLL。
+- `void pll_deinit (PLL pll)`: 释放/取消初始化指定的 PLL。
+
+### 宏定义文档
+
+#### PLL_RESET_NUM
+
+`#define PLL_RESET_NUM(pll)`
+
+返回用于复位给定 PLL 实例的 `reset_num_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+
+### 函数文档
+
+#### pll_deinit
+
+`void pll_deinit ([PLL] pll)`
+
+释放/取消初始化指定的 PLL。
+
+这将关闭指定 PLL 的电源。注意，此函数当前不检查 PLL 是否正在使用，因此应谨慎使用。
+
+**参数**
+
+- `pll`: pll_sys 或 pll_usb
+
+#### pll_init
+
+`void pll_init ([PLL] pll, uint ref_div, uint vco_freq, uint post_div1, uint post_div2)`
+
+初始化指定的 PLL。
+
+**参数**
+
+- `pll`: pll_sys 或 pll_usb
+- `ref_div`: 输入时钟分频器。
+- `vco_freq`: VCO（压控振荡器）请求输出频率
+- `post_div1`: 后分频器 1 - 范围 1-7，必须 >= post_div2
+- `post_div2`: 后分频器 2 - 范围 1-7
+
+<Normal />

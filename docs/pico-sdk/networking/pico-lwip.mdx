@@ -1,0 +1,209 @@
+---
+sidebar_position: 4
+draft: false
+description: "[lwIP](https://savannah.nongnu.org/projects/lwip/lwIP) 的集成/封装库，其文档位于[此处](https://www.nongnu.org/lwip/2_1_x/index.html)。"
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK lwip, lwIP]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+[lwIP](https://savannah.nongnu.org/projects/lwip/lwIP) 的集成/封装库，其文档位于[此处](https://www.nongnu.org/lwip/2_1_x/index.html)。
+
+### 详细描述
+
+主 `**pico_lwip** 库 本身聚合了 lwIP RAW API：**pico_lwip_core**、`**pico_lwip_core4**、**pico_lwip_core6**`、**pico_lwip_api**、**pico_lwip_netif**`、`**pico_lwip_sixlowpan** 和 **pico_lwip_ppp**`。
+
+如果希望在 NO_SYS=1 模式下运行，可以将 `**pico_lwip** 与 pico_lwip_nosys` 一起链接。
+
+如果希望在 NO_SYS=0 模式下运行，可以将 `**pico_lwip** 与（例如）pico_lwip_freertos` 一起链接，并链接 pico_lwip_api 以获取额外的阻塞/线程安全 API。
+
+此外，除非您提供自己的 lwIP 编译器绑定，否则必须链接 `pico_lwip_arch`。
+
+还可以按需链接以下任意库，以获取 lwIP 的各个独立功能模块。
+
+以下库包含与 lwIP 功能组完全等效的内容：
+
+* `**pico_lwip_core** -`
+
+* `**pico_lwip_core4** -`
+
+* `**pico_lwip_core6** -`
+
+* `**pico_lwip_netif** -`
+
+* `**pico_lwip_sixlowpan** -`
+
+* `**pico_lwip_ppp** -`
+
+* `**pico_lwip_api** -`
+
+以下库包含与 lwIP 应用支持完全等效的内容：
+
+* `**pico_lwip_snmp** -`
+
+* `**pico_lwip_http** -`
+
+* `**pico_lwip_makefsdata** -`
+
+* `**pico_lwip_iperf** -`
+
+* `**pico_lwip_smtp** -`
+
+* `**pico_lwip_sntp** -`
+
+* `**pico_lwip_mdns** -`
+
+* `**pico_lwip_netbios** -`
+
+* `**pico_lwip_tftp** -`
+
+* `**pico_lwip_mbedtls** -`
+
+* `**pico_lwip_mqtt** -`
+
+### 模块
+
+`pico_lwip_arch<br/>&emsp;lwIP 编译器适配器。默认不包含在 **pico_lwip**` 中，以便您可以提供自己的实现。
+
+`pico_lwip_http`<br/>&emsp;LwIP HTTP 客户端和服务器库。
+
+`pico_lwip_freertos<br/>&emsp;用于在 NO_SYS=0` 模式下将 lwIP 与 SDK 集成的粘合库。
+
+`pico_lwip_nosys<br/>&emsp;用于在 NO_SYS=1` 模式下将 lwIP 与 SDK 集成的粘合库。
+
+### pico_lwip_arch
+
+lwIP 编译器适配器。默认不包含在 `**pico_lwip**` 中，以便您可以提供自己的实现。
+
+### pico_lwip_http
+
+LwIP HTTP 客户端和服务器库。
+
+#### 详细描述
+
+此库使您能够使用 LwIP HTTP 客户端和服务器库。
+
+**LwIP HTTP 服务器**
+
+要使用 LwIP HTTP 服务器，您需要提供服务器将返回给客户端的 HTML 内容。这通过将内容直接编译到可执行文件中来实现。
+
+**makefsdata**
+
+LwIP 提供了一个 C 库工具 `makefsdata`，用于将 HTML 编译为源文件以包含到程序中。由于需要先将该工具编译为本地二进制文件，然后运行工具生成源文件，再为 Pico 设备编译代码，因此使用起来相当复杂。
+
+**pico_set_lwip_httpd_content**
+
+为简化整个流程，提供了 Python 脚本 `makefsdata.py 来为 HTML 内容生成源文件。CMake 函数 pico_set_lwip_httpd_content 负责为您运行 `makefsdata.py Python 脚本。要使用此功能，请在 lwipopts.h` 中将源文件名指定为 pico_fsdata.inc`。
+
+```c
+#define HTTPD_FSDATA_FILE "pico_fsdata.inc"
+```
+
+然后在 `CMakeLists.txt 中调用 CMake 函数 pico_set_lwip_httpd_content`，将您的内容添加到库中。确保通过将该库添加到 target_link_libraries 列表中，将其链接到可执行文件。以下是来自 pico-examples 中 httpd 示例的示例：
+
+```c
+pico_add_library(pico_httpd_content NOFLAG)
+pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
+       ${CMAKE_CURRENT_LIST_DIR}/content/404.html
+       ${CMAKE_CURRENT_LIST_DIR}/content/index.shtml
+       ${CMAKE_CURRENT_LIST_DIR}/content/test.shtml
+       ${CMAKE_CURRENT_LIST_DIR}/content/ledpass.shtml
+       ${CMAKE_CURRENT_LIST_DIR}/content/ledfail.shtml
+       ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png
+       )
+```
+
+### pico_lwip_freertos
+
+用于在 `NO_SYS=0` 模式下将 lwIP 与 SDK 集成的粘合库。
+
+#### 详细描述
+
+只需简单的 `init 和 deinit 即可通过 `async_context` 实例接入 lwIP（支持完整的阻塞 API）。
+
+#### 函数
+
+`bool lwip_freertos_init (async_context_t *context)<br/>&emsp;使用提供的 async_context` 初始化 FreeRTOS 的 lwIP（NO_SYS=0 模式）支持。
+
+`void lwip_freertos_deinit (async_context_t *context)`<br/>&emsp;反初始化 FreeRTOS 的 lwIP（NO_SYS=0 模式）支持。
+
+#### 函数文档
+
+**lwip_freertos_deinit**
+
+`void lwip_freertos_deinit (async_context_t * context)`
+
+反初始化 FreeRTOS 的 lwIP（NO_SYS=0 模式）支持。
+
+注意，由于 lwIP 只能初始化一次，且自身不提供关闭机制，lwIP 本身可能仍会消耗资源。
+
+但之后可以安全地再次调用 `lwip_freertos_init`。
+
+**参数**
+
+- `context: 通过 lwip_freertos_init 添加了 lwip_freertos 支持的 async_context`
+
+**lwip_freertos_init**
+
+`bool lwip_freertos_init (async_context_t * context)`
+
+使用提供的 `async_context` 初始化 FreeRTOS 的 lwIP（NO_SYS=0 模式）支持。
+
+如果初始化成功，可调用 `lwip_freertos_deinit()` 来关闭 lwIP 支持。
+
+**参数**
+
+- `context: 提供异步工作处理抽象的 async_context 实例。注意，一般情况下这会是一个 `async_context_freertos` 实例，但不强制要求。
+
+**返回值**
+
+初始化成功则返回 true
+
+### pico_lwip_nosys
+
+用于在 `NO_SYS=1` 模式下将 lwIP 与 SDK 集成的粘合库。
+
+#### 详细描述
+
+只需简单的 `init 和 deinit 即可通过 `async_context` 实例接入 lwIP。
+
+#### 函数
+
+`bool lwip_nosys_init (async_context_t *context)<br/>&emsp;使用提供的 async_context` 初始化 lwIP（NO_SYS=1 模式）支持。
+
+`void lwip_nosys_deinit (async_context_t *context)`<br/>&emsp;反初始化 lwIP（NO_SYS=1 模式）支持。
+
+#### 函数文档
+
+**lwip_nosys_deinit**
+
+`void lwip_nosys_deinit (async_context_t * context)`
+
+反初始化 lwIP（NO_SYS=1 模式）支持。
+
+注意，由于 lwIP 只能初始化一次，且自身不提供关闭机制，lwIP 本身可能仍会消耗资源。
+
+但之后可以安全地再次调用 `lwip_nosys_init`。
+
+**参数**
+
+- `context: 通过 lwip_nosys_init 添加了 lwip_nosys 支持的 async_context`
+
+**lwip_nosys_init**
+
+`bool lwip_nosys_init (async_context_t * context)`
+
+使用提供的 `async_context` 初始化 lwIP（NO_SYS=1 模式）支持。
+
+如果初始化成功，可调用 `lwip_nosys_deinit()` 来关闭 lwIP 支持。
+
+**参数**
+
+- `context: 提供异步工作处理抽象的 async_context` 实例。
+
+**返回值**
+
+初始化成功则返回 true
+
+<Normal />

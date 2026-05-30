@@ -1,0 +1,39 @@
+---
+sidebar_position: 20
+draft: false
+description: 包含可由 picotool 显示的关于二进制文件的默认信息。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK standard binary info]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+包含可由 picotool 显示的关于二进制文件的默认信息。
+
+### 详细描述
+
+仅当 `PICO_NO_BINARY_INFO 和 PICO_NO_PROGRAM_INFO` 均为 false 时才包含信息。
+
+此库向二进制文件中添加以下信息：
+
+* 程序名称（如果已定义，除非 `PICO_NO_BINARY_SIZE=1）。值为 PICO_PROGRAM_NAME，若前者未定义则为 `PICO_TARGET_NAME`。
+
+* PICO_BOARD 的值（除非 `PICO_NO_BI_PICO_BOARD=1）。
+
+* SDK 版本（除非 `PICO_NO_BI_SDK_VERSION=1）。
+
+* 程序版本字符串（如果已定义，除非 `PICO_NO_BI_PROGRAM_VERSION_STRING=1）。值为 PICO_PROGRAM_VERSION_STRING`。
+
+* 程序描述（如果已定义，除非 `PICO_NO_BI_PROGRAM_DESCRIPTION=1）。值为 PICO_PROGRAM_DESCRIPTION`。
+
+* 程序 URL（如果已定义，除非 `PICO_NO_BI_PROGRAM_URL=1）。值为 PICO_PROGRAM_URL`。
+
+* 所使用的 boot stage 2（如果有，除非 `PICO_NO_BI_BOOT_STAGE2_NAME=1）。值为 PICO_BOOT_STAGE2_NAME`。
+
+* 程序构建日期（除非 `PICO_NO_BI_PROGRAM_BUILD_DATE=1）。值默认为 C 预处理器值 __DATE__`，但可以通过 PICO_PROGRAM_BUILD_DATE` 覆盖。注意：如果希望确保此值是最新的，请执行干净构建。
+
+* 程序构建类型（除非 `PICO_NO_BI_BUILD_TYPE=1）。值为 PICO_CMAKE_BUILD_TYPE`，来自 CMake 构建——例如 Release、Debug、RelMinSize。
+
+* 二进制文件大小（除非 `PICO_NO_BI_BINARY_SIZE=1）。
+
+<Normal />

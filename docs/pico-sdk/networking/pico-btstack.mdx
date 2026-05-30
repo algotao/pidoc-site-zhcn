@@ -1,0 +1,89 @@
+---
+sidebar_position: 1
+draft: false
+description: "[BTstack](https://github.com/bluekitchen/btstack) 的集成/封装库，其文档位于[此处](https://bluekitchen-gmbh.com/btstack/)。"
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK btstack, btstack]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+[BTstack](https://github.com/bluekitchen/btstack) 的集成/封装库，其文档位于[此处](https://bluekitchen-gmbh.com/btstack/)。
+
+### 详细描述
+
+BTstack 的补充许可证（除标准 BTstack 许可条款外）可在[此处](https://github.com/raspberrypi/pico-sdk/blob/master/src/rp2_common/pico_btstack/LICENSE.RP)获取。
+
+`**pico_btstack_ble** 库 添加了蓝牙低功耗（BLE）所需的支持。**pico_btstack_classic** 库` 添加了蓝牙经典所需的支持。您可以单独链接其中任一库，也可以同时链接两个库，从而启用 BTstack 提供的双模支持。
+
+要使用 BTstack，您需要在源代码树中提供一个 `btstack_config.h 文件，并将其位置添加到 include 路径中。当您链接 pico_btstack_classic 和 `pico_btstack_ble 库时，BTstack 配置宏 ENABLE_CLASSIC` 和 ENABLE_BLE` 会自动为您定义，因此您无需手动定义它们。
+
+更多详情请参阅 [How to configure BTstack](https://bluekitchen-gmbh.com/btstack/develop/#how_to/) 及相关 [pico-examples](https://github.com/raspberrypi/pico-examples#pico-w-bluetooth)。
+
+以下库供您链接使用：
+
+* `**pico_btstack_ble** -` 添加蓝牙低功耗（LE）支持。
+
+* `**pico_btstack_classic** -` 添加蓝牙经典支持。
+
+* `**pico_btstack_sbc_encoder** -` 添加蓝牙子带编码（SBC）编码器支持。
+
+* `**pico_btstack_sbc_decoder** -` 添加蓝牙子带编码（SBC）解码器支持。
+
+* `**pico_btstack_bnep_lwip** -` 添加使用 LwIP 的蓝牙网络封装协议（BNEP）支持。
+
+* `**pico_btstack_bnep_lwip_sys_freertos** -` 添加使用 LwIP 与 FreeRTOS（NO_SYS=0 模式）的蓝牙网络封装协议（BNEP）支持。
+
+* `**pico_btstack_mesh** -` 添加 BTstack 的蓝牙 Mesh 支持。
+
+CMake 函数 pico_btstack_make_gatt_header 可用于运行 BTstack compile_gatt 工具，从 BTstack GATT 文件生成 GATT 头文件。
+
+**参见**
+
+`pico_btstack_cyw43（位于 pico_cyw43_driver），它添加了 BTstack 所需的 cyw43 驱动支持，包括 BTstack 运行循环支持。
+
+### 函数
+
+`const hal_flash_bank_t * pico_flash_bank_instance (void)`<br/>&emsp;返回用于非易失性存储的 BTstack HAL flash 单例实例。
+
+`const btstack_run_loop_t ** btstack_run_loop_async_context_get_instance (async_context_t **context)<br/>&emsp;初始化并返回与 async_context` API 集成的 BTstack 运行循环单例实例。
+- `void btstack_run_loop_async_context_deinit (void): 反初始化 BTstack 状态，使其停止使用 `async_context` API。
+`const btstack_chipset_t * btstack_chipset_cyw43_instance (void)`<br/>&emsp;返回 BTstack chipset CY43 API 的单例实例。
+
+### 函数文档
+
+#### btstack_chipset_cyw43_instance
+
+`const btstack_chipset_t * btstack_chipset_cyw43_instance (void)`
+
+返回 BTstack chipset CY43 API 的单例实例。
+
+#### btstack_run_loop_async_context_deinit
+
+`void btstack_run_loop_async_context_deinit (void)`
+
+反初始化 BTstack 状态，使其停止使用 `async_context` API。
+
+#### btstack_run_loop_async_context_get_instance
+
+`const btstack_run_loop_t ** btstack_run_loop_async_context_get_instance (async_context_t` ** context)`
+
+初始化并返回与 `async_context` API 集成的 BTstack 运行循环单例实例。
+
+**参数**
+
+- `context: 提供异步工作处理抽象的 async_context` 实例。
+
+**返回值**
+
+BTstack 运行循环实例
+
+#### pico_flash_bank_instance
+
+`const hal_flash_bank_t * pico_flash_bank_instance (void)`
+
+返回用于非易失性存储的 BTstack HAL flash 单例实例。
+
+默认情况下，使用 flash 末尾附近的两个扇区。对于 RP2350，当 PICO_RP2350_A2_SUPPORTED 为 true 时，使用距 flash 末尾三个扇区处的两个扇区，以保留最后一个扇区用于芯片勘误 RP2350-E10 的变通处理。详情请参阅 RP2350 数据手册。否则，直接使用 flash 末尾的两个扇区。（参见 `PICO_FLASH_BANK_STORAGE_OFFSET 和 PICO_FLASH_BANK_TOTAL_SIZE）
+
+<Normal />

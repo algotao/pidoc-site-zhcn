@@ -1,0 +1,559 @@
+---
+sidebar_position: 2
+draft: false
+description: "`async_context 提供一个逻辑上单线程的上下文，用于执行工作和响应异步事件。因此，async_context` 实例适合为非可重入的第三方库提供服务。"
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK async context]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+`async_context 提供一个逻辑上单线程的上下文，用于执行工作和响应异步事件。因此，async_context` 实例适合为非可重入的第三方库提供服务。
+
+### 详细描述
+
+`async_context 中的"上下文"是指：在 async_context` 中调用工作者或超时回调时，若干前置条件成立：
+
+. 
+存在单一的逻辑执行线程；即上下文不会并发地调用任何工作者函数。
+
+. 
+上下文始终从同一处理器核心调用工作者，因为大多数 `async_context` 的使用都依赖于与 IRQ 的交互，而 IRQ 本身是特定于核心的。
+
+`async_context` 提供两种异步工作机制：
+
+* _待处理时（when_pending）_ 工作者：当有工作待处理时执行。参见 `async_context_add_when_pending_worker、async_context_remove_when_pending_worker 和 `async_context_set_work_pending，其中最后一个可在中断处理程序中使用，以通知常规 async_context` 需要由工作者执行服务工作。
+
+* _定时（at_time）_ 工作者：在特定时间点之后执行。
+
+注意："待处理"工作者有待处理工作时，会在"定时"工作者之前执行。
+
+`async_context 提供锁定机制，参见 async_context_acquire_lock_blocking、`async_context_release_lock 和 async_context_lock_check`，外部代码可使用这些机制确保外部代码的执行不与工作者代码并发。被锁定的代码在调用核心上运行，但也提供了 async_context_execute_sync，用于从 async_context` 所属核心同步运行函数。
+
+SDK 随附以下默认 async_context：
+
+`async_context_poll - 此上下文不是线程安全的，用户负责定期调用 async_context_poll()，并在没有其他事情要做时使用 `async_context_wait_for_work_until()` 在两次调用之间休眠，直到需要工作时再唤醒。
+
+`async_context_threadsafe_background - 为了在后台工作，使用低优先级 IRQ 来处理回调。代码通常从该 IRQ 上下文调用，但也可能在同一核心上其他使用 async_context 的代码（非 IRQ 上下文）之后被调用。不需要调用 async_context_poll()，调用它是空操作。此上下文实现了 `async_context` 锁定，因此可根据各 API 的具体说明从任一核心安全调用。
+
+`async_context_freertos - 工作在独立的"async_context"任务中执行，但同样地，代码也可能在同一核心上直接使用 async_context 之后被调用。不需要调用 `async_context_poll()，调用它是空操作。此上下文实现了 async_context` 锁定，因此可根据各 API 的具体说明从任意任务以及任一核心安全调用。
+
+每种 `async_context` 都在对应的头文件中提供了专门的实例化方法（例如 [async_context_poll.h]、[async_context_threadsafe_background.h]、asycn_context_freertos.h）。async_context 通过公共的 async_context_deint() 方法进行反初始化。
+
+一个应用程序可以使用多个 `async_context` 实例，它们将独立运行。
+
+### 模块
+
+`async_context_freertos`<br/>&emsp;async_context_freertos 提供了 `async_context` 的一种实现，在独立的 FreeRTOS 任务中处理异步工作。
+
+`async_context_poll`<br/>&emsp;async_context_poll 提供了 `async_context` 的一种实现，适用于在单个核心上使用简单轮询循环。它不是线程安全的。
+
+`async_context_threadsafe_background`<br/>&emsp;async_context_threadsafe_background 提供了 `async_context` 的一种实现，在低优先级 IRQ 中处理异步工作，用户无需轮询工作。
+
+### 类型定义
+
+- `typedef struct async_work_on_timeout async_at_time_worker_t`: async_context` 使用的"超时"实例。
+- `typedef struct async_when_pending_worker async_when_pending_worker_t`: async_context` 使用的"工作者"实例。
+- `typedef struct async_context_type async_context_type_t`: async_context` 类型的实现，提供该类型通用的方法。
+
+### 函数
+
+`static void async_context_acquire_lock_blocking (async_context_t *context)<br/>&emsp;获取 async_context` 锁。
+
+`static void async_context_release_lock (async_context_t *context)<br/>&emsp;释放 async_context` 锁。
+
+`static void async_context_lock_check (async_context_t *context)<br/>&emsp;若调用者不持有 async_context` 的锁则断言失败。
+
+`static uint32_t async_context_execute_sync (async_context_t **context, uint32_t(**func)(void **param), void **param)<br/>&emsp;在 async_context` 所属核心上同步执行工作。
+
+`static bool async_context_add_at_time_worker (async_context_t **context, async_at_time_worker_t **worker)`<br/>&emsp;向上下文添加"定时"工作者。
+
+`static bool async_context_add_at_time_worker_at (async_context_t **context, async_at_time_worker_t **worker, absolute_time_t at)`<br/>&emsp;向上下文添加"定时"工作者。
+
+`static bool async_context_add_at_time_worker_in_ms (async_context_t **context, async_at_time_worker_t **worker, uint32_t ms)`<br/>&emsp;向上下文添加"定时"工作者。
+
+`static bool async_context_remove_at_time_worker (async_context_t **context, async_at_time_worker_t **worker)`<br/>&emsp;从上下文移除"定时"工作者。
+
+`static bool async_context_add_when_pending_worker (async_context_t **context, async_when_pending_worker_t **worker)`<br/>&emsp;向上下文添加"待处理时"工作者。
+
+`static bool async_context_remove_when_pending_worker (async_context_t **context, async_when_pending_worker_t **worker)`<br/>&emsp;从上下文移除"待处理时"工作者。
+
+`static void async_context_set_work_pending (async_context_t **context, async_when_pending_worker_t **worker)`<br/>&emsp;将"待处理时"工作者标记为有待处理工作。
+
+`static void async_context_poll (async_context_t *context)<br/>&emsp;对轮询式 async_context` 执行所有待处理工作。
+
+`static void async_context_wait_until (async_context_t *context, absolute_time_t until)<br/>&emsp;在 async_context` 回调安全的方式下休眠至指定时间。
+
+`static void async_context_wait_for_work_until (async_context_t *context, absolute_time_t until)`<br/>&emsp;阻塞直到需要执行工作或到达指定时间。
+
+`static void async_context_wait_for_work_ms (async_context_t *context, uint32_t ms)`<br/>&emsp;阻塞直到需要执行工作或经过指定毫秒数。
+
+`static uint async_context_core_num (const async_context_t *context)<br/>&emsp;返回此 async_context` 所属的处理器核心编号。
+
+`static void async_context_deinit (async_context_t *context)<br/>&emsp;结束 async_context` 处理并释放所有资源。
+
+### 类型定义文档
+
+#### async_at_time_worker_t
+
+`typedef struct async_work_on_timeout async_at_time_worker_t`
+
+`async_context` 使用的"超时"实例。
+
+"超时"代表某个必须在特定时间采取的未来动作。其方法在给定时间点由 `async_context` 在持锁状态下调用。
+
+**另请参阅**
+
+
+#### async_when_pending_worker_t
+
+`typedef struct async_when_pending_worker async_when_pending_worker_t`
+
+`async_context` 使用的"工作者"实例。
+
+"工作者"代表某个必须响应外部刺激（通常是 IRQ）而执行工作的外部实体。其方法在给定时间点由 `async_context` 在持锁状态下调用。
+
+**另请参阅**
+
+
+#### async_context_type_t
+
+`typedef struct async_context_type async_context_type_t`
+
+`async_context` 类型的实现，提供该类型通用的方法。
+
+### 函数文档
+
+#### async_context_acquire_lock_blocking
+
+`static void async_context_acquire_lock_blocking (async_context_t * context) [inline], [static]`
+
+获取 `async_context` 锁。
+
+`async_context 锁的持有者是 async_context 的逻辑所有者，与此 `async_context` 相关的其他工作不会并发执行。
+
+此方法可由锁的持有者以嵌套方式调用。
+
+`async_context` 锁可被同一调用者嵌套持有，因此维护一个内部计数。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+
+**另请参阅**
+
+
+#### async_context_add_at_time_worker
+
+`static bool async_context_add_at_time_worker (async_context_t **` context, async_at_time_worker_t ** worker) [inline], [static]`
+
+向上下文添加"定时"工作者。
+
+"定时"工作者将在特定时间点或之后运行，并在运行时（运行之前）自动移除。
+
+触发时间在工作者的 next_time 字段中指定。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+- `worker`: 要添加的"定时"工作者
+
+**返回值**
+
+如果工作者已添加则返回 true，如果工作者已存在则返回 false。
+
+#### async_context_add_at_time_worker_at
+
+`static bool async_context_add_at_time_worker_at (async_context_t **` context, async_at_time_worker_t `** worker, absolute_time_t at) [inline], [static]`
+
+向上下文添加"定时"工作者。
+
+"定时"工作者将在特定时间点或之后运行，并在运行时（运行之前）自动移除。
+
+触发时间由 at 参数指定。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+- `worker`: 要添加的"定时"工作者
+- `at`: 触发时间
+
+**返回值**
+
+如果工作者已添加则返回 true，如果工作者已存在则返回 false。
+
+#### async_context_add_at_time_worker_in_ms
+
+`static bool async_context_add_at_time_worker_in_ms (async_context_t **` context, async_at_time_worker_t ** worker, uint32_t ms) [inline], [static]`
+
+向上下文添加"定时"工作者。
+
+"定时"工作者将在特定时间点或之后运行，并在运行时（运行之前）自动移除。
+
+触发时间由 ms 参数指定的延迟确定。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+- `worker`: 要添加的"定时"工作者
+- `ms`: 从现在起经过多少毫秒后触发
+
+**返回值**
+
+如果工作者已添加则返回 true，如果工作者已存在则返回 false。
+
+#### async_context_add_when_pending_worker
+
+`static bool async_context_add_when_pending_worker (async_context_t **` context, async_when_pending_worker_t ** worker) [inline], [static]`
+
+向上下文添加"待处理时"工作者。
+
+"待处理时"工作者在有待处理工作时运行（可通过 `async_context_set_work_pending` 设置），运行后不会自动移除。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+- `worker`: 要添加的"待处理时"工作者
+
+**返回值**
+
+如果工作者已添加则返回 true，如果工作者已存在则返回 false。
+
+#### async_context_core_num
+
+`static uint async_context_core_num (const async_context_t * context) [inline], [static]`
+
+返回此 `async_context` 所属的处理器核心编号。
+
+**参数**
+
+- `context: async_context`
+
+**返回值**
+
+物理核心编号
+
+#### async_context_deinit
+
+`static void async_context_deinit (async_context_t * context) [inline], [static]`
+
+结束 `async_context` 处理并释放所有资源。
+
+注意：用户应自行清理与 `async_context` 中工作者关联的资源。
+
+异步（非轮询）async_context 保证此方法返回后不会再有回调被调用。
+
+**参数**
+
+- `context: async_context`
+
+#### async_context_execute_sync
+
+`static uint32_t async_context_execute_sync (async_context_t **` context, uint32_t(**)(void `**param) func, void ** param) [inline], [static]`
+
+在 `async_context` 所属核心上同步执行工作。
+
+此方法旨在供 `async_context 外部的代码（如另一个线程/任务）使用，以与 async_context` 工作者被调用时相同的保证（单核心、逻辑执行线程）执行函数。
+
+调用此方法时不应持有 `async_context` 的锁。
+
+**参数**
+
+- `context: async_context`
+- `func`: 要调用的函数
+- `param`: 传递给函数的参数
+
+**返回值**
+
+func 的返回值
+
+#### async_context_lock_check
+
+`static void async_context_lock_check (async_context_t * context) [inline], [static]`
+
+若调用者不持有 `async_context` 的锁则断言失败。
+
+此方法是线程安全的。
+
+**参数**
+
+- `context: async_context`
+
+#### async_context_poll
+
+`static void async_context_poll (async_context_t * context) [inline], [static]`
+
+对轮询式 `async_context` 执行所有待处理工作。
+
+对于轮询式 `async_context（如 async_context_poll），用户负责定期调用此方法以执行所需工作。
+
+此方法也可立即在其他上下文类型上执行待处理工作，但不强制要求。
+
+**参数**
+
+- `context: async_context`
+
+#### async_context_release_lock
+
+`static void async_context_release_lock (async_context_t * context) [inline], [static]`
+
+释放 `async_context` 锁。
+
+`async_context 锁可被嵌套调用，因此维护一个内部计数。在最外层释放时，会检查是否有在持锁期间被跳过的工作，如果从 async_context` 所属核心调用，则可能在此次调用期间执行这些工作。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+
+**另请参阅**
+
+
+#### async_context_remove_at_time_worker
+
+`static bool async_context_remove_at_time_worker (async_context_t **` context, async_at_time_worker_t ** worker) [inline], [static]`
+
+从上下文移除"定时"工作者。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+- `worker`: 要移除的"定时"工作者
+
+**返回值**
+
+如果工作者已移除则返回 true，如果实例不存在则返回 false。
+
+#### async_context_remove_when_pending_worker
+
+`static bool async_context_remove_when_pending_worker (async_context_t **` context, async_when_pending_worker_t ** worker) [inline], [static]`
+
+从上下文移除"待处理时"工作者。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+- `worker`: 要移除的"待处理时"工作者
+
+**返回值**
+
+如果工作者已移除则返回 true，如果实例不存在则返回 false。
+
+#### async_context_set_work_pending
+
+`static void async_context_set_work_pending (async_context_t **` context, async_when_pending_worker_t ** worker) [inline], [static]`
+
+将"待处理时"工作者标记为有待处理工作。
+
+该工作者将在稍后由 `async_context` 运行。
+
+此方法可从任何上下文（包括 IRQ）中调用。
+
+**参数**
+
+- `context: async_context`
+- `worker`: 要标记为待处理的"待处理时"工作者
+
+#### async_context_wait_for_work_ms
+
+`static void async_context_wait_for_work_ms (async_context_t * context, uint32_t ms) [inline], [static]`
+
+阻塞直到需要执行工作或经过指定毫秒数。
+
+此方法不应从工作者回调中调用。
+
+**参数**
+
+- `context: async_context`
+- `ms`: 如果无需工作，经过此毫秒数后返回
+
+#### async_context_wait_for_work_until
+
+`static void async_context_wait_for_work_until (async_context_t *` context, absolute_time_t until) [inline], [static]`
+
+阻塞直到需要执行工作或到达指定时间。
+
+此方法不应从工作者回调中调用。
+
+**参数**
+
+- `context: async_context`
+- `until`: 如果无需工作，到达此时间后返回
+
+#### async_context_wait_until
+
+`static void async_context_wait_until (async_context_t *` context, absolute_time_t until) [inline], [static]`
+
+在 `async_context` 回调安全的方式下休眠至指定时间。
+
+对于提供锁定机制的 async_context（非 `async_context_poll），此方法是线程安全的，可从 async_context` 调用的任意工作者方法内部或任何其他非 IRQ 上下文中调用。
+
+**参数**
+
+- `context: async_context`
+- `until`: 休眠至该时间
+
+### async_context_freertos
+
+`async_context_freertos 提供了 async_context` 的一种实现，在独立的 FreeRTOS 任务中处理异步工作。
+
+#### 函数
+
+`bool async_context_freertos_init (async_context_freertos_t **self, async_context_freertos_config_t **config)<br/>&emsp;使用指定配置初始化 async_context_freertos` 实例。
+- `static async_context_freertos_config_t async_context_freertos_default_config` (void): 返回 async_context_freertos_init_with_defaults()` 使用的默认配置对象的副本。
+`static bool async_context_freertos_init_with_defaults (async_context_freertos_t *self)<br/>&emsp;使用默认值初始化 async_context_freertos` 实例。
+
+#### 函数文档
+
+**async_context_freertos_default_config**
+
+`static async_context_freertos_config_t async_context_freertos_default_config (void) [inline], [static]`
+
+返回 `async_context_freertos_init_with_defaults()` 使用的默认配置对象的副本。
+
+调用者可随后修改其关心的设置，然后调用 `async_context_freertos_init()`。
+
+**返回值**
+
+默认配置对象
+
+**async_context_freertos_init**
+
+`bool async_context_freertos_init (async_context_freertos_t **` self, async_context_freertos_config_t ** config)`
+
+使用指定配置初始化 `async_context_freertos` 实例。
+
+如果此方法成功（返回 true），则 `async_context 可以使用，可通过调用 async_context_deinit()` 进行反初始化。
+
+**参数**
+
+- `self: 指向要初始化的 async_context_freertos` 结构的指针
+- `config: 指定 async_context` 特性的配置对象
+
+**返回值**
+
+初始化成功返回 true，否则返回 false。
+
+**async_context_freertos_init_with_defaults**
+
+`static bool async_context_freertos_init_with_defaults (async_context_freertos_t * self) [inline], [static]`
+
+使用默认值初始化 `async_context_freertos` 实例。
+
+如果此方法成功（返回 true），则 `async_context 可以使用，可通过调用 async_context_deinit()` 进行反初始化。
+
+**参数**
+
+- `self: 指向要初始化的 async_context_freertos` 结构的指针
+
+**返回值**
+
+初始化成功返回 true，否则返回 false。
+
+### async_context_poll
+
+`async_context_poll 提供了 async_context` 的一种实现，适用于在单个核心上使用简单轮询循环。它不是线程安全的。
+
+#### 详细描述
+
+必须定期调用 `async_context_poll() 方法以处理可能待处理的异步工作。可使用 async_context_wait_for_work_until()` 阻塞轮询循环直到有工作要做，避免忙等循环。
+
+#### 函数
+
+`bool async_context_poll_init_with_defaults (async_context_poll_t *self)<br/>&emsp;使用默认值初始化 async_context_poll` 实例。
+
+#### 函数文档
+
+**async_context_poll_init_with_defaults**
+
+`bool async_context_poll_init_with_defaults (async_context_poll_t * self)`
+
+使用默认值初始化 `async_context_poll` 实例。
+
+如果此方法成功（返回 true），则 `async_context 可以使用，可通过调用 async_context_deinit()` 进行反初始化。
+
+**参数**
+
+- `self: 指向要初始化的 async_context_poll` 结构的指针
+
+**返回值**
+
+初始化成功返回 true，否则返回 false。
+
+### async_context_threadsafe_background
+
+`async_context_threadsafe_background 提供了 async_context` 的一种实现，在低优先级 IRQ 中处理异步工作，用户无需轮询工作。
+
+#### 详细描述
+
+与此 `async_context` 配合使用的工作者必须可以从 IRQ 中安全调用。
+
+#### 函数
+
+`bool async_context_threadsafe_background_init (async_context_threadsafe_background_t **self, async_context_threadsafe_background_config_t **config)<br/>&emsp;使用指定配置初始化 async_context_threadsafe_background` 实例。
+- `async_context_threadsafe_background_config_t async_context_threadsafe_background_default_config (void): 返回 `async_context_threadsafe_background_init_with_defaults()` 使用的默认配置对象的副本。
+`static bool async_context_threadsafe_background_init_with_defaults (async_context_threadsafe_background_t *self)<br/>&emsp;使用默认值初始化 async_context_threadsafe_background` 实例。
+
+#### 函数文档
+
+**async_context_threadsafe_background_default_config**
+
+`async_context_threadsafe_background_config_t async_context_threadsafe_background_default_config (void)`
+
+返回 `async_context_threadsafe_background_init_with_defaults()` 使用的默认配置对象的副本。
+
+调用者可随后修改其关心的设置，然后调用 `async_context_threadsafe_background_init()`。
+
+**返回值**
+
+默认配置对象
+
+**async_context_threadsafe_background_init**
+
+`bool async_context_threadsafe_background_init (async_context_threadsafe_background_t **` self, async_context_threadsafe_background_config_t ** config)`
+
+使用指定配置初始化 `async_context_threadsafe_background` 实例。
+
+如果此方法成功（返回 true），则 `async_context 可以使用，可通过调用 async_context_deinit()` 进行反初始化。
+
+**参数**
+
+- `self: 指向要初始化的 async_context_threadsafe_background` 结构的指针
+- `config: 指定 async_context` 特性的配置对象
+
+**返回值**
+
+初始化成功返回 true，否则返回 false。
+
+**async_context_threadsafe_background_init_with_defaults**
+
+`static bool async_context_threadsafe_background_init_with_defaults (async_context_threadsafe_background_t * self) [inline], [static]`
+
+使用默认值初始化 `async_context_threadsafe_background` 实例。
+
+如果此方法成功（返回 true），则 `async_context 可以使用，可通过调用 async_context_deinit()` 进行反初始化。
+
+**参数**
+
+- `self: 指向要初始化的 async_context_threadsafe_background` 结构的指针
+
+**返回值**
+
+初始化成功返回 true，否则返回 false。
+
+<Normal />

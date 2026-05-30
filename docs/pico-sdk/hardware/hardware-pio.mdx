@@ -1,0 +1,2317 @@
+---
+sidebar_position: 15
+draft: false
+description: 可编程 I/O（PIO）API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK pio, PIO]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+可编程 I/O（PIO）API。
+
+### 详细描述
+
+可编程输入/输出块（PIO）是一种多功能硬件接口，可支持多种不同的 IO 标准。
+
+RP2040 中有两个 PIO 块。
+
+RP2350 中有三个 PIO 块。
+
+每个 PIO 与处理器的可编程性相同：四个状态机独立执行简短的顺序程序，以操作 GPIO 并传输数据。与通用处理器不同，PIO 状态机高度专业化于 IO，注重确定性、精确时序以及与固定功能硬件的紧密集成。每个状态机配备：
+
+* 两个 32 位移位寄存器——任意方向，任意移位计数
+
+* 两个 32 位暂存寄存器
+
+* 每个方向（TX/RX）4×32 位总线 FIFO，可重新配置为单方向 8×32
+
+* 分数时钟分频器（16 位整数，8 位分数）
+
+* 灵活的 GPIO 映射
+
+* DMA 接口，系统 DMA 每时钟最高持续吞吐量为 1 个字
+
+* IRQ 标志置位/清除/状态
+
+PIO 的完整详细信息请参阅相应的 RP 系列数据手册。请注意，RP2350 PIO 实现中有额外功能，因此在编写需要同时在 RP2040 和 RP2350 上运行的 PIO 代码时需要注意。
+
+ 在 RP2040 上，引脚编号始终可以指定为 0-31
+
+在 RP2350A 上，引脚编号始终可以指定为 0-31。
+
+在 RP2350B 上，有 48 个引脚，但每个 PIO 实例只能寻址 32 个引脚（PIO 实例根据 `pio_set_gpio_base 寻址引脚 0-31 或 16-47）。直接影响硬件的 pio_sm_` 方法始终采用完整范围内的*实际*引脚编号，但：
+
+* 若 `PICO_PIO_USE_GPIO_BASE != 1，则引脚编号的第 5 位被忽略。这样做是为了使针对 RP2350A 开发板编译的程序不会因处理不存在的高编号引脚而产生额外开销。在这种情况下，这些函数的行为与 RP2040 完全相同。注意，若 PICO_RP2350A 为 1，则 `PICO_PIO_USE_GPIO_BASE` 默认为 0。
+
+* 若 `PICO_PIO_USE_GPIO_BASE == 1`，则传入的引脚编号会在内部减去 GPIO 基址，从 PIO 角度得到 0-31 范围内的引脚编号。
+
+您可以设置 `PARAM_ASSERTIONS_ENABLED_HARDWARE_PIO = 1` 以启用参数检查，用于调试 hardware_pio 方法中的引脚（或其他）问题。
+
+注意，引脚掩码遵循与单个引脚相同的规则；32 位或 64 位掩码中的位 N 始终指引脚 N。
+
+### 模块
+
+`sm_config`<br/>&emsp;PIO 状态机配置。
+
+`pio_instructions`<br/>&emsp;PIO 指令编码。
+
+### 宏
+
+* `#define pio0 pio0_hw`
+* `#define pio1 pio1_hw`
+* `#define [PIO_NUM](pio)`
+* `#define [PIO_INSTANCE](instance)`
+* `#define [PIO_FUNCSEL_NUM](pio, gpio)`
+* `#define [PIO_DREQ_NUM](pio, sm, is_tx)`
+* `#define [PIO_IRQ_NUM](pio, irqn)`
+
+### 类型定义
+
+- `typedef enum pio_interrupt_source pio_interrupt_source_t``: PIO 相关 IRQ 的 PIO 中断源编号。
+
+### 枚举
+
+- `enum pio_fifo_join { [PIO_FIFO_JOIN_NONE] = 0, [PIO_FIFO_JOIN_TX] = 1, [PIO_FIFO_JOIN_RX] = 2 }`: FIFO 连接状态。
+- `enum pio_mov_status_type { STATUS_TX_LESSTHAN = 0, STATUS_RX_LESSTHAN = 1 }`: MOV 状态类型。
+- `enum pio_interrupt_source { pis_interrupt0` = PIO_INTR_SM0_LSB, pis_interrupt1 = PIO_INTR_SM1_LSB, `pis_interrupt2 = PIO_INTR_SM2_LSB, pis_interrupt3 = PIO_INTR_SM3_LSB, `pis_sm0_tx_fifo_not_full` = PIO_INTR_SM0_TXNFULL_LSB, pis_sm1_tx_fifo_not_full = PIO_INTR_SM1_TXNFULL_LSB, pis_sm2_tx_fifo_not_full` = PIO_INTR_SM2_TXNFULL_LSB, pis_sm3_tx_fifo_not_full = PIO_INTR_SM3_TXNFULL_LSB, `pis_sm0_rx_fifo_not_empty = PIO_INTR_SM0_RXNEMPTY_LSB, pis_sm1_rx_fifo_not_empty = PIO_INTR_SM1_RXNEMPTY_LSB, `pis_sm2_rx_fifo_not_empty` = PIO_INTR_SM2_RXNEMPTY_LSB, pis_sm3_rx_fifo_not_empty = PIO_INTR_SM3_RXNEMPTY_LSB }`: PIO 相关 IRQ 的 PIO 中断源编号。
+
+### 函数
+
+- `static uint pio_get_gpio_base (PIO pio)`: 返回 PIO 实例的 GPIO 基址。
+`static int pio_sm_set_config (PIO pio, uint sm, const pio_sm_config *config)`<br/>&emsp;将状态机配置应用到状态机。
+- `static uint pio_get_index (PIO pio)`: 返回 PIO 实例的实例编号。
+- `static uint pio_get_funcsel (PIO pio)`: 返回 PIO 实例的功能选择编号。
+- `static [PIO] pio_get_instance (uint instance)`: 将 PIO 实例转换为硬件实例。
+- `static void pio_gpio_init (PIO pio, uint pin)`: 设置 GPIO 的功能选择以使用给定 PIO 实例的输出。
+- `static uint pio_get_dreq (PIO pio, uint sm, bool is_tx)`: 返回用于调节特定状态机 FIFO 传输速率的 DREQ。
+- `int pio_set_gpio_base (PIO pio, uint gpio_base)`: 设置 PIO 实例的 GPIO 基址。
+`bool pio_can_add_program (PIO pio, const pio_program_t *program)`<br/>&emsp;确定给定程序当前是否可以加载到 PIO 实例。
+
+`bool pio_can_add_program_at_offset (PIO pio, const pio_program_t *program, uint offset)`<br/>&emsp;确定给定程序当前是否可以从特定位置加载到 PIO 实例。
+
+`int pio_add_program (PIO pio, const pio_program_t *program)`<br/>&emsp;尝试加载程序。
+
+`int pio_add_program_at_offset (PIO pio, const pio_program_t *program, uint offset)`<br/>&emsp;尝试在指定指令内存偏移处加载程序。
+
+`void pio_remove_program (PIO pio, const pio_program_t *program, uint loaded_offset)`<br/>&emsp;从 PIO 实例的指令内存中移除程序。
+- `void pio_clear_instruction_memory (PIO pio)`: 清除 PIO 实例的所有指令内存。
+`int pio_sm_init (PIO pio, uint sm, uint initial_pc, const pio_sm_config *config)`<br/>&emsp;将状态机重置为一致状态并进行配置。
+- `static void pio_sm_set_enabled (PIO pio, uint sm, bool enabled)`: 启用或禁用 PIO 状态机。
+- `static void pio_set_sm_mask_enabled (PIO pio, uint32_t mask, bool enabled)`: 启用或禁用多个 PIO 状态机。
+- `static void pio_sm_restart (PIO pio, uint sm)`: 以已知状态重启状态机。
+- `static void pio_restart_sm_mask (PIO pio, uint32_t mask)`: 以已知状态重启多个状态机。
+- `static void pio_sm_clkdiv_restart (PIO pio, uint sm)`: 从相位 0 重启状态机的时钟分频器。
+- `static void pio_clkdiv_restart_sm_mask (PIO pio, uint32_t mask)`: 从相位 0 重启多个状态机的时钟分频器。
+- `static void pio_enable_sm_mask_in_sync (PIO pio, uint32_t mask)`: 同步时钟分频器地启用多个 PIO 状态机。
+- `static void pio_set_irq0_source_enabled (PIO pio, pio_interrupt_source_t source, bool enabled)`: 启用/禁用 PIO 的 IRQ 0 上的单个源。
+- `static void pio_set_irq1_source_enabled (PIO pio, pio_interrupt_source_t source, bool enabled)`: 启用/禁用 PIO 的 IRQ 1 上的单个源。
+- `static void pio_set_irq0_source_mask_enabled (PIO pio, uint32_t source_mask, bool enabled)`: 启用/禁用 PIO 的 IRQ 0 上的多个源。
+- `static void pio_set_irq1_source_mask_enabled (PIO pio, uint32_t source_mask, bool enabled)`: 启用/禁用 PIO 的 IRQ 1 上的多个源。
+- `static void pio_set_irqn_source_enabled (PIO pio, uint irq_index, pio_interrupt_source_t source, bool enabled)`: 启用/禁用 PIO 指定（0/1）IRQ 索引上的单个源。
+- `static void pio_set_irqn_source_mask_enabled (PIO pio, uint irq_index, uint32_t source_mask, bool enabled)`: 启用/禁用 PIO 指定（0/1）IRQ 索引上的多个源。
+- `static bool pio_interrupt_get (PIO pio, uint pio_interrupt_num)`: 确定特定 PIO 中断是否已设置。
+- `static void pio_interrupt_clear (PIO pio, uint pio_interrupt_num)`: 清除特定 PIO 中断。
+- `static uint8_t pio_sm_get_pc (PIO pio, uint sm)`: 返回状态机的当前程序计数器。
+- `static void pio_sm_exec (PIO pio, uint sm, uint instr)`: 立即在状态机上执行指令。
+- `static bool pio_sm_is_exec_stalled (PIO pio, uint sm): 确定由 `pio_sm_exec()` 设置的指令是否停滞执行。
+- `static void pio_sm_exec_wait_blocking (PIO pio, uint sm, uint instr)`: 立即在状态机上执行指令并等待完成。
+- `static void pio_sm_set_wrap (PIO pio, uint sm, uint wrap_target, uint wrap)`: 设置状态机的当前回绕配置。
+- `static void pio_sm_set_out_pins (PIO pio, uint sm, uint out_base, uint out_count)`: 设置状态机的当前"out"引脚。
+- `static void pio_sm_set_set_pins (PIO pio, uint sm, uint set_base, uint set_count)`: 设置状态机的当前"set"引脚。
+- `static void pio_sm_set_in_pins (PIO pio, uint sm, uint in_base)`: 设置状态机的当前"in"引脚。
+- `static void pio_sm_set_sideset_pins (PIO pio, uint sm, uint sideset_base)`: 设置状态机的当前"sideset"引脚。
+- `static void pio_sm_set_jmp_pin (PIO pio, uint sm, uint pin)`: 设置状态机的"jmp"引脚。
+- `static void pio_sm_put (PIO pio, uint sm, uint32_t data)`: 向状态机的 TX FIFO 写入一个字的数据。
+- `static uint32_t pio_sm_get (PIO pio, uint sm)`: 从状态机的 RX FIFO 读取一个字的数据。
+- `static bool pio_sm_is_rx_fifo_full (PIO pio, uint sm)`: 确定状态机的 RX FIFO 是否已满。
+- `static bool pio_sm_is_rx_fifo_empty (PIO pio, uint sm)`: 确定状态机的 RX FIFO 是否为空。
+- `static uint pio_sm_get_rx_fifo_level (PIO pio, uint sm)`: 返回状态机 RX FIFO 中当前的元素数量。
+- `static bool pio_sm_is_tx_fifo_full (PIO pio, uint sm)`: 确定状态机的 TX FIFO 是否已满。
+- `static bool pio_sm_is_tx_fifo_empty (PIO pio, uint sm)`: 确定状态机的 TX FIFO 是否为空。
+- `static uint pio_sm_get_tx_fifo_level (PIO pio, uint sm)`: 返回状态机 TX FIFO 中当前的元素数量。
+- `static void pio_sm_put_blocking (PIO pio, uint sm, uint32_t data)`: 向状态机的 TX FIFO 写入一个字的数据，若 FIFO 满则阻塞。
+- `static uint32_t pio_sm_get_blocking (PIO pio, uint sm)`: 从状态机的 RX FIFO 读取一个字的数据，若 FIFO 为空则阻塞。
+- `void pio_sm_drain_tx_fifo (PIO pio, uint sm)`: 清空状态机的 TX FIFO。
+- `static void pio_sm_set_clkdiv_int_frac8 (PIO pio, uint sm, uint32_t div_int, uint8_t div_frac8)`: 使用 16:8 分数值设置状态机的当前时钟分频器
+- `static void pio_sm_set_clkdiv (PIO pio, uint sm, float div)`: 设置状态机的当前时钟分频器
+- `static void pio_sm_clear_fifos (PIO pio, uint sm)`: 清除状态机的 TX 和 RX FIFO。
+- `void pio_sm_set_pins (PIO pio, uint sm, uint32_t pin_values)`: 使用状态机为 PIO 实例的所有引脚设置值。
+- `void pio_sm_set_pins64 (PIO pio, uint sm, uint64_t pin_values)`: 使用状态机为 PIO 实例的所有引脚设置值。
+- `void pio_sm_set_pins_with_mask (PIO pio, uint sm, uint32_t pin_values, uint32_t pin_mask)`: 使用状态机为 PIO 实例的多个引脚设置值。
+- `void pio_sm_set_pins_with_mask64 (PIO pio, uint sm, uint64_t pin_values, uint64_t pin_mask)`: 使用状态机为 PIO 实例的多个引脚设置值。
+- `void pio_sm_set_pindirs_with_mask (PIO pio, uint sm, uint32_t pin_dirs, uint32_t pin_mask)`: 使用状态机为 PIO 实例的多个引脚设置引脚方向。
+- `void pio_sm_set_pindirs_with_mask64 (PIO pio, uint sm, uint64_t pin_dirs, uint64_t pin_mask)`: 使用状态机为 PIO 实例的多个引脚设置引脚方向。
+- `int pio_sm_set_consecutive_pindirs (PIO pio, uint sm, uint pins_base, uint pin_count, bool is_out)`: 使用状态机为 PIO 实例的多个连续引脚设置相同的引脚方向。
+- `void pio_sm_claim (PIO pio, uint sm)`: 将状态机标记为已使用。
+- `void pio_claim_sm_mask (PIO pio, uint sm_mask)`: 将多个状态机标记为已使用。
+- `void pio_sm_unclaim (PIO pio, uint sm)`: 将状态机标记为不再使用。
+- `int pio_claim_unused_sm (PIO pio, bool required)`: 在 PIO 实例上占用一个空闲状态机。
+- `bool pio_sm_is_claimed (PIO pio, uint sm)`: 确定 PIO 状态机是否已被占用。
+`bool pio_claim_free_sm_and_add_program (const pio_program_t **program, PIO **pio, uint **sm, uint **offset)`<br/>&emsp;查找 PIO 和状态机并将程序添加到 PIO 内存。
+
+`bool pio_claim_free_sm_and_add_program_for_gpio_range (const pio_program_t **program, PIO **pio, uint **sm, uint **offset, uint gpio_base, uint gpio_count, bool set_gpio_base)`<br/>&emsp;查找 PIO 和状态机并将程序添加到 PIO 内存。
+
+`void pio_remove_program_and_unclaim_sm (const pio_program_t *program, PIO pio, uint sm, uint offset)`<br/>&emsp;从 PIO 内存中移除程序并释放状态机。
+- `static int pio_get_irq_num (PIO pio, uint irqn)`: 返回 PIO 硬件实例的 IRQ。
+- `static pio_interrupt_source_t pio_get_tx_fifo_not_full_interrupt_source` (uint sm)`: 返回状态机 TX FIFO 非满中断的中断源。
+- `static pio_interrupt_source_t pio_get_rx_fifo_not_empty_interrupt_source` (uint sm)`: 返回状态机 RX FIFO 非空中断的中断源。
+
+### 宏定义文档
+
+#### pio0
+
+`#define pio0 pio0_hw`
+
+第一个（PIO 0）硬件 PIO 实例的标识符（用于 PIO 函数）。
+
+例如：pio_gpio_init(pio0, 5)
+#### pio1
+
+`#define pio1 pio1_hw`
+
+第二个（PIO 1）硬件 PIO 实例的标识符（用于 PIO 函数）。
+
+例如：pio_gpio_init(pio1, 5)
+#### PIO_NUM
+
+`#define PIO_NUM(pio)`
+
+返回 PIO 实例的 PIO 编号。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### PIO_INSTANCE
+
+`#define PIO_INSTANCE(instance)`
+
+返回具有给定 PIO 编号的 PIO 实例。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### PIO_FUNCSEL_NUM
+
+`#define PIO_FUNCSEL_NUM(pio, gpio)`
+
+返回在给定 GPIO 上为给定 PIO 实例选择 PIO 功能所需的 `gpio_function_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### PIO_DREQ_NUM
+
+`#define PIO_DREQ_NUM(pio, sm, is_tx)`
+
+返回用于调节此 PIO 实例上给定状态机 FIFO DMA 传输速率的 `dreq_num_t`。若 is_tx 为 true，则用于向 PIO 状态机 TX FIFO 传输；否则用于从 PIO 状态机 RX FIFO 传输。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### PIO_IRQ_NUM
+
+`#define PIO_IRQ_NUM(pio, irqn)`
+
+返回来自给定 PIO 实例的处理器中断的 `irq_num_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+
+### 类型定义文档
+
+#### pio_interrupt_source_t
+
+`typedef enum pio_interrupt_source pio_interrupt_source_t`
+
+PIO 相关 IRQ 的 PIO 中断源编号。
+
+### 枚举类型文档
+
+#### pio_fifo_join
+
+`enum pio_fifo_join`
+
+FIFO 连接状态。
+
+| 枚举值 | 说明 |
+| --- | --- |
+| PIO_FIFO_JOIN_NONE | TX FIFO 长度=4 用于发送，RX FIFO 长度=4 用于接收。 |
+| PIO_FIFO_JOIN_TX | TX FIFO 长度=8 用于发送，RX FIFO 禁用。 |
+| PIO_FIFO_JOIN_RX | RX FIFO 长度=8 用于接收，TX FIFO 禁用。 |
+
+#### pio_mov_status_type
+
+`enum pio_mov_status_type`
+
+MOV 状态类型。
+#### pio_interrupt_source
+
+`enum pio_interrupt_source`
+
+PIO 相关 IRQ 的 PIO 中断源编号。
+
+| 枚举值 | 说明 |
+| --- | --- |
+| pis_interrupt0 | PIO 中断 0 触发。 |
+| pis_interrupt1 | PIO 中断 1 触发。 |
+| pis_interrupt2 | PIO 中断 2 触发。 |
+| pis_interrupt3 | PIO 中断 3 触发。 |
+| pis_sm0_tx_fifo_not_full | 状态机 0 TX FIFO 未满。 |
+| pis_sm1_tx_fifo_not_full | 状态机 1 TX FIFO 未满。 |
+| pis_sm2_tx_fifo_not_full | 状态机 2 TX FIFO 未满。 |
+| pis_sm3_tx_fifo_not_full | 状态机 3 TX FIFO 未满。 |
+| pis_sm0_rx_fifo_not_empty | 状态机 0 RX FIFO 非空。 |
+| pis_sm1_rx_fifo_not_empty | 状态机 1 RX FIFO 非空。 |
+| pis_sm2_rx_fifo_not_empty | 状态机 2 RX FIFO 非空。 |
+| pis_sm3_rx_fifo_not_empty | 状态机 3 RX FIFO 非空。 |
+
+### 函数文档
+
+#### pio_add_program
+
+`int pio_add_program ([PIO] pio, const pio_program_t * program)`
+
+尝试加载程序。
+
+若需要检查程序是否可以加载，请参见 `pio_can_add_program()`。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `program`: 程序定义
+
+**返回**
+
+程序加载的指令内存偏移，或负数表示错误（为与先前 SDK 向后兼容，错误值为 -1，即 PICO_ERROR_GENERIC）
+
+#### pio_add_program_at_offset
+
+`int pio_add_program_at_offset ([PIO] pio, const pio_program_t * program, uint offset)`
+
+尝试在指定指令内存偏移处加载程序。
+
+若需要检查程序是否可以加载，请参见 `pio_can_add_program_at_offset()`。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `program`: 程序定义
+- `offset`: 程序起始处所需的指令内存偏移
+
+**返回**
+
+程序加载的指令内存偏移，或负数表示错误（为与先前 SDK 向后兼容，错误值为 -1，即 PICO_ERROR_GENERIC）
+
+#### pio_can_add_program
+
+`bool pio_can_add_program ([PIO] pio, const pio_program_t * program)`
+
+确定给定程序当前是否可以加载到 PIO 实例。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `program`: 程序定义
+
+**返回**
+
+若程序可以加载则返回 true；否则返回 false，例如指令内存中没有合适的空间
+
+#### pio_can_add_program_at_offset
+
+`bool pio_can_add_program_at_offset ([PIO] pio, const pio_program_t * program, uint offset)`
+
+确定给定程序当前是否可以从特定位置加载到 PIO 实例。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `program`: 程序定义
+- `offset`: 程序起始处所需的指令内存偏移
+
+**返回**
+
+若程序可以在该位置加载则返回 true；否则返回 false，例如指令内存中没有空间
+
+#### pio_claim_free_sm_and_add_program
+
+`bool pio_claim_free_sm_and_add_program (const pio_program_t **` program, [PIO] ** pio, uint `** sm, uint ** offset)`
+
+查找 PIO 和状态机并将程序添加到 PIO 内存。
+
+**参数**
+
+- `program`: 要添加的 PIO 程序
+- `pio`: 返回 PIO 硬件实例，若无可用 PIO 则返回 NULL
+- `sm`: 返回已占用的 PIO 状态机的索引
+- `offset`: 返回程序起始处的指令内存偏移
+
+**返回**
+
+成功返回 true，否则返回 false
+
+**参见**
+
+
+#### pio_claim_free_sm_and_add_program_for_gpio_range
+
+`bool pio_claim_free_sm_and_add_program_for_gpio_range (const pio_program_t **` program, [PIO] ** pio, uint `** sm, uint ** offset, uint gpio_base, uint gpio_count, bool set_gpio_base)`
+
+查找 PIO 和状态机并将程序添加到 PIO 内存。
+
+`pio_claim_free_sm_and_add_program` 的此变体在 RP2350 QFN80 上很有用，在该型号中，每个 PIO 实例必须设置"GPIO Base"以寻址 32 个 GPIO（0\-&gt;31）或 32 个 GPIO（16-47）。单个 PIO 实例无法同时与引脚 0\-&gt;15 或 32\-&gt;47 交互。
+
+此方法接受关于所需 GPIO 引脚的额外信息（通过 gpio_base 和 gpio_count），并在必要时可选地设置未使用 PIO 实例的 GPIO 基址（参见 `pio_set_gpio_base）。
+
+**参数**
+
+- `program`: 要添加的 PIO 程序
+- `pio`: 返回 PIO 硬件实例，若无可用 PIO 则返回 NULL
+- `sm`: 返回已占用的 PIO 状态机的索引
+- `offset`: 返回程序起始处的指令内存偏移
+- `gpio_base`: 所需的最低 GPIO 编号（RP2350B 上为 0-47，否则为 0-31）
+- `gpio_count`: 所需的 GPIO 数量
+- `set_gpio_base`: 若在具有正确 GPIO 基址的 PIO 实例上没有空闲 SM，但有未使用的 PIO 实例，则该 PIO 将被重新配置以使此方法成功
+
+**返回**
+
+成功返回 true，否则返回 false
+
+**参见**
+
+
+#### pio_claim_sm_mask
+
+`void pio_claim_sm_mask ([PIO] pio, uint sm_mask)`
+
+将多个状态机标记为已使用。
+
+用于硬件协作占用的方法。若任何状态机已被占用，将触发 panic。库使用此方法可检测到会以不可预测方式失败的意外配置。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm_mask`: 状态机索引掩码
+
+#### pio_claim_unused_sm
+
+`int pio_claim_unused_sm ([PIO] pio, bool required)`
+
+在 PIO 实例上占用一个空闲状态机。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `required`: 若为 true，则在没有可用状态机时函数将 panic
+
+**返回**
+
+状态机索引；若 required 为 false 且没有空闲状态机则返回负数（为与先前 SDK 向后兼容，错误值为 -1，即 PICO_ERROR_GENERIC）
+
+#### pio_clear_instruction_memory
+
+`void pio_clear_instruction_memory ([PIO] pio)`
+
+清除 PIO 实例的所有指令内存。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+
+#### pio_clkdiv_restart_sm_mask
+
+`static void pio_clkdiv_restart_sm_mask ([PIO] pio, uint32_t mask) inline, [static]`
+
+从相位 0 重启多个状态机的时钟分频器。
+
+每个状态机的时钟分频器是一个自由运行的硬件，它*仅*根据配置的整数/分数除数为状态机生成时钟使能脉冲模式。运行/停止周期的模式将状态机的执行减慢到某个受控速率。
+
+此函数同时清除多个状态机时钟分频器的整数和分数相位累加器。如果这些状态机都配置了相同的整数和分数除数，则它们的时钟分频器将从此刻开始以精确的确定性锁步运行。
+
+通过这种方式同步执行时钟，可以安全地让多个状态机对同一标志执行 'wait irq'，并在同一周期内全部清除它。
+
+还请注意，此函数可以在状态机运行时调用（例如，如果您刚刚更改了某些状态机的时钟除数并希望重新同步它们），禁用状态机不会停止其时钟分频器：也就是说，如果多个状态机已同步时钟，您可以安全地禁用并重新启用其中一个状态机，而不会失去同步。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `mask`: 要修改启用状态的状态机索引位掩码
+
+#### pio_enable_sm_mask_in_sync
+
+`static void pio_enable_sm_mask_in_sync ([PIO] pio, uint32_t mask) [inline], [static]`
+
+同步时钟分频器地启用多个 PIO 状态机。
+
+这相当于在*同一*时钟周期内同时调用 `pio_set_sm_mask_enabled() 和 pio_clkdiv_restart_sm_mask()`。'mask' 指定的所有状态机同时启动，假设它们具有相同的时钟除数，其分频时钟将保持精确同步。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `mask`: 要修改启用状态的状态机索引位掩码
+
+#### pio_get_dreq
+
+`static uint pio_get_dreq ([PIO] pio, uint sm, bool is_tx) [inline], [static]`
+
+返回用于调节特定状态机 FIFO 传输速率的 DREQ。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `is_tx`: true 表示向状态机发送数据，false 表示从状态机接收数据
+
+#### pio_get_funcsel
+
+`static uint pio_get_funcsel ([PIO] pio) [inline], [static]`
+
+返回 PIO 实例的功能选择编号。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+
+**返回**
+
+PIO 实例编号（0, 1, ...）
+
+**参见**
+
+
+#### pio_get_gpio_base
+
+`static uint pio_get_gpio_base ([PIO] pio) inline, [static]`
+
+返回 PIO 实例的 GPIO 基址。
+
+在 RP2040 上此方法始终返回 0。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+
+**返回**
+
+PIO 实例的当前 GPIO 基址
+
+#### pio_get_index
+
+`static uint pio_get_index ([PIO] pio) inline, [static]`
+
+返回 PIO 实例的实例编号。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+
+**返回**
+
+PIO 实例编号（0, 1, ...）
+
+#### pio_get_instance
+
+`static [PIO] pio_get_instance (uint instance) inline, [static]`
+
+将 PIO 实例转换为硬件实例。
+
+**参数**
+
+- `instance`: PIO 实例，0 或 1
+
+**返回**
+
+PIO 硬件实例
+
+#### pio_get_irq_num
+
+`static int pio_get_irq_num ([PIO] pio, uint irqn) [inline], [static]`
+
+返回 PIO 硬件实例的 IRQ。
+
+**参数**
+
+- `pio`: PIO 硬件实例
+- `irqn`: 0 表示 PIOx_IRQ_0，1 表示 PIOx_IRQ_1 等，其中 x 是 PIO 编号
+
+**返回**
+
+用于 PIO 的 IRQ 编号
+
+#### pio_get_rx_fifo_not_empty_interrupt_source
+
+`static pio_interrupt_source_t pio_get_rx_fifo_not_empty_interrupt_source (uint sm) [inline], [static]`
+
+返回状态机 RX FIFO 非空中断的中断源。
+
+**参数**
+
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+用于 `pio_set_irqn_source_enabled` 或类似函数的中断源编号
+
+#### pio_get_tx_fifo_not_full_interrupt_source
+
+`static pio_interrupt_source_t pio_get_tx_fifo_not_full_interrupt_source (uint sm) [inline], [static]`
+
+返回状态机 TX FIFO 非满中断的中断源。
+
+**参数**
+
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+用于 `pio_set_irqn_source_enabled` 或类似函数的中断源编号
+
+#### pio_gpio_init
+
+`static void pio_gpio_init ([PIO] pio, uint pin) [inline], [static]`
+
+设置 GPIO 的功能选择以使用给定 PIO 实例的输出。
+
+PIO 在 GPIO 复用中作为替代功能出现，就像 SPI 或 UART 一样。此函数配置该复用以将给定的 PIO 实例连接到 GPIO。它还通过以下方式配置 GPIO 焊盘以传入和传出信号：
+
+* 清除焊盘输出禁用（OD）位
+
+* 设置焊盘输入使能（IE）位
+
+* （非 RP2040）移除焊盘隔离
+
+此函数通过在内部调用 `gpio_set_function()` 来实现这种低级焊盘设置。
+
+请注意，如果您的 PIO 程序只需要来自给定 GPIO 的*输入*，则无需选择 PIO GPIO 功能，因为 PIO 输入路径会忽略 GPIO 复用。但是，您仍然必须为输入配置 GPIO 焊盘本身。
+
+反之，如果在给定引脚上同时使用 PIO 进行输入和输出，则必须为给定的 PIO 实例选择 PIO GPIO 功能，以及为输入和输出配置焊盘。调用此函数对仅输入和输入/输出情况都足够。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `pin`: 要设置功能选择的 GPIO 引脚
+
+#### pio_interrupt_clear
+
+`static void pio_interrupt_clear ([PIO] pio, uint pio_interrupt_num) [inline], [static]`
+
+清除特定 PIO 中断。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `pio_interrupt_num`: PIO 中断编号 0-7
+
+#### pio_interrupt_get
+
+`static bool pio_interrupt_get ([PIO] pio, uint pio_interrupt_num) [inline], [static]`
+
+确定特定 PIO 中断是否已设置。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `pio_interrupt_num`: PIO 中断编号 0-7
+
+**返回**
+
+若对应的 PIO 中断当前已设置则返回 true
+
+#### pio_remove_program
+
+`void pio_remove_program ([PIO] pio, const pio_program_t * program, uint loaded_offset)`
+
+从 PIO 实例的指令内存中移除程序。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `program`: 程序定义
+- `loaded_offset`: 添加程序时返回的已加载偏移
+
+#### pio_remove_program_and_unclaim_sm
+
+`void pio_remove_program_and_unclaim_sm (const pio_program_t * program, [PIO] pio, uint sm, uint offset)`
+
+从 PIO 内存中移除程序并释放状态机。
+
+**参数**
+
+- `program`: 要从内存中移除的 PIO 程序
+- `pio`: 正在使用的 PIO 硬件实例
+- `sm`: 已占用的 PIO 状态机
+- `offset`: 程序在 PIO 内存中的偏移
+
+**参见**
+
+
+#### pio_restart_sm_mask
+
+`static void pio_restart_sm_mask ([PIO] pio, uint32_t mask) [inline], [static]`
+
+以已知状态重启多个状态机。
+
+此方法清除 ISR、移位计数器、时钟分频器计数器、引脚写标志、延迟计数器、锁存的 EXEC 指令和 IRQ 等待条件。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `mask`: 要修改启用状态的状态机索引位掩码
+
+#### pio_set_gpio_base
+
+`int pio_set_gpio_base ([PIO] pio, uint gpio_base)`
+
+设置 PIO 实例的 GPIO 基址。
+
+由于单个 PIO 只能访问 32 个引脚，为了访问更多引脚，PIO 实例必须指定一个基础 GPIO，使实例的"引脚 0"映射于此。对于 RP2350，有效值为 0 和 16，分别表示 PIO 实例可以访问引脚 0-31 或 16-47。
+
+::::note
+此方法仅更改底层 PIO 寄存器，不会检测或尝试防止此更改对此 PIO 上正在使用的状态机产生的任何副作用。
+::::
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `gpio_base`: GPIO 基址（0 或 16）
+
+**返回**
+
+成功返回 PICO_OK (0)，否则返回错误码
+
+#### pio_set_irq0_source_enabled
+
+`static void pio_set_irq0_source_enabled ([PIO] pio, pio_interrupt_source_t source, bool enabled) [inline], [static]`
+
+启用/禁用 PIO 的 IRQ 0 上的单个源。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `source: 源编号（参见 pio_interrupt_source）
+- `enabled`: true 为该源启用 IRQ 0，false 禁用。
+
+#### pio_set_irq0_source_mask_enabled
+
+`static void pio_set_irq0_source_mask_enabled ([PIO] pio, uint32_t source_mask, bool enabled) [inline], [static]`
+
+启用/禁用 PIO 的 IRQ 0 上的多个源。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `source_mask: 位掩码，每位对应一个要影响的源编号（参见 pio_interrupt_source）
+- `enabled`: true 在 IRQ 0 上启用掩码中指定的所有源，false 在 IRQ 0 上禁用掩码中指定的所有源
+
+#### pio_set_irq1_source_enabled
+
+`static void pio_set_irq1_source_enabled ([PIO] pio, pio_interrupt_source_t source, bool enabled) [inline], [static]`
+
+启用/禁用 PIO 的 IRQ 1 上的单个源。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `source: 源编号（参见 pio_interrupt_source）
+- `enabled`: true 为该源启用 IRQ 0，false 禁用。
+
+#### pio_set_irq1_source_mask_enabled
+
+`static void pio_set_irq1_source_mask_enabled ([PIO] pio, uint32_t source_mask, bool enabled) [inline], [static]`
+
+启用/禁用 PIO 的 IRQ 1 上的多个源。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `source_mask: 位掩码，每位对应一个要影响的源编号（参见 pio_interrupt_source）
+- `enabled`: true 在 IRQ 1 上启用掩码中指定的所有源，false 在 IRQ 1 上禁用掩码中指定的所有源
+
+#### pio_set_irqn_source_enabled
+
+`static void pio_set_irqn_source_enabled ([PIO] pio, uint irq_index, pio_interrupt_source_t source, bool enabled) [inline], [static]`
+
+启用/禁用 PIO 指定（0/1）IRQ 索引上的单个源。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `irq_index`: IRQ 索引；0 或 1
+- `source: 源编号（参见 pio_interrupt_source）
+- `enabled`: true 在指定 IRQ 上启用该源，false 禁用。
+
+#### pio_set_irqn_source_mask_enabled
+
+`static void pio_set_irqn_source_mask_enabled ([PIO] pio, uint irq_index, uint32_t source_mask, bool enabled) [inline], [static]`
+
+启用/禁用 PIO 指定（0/1）IRQ 索引上的多个源。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `irq_index`: IRQ 索引；0 或 1
+- `source_mask: 位掩码，每位对应一个要影响的源编号（参见 pio_interrupt_source）
+- `enabled`: true 在指定 IRQ 上启用掩码中指定的所有源，false 在指定 IRQ 上禁用掩码中指定的所有源
+
+#### pio_set_sm_mask_enabled
+
+`static void pio_set_sm_mask_enabled ([PIO] pio, uint32_t mask, bool enabled) [inline], [static]`
+
+启用或禁用多个 PIO 状态机。
+
+请注意，此方法只是设置状态机的启用状态；若现在启用，则从停止处精确继续。
+
+若希望启用多个状态机并确保其时钟分频器同步，请参见 `pio_enable_sm_mask_in_sync()`。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `mask`: 要修改启用状态的状态机索引位掩码
+- `enabled`: true 启用状态机；false 禁用
+
+#### pio_sm_claim
+
+`void pio_sm_claim ([PIO] pio, uint sm)`
+
+将状态机标记为已使用。
+
+用于硬件协作占用的方法。若状态机已被占用，将触发 panic。库使用此方法可检测到会以不可预测方式失败的意外配置。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+#### pio_sm_clear_fifos
+
+`static void pio_sm_clear_fifos ([PIO] pio, uint sm) [inline], [static]`
+
+清除状态机的 TX 和 RX FIFO。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+#### pio_sm_clkdiv_restart
+
+`static void pio_sm_clkdiv_restart ([PIO] pio, uint sm) [inline], [static]`
+
+从相位 0 重启状态机的时钟分频器。
+
+每个状态机的时钟分频器是一个自由运行的硬件，它*仅*根据配置的整数/分数除数为状态机生成时钟使能脉冲模式。运行/停止周期的模式将状态机的执行减慢到某个受控速率。
+
+此函数清除分频器的整数和分数相位累加器，使其从头重新开始此模式。它由 `pio_sm_init()` 自动调用，但也可以在稍后启用状态机时调用，以确保每次加载和运行给定 PIO 程序时时序精确一致。
+
+更常见的是，此硬件机制用于同步多个状态机的执行时钟——参见 `pio_clkdiv_restart_sm_mask()`。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+#### pio_sm_drain_tx_fifo
+
+`void pio_sm_drain_tx_fifo ([PIO] pio, uint sm)`
+
+清空状态机的 TX FIFO。
+
+此方法在状态机上重复执行 `pull 指令，直到 TX FIFO 为空。这会干扰 OSR 的内容，因此另见 pio_sm_clear_fifos()`，该函数清除两个 FIFO 但不干扰状态机的内部状态。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**参见**
+
+`pio_sm_clear_fifos()`
+
+#### pio_sm_exec
+
+`static void pio_sm_exec ([PIO] pio, uint sm, uint instr) [inline], [static]`
+
+立即在状态机上执行指令。
+
+此指令代替状态机正常控制流中的下一条指令执行。后续对此方法的调用如果前一个已执行的指令仍在运行则替换它。参见 `pio_sm_is_exec_stalled()` 以了解已执行的指令是否仍在运行（即是否因某个条件而停滞）。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `instr`: 编码的 PIO 指令
+
+#### pio_sm_exec_wait_blocking
+
+`static void pio_sm_exec_wait_blocking ([PIO] pio, uint sm, uint instr) [inline], [static]`
+
+立即在状态机上执行指令并等待完成。
+
+此指令代替状态机正常控制流中的下一条指令执行。后续对此方法的调用如果前一个已执行的指令仍在运行则替换它。参见 `pio_sm_is_exec_stalled()` 以了解已执行的指令是否仍在运行（即是否因某个条件而停滞）。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `instr`: 编码的 PIO 指令
+
+#### pio_sm_get
+
+`static uint32_t pio_sm_get ([PIO] pio, uint sm) [inline], [static]`
+
+从状态机的 RX FIFO 读取一个字的数据。
+
+这是一个原始 FIFO 访问，不检查空状态。如果 FIFO 为空，硬件会忽略从 FIFO 读取的尝试（读取后 FIFO 仍处于空状态），并在 FDEBUG 中为此 FIFO 设置粘性 RXUNDER 标志，以指示系统在 FIFO 为空时尝试读取。当 FIFO 为空时，此函数返回的数据是未定义的。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**参见**
+
+`pio_sm_get_blocking()`
+
+#### pio_sm_get_blocking
+
+`static uint32_t pio_sm_get_blocking ([PIO] pio, uint sm) [inline], [static]`
+
+从状态机的 RX FIFO 读取一个字的数据，若 FIFO 为空则阻塞。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+#### pio_sm_get_pc
+
+`static uint8_t pio_sm_get_pc ([PIO] pio, uint sm) [inline], [static]`
+
+返回状态机的当前程序计数器。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+程序计数器
+
+#### pio_sm_get_rx_fifo_level
+
+`static uint pio_sm_get_rx_fifo_level ([PIO] pio, uint sm) [inline], [static]`
+
+返回状态机 RX FIFO 中当前的元素数量。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+RX FIFO 中的元素数量
+
+#### pio_sm_get_tx_fifo_level
+
+`static uint pio_sm_get_tx_fifo_level ([PIO] pio, uint sm) [inline], [static]`
+
+返回状态机 TX FIFO 中当前的元素数量。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+TX FIFO 中的元素数量
+
+#### pio_sm_init
+
+`int pio_sm_init ([PIO] pio, uint sm, uint initial_pc, const pio_sm_config * config)`
+
+将状态机重置为一致状态并进行配置。
+
+此方法：
+
+* 禁用状态机（若正在运行）
+
+* 清除 FIFO
+
+* 应用 'config' 指定的配置
+
+* 重置任何内部状态，例如移位计数器
+
+* 跳转到 'initial_pc' 给定的初始程序位置
+
+此调用返回后状态机处于禁用状态。
+
+有关为什么此方法在 RP2350B 上可能失败的更多详情，请参见 [sm_config_ pins]。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `initial_pc`: 要从中运行的初始程序内存偏移
+- `config`: 要应用的配置（或 NULL 以应用默认值）
+
+**返回**
+
+PICO_OK，或 &lt; 0 表示错误（参见 `pico_error_codes）
+
+#### pio_sm_is_claimed
+
+`bool pio_sm_is_claimed ([PIO] pio, uint sm)`
+
+确定 PIO 状态机是否已被占用。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+若已占用则返回 true，否则返回 false
+
+**参见**
+
+
+
+#### pio_sm_is_exec_stalled
+
+`static bool pio_sm_is_exec_stalled ([PIO] pio, uint sm) [inline], [static]`
+
+确定由 `pio_sm_exec()` 设置的指令是否停滞执行。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+若已执行的指令仍在运行（停滞）则返回 true
+
+#### pio_sm_is_rx_fifo_empty
+
+`static bool pio_sm_is_rx_fifo_empty ([PIO] pio, uint sm) [inline], [static]`
+
+确定状态机的 RX FIFO 是否为空。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+若 RX FIFO 为空则返回 true
+
+#### pio_sm_is_rx_fifo_full
+
+`static bool pio_sm_is_rx_fifo_full ([PIO] pio, uint sm) [inline], [static]`
+
+确定状态机的 RX FIFO 是否已满。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+若 RX FIFO 已满则返回 true
+
+#### pio_sm_is_tx_fifo_empty
+
+`static bool pio_sm_is_tx_fifo_empty ([PIO] pio, uint sm) [inline], [static]`
+
+确定状态机的 TX FIFO 是否为空。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+若 TX FIFO 为空则返回 true
+
+#### pio_sm_is_tx_fifo_full
+
+`static bool pio_sm_is_tx_fifo_full ([PIO] pio, uint sm) [inline], [static]`
+
+确定状态机的 TX FIFO 是否已满。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+**返回**
+
+若 TX FIFO 已满则返回 true
+
+#### pio_sm_put
+
+`static void pio_sm_put ([PIO] pio, uint sm, uint32_t data) [inline], [static]`
+
+向状态机的 TX FIFO 写入一个字的数据。
+
+这是一个原始 FIFO 访问，不检查满状态。如果 FIFO 已满，FIFO 内容和状态不受写入尝试的影响。硬件在 FDEBUG 中为此 FIFO 设置 TXOVER 粘性标志，以指示系统尝试向满 FIFO 写入。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `data`: 32 位数据值
+
+**参见**
+
+`pio_sm_put_blocking()`
+
+#### pio_sm_put_blocking
+
+`static void pio_sm_put_blocking ([PIO] pio, uint sm, uint32_t data) [inline], [static]`
+
+向状态机的 TX FIFO 写入一个字的数据，若 FIFO 满则阻塞。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `data`: 32 位数据值
+
+#### pio_sm_restart
+
+`static void pio_sm_restart ([PIO] pio, uint sm) [inline], [static]`
+
+以已知状态重启状态机。
+
+此方法清除 ISR、移位计数器、时钟分频器计数器、引脚写标志、延迟计数器、锁存的 EXEC 指令和 IRQ 等待条件。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+#### pio_sm_set_clkdiv
+
+`static void pio_sm_set_clkdiv ([PIO] pio, uint sm, float div) [inline], [static]`
+
+设置状态机的当前时钟分频器
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `div`: 浮点时钟分频器
+
+#### pio_sm_set_clkdiv_int_frac8
+
+`static void pio_sm_set_clkdiv_int_frac8 ([PIO] pio, uint sm, uint32_t div_int, uint8_t div_frac8) [inline], [static]`
+
+使用 16:8 分数值设置状态机的当前时钟分频器
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `div_int`: 时钟分频器的整数部分
+- `div_frac8`: 时钟分频器的分数部分（以 1/256 为单位）
+
+#### pio_sm_set_config
+
+`static int pio_sm_set_config ([PIO] pio, uint sm, const pio_sm_config * config) [inline], [static]`
+
+将状态机配置应用到状态机。
+
+有关为什么此方法在 RP2350B 上可能失败的更多详情，请参见 [sm_config_ pins]。
+
+**参数**
+
+- `pio`: PIO 实例的句柄；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `config`: 要应用的配置
+
+**返回**
+
+成功返回 PICO_OK (0)，否则返回负数错误码
+
+#### pio_sm_set_consecutive_pindirs
+
+`int pio_sm_set_consecutive_pindirs ([PIO] pio, uint sm, uint pins_base, uint pin_count, bool is_out)`
+
+使用状态机为 PIO 实例的多个连续引脚设置相同的引脚方向。
+
+此方法反复重新配置目标状态机的引脚配置，并执行 'set' 指令在连续引脚上设置引脚方向，然后将状态机的引脚配置恢复到之前的状态。
+
+提供此方法是为了方便设置初始引脚方向，不应在已启用的状态机上使用。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 要使用的状态机索引（0..3）
+- `pins_base`: 要设置方向的第一个引脚。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+- `pin_count`: 要设置方向的连续引脚数量
+- `is_out`: 要设置的方向；true = 输出，false = 输入
+
+**返回**
+
+成功返回 PICO_OK (0)，否则返回错误码
+
+#### pio_sm_set_enabled
+
+`static void pio_sm_set_enabled ([PIO] pio, uint sm, bool enabled) [inline], [static]`
+
+启用或禁用 PIO 状态机。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `enabled`: true 启用状态机；false 禁用
+
+#### pio_sm_set_in_pins
+
+`static void pio_sm_set_in_pins ([PIO] pio, uint sm, uint in_base) [inline], [static]`
+
+设置状态机的当前"in"引脚。
+
+"in"引脚可以与"out"、"set"和"sideset"引脚重叠。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `in_base`: 用作输入的第一个引脚。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+
+#### pio_sm_set_jmp_pin
+
+`static void pio_sm_set_jmp_pin ([PIO] pio, uint sm, uint pin) [inline], [static]`
+
+设置状态机的"jmp"引脚。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `pin: 用作 jmp pin` 指令源的引脚编号。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+
+#### pio_sm_set_out_pins
+
+`static void pio_sm_set_out_pins ([PIO] pio, uint sm, uint out_base, uint out_count) [inline], [static]`
+
+设置状态机的当前"out"引脚。
+
+"out"引脚可以与"in"、"set"和"sideset"引脚重叠。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `out_base`: 设置为输出的第一个引脚。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+- `out_count`: 0-32 要设置的引脚数量。
+
+#### pio_sm_set_pindirs_with_mask
+
+`void pio_sm_set_pindirs_with_mask ([PIO] pio, uint sm, uint32_t pin_dirs, uint32_t pin_mask)`
+
+使用状态机为 PIO 实例的多个引脚设置引脚方向。
+
+此方法反复重新配置目标状态机的引脚配置，并执行 'set' 指令在最多 32 个引脚上设置引脚方向，然后将状态机的引脚配置恢复到之前的状态。
+
+提供此方法是为了方便设置初始引脚方向，不应在已启用的状态机上使用。注意：此方法仅适用于引脚编号 &lt; 32。若要与引脚编号 >= 32 一起使用，请调用 pio_sm_set_pindirs_with_mask64。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 要使用的状态机索引（0..3）
+- `pin_dirs`: 要设置的引脚方向——1 = 输出，0 = 输入（若 pin_mask 中对应位已设置）
+- `pin_mask`: 每个引脚一位，表示该引脚的对应 pin_value 是否应被应用。
+
+#### pio_sm_set_pindirs_with_mask64
+
+`void pio_sm_set_pindirs_with_mask64 ([PIO] pio, uint sm, uint64_t pin_dirs, uint64_t pin_mask)`
+
+使用状态机为 PIO 实例的多个引脚设置引脚方向。
+
+此方法反复重新配置目标状态机的引脚配置，并执行 'set' 指令在最多 32 个引脚上设置引脚方向，然后将状态机的引脚配置恢复到之前的状态。
+
+提供此方法是为了方便设置初始引脚方向，不应在已启用的状态机上使用。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 要使用的状态机索引（0..3）
+- `pin_dirs`: 要设置的引脚方向——1 = 输出，0 = 输入（若 pin_mask 中对应位已设置）
+- `pin_mask`: 每个引脚一位，表示该引脚的对应 pin_value 是否应被应用。
+
+#### pio_sm_set_pins
+
+`void pio_sm_set_pins ([PIO] pio, uint sm, uint32_t pin_values)`
+
+使用状态机为 PIO 实例的所有引脚设置值。
+
+此方法反复重新配置目标状态机的引脚配置，并执行 'set' 指令在所有 32 个引脚上设置值，然后将状态机的引脚配置恢复到之前的状态。
+
+提供此方法是为了方便设置初始引脚状态，不应在已启用的状态机上使用。注意：此方法仅适用于引脚编号 &lt; 32。若要与引脚编号 >= 32 一起使用，请调用 pio_sm_set_pins64。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 要使用的状态机索引（0..3）
+- `pin_values`: 要设置的引脚值。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+
+#### pio_sm_set_pins64
+
+`void pio_sm_set_pins64 ([PIO] pio, uint sm, uint64_t pin_values)`
+
+使用状态机为 PIO 实例的所有引脚设置值。
+
+此方法反复重新配置目标状态机的引脚配置，并执行 'set' 指令在所有 32 个引脚上设置值，然后将状态机的引脚配置恢复到之前的状态。
+
+提供此方法是为了方便设置初始引脚状态，不应在已启用的状态机上使用。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 要使用的状态机索引（0..3）
+- `pin_values`: 要设置的引脚值。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+
+#### pio_sm_set_pins_with_mask
+
+`void pio_sm_set_pins_with_mask ([PIO] pio, uint sm, uint32_t pin_values, uint32_t pin_mask)`
+
+使用状态机为 PIO 实例的多个引脚设置值。
+
+此方法反复重新配置目标状态机的引脚配置，并执行 'set' 指令在最多 32 个引脚上设置值，然后将状态机的引脚配置恢复到之前的状态。
+
+提供此方法是为了方便设置初始引脚状态，不应在已启用的状态机上使用。注意：此方法仅适用于引脚编号 &lt; 32。若要与引脚编号 >= 32 一起使用，请调用 pio_sm_set_pins_with_mask64。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 要使用的状态机索引（0..3）
+- `pin_values`: 要设置的引脚值（若 pin_mask 中对应位已设置）
+- `pin_mask`: 每个引脚一位，表示该引脚的对应 pin_value 是否应被应用。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+
+#### pio_sm_set_pins_with_mask64
+
+`void pio_sm_set_pins_with_mask64 ([PIO] pio, uint sm, uint64_t pin_values, uint64_t pin_mask)`
+
+使用状态机为 PIO 实例的多个引脚设置值。
+
+此方法反复重新配置目标状态机的引脚配置，并执行 'set' 指令在最多 32 个引脚上设置值，然后将状态机的引脚配置恢复到之前的状态。
+
+提供此方法是为了方便设置初始引脚状态，不应在已启用的状态机上使用。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 要使用的状态机索引（0..3）
+- `pin_values`: 要设置的引脚值（若 pin_mask 中对应位已设置）
+- `pin_mask`: 每个引脚一位，表示该引脚的对应 pin_value 是否应被应用。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+
+#### pio_sm_set_set_pins
+
+`static void pio_sm_set_set_pins ([PIO] pio, uint sm, uint set_base, uint set_count) [inline], [static]`
+
+设置状态机的当前"set"引脚。
+
+"set"引脚可以与"in"、"out"和"sideset"引脚重叠。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `set_base`: 设置为"set"的第一个引脚。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+- `set_count`: 0-5 要设置的引脚数量。
+
+#### pio_sm_set_sideset_pins
+
+`static void pio_sm_set_sideset_pins ([PIO] pio, uint sm, uint sideset_base) [inline], [static]`
+
+设置状态机的当前"sideset"引脚。
+
+"sideset"引脚可以与"in"、"out"和"set"引脚重叠。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `sideset_base`: "side set"的基础引脚。有关引脚参数的更多详细信息，请参见 [pio_sm_ pins]
+
+#### pio_sm_set_wrap
+
+`static void pio_sm_set_wrap ([PIO] pio, uint sm, uint wrap_target, uint wrap) [inline], [static]`
+
+设置状态机的当前回绕配置。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+- `wrap_target`: 要回绕到的指令内存地址
+- `wrap`: 若指令本身不更新程序计数器，则在此指令内存地址之后将程序计数器设置为 wrap_target
+
+#### pio_sm_unclaim
+
+`void pio_sm_unclaim ([PIO] pio, uint sm)`
+
+将状态机标记为不再使用。
+
+用于硬件协作占用的方法。
+
+**参数**
+
+- `pio`: PIO 实例；例如 [pio0] 或 pio1
+- `sm`: 状态机索引（0..3）
+
+### sm_config
+
+PIO 状态机配置。
+
+#### 详细描述
+
+PIO 块需要配置，这些函数提供了设置配置结构体的辅助工具。参见 `pio_sm_set_config`。
+
+ 在 RP2040 上，引脚编号始终可以指定为 0-31
+
+在 RP2350A 上，引脚编号始终可以指定为 0-31。
+
+在 RP2350B 上，有 48 个引脚，但每个 PIO 实例只能寻址 32 个引脚（PIO 实例根据 `pio_set_gpio_base 寻址引脚 0-31 或 16-47）。sm_config_` 状态机配置始终采用完整范围内的*实际*引脚编号，但：
+
+* 若 `PICO_PIO_USE_GPIO_BASE != 1，则引脚编号的第 5 位被忽略。这样做是为了使针对 RP2350A 开发板编译的程序不会因处理不存在的高编号引脚而产生额外开销。在这种情况下，这些函数的行为与 RP2040 完全相同。注意，若 PICO_RP2350A 为 1，则 `PICO_PIO_USE_GPIO_BASE` 默认为 0。
+
+* 若 `PICO_PIO_USE_GPIO_BASE == 1`，则状态机配置以 0-47 的实际引脚编号存储。当然在这种情况下，有可能创建无效配置（使用了 0-15 和 32-47 两个范围的引脚）。
+
+`pio_sm_set_config（或调用它的 pio_sm_init）尝试将配置应用到特定 PIO 的状态机，如果由于上述问题无法应用配置，或者 PIO 的 GPIO 基址（参见 `pio_set_gpio_base）不允许访问所需引脚，则会返回 PICO_ERROR_BAD_ALIGNMENT。
+
+需要明确的是，`pio_sm_set_config 不会为您更改 PIO 的 GPIO 基址；您必须在调用此方法之前配置 PIO 的 GPIO 基址，但您可以使用 pio_claim_free_sm_and_add_program_for_gpio_range` 来查找/配置适合特定 GPIO 范围的 PIO 实例。
+
+您可以设置 `PARAM_ASSERTIONS_ENABLED_HARDWARE_PIO = 1` 以启用参数检查，用于调试 hardware_pio 方法中的引脚（或其他）问题。
+
+#### 函数
+
+`static void sm_config_set_out_pin_base (pio_sm_config *c, uint out_base)`<br/>&emsp;在状态机配置中设置"out"引脚的基址。
+
+`static void sm_config_set_out_pin_count (pio_sm_config *c, uint out_count)`<br/>&emsp;在状态机配置中设置"out"引脚的数量。
+
+`static void sm_config_set_out_pins (pio_sm_config *c, uint out_base, uint out_count)`<br/>&emsp;在状态机配置中设置"out"引脚。
+
+`static void sm_config_set_set_pin_base (pio_sm_config *c, uint set_base)`<br/>&emsp;在状态机配置中设置"set"引脚的基址。
+
+`static void sm_config_set_set_pin_count (pio_sm_config *c, uint set_count)`<br/>&emsp;在状态机配置中设置"set"引脚的数量。
+
+`static void sm_config_set_set_pins (pio_sm_config *c, uint set_base, uint set_count)`<br/>&emsp;在状态机配置中设置"set"引脚。
+
+`static void sm_config_set_in_pin_base (pio_sm_config *c, uint in_base)`<br/>&emsp;在状态机配置中设置"in"引脚的基址。
+
+`static void sm_config_set_in_pins (pio_sm_config *c, uint in_base)`<br/>&emsp;在状态机配置中设置"in"引脚的基址。
+
+`static void sm_config_set_in_pin_count (pio_sm_config *c, uint in_count)`<br/>&emsp;在状态机配置中设置"in"引脚的数量。
+
+`static void sm_config_set_sideset_pin_base (pio_sm_config *c, uint sideset_base)`<br/>&emsp;在状态机配置中设置"sideset"引脚的基址。
+
+`static void sm_config_set_sideset_pins (pio_sm_config *c, uint sideset_base)`<br/>&emsp;在状态机配置中设置"sideset"引脚。
+
+`static void sm_config_set_sideset (pio_sm_config *c, uint bit_count, bool optional, bool pindirs)`<br/>&emsp;在状态机配置中设置"sideset"选项。
+
+`static void sm_config_set_clkdiv_int_frac8 (pio_sm_config *c, uint32_t div_int, uint8_t div_frac8)`<br/>&emsp;在状态机配置中设置状态机时钟分频器（来自整数和分数部分——16:8）。
+
+`static void sm_config_set_clkdiv (pio_sm_config *c, float div)`<br/>&emsp;在状态机配置中设置状态机时钟分频器（来自浮点值）。
+
+`static void sm_config_set_wrap (pio_sm_config *c, uint wrap_target, uint wrap)`<br/>&emsp;在状态机配置中设置回绕地址。
+
+`static void sm_config_set_jmp_pin (pio_sm_config *c, uint pin)`<br/>&emsp;在状态机配置中设置"jmp"引脚。
+
+`static void sm_config_set_in_shift (pio_sm_config *c, bool shift_right, bool autopush, uint push_threshold)`<br/>&emsp;在状态机配置中设置"in"移位参数。
+
+`static void sm_config_set_out_shift (pio_sm_config *c, bool shift_right, bool autopull, uint pull_threshold)`<br/>&emsp;在状态机配置中设置"out"移位参数。
+
+`static void sm_config_set_fifo_join (pio_sm_config *c, enum pio_fifo_join join)`<br/>&emsp;在状态机配置中设置 FIFO 连接。
+
+`static void sm_config_set_out_special (pio_sm_config *c, bool sticky, bool has_enable_pin, uint enable_bit_index)`<br/>&emsp;在状态机配置中设置特殊"out"操作。
+
+`static void sm_config_set_mov_status (pio_sm_config *c, enum pio_mov_status_type status_sel, uint status_n)`<br/>&emsp;在状态机配置中设置"mov status"的源。
+- `static pio_sm_config pio_get_default_sm_config` (void)`: 获取默认状态机配置。
+
+#### 函数文档
+
+**pio_get_default_sm_config**
+
+`static pio_sm_config pio_get_default_sm_config (void) [inline], [static]`
+
+获取默认状态机配置。
+
+| 设置 | 默认值 |
+| --- | --- |
+| Out Pins | 32 starting at 0 |
+| Set Pins | 0 starting at 0 |
+| In Pins | 32 starting at 0 |
+| Side Set Pins (base) | 0 |
+| Side Set | disabled |
+| Wrap | wrap=31, wrap_to=0 |
+| In Shift | shift_direction=right, autopush=false, push_threshold=32 |
+| Out Shift | shift_direction=right, autopull=false, pull_threshold=32 |
+| Jmp Pin | 0 |
+| Out Special | sticky=false, has_enable_pin=false, enable_pin_index=0 |
+| Mov Status | status_sel=STATUS_TX_LESSTHAN, n=0 |
+
+**返回**
+
+可以随后修改的默认状态机配置。
+
+**sm_config_set_clkdiv**
+
+`static void sm_config_set_clkdiv (pio_sm_config * c, float div) [inline], [static]`
+
+在状态机配置中设置状态机时钟分频器（来自浮点值）。
+
+时钟分频器通过在某些周期屏蔽系统时钟来减慢状态机的执行，形成重复模式，使状态机不会推进。这实际上为状态机运行提供了一个更慢的时钟，可用于生成特定的 UART 波特率等。详情请参阅数据手册。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `div`: 要设置的分数除数。1 为全速。整数时钟除数 n 将使状态机每 n 个周期运行 1 次。注意，对于小的 n，分数分频器（例如 2.5）引入的抖动可能不可接受，但这取决于具体使用场景。
+
+**sm_config_set_clkdiv_int_frac8**
+
+`static void sm_config_set_clkdiv_int_frac8 (pio_sm_config * c, uint32_t div_int, uint8_t div_frac8) [inline], [static]`
+
+在状态机配置中设置状态机时钟分频器（来自整数和分数部分——16:8）。
+
+时钟分频器可以通过在某些周期（而非全部周期）使能状态机，将状态机的执行减慢到低于系统时钟频率的某个速率。这可用于生成特定的 UART 波特率等。详情请参阅数据手册。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `div_int`: 除数的整数部分
+- `div_frac8`: 以 1/256 为单位的分数部分
+
+**参见**
+
+`sm_config_set_clkdiv()`
+
+**sm_config_set_fifo_join**
+
+`static void sm_config_set_fifo_join (pio_sm_config *` c, enum pio_fifo_join join) [inline], [static]`
+
+在状态机配置中设置 FIFO 连接。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `join: 指定连接类型。参见 pio_fifo_join`
+
+**sm_config_set_in_pin_base**
+
+`static void sm_config_set_in_pin_base (pio_sm_config * c, uint in_base) [inline], [static]`
+
+在状态机配置中设置"in"引脚的基址。
+
+"in"引脚可以与"out"、"set"和"sideset"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `in_base`: 用作输入的第一个引脚。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+
+**sm_config_set_in_pin_count**
+
+`static void sm_config_set_in_pin_count (pio_sm_config * c, uint in_count) [inline], [static]`
+
+在状态机配置中设置"in"引脚的数量。
+
+使用 IN 引脚映射读取引脚时，将读取这么多（低位）位，其余位取零值。
+
+RP2040 不能屏蔽未使用的输入引脚，因此 in_count 必须为 32。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `in_count`: 1-32 通过 IN 引脚映射读取时包含的引脚数量
+
+**sm_config_set_in_pins**
+
+`static void sm_config_set_in_pins (pio_sm_config * c, uint in_base) [inline], [static]`
+
+在状态机配置中设置"in"引脚的基址。
+
+"in"引脚可以与"out"、"set"和"sideset"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `in_base`: 用作输入的第一个引脚。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+
+**sm_config_set_in_shift**
+
+`static void sm_config_set_in_shift (pio_sm_config * c, bool shift_right, bool autopush, uint push_threshold) [inline], [static]`
+
+在状态机配置中设置"in"移位参数。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `shift_right`: true 将 ISR 向右移位，false 向左移位
+- `autopush`: 是否启用自动推送
+- `push_threshold`: 自动/条件重新推送 ISR 之前的移入位数阈值
+
+**sm_config_set_jmp_pin**
+
+`static void sm_config_set_jmp_pin (pio_sm_config * c, uint pin) [inline], [static]`
+
+在状态机配置中设置"jmp"引脚。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `pin: 用作 jmp pin` 指令源的原始 GPIO 引脚编号。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+
+**sm_config_set_mov_status**
+
+`static void sm_config_set_mov_status (pio_sm_config *` c, enum pio_mov_status_type status_sel, uint status_n) [inline], [static]`
+
+在状态机配置中设置"mov status"的源。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `status_sel: 状态操作选择器。参见 pio_mov_status_type`
+- `status_n`: mov status 操作的参数（目前为位计数）
+
+**sm_config_set_out_pin_base**
+
+`static void sm_config_set_out_pin_base (pio_sm_config * c, uint out_base) [inline], [static]`
+
+在状态机配置中设置"out"引脚的基址。
+
+"out"引脚可以与"in"、"set"和"sideset"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `out_base`: 设置为输出的第一个引脚。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+
+**sm_config_set_out_pin_count**
+
+`static void sm_config_set_out_pin_count (pio_sm_config * c, uint out_count) [inline], [static]`
+
+在状态机配置中设置"out"引脚的数量。
+
+"out"引脚可以与"in"、"set"和"sideset"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `out_count`: 0-32 要设置的引脚数量。
+
+**sm_config_set_out_pins**
+
+`static void sm_config_set_out_pins (pio_sm_config * c, uint out_base, uint out_count) [inline], [static]`
+
+在状态机配置中设置"out"引脚。
+
+"out"引脚可以与"in"、"set"和"sideset"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `out_base`: 设置为输出的第一个引脚。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+- `out_count`: 0-32 要设置的引脚数量。
+
+**sm_config_set_out_shift**
+
+`static void sm_config_set_out_shift (pio_sm_config * c, bool shift_right, bool autopull, uint pull_threshold) [inline], [static]`
+
+在状态机配置中设置"out"移位参数。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `shift_right`: true 将 OSR 向右移位，false 向左移位
+- `autopull`: 是否启用自动拉取
+- `pull_threshold`: 自动/条件重新拉取 OSR 之前的移出位数阈值
+
+**sm_config_set_out_special**
+
+`static void sm_config_set_out_special (pio_sm_config * c, bool sticky, bool has_enable_pin, uint enable_bit_index) [inline], [static]`
+
+在状态机配置中设置特殊"out"操作。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `sticky`: 启用"粘性"输出（即在后续周期中重新断言最近的 OUT/SET 引脚值）
+- `has_enable_pin`: true 启用辅助 OUT 使能引脚
+- `enable_bit_index`: 辅助 OUT 使能的数据位索引。
+
+**sm_config_set_set_pin_base**
+
+`static void sm_config_set_set_pin_base (pio_sm_config * c, uint set_base) [inline], [static]`
+
+在状态机配置中设置"set"引脚的基址。
+
+"set"引脚可以与"in"、"out"和"sideset"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `set_base`: 用作"set"的第一个引脚。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+
+**sm_config_set_set_pin_count**
+
+`static void sm_config_set_set_pin_count (pio_sm_config * c, uint set_count) [inline], [static]`
+
+在状态机配置中设置"set"引脚的数量。
+
+"set"引脚可以与"in"、"out"和"sideset"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `set_count`: 0-5 要设置的引脚数量。
+
+**sm_config_set_set_pins**
+
+`static void sm_config_set_set_pins (pio_sm_config * c, uint set_base, uint set_count) [inline], [static]`
+
+在状态机配置中设置"set"引脚。
+
+"set"引脚可以与"in"、"out"和"sideset"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `set_base`: 用作"set"的第一个引脚。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+- `set_count`: 0-5 要设置的引脚数量。
+
+**sm_config_set_sideset**
+
+`static void sm_config_set_sideset (pio_sm_config * c, uint bit_count, bool optional, bool pindirs) [inline], [static]`
+
+在状态机配置中设置"sideset"选项。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `bit_count`: 从指令延迟字段中占用的位数，用于 side set（最多 5 位）
+- `optional`: 若最高位的 side set 位用作标志，指示是否在该指令上应用 side set，则为 true
+- `pindirs`: 若 side set 影响引脚方向而非值，则为 true
+
+**sm_config_set_sideset_pin_base**
+
+`static void sm_config_set_sideset_pin_base (pio_sm_config * c, uint sideset_base) [inline], [static]`
+
+在状态机配置中设置"sideset"引脚的基址。
+
+"sideset"引脚可以与"in"、"out"和"set"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `sideset_base`: 用于"side set"的第一个引脚。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+
+**sm_config_set_sideset_pins**
+
+`static void sm_config_set_sideset_pins (pio_sm_config * c, uint sideset_base) [inline], [static]`
+
+在状态机配置中设置"sideset"引脚。
+
+此方法与 `sm_config_set_sideset_pin_base` 相同，提供是为了向后兼容。
+
+"sideset"引脚可以与"in"、"out"和"set"引脚重叠。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `sideset_base`: 用于"side set"的第一个引脚。有关引脚参数的更多详细信息，请参见 [sm_config_ pins]
+
+**sm_config_set_wrap**
+
+`static void sm_config_set_wrap (pio_sm_config * c, uint wrap_target, uint wrap) [inline], [static]`
+
+在状态机配置中设置回绕地址。
+
+**参数**
+
+- `c`: 指向要修改的配置结构体的指针
+- `wrap_target`: 要回绕到的指令内存地址
+- `wrap`: 若指令本身不更新程序计数器，则在此指令内存地址之后将程序计数器设置为 wrap_target
+
+### pio_instructions
+
+PIO 指令编码。
+
+#### 详细描述
+
+用于以编程方式生成 PIO 指令编码的函数。在调试构建中，可以将 `PARAM_ASSERTIONS_ENABLED_PIO_INSTRUCTIONS` 设置为 1 以启用编码函数参数的验证。
+
+有关相关指令的更完整描述，请参阅"RP2040 数据手册"。
+
+#### 枚举
+
+- `enum pio_src_dest { pio_pins = 0u, pio_x = 1u, pio_y = 2u, pio_null = 3u | 0x20u | 0x80u, pio_pindirs = 4u | 0x08u | 0x40u | 0x80u, pio_exec_mov = 4u | 0x08u | 0x10u | 0x20u | 0x40u, pio_status = 5u | 0x08u | 0x10u | 0x20u | 0x80u, pio_pc = 5u | 0x08u | 0x20u | 0x40u, pio_isr = 6u | 0x20u, pio_osr = 7u | 0x10u | 0x20u, pio_exec_out = 7u | 0x08u | 0x20u | 0x40u | 0x80u }`: 传递给指令编码函数的源/目的地参数值枚举。
+
+#### 函数
+
+- `static uint pio_encode_delay (uint cycles)`: 仅编码指令的延迟槽位。
+- `static uint pio_encode_sideset (uint sideset_bit_count, uint value)`: 仅编码指令的 side set 位（在非可选 side set 模式下）
+- `static uint pio_encode_sideset_opt (uint sideset_bit_count, uint value): 仅编码指令的 side set 位（在可选 -`opt` side set 模式下）
+- `static uint pio_encode_jmp (uint addr)`: 编码无条件 JMP 指令。
+- `static uint pio_encode_jmp_not_x (uint addr)`: 编码条件 JMP（若暂存 X 为零）指令。
+- `static uint pio_encode_jmp_x_dec (uint addr)`: 编码条件 JMP（若暂存 X 非零，且后减）指令。
+- `static uint pio_encode_jmp_not_y (uint addr)`: 编码条件 JMP（若暂存 Y 为零）指令。
+- `static uint pio_encode_jmp_y_dec (uint addr)`: 编码条件 JMP（若暂存 Y 非零，且后减）指令。
+- `static uint pio_encode_jmp_x_ne_y (uint addr)`: 编码条件 JMP（若暂存 X 不等于暂存 Y）指令。
+- `static uint pio_encode_jmp_pin (uint addr)`: 编码条件 JMP（若输入引脚为高）指令。
+- `static uint pio_encode_jmp_not_osre (uint addr)`: 编码条件 JMP（若输出移位寄存器非空）指令。
+- `static uint pio_encode_wait_gpio (bool polarity, uint gpio)`: 编码等待 GPIO 引脚的 WAIT 指令。
+- `static uint pio_encode_wait_pin (bool polarity, uint pin)`: 编码等待引脚的 WAIT 指令。
+- `static uint pio_encode_wait_irq (bool polarity, bool relative, uint irq)`: 编码等待 IRQ 的 WAIT 指令。
+- `static uint pio_encode_in (enum pio_src_dest src, uint count)`: 编码 IN 指令。
+- `static uint pio_encode_out (enum pio_src_dest dest, uint count)`: 编码 OUT 指令。
+- `static uint pio_encode_push (bool if_full, bool block)`: 编码 PUSH 指令。
+- `static uint pio_encode_pull (bool if_empty, bool block)`: 编码 PULL 指令。
+- `static uint pio_encode_mov (enum pio_src_dest dest, enum pio_src_dest src)`: 编码 MOV 指令。
+- `static uint pio_encode_mov_not (enum pio_src_dest dest, enum pio_src_dest src)`: 编码带位取反的 MOV 指令。
+- `static uint pio_encode_mov_reverse (enum pio_src_dest dest, enum pio_src_dest src)`: 编码带位反转的 MOV 指令。
+- `static uint pio_encode_irq_set (bool relative, uint irq)`: 编码 IRQ SET 指令。
+- `static uint pio_encode_irq_wait (bool relative, uint irq)`: 编码 IRQ WAIT 指令。
+- `static uint pio_encode_irq_clear (bool relative, uint irq)`: 编码 IRQ CLEAR 指令。
+- `static uint pio_encode_set (enum pio_src_dest dest, uint value)`: 编码 SET 指令。
+- `static uint pio_encode_nop (void)`: 编码 NOP 指令。
+
+#### 枚举类型文档
+
+**pio_src_dest**
+
+`enum pio_src_dest`
+
+传递给指令编码函数的源/目的地参数值枚举。
+
+并非所有值都适用于所有函数。有效性仅在 `PARAM_ASSERTIONS_ENABLED_PIO_INSTRUCTIONS` 为 1 时的调试模式下进行检查。
+
+#### 函数文档
+
+**pio_encode_delay**
+
+`static uint pio_encode_delay (uint cycles) [inline], [static]`
+
+仅编码指令的延迟槽位。
+
+此函数不返回有效的指令编码；而是返回延迟槽位的编码，适合与实际指令编码函数结果进行 `OR 运算。在将此函数的结果与 pio_encode_sideset 和 `pio_encode_sideset_opt` 的结果组合时应小心，因为它们在指令编码中共享相同的位。
+
+**参数**
+
+- `cycles`: 周期数 0-31（若使用 side set 则更少）
+
+**返回**
+
+要与指令编码进行 OR 运算的延迟槽位
+
+**pio_encode_in**
+
+`static uint pio_encode_in (enum pio_src_dest src, uint count) [inline], [static]`
+
+编码 IN 指令。
+
+这等效于 `IN &lt;src>, &lt;count>`
+
+**参数**
+
+- `src`: 从中获取数据的源
+- `count`: 位数 1-32
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_irq_clear**
+
+`static uint pio_encode_irq_clear (bool relative, uint irq) [inline], [static]`
+
+编码 IRQ CLEAR 指令。
+
+这等效于 `IRQ CLEAR &lt;irq> &lt;relative>`
+
+**参数**
+
+- `relative: IRQ CLEAR &lt;irq> REL 为 true，常规 `IRQ CLEAR &lt;irq>` 为 false
+- `irq`: irq 编号 0-7
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_irq_set**
+
+`static uint pio_encode_irq_set (bool relative, uint irq) [inline], [static]`
+
+编码 IRQ SET 指令。
+
+这等效于 `IRQ SET &lt;irq> &lt;relative>`
+
+**参数**
+
+- `relative: IRQ SET &lt;irq> REL 为 true，常规 `IRQ SET &lt;irq>` 为 false
+- `irq`: irq 编号 0-7
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_irq_wait**
+
+`static uint pio_encode_irq_wait (bool relative, uint irq) [inline], [static]`
+
+编码 IRQ WAIT 指令。
+
+这等效于 `IRQ WAIT &lt;irq> &lt;relative>`
+
+**参数**
+
+- `relative: IRQ WAIT &lt;irq> REL 为 true，常规 `IRQ WAIT &lt;irq>` 为 false
+- `irq`: irq 编号 0-7
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_jmp**
+
+`static uint pio_encode_jmp (uint addr) [inline], [static]`
+
+编码无条件 JMP 指令。
+
+这等效于 `JMP &lt;addr>`
+
+**参数**
+
+- `addr`: 目标地址 0-31（PIO 指令内存中的绝对地址）
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_jmp_not_osre**
+
+`static uint pio_encode_jmp_not_osre (uint addr) [inline], [static]`
+
+编码条件 JMP（若输出移位寄存器非空）指令。
+
+这等效于 `JMP !OSRE &lt;addr>`
+
+**参数**
+
+- `addr`: 目标地址 0-31（PIO 指令内存中的绝对地址）
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_jmp_not_x**
+
+`static uint pio_encode_jmp_not_x (uint addr) [inline], [static]`
+
+编码条件 JMP（若暂存 X 为零）指令。
+
+这等效于 `JMP !X &lt;addr>`
+
+**参数**
+
+- `addr`: 目标地址 0-31（PIO 指令内存中的绝对地址）
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_jmp_not_y**
+
+`static uint pio_encode_jmp_not_y (uint addr) [inline], [static]`
+
+编码条件 JMP（若暂存 Y 为零）指令。
+
+这等效于 `JMP !Y &lt;addr>`
+
+**参数**
+
+- `addr`: 目标地址 0-31（PIO 指令内存中的绝对地址）
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_jmp_pin**
+
+`static uint pio_encode_jmp_pin (uint addr) [inline], [static]`
+
+编码条件 JMP（若输入引脚为高）指令。
+
+这等效于 `JMP PIN &lt;addr>`
+
+**参数**
+
+- `addr`: 目标地址 0-31（PIO 指令内存中的绝对地址）
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_jmp_x_dec**
+
+`static uint pio_encode_jmp_x_dec (uint addr) [inline], [static]`
+
+编码条件 JMP（若暂存 X 非零，且后减 X）指令。
+
+这等效于 `JMP X-- &lt;addr>`
+
+**参数**
+
+- `addr`: 目标地址 0-31（PIO 指令内存中的绝对地址）
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_jmp_x_ne_y**
+
+`static uint pio_encode_jmp_x_ne_y (uint addr) [inline], [static]`
+
+编码条件 JMP（若暂存 X 不等于暂存 Y）指令。
+
+这等效于 `JMP X!=Y &lt;addr>`
+
+**参数**
+
+- `addr`: 目标地址 0-31（PIO 指令内存中的绝对地址）
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_jmp_y_dec**
+
+`static uint pio_encode_jmp_y_dec (uint addr) [inline], [static]`
+
+编码条件 JMP（若暂存 Y 非零，且后减 Y）指令。
+
+这等效于 `JMP Y-- &lt;addr>`
+
+**参数**
+
+- `addr`: 目标地址 0-31（PIO 指令内存中的绝对地址）
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_mov**
+
+`static uint pio_encode_mov (enum pio_src_dest dest, enum pio_src_dest src) [inline], [static]`
+
+编码 MOV 指令。
+
+这等效于 `MOV &lt;dest>, &lt;src>`
+
+**参数**
+
+- `dest`: 写入数据的目的地
+- `src`: 获取数据的源
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_mov_not**
+
+`static uint pio_encode_mov_not (enum pio_src_dest dest, enum pio_src_dest src) [inline], [static]`
+
+编码带位取反的 MOV 指令。
+
+这等效于 `MOV &lt;dest>, ~&lt;src>`
+
+**参数**
+
+- `dest`: 写入取反数据的目的地
+- `src`: 获取数据的源
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_mov_reverse**
+
+`static uint pio_encode_mov_reverse (enum pio_src_dest dest, enum pio_src_dest src) [inline], [static]`
+
+编码带位反转的 MOV 指令。
+
+这等效于 `MOV &lt;dest>, ::&lt;src>`
+
+**参数**
+
+- `dest`: 写入位反转数据的目的地
+- `src`: 获取数据的源
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_nop**
+
+`static uint pio_encode_nop (void) [inline], [static]`
+
+编码 NOP 指令。
+
+这等效于 `NOP，其本身编码为 MOV y, y`
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_out**
+
+`static uint pio_encode_out (enum pio_src_dest dest, uint count) [inline], [static]`
+
+编码 OUT 指令。
+
+这等效于 `OUT &lt;src>, &lt;count>`
+
+**参数**
+
+- `dest`: 写入数据的目的地
+- `count`: 位数 1-32
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_pull**
+
+`static uint pio_encode_pull (bool if_empty, bool block) [inline], [static]`
+
+编码 PULL 指令。
+
+这等效于 `PULL &lt;if_empty>, &lt;block>`
+
+**参数**
+
+- `if_empty: PULL IF_EMPTY ... 为 true，`PULL ...` 为 false
+- `block: PULL ... BLOCK 为 true，`PULL ...` 为 false
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_push**
+
+`static uint pio_encode_push (bool if_full, bool block) [inline], [static]`
+
+编码 PUSH 指令。
+
+这等效于 `PUSH &lt;if_full>, &lt;block>`
+
+**参数**
+
+- `if_full: PUSH IF_FULL ... 为 true，`PUSH ...` 为 false
+- `block: PUSH ... BLOCK 为 true，`PUSH ...` 为 false
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_set**
+
+`static uint pio_encode_set (enum pio_src_dest dest, uint value) [inline], [static]`
+
+编码 SET 指令。
+
+这等效于 `SET &lt;dest>, &lt;value>`
+
+**参数**
+
+- `dest`: 要应用值的目的地
+- `value`: 值 0-31
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_sideset**
+
+`static uint pio_encode_sideset (uint sideset_bit_count, uint value) [inline], [static]`
+
+仅编码指令的 side set 位（在非可选 side set 模式下）
+
+此函数不返回有效的指令编码；而是返回 side set 位的编码，适合与实际指令编码函数结果进行 `OR 运算。在将此函数的结果与 pio_encode_delay` 的结果组合时应小心，因为它们在指令编码中共享相同的位。
+
+**参数**
+
+- `sideset_bit_count: side set 位数，与 pioasm 中 .sideset` 指定的相同
+- `value`: 要在引脚上 sideset 的值
+
+**返回**
+
+要与指令编码进行 OR 运算的 side set 位
+
+**pio_encode_sideset_opt**
+
+`static uint pio_encode_sideset_opt (uint sideset_bit_count, uint value) [inline], [static]`
+
+仅编码指令的 side set 位（在可选 -`opt` side set 模式下）
+
+此函数不返回有效的指令编码；而是返回 side set 位的编码，适合与实际指令编码函数结果进行 `OR 运算。在将此函数的结果与 pio_encode_delay` 的结果组合时应小心，因为它们在指令编码中共享相同的位。
+
+**参数**
+
+- `sideset_bit_count: side set 位数，与 pioasm 中 .sideset &lt;n> opt` 指定的相同
+- `value`: 要在引脚上 sideset 的值
+
+**返回**
+
+要与指令编码进行 OR 运算的 side set 位
+
+**pio_encode_wait_gpio**
+
+`static uint pio_encode_wait_gpio (bool polarity, uint gpio) [inline], [static]`
+
+编码等待 GPIO 引脚的 WAIT 指令。
+
+这等效于 `WAIT &lt;polarity> GPIO &lt;gpio>`
+
+此处的 gpio 指的是原始指令编码，仅支持 32 个 GPIO。因此，如果您有一个带有 `WAIT &lt;polarity> GPIO 42 的 PIO 程序，且 GPIO_BASE（参见 pio_set_gpio_base）为 16，那么假设您使用此函数为 pio_sm_exec 构造指令，您应该执行 pio_encode_wait_gpio(polarity, 42-16)`。
+
+**参数**
+
+- `polarity: WAIT 1 为 true，`WAIT 0` 为 false
+- `gpio: 相对于状态机 GPIO_BASE（参见 pio_set_gpio_base）的 GPIO 编号 0-31
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_wait_irq**
+
+`static uint pio_encode_wait_irq (bool polarity, bool relative, uint irq) [inline], [static]`
+
+编码等待 IRQ 的 WAIT 指令。
+
+这等效于 `WAIT &lt;polarity> IRQ &lt;irq> &lt;relative>`
+
+**参数**
+
+- `polarity: WAIT 1 为 true，`WAIT 0` 为 false
+- `relative: WAIT IRQ &lt;irq> REL 为 true，常规 `WAIT IRQ &lt;irq>` 为 false
+- `irq`: irq 编号 0-7
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+**pio_encode_wait_pin**
+
+`static uint pio_encode_wait_pin (bool polarity, uint pin) [inline], [static]`
+
+编码等待引脚的 WAIT 指令。
+
+这等效于 `WAIT &lt;polarity> PIN &lt;pin>`
+
+**参数**
+
+- `polarity: WAIT 1 为 true，`WAIT 0` 为 false
+- `pin`: 相对于执行 SM 输入引脚映射的引脚编号 0-31
+
+**返回**
+
+延迟为 0 且无 side set 值的指令编码
+
+**参见**
+
+`pio_encode_delay, pio_encode_sideset, pio_encode_sideset_opt`
+
+<Normal />

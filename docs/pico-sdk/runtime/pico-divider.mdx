@@ -1,0 +1,438 @@
+---
+sidebar_position: 10
+draft: false
+description: 由 RP2040 硬件除法器加速的优化 32 位和 64 位除法函数。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK divider]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+由 RP2040 硬件除法器加速的优化 32 位和 64 位除法函数。
+
+### 详细描述
+
+此外还提供与 C 语言 `/ 和 %` 运算符的集成。
+
+### 函数
+
+- `int32_t div_s32s32 (int32_t a, int32_t b)`: 两个有符号 32 位值的整数除法。
+`static int32_t divmod_s32s32_rem (int32_t a, int32_t b, int32_t *rem)`<br/>&emsp;两个有符号 32 位值的整数除法，带余数。
+- `divmod_result_t divmod_s32s32 (int32_t a, int32_t b)`: 两个有符号 32 位值的整数除法。
+- `uint32_t div_u32u32 (uint32_t a, uint32_t b)`: 两个无符号 32 位值的整数除法。
+`static uint32_t divmod_u32u32_rem (uint32_t a, uint32_t b, uint32_t *rem)`<br/>&emsp;两个无符号 32 位值的整数除法，带余数。
+- `divmod_result_t divmod_u32u32 (uint32_t a, uint32_t b)`: 两个无符号 32 位值的整数除法。
+- `int64_t div_s64s64 (int64_t a, int64_t b)`: 两个有符号 64 位值的整数除法。
+`int64_t divmod_s64s64_rem (int64_t a, int64_t b, int64_t *rem)`<br/>&emsp;两个有符号 64 位值的整数除法，带余数。
+- `int64_t divmod_s64s64 (int64_t a, int64_t b)`: 两个有符号 64 位值的整数除法。
+- `uint64_t div_u64u64 (uint64_t a, uint64_t b)`: 两个无符号 64 位值的整数除法。
+`uint64_t divmod_u64u64_rem (uint64_t a, uint64_t b, uint64_t *rem)`<br/>&emsp;两个无符号 64 位值的整数除法，带余数。
+- `uint64_t divmod_u64u64 (uint64_t a, uint64_t b)`: 两个有符号 64 位值的整数除法。
+- `int32_t div_s32s32_unsafe (int32_t a, int32_t b)`: 两个有符号 32 位值的不安全整数除法。
+`int32_t divmod_s32s32_rem_unsafe (int32_t a, int32_t b, int32_t *rem)`<br/>&emsp;两个有符号 32 位值的不安全整数除法，带余数。
+- `divmod_result_t divmod_s32s32_unsafe (int32_t a, int32_t b)`: 两个无符号 32 位值的不安全整数除法。
+- `uint32_t div_u32u32_unsafe (uint32_t a, uint32_t b)`: 两个无符号 32 位值的不安全整数除法。
+`uint32_t divmod_u32u32_rem_unsafe (uint32_t a, uint32_t b, uint32_t *rem)`<br/>&emsp;两个无符号 32 位值的不安全整数除法，带余数。
+- `divmod_result_t divmod_u32u32_unsafe (uint32_t a, uint32_t b)`: 两个无符号 32 位值的不安全整数除法。
+- `int64_t div_s64s64_unsafe (int64_t a, int64_t b)`: 两个有符号 64 位值的不安全整数除法。
+`int64_t divmod_s64s64_rem_unsafe (int64_t a, int64_t b, int64_t *rem)`<br/>&emsp;两个有符号 64 位值的不安全整数除法，带余数。
+- `int64_t divmod_s64s64_unsafe (int64_t a, int64_t b)`: 两个有符号 64 位值的不安全整数除法。
+- `uint64_t div_u64u64_unsafe (uint64_t a, uint64_t b)`: 两个无符号 64 位值的不安全整数除法。
+`uint64_t divmod_u64u64_rem_unsafe (uint64_t a, uint64_t b, uint64_t *rem)`<br/>&emsp;两个无符号 64 位值的不安全整数除法，带余数。
+- `uint64_t divmod_u64u64_unsafe (uint64_t a, uint64_t b)`: 两个有符号 64 位值的不安全整数除法。
+
+### 函数文档
+
+#### div_s32s32
+
+`int32_t div_s32s32 (int32_t a, int32_t b)`
+
+两个有符号 32 位值的整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+商
+
+#### div_s32s32_unsafe
+
+`int32_t div_s32s32_unsafe (int32_t a, int32_t b)`
+
+两个有符号 32 位值的不安全整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+商
+
+不要在中断中使用。
+
+#### div_s64s64
+
+`int64_t div_s64s64 (int64_t a, int64_t b)`
+
+两个有符号 64 位值的整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+商
+
+#### div_s64s64_unsafe
+
+`int64_t div_s64s64_unsafe (int64_t a, int64_t b)`
+
+两个有符号 64 位值的不安全整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+商
+
+不要在中断中使用。
+
+#### div_u32u32
+
+`uint32_t div_u32u32 (uint32_t a, uint32_t b)`
+
+两个无符号 32 位值的整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+商
+
+#### div_u32u32_unsafe
+
+`uint32_t div_u32u32_unsafe (uint32_t a, uint32_t b)`
+
+两个无符号 32 位值的不安全整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+商
+
+不要在中断中使用。
+
+#### div_u64u64
+
+`uint64_t div_u64u64 (uint64_t a, uint64_t b)`
+
+两个无符号 64 位值的整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+商
+
+#### div_u64u64_unsafe
+
+`uint64_t div_u64u64_unsafe (uint64_t a, uint64_t b)`
+
+两个无符号 64 位值的不安全整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+商
+
+不要在中断中使用。
+
+#### divmod_s32s32
+
+`divmod_result_t divmod_s32s32 (int32_t a, int32_t b)`
+
+两个有符号 32 位值的整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+低字/r0 中为商，高字/r1 中为余数
+
+#### divmod_s32s32_rem
+
+`static int32_t divmod_s32s32_rem (int32_t a, int32_t b, int32_t * rem) [inline], [static]`
+
+两个有符号 32 位值的整数除法，带余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+- `rem`: 被除数/除数的余数
+
+**返回值**
+
+被除数/除数的商
+
+#### divmod_s32s32_rem_unsafe
+
+`int32_t divmod_s32s32_rem_unsafe (int32_t a, int32_t b, int32_t * rem)`
+
+两个有符号 32 位值的不安全整数除法，带余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+- `rem`: 被除数/除数的余数
+
+**返回值**
+
+被除数/除数的商
+
+不要在中断中使用。
+
+#### divmod_s32s32_unsafe
+
+`divmod_result_t divmod_s32s32_unsafe (int32_t a, int32_t b)`
+
+两个无符号 32 位值的不安全整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+低字/r0 中为商，高字/r1 中为余数
+
+不要在中断中使用。
+
+#### divmod_s64s64
+
+`int64_t divmod_s64s64 (int64_t a, int64_t b)`
+
+两个有符号 64 位值的整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+结果（r0,r1）中为商，寄存器（r2, r3）中为余数
+
+#### divmod_s64s64_rem
+
+`int64_t divmod_s64s64_rem (int64_t a, int64_t b, int64_t * rem)`
+
+两个有符号 64 位值的整数除法，带余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+- `rem`: 被除数/除数的余数
+
+**返回值**
+
+被除数/除数的商
+
+#### divmod_s64s64_rem_unsafe
+
+`int64_t divmod_s64s64_rem_unsafe (int64_t a, int64_t b, int64_t * rem)`
+
+两个有符号 64 位值的不安全整数除法，带余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+- `rem`: 被除数/除数的余数
+
+**返回值**
+
+被除数/除数的商
+
+不要在中断中使用。
+
+#### divmod_s64s64_unsafe
+
+`int64_t divmod_s64s64_unsafe (int64_t a, int64_t b)`
+
+两个有符号 64 位值的不安全整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+结果（r0,r1）中为商，寄存器（r2, r3）中为余数
+
+不要在中断中使用。
+
+#### divmod_u32u32
+
+`divmod_result_t divmod_u32u32 (uint32_t a, uint32_t b)`
+
+两个无符号 32 位值的整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+低字/r0 中为商，高字/r1 中为余数
+
+#### divmod_u32u32_rem
+
+`static uint32_t divmod_u32u32_rem (uint32_t a, uint32_t b, uint32_t * rem) [inline], [static]`
+
+两个无符号 32 位值的整数除法，带余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+- `rem`: 被除数/除数的余数
+
+**返回值**
+
+被除数/除数的商
+
+#### divmod_u32u32_rem_unsafe
+
+`uint32_t divmod_u32u32_rem_unsafe (uint32_t a, uint32_t b, uint32_t * rem)`
+
+两个无符号 32 位值的不安全整数除法，带余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+- `rem`: 被除数/除数的余数
+
+**返回值**
+
+被除数/除数的商
+
+不要在中断中使用。
+
+#### divmod_u32u32_unsafe
+
+`divmod_result_t divmod_u32u32_unsafe (uint32_t a, uint32_t b)`
+
+两个无符号 32 位值的不安全整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+低字/r0 中为商，高字/r1 中为余数
+
+不要在中断中使用。
+
+#### divmod_u64u64
+
+`uint64_t divmod_u64u64 (uint64_t a, uint64_t b)`
+
+两个有符号 64 位值的整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+结果（r0,r1）中为商，寄存器（r2, r3）中为余数
+
+#### divmod_u64u64_rem
+
+`uint64_t divmod_u64u64_rem (uint64_t a, uint64_t b, uint64_t * rem)`
+
+两个无符号 64 位值的整数除法，带余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+- `rem`: 被除数/除数的余数
+
+**返回值**
+
+被除数/除数的商
+
+#### divmod_u64u64_rem_unsafe
+
+`uint64_t divmod_u64u64_rem_unsafe (uint64_t a, uint64_t b, uint64_t * rem)`
+
+两个无符号 64 位值的不安全整数除法，带余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+- `rem`: 被除数/除数的余数
+
+**返回值**
+
+被除数/除数的商
+
+不要在中断中使用。
+
+#### divmod_u64u64_unsafe
+
+`uint64_t divmod_u64u64_unsafe (uint64_t a, uint64_t b)`
+
+两个有符号 64 位值的不安全整数除法。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回值**
+
+结果（r0,r1）中为商，寄存器（r2, r3）中为余数
+
+不要在中断中使用。
+
+<Normal />

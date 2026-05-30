@@ -1,0 +1,96 @@
+---
+sidebar_position: 21
+draft: false
+description: 标准 RISC-V 平台定时器（mtime/mtimecmp）访问接口，适用于搭载 RISC-V 处理器的 Raspberry Pi 微控制器。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK riscv platform timer]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+标准 RISC-V 平台定时器（mtime/mtimecmp）访问接口，适用于搭载 RISC-V 处理器的 Raspberry Pi 微控制器。
+
+### 详细说明
+
+注意，由于该定时器是处理器外部的内存映射外设，Arm 处理器同样可以使用此头文件。该名称表明此定时器是标准的 RISC-V 外设。
+
+### 函数
+
+- `static void riscv_timer_set_enabled (bool enabled)`: 启用或禁用 RISC-V 平台定时器。
+- `static void riscv_timer_set_fullspeed (bool fullspeed)`: 配置 RISC-V 平台定时器以全系统时钟速度运行。
+- `static uint64_t riscv_timer_get_mtime (void)`: 读取 RISC-V 平台定时器。
+- `static void riscv_timer_set_mtime (uint64_t mtime)`: 更新 RISC-V 平台定时器。
+- `static uint64_t riscv_timer_get_mtimecmp (void)`: 获取当前核心的 RISC-V 平台定时器 mtimecmp 值。
+- `static void riscv_timer_set_mtimecmp (uint64_t mtimecmp)`: 为当前核心设置新的 RISC-V 平台定时器中断比较值（mtimecmp）。
+
+### 函数文档
+
+#### riscv_timer_get_mtime
+
+`static uint64_t riscv_timer_get_mtime (void) [inline], [static]`
+
+读取 RISC-V 平台定时器。
+
+**返回值**
+
+当前 64 位 mtime 值
+
+#### riscv_timer_get_mtimecmp
+
+`static uint64_t riscv_timer_get_mtimecmp (void) [inline], [static]`
+
+获取当前核心的 RISC-V 平台定时器 mtimecmp 值。
+
+获取调用核心的当前 mtimecmp 值。只要定时器中断仅增大 mtimecmp 的值，此函数即为中断安全的。否则，必须在禁用定时器中断的情况下调用。
+
+**返回值**
+
+mtimecmp 的当前值
+
+#### riscv_timer_set_enabled
+
+`static void riscv_timer_set_enabled (bool enabled) [inline], [static]`
+
+启用或禁用 RISC-V 平台定时器。
+
+此函数控制 RISC-V 平台定时器的计数启停，不会影响中断的启用或禁用状态——当某核心的 mtimecmp/mtimecmph 寄存器值大于 mtime/mtimeh 寄存器当前 64 位值时，中断将无条件触发。
+
+**参数**
+
+- `enabled`: 传入 true 以启用，传入 false 以禁用
+
+#### riscv_timer_set_fullspeed
+
+`static void riscv_timer_set_fullspeed (bool fullspeed) [inline], [static]`
+
+配置 RISC-V 平台定时器以全系统时钟速度运行。
+
+**参数**
+
+- `fullspeed: 传入 true 以按系统时钟速度递增，传入 false 以按系统 tick 生成器（ticks` 模块）定义的频率递增
+
+#### riscv_timer_set_mtime
+
+`static void riscv_timer_set_mtime (uint64_t mtime) [inline], [static]`
+
+更新 RISC-V 平台定时器。
+
+此函数只应在通过 `riscv_timer_set_enabled()` 禁用定时器后调用。另请注意，与 mtimecmp 比较值不同，mtime 并非核心本地的，因此在一个核心上的更新对另一个核心也可见。
+
+**参数**
+
+- `mtime`: 要设置的 RISC-V 平台定时器新值
+
+#### riscv_timer_set_mtimecmp
+
+`static void riscv_timer_set_mtimecmp (uint64_t mtimecmp) [inline], [static]`
+
+为当前核心设置新的 RISC-V 平台定时器中断比较值（mtimecmp）。
+
+此函数更新当前核心的 mtimecmp 值。当 64 位 mtime 值（存储在 32 位 mtime/mtimeh 寄存器中）大于或等于当前核心的 mtime/mtimecmph 值时，调用核心的 RISC-V 平台定时器中断将被触发。
+
+**参数**
+
+- `mtime`: 要设置的 RISC-V 平台定时器新值
+
+<Normal />

@@ -1,0 +1,106 @@
+---
+sidebar_position: 5
+draft: false
+description: 高级 Flash API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK flash]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+高级 Flash API。
+
+### 详细描述
+
+Flash 在 XIP 模式下无法被擦除或写入。然而，当系统不在 XIP 模式时，也无法直接访问 Flash 地址空间中的内存。
+
+因此，在对 Flash 进行写入或擦除操作时，必须确保没有任何代码或数据正在从 Flash 读取。
+
+如果只使用一个核心，问题很简单——只需禁用中断即可；但如果另一个核心上有代码在运行，则需要礼貌地请求它暂时避免访问 Flash。如果你无法始终控制另一个核心上运行的代码，这就很难实现。
+
+本库提供了 `flash_safe_execute` 方法，它会在成功进入如下状态后回调一个函数：中断已禁用，且另一个核心也未执行或读取 Flash。
+
+具体实现方式取决于所支持的环境（FreeRTOS SMP 或 pico_multicore）。此外，用户可以通过提供 `get_flash_safety_helper()` 的强定义来使用自定义机制。
+
+使用默认设置时，flash_safe_execute 只有在状态安全时才会调用回调函数，否则返回错误（或根据 PICO_FLASH_ASSERT_ON_UNSAFE 触发断言）。
+
+以下情况无法保证安全性：
+
+. 
+使用 `configNUM_CORES=1 的 FreeRTOS SMP —— FreeRTOS 在此情况下仍会使用 pico_multicore，因此 flash_safe_execute` 无法得知另一个核心正在做什么，也无法在 FreeRTOS 核心与非 FreeRTOS 核心之间强制代码执行。
+
+. 
+非 SMP FreeRTOS 与 pico_multicore 同时使用 —— 同样无法在 FreeRTOS 核心与非 FreeRTOS 核心之间强制代码执行。
+
+. 
+使用 pico_multicore 但另一个核心未调用 `flash_safe_execute_core_init() —— flash_safe_execute 方法无法得知另一个核心是否在执行代码，因此只能假设它正在执行。无论如何，如果另一个核心未调用 `flash_safe_execute_core_init()`，则无法进行干预。
+
+幸运的是，在这种情况下并非毫无办法，你可以：
+
+* 设置 PICO_FLASH_ASSUME_CORE0_SAFE=1，明确声明 core 0 从不使用 Flash。
+
+* 设置 PICO_FLASH_ASSUME_CORE1_SAFE=1，明确声明 core 1 从不使用 Flash。
+
+### 函数
+
+- `bool flash_safe_execute_core_init (void): 初始化一个核心，使另一个核心可以在 `flash_safe_execute` 期间将其锁定。
+- `bool flash_safe_execute_core_deinit (void): 撤销 `flash_safe_execute_core_init` 所做的初始化工作。
+`int flash_safe_execute (void(**func)(void **), void *param, uint32_t enter_exit_timeout_ms)`<br/>&emsp;在禁用 IRQ 且另一个核心也未执行/读取 Flash 的状态下执行一个函数。
+
+`flash_safety_helper_t * get_flash_safety_helper (void)`<br/>&emsp;返回 Flash 安全辅助实现的内部方法。
+
+### 函数文档
+
+#### flash_safe_execute
+
+`int flash_safe_execute (void(**)(void **`) func, void * param, uint32_t enter_exit_timeout_ms)`
+
+在禁用 IRQ 且另一个核心也未执行/读取 Flash 的状态下执行一个函数。
+
+**参数**
+
+- `func`: 要调用的函数
+- `param`: 要传递给函数的参数
+- `enter_exit_timeout_ms`: 与另一个核心协调时，进入/退出阶段各自的超时时间（毫秒）
+
+**返回**
+
+成功时返回 PICO_OK（函数已被调用）。超时时返回 PICO_ERROR_TIMEOUT（函数可能已被调用）。如果无法安全执行则返回 PICO_ERROR_NOT_PERMITTED（函数未被调用）。如果由于动态资源耗尽导致方法失败则返回 PICO_ERROR_INSUFFICIENT_RESOURCES（函数未被调用）。
+
+若 PICO_FLASH_ASSERT_ON_UNSAFE 为 1，此函数在调试模式下将触发断言，而非返回 PICO_ERROR_NOT_PERMITTED。
+
+#### flash_safe_execute_core_deinit
+
+`bool flash_safe_execute_core_deinit (void)`
+
+撤销 `flash_safe_execute_core_init` 所做的初始化工作。
+
+**返回**
+
+成功时返回 true。
+
+#### flash_safe_execute_core_init
+
+`bool flash_safe_execute_core_init (void)`
+
+初始化一个核心，使另一个核心可以在 `flash_safe_execute` 期间将其锁定。
+
+FreeRTOS SMP 不需要此操作，但通过 `multicore_launch_core1` 启动时应当使用。
+
+**返回**
+
+成功时返回 true；失败时无需调用 `flash_safe_execute_core_deinit()`。
+
+#### get_flash_safety_helper
+
+`flash_safety_helper_t * get_flash_safety_helper (void)`
+
+返回 Flash 安全辅助实现的内部方法。
+
+高级用户可以提供此函数的自定义实现，以在禁用 XIP 模式之前执行不同的核间协调操作。
+
+**返回**
+
+返回 `flash_safety_helper_t`。
+
+<Normal />

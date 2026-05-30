@@ -1,0 +1,92 @@
+---
+sidebar_position: 3
+draft: false
+description: Raspberry Pi Pico SDK 的核心类型和宏定义。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK base]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+Raspberry Pi Pico SDK 的核心类型和宏定义。
+
+### 详细描述
+
+此头文件旨在被所有源代码包含，它按正确顺序包含配置头文件和覆盖文件。
+
+此头文件可由汇编代码包含。
+
+### 宏
+
+* `#define pico_board_cmake_set(x, y)`
+* `#define pico_board_cmake_set_default(x, y)`
+
+### 枚举
+
+- `enum pico_error_codes { [PICO_OK] = 0, [PICO_ERROR_NONE] = 0, [PICO_ERROR_GENERIC] = -1, [PICO_ERROR_TIMEOUT] = -2, [PICO_ERROR_NO_DATA] = -3, [PICO_ERROR_NOT_PERMITTED] = -4, [PICO_ERROR_INVALID_ARG] = -5, [PICO_ERROR_IO] = -6, [PICO_ERROR_BADAUTH] = -7, [PICO_ERROR_CONNECT_FAILED] = -8, [PICO_ERROR_INSUFFICIENT_RESOURCES] = -9, [PICO_ERROR_INVALID_ADDRESS] = -10, [PICO_ERROR_BAD_ALIGNMENT] = -11, [PICO_ERROR_INVALID_STATE] = -12, [PICO_ERROR_BUFFER_TOO_SMALL] = -13, [PICO_ERROR_PRECONDITION_NOT_MET] = -14, [PICO_ERROR_MODIFIED_DATA] = -15, [PICO_ERROR_INVALID_DATA] = -16, [PICO_ERROR_NOT_FOUND] = -17, [PICO_ERROR_UNSUPPORTED_MODIFICATION] = -18, [PICO_ERROR_LOCK_REQUIRED] = -19, [PICO_ERROR_VERSION_MISMATCH] = -20, [PICO_ERROR_RESOURCE_IN_USE] = -21 }`: pico_sdk 方法返回状态时的通用返回码。
+
+### 宏定义文档
+
+#### pico_board_cmake_set
+
+`#define pico_board_cmake_set(x, y)`
+
+在板级头文件中使用的标记，用于指定当使用该板级头文件时应在 CMake 构建中设置的 CMake 变量和值。
+
+基于 PICO_BOARD CMake 变量，构建系统将扫描板级头文件中的 `[ value)] 并在构建配置过程的早期阶段设置这些变量。这允许从板级头文件中设置 CMake 变量（如 PICO_PLATFORM），从而影响（例如）构建所用编译器的选择。
+
+使用此宏将覆盖已设置的 CMake 变量。
+
+此宏的定义为空，不会对实际编译产生任何影响。
+
+#### pico_board_cmake_set_default
+
+`#define pico_board_cmake_set_default(x, y)`
+
+在板级头文件中使用的标记，用于指定当使用该板级头文件时应在 CMake 构建中设置的 CMake 变量和值（前提是该 CMake 变量尚未被设置）。
+
+基于 PICO_BOARD CMake 变量，构建系统将扫描板级头文件中的 `[ value)] 并在构建配置过程的早期阶段设置这些变量。这允许从板级头文件中设置 CMake 变量（如 PICO_PLATFORM），从而影响（例如）构建所用编译器的选择。
+
+使用此宏不会覆盖已设置的 CMake 变量。
+
+此宏的定义为空，不会对实际编译产生任何影响。
+
+### 枚举类型文档
+
+#### pico_error_codes
+
+`enum pico_error_codes`
+
+pico_sdk 方法返回状态时的通用返回码。
+
+所有 `PICO_ERROR_` 值均为负数，因此可从同时返回零或正数表示成功的函数中返回。
+
+注意，这些错误码也可能通过 bootrom 函数返回。
+
+| 枚举值 | 说明 |
+| --- | --- |
+| PICO_OK | 无错误；操作成功。 |
+| PICO_ERROR_NONE | 无错误；操作成功。 |
+| PICO_ERROR_GENERIC | 发生了未指定的错误。 |
+| PICO_ERROR_TIMEOUT | 函数因超时而失败。 |
+| PICO_ERROR_NO_DATA | 例如尝试从空缓冲区/FIFO 读取数据。 |
+| PICO_ERROR_NOT_PERMITTED | 权限违规，例如向只读 flash 分区写入，或安全违规。 |
+| PICO_ERROR_INVALID_ARG | 参数超出支持值的范围。 |
+| PICO_ERROR_IO | 发生了 I/O 错误。 |
+| PICO_ERROR_BADAUTH | 由于凭证错误，授权失败。 |
+| PICO_ERROR_CONNECT_FAILED | 连接失败。 |
+| PICO_ERROR_INSUFFICIENT_RESOURCES | 动态分配资源失败。 |
+| PICO_ERROR_INVALID_ADDRESS | 地址参数超出范围，或被确定为调用者无权访问的地址。 |
+| PICO_ERROR_BAD_ALIGNMENT | 地址未对齐（通常不在字边界上）。 |
+| PICO_ERROR_INVALID_STATE | 过去发生了某些事情或未能发生，导致当前无法处理请求。 |
+| PICO_ERROR_BUFFER_TOO_SMALL | 用户分配的缓冲区太小，无法容纳此函数的结果或工作状态。 |
+| PICO_ERROR_PRECONDITION_NOT_MET | 调用失败，因为必须先调用另一个函数。 |
+| PICO_ERROR_MODIFIED_DATA | 缓存数据被确定与实际数据版本不一致。 |
+| PICO_ERROR_INVALID_DATA | 数据结构验证失败。 |
+| PICO_ERROR_NOT_FOUND | 尝试访问不存在的内容；或搜索失败。 |
+| PICO_ERROR_UNSUPPORTED_MODIFICATION | 基于之前的写入操作，写入不可能完成；例如尝试清除 OTP 位。 |
+| PICO_ERROR_LOCK_REQUIRED | 未持有所需的锁。 |
+| PICO_ERROR_VERSION_MISMATCH | 发生版本不匹配（例如尝试在 RP2040 上运行 PIO 版本 1 代码）。 |
+| PICO_ERROR_RESOURCE_IN_USE | 由于所需资源不可用，调用无法继续。 |
+
+<Normal />

@@ -1,0 +1,126 @@
+---
+sidebar_position: 12
+draft: false
+description: 优化的单精度浮点函数。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK float]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+优化的单精度浮点函数。
+
+### 详细描述
+
+应用程序可以通过依赖 pico_float 库，对程序中使用的浮点运算例程进行比编译器所提供的更深层次的控制。用户可能希望这样做的原因包括：
+
+. 
+使用 RP2-series 设备 bootrom 或 SDK 提供的优化软件实现
+
+. 
+使用利用 RP2-series 自定义硬件加速的优化软硬件组合实现
+
+. 
+控制 C 编译器/库代码体积膨胀的程度
+
+. 
+确保程序中完全不调用浮点运算
+
+pico_float 库有三种主要版本：
+
+. 
+`pico_float_none` - 所有浮点操作都会引发 panic —— 不包含任何单精度浮点代码
+
+. 
+`pico_float_compiler` - 不提供自定义函数；所有单精度浮点运算均由 C 编译器/库处理
+
+. 
+`pico_float_pico` - 适用于该平台的最小且最快的版本，并附带额外功能（如定点数转换），详见下文
+
+用户可以通过设置 CMake 全局变量 `PICO_DEFAULT_FLOAT_IMPL=xxx，或使用 CMake 函数 pico_set_float_implementation(<TARGET> xxx)` 来控制使用哪个版本（即 **pico_float_xxx**）。注意：若两者均未设置，默认使用 pico_float_pico。
+
+在 RP2040 上，`pico_float_pico` 使用来自 bootrom 和 SDK 的优化手写实现，涵盖基本单精度浮点运算和浮点数学库函数。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
+
+在 RP2350 的 Arm 上，`pico_float_pico` 有多个选项：
+
+. 
+`pico_float_pico_vfp` - 此库将基本 C 单精度浮点运算交由编译器处理，编译器可以使用内联的 VFP（Arm FPU）代码。同时提供自定义优化版本的三角函数和科学计算函数。不使用 DCP（RP2350 双精度协处理器）指令。
+
+. 
+`pico_float_pico_dcp` - 此库阻止编译器注入内联 VFP 代码，并用优化的 DCP 或 M33 代码实现所有单精度浮点运算。此选项速度略慢于 pico_float_pico_vfp，但允许在不启用 CPU 浮点协处理器的情况下执行浮点运算；在某些场景下（例如，不希望为任务或中断的浮点状态保留栈空间时）这会很有用。
+
+注意：在 RP2350 上，`pico_float_pico 等同于 pico_float_pico_vfp`，因为这是最合理的默认选项。
+
+在 Arm 上，使用 `pico_float 的 _pico` 变体时，以下编译器内置函数和数学库函数将提供（替换性的）优化实现：
+
+* 基本算术：（`pico_float_pico_vfp` 除外）
+
+`__aeabi_fadd, __aeabi_fdiv, `__aeabi_fmul, __aeabi_frsub, __aeabi_fsub`
+
+* 比较：（`pico_float_pico_vfp` 除外）
+
+`__aeabi_cfcmpeq, __aeabi_cfrcmple, `__aeabi_cfcmple, __aeabi_fcmpeq`, __aeabi_fcmplt, __aeabi_fcmple`, `__aeabi_fcmpge, __aeabi_fcmpgt, __aeabi_fcmpun`
+
+* (u)int32 &lt;\-> float：（`pico_float_pico_vfp` 除外）
+
+`__aeabi_i2f, __aeabi_ui2f, `__aeabi_f2iz, __aeabi_f2uiz`
+
+* (u)int64 &lt;\-> float：（`pico_float_pico_vfp` 除外）
+
+`__aeabi_l2f, __aeabi_ul2f, `__aeabi_f2lz, __aeabi_f2ulz`
+
+* float \-> double：（`pico_float_pico_vfp` 除外）
+
+`__aeabi_f2d`
+
+* 基本三角函数：
+
+sqrtf, cosf, sinf, tanf, atan2f, expf, logf
+
+* 三角函数和科学计算函数：
+
+ldexpf, copysignf, truncf, floorf, ceilf, roundf, asinf, acosf, atanf, sinhf, coshf, tanhf, asinhf, acoshf, atanhf, exp2f, log2f, exp10f, log10f, powf, hypotf, cbrtf, fmodf, dremf, remainderf, remquof, expm1f, log1pf, fmaf
+
+* GNU 扩展：
+
+powintf, sincosf
+
+在 Arm 上，使用 `pico_float 的 _pico` 变体时还提供以下额外的优化函数：
+
+* 与整数类型之间的转换：
+
+  * (u)int \-> float（四舍五入到最近）：
+int2float, uint2float, int642float, uint642float
+注意：在 `pico_float_pico_vfp` 上，32 位函数也作为 C 宏提供，因为它们映射到内联 VFP 代码
+
+  * (u)float \-> int（向零舍入）：
+float2int_z, float2uint_z, float2int64_z, float2uint64_z
+注意：在 `pico_float_pico_vfp` 上，32 位函数也作为 C 宏提供，因为它们映射到内联 VFP 代码
+
+  * (u)float \-> int（向负无穷舍入）：
+float2int, float2uint, float2int64, float2uint64
+
+* 与定点整数之间的转换：
+
+  * (u)fix \-> float（四舍五入到最近）：
+fix2float, ufix2float, fix642float, ufix642float
+
+  * float \-> (u)fix（向零舍入）：
+float2fix_z, float2ufix_z, float2fix64_z, float2ufix64_z
+注意：在 `pico_float_pico_vfp` 上，当小数位数是 1 到 32 之间的编译时常量时，32 位函数也作为 C 宏提供，因为它们可以映射到内联 VFP 代码
+
+  * float \-> (u)fix（向负无穷舍入）：
+float2fix, float2ufix, float2fix64, float2ufix64
+注意：在 `pico_float_pico_vfp` 上，当小数位数是 1 到 32 之间的编译时常量时，32 位函数也作为 C 宏提供，因为它们可以映射到内联 VFP 代码
+
+* 不能正确舍入的更快版本的除法和平方根函数：（仅 `pico_float_pico_dcp）
+
+fdiv_fast, sqrtf_fast
+
+在 RISC-V 上，使用 `pico_float_pico` 库时，以下编译器内置函数将提供（替换性的）优化实现（注意：在 Arm 上存在不同变体，但在 RISC-V 上没有）：
+
+* 基本算术：
+
+`__addsf3, __subsf3, __mulsf3`
+
+<Normal />

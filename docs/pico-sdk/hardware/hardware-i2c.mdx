@@ -1,0 +1,534 @@
+---
+sidebar_position: 12
+draft: false
+description: I2C 总线是一种双线串行接口，由串行数据线 SDA 和串行时钟线 SCL 组成。这些线路在连接到总线的设备之间传输信息。每个设备通过唯一的 7 位地址识别，可作为"发送方"或"接收方"运行，具体取决于设备功能。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK i2c, I2C]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+I2C 控制器 API。
+
+### 详细描述
+
+I2C 总线是一种双线串行接口，由串行数据线 SDA 和串行时钟线 SCL 组成。这些线路在连接到总线的设备之间传输信息。每个设备通过唯一的 7 位地址识别，可作为"发送方"或"接收方"运行，具体取决于设备功能。设备在执行数据传输时还可视为主设备或从设备。主设备是在总线上发起数据传输并生成时钟信号以允许该传输的设备。数据传输中的第一个字节始终包含 7 位地址以及 LSB 位置的读/写位。此 API 负责切换读/写位。此后，任何被寻址的设备均被视为从设备。
+
+此 API 允许使用 `i2c_set_slave_mode` 函数将控制器设置为主设备或从设备。
+
+每个控制器的外部引脚连接到 GPIO 引脚，具体如数据手册中的 GPIO 复用表所定义。复用选项提供了一定的 IO 灵活性，但每个控制器外部引脚应仅连接到一个 GPIO。
+
+请注意，该控制器不支持高速模式或超快速模式，最快操作为快速模式加（Fast mode plus），速率最高可达 1000Kb/s。
+
+有关 I2C 控制器及其用法的更多信息，请参阅数据手册。
+
+**示例**
+
+```c title="bus_scan.c"
+// Sweep through all 7-bit I2C addresses, to see if any slaves are present on
+// the I2C bus. Print out a table that looks like this:
+//
+// I2C Bus Scan
+//    0 1 2 3 4 5 6 7 8 9 A B C D E F
+// 00 . . . . . . . . . . . . . . . .
+// 10 . . @ . . . . . . . . . . . . .
+// 20 . . . . . . . . . . . . . . . .
+// 30 . . . . @ . . . . . . . . . . .
+// 40 . . . . . . . . . . . . . . . .
+// 50 . . . . . . . . . . . . . . . .
+// 60 . . . . . . . . . . . . . . . .
+// 70 . . . . . . . . . . . . . . . .
+// E.g. if addresses 0x12 and 0x34 were acknowledged.
+
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "pico/binary_info.h"
+#include "hardware/i2c.h"
+
+// I2C reserves some addresses for special purposes. We exclude these from the scan.
+// These are any addresses of the form 000 0xxx or 111 1xxx
+bool reserved_addr(uint8_t addr) {
+    return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
+}
+
+int main() {
+    // Enable UART so we can print status output
+    stdio_init_all();
+#if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
+#warning i2c/bus_scan example requires a board with I2C pins
+    puts("Default I2C pins were not defined");
+#else
+    // This example will use I2C0 on the default SDA and SCL pins (GP4, GP5 on a Pico)
+    i2c_init(i2c_default, 100 * 1000);
+    gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
+    gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
+    // Make the I2C pins available to picotool
+    bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
+
+    printf("\nI2C Bus Scan\n");
+    printf("   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n");
+
+    for (int addr = 0; addr < (1 << 7); ++addr) {
+        if (addr % 16 == 0) {
+            printf("%02x ", addr);
+        }
+
+        // Perform a 1-byte dummy read from the probe address. If a slave
+        // acknowledges this address, the function returns the number of bytes
+        // transferred. If the address byte is ignored, the function returns
+        // -1.
+
+        // Skip over any reserved addresses.
+        int ret;
+        uint8_t rxdata;
+        if (reserved_addr(addr))
+            ret = PICO_ERROR_GENERIC;
+        else
+            ret = i2c_read_blocking(i2c_default, addr, &rxdata, 1, false);
+
+        printf(ret < 0 ? "." : "@");
+        printf(addr % 16 == 15 ? "\n" : "  ");
+    }
+    printf("Done.\n");
+    return 0;
+#endif
+}
+```
+
+### 宏
+
+* `#define [I2C_NUM](i2c)`
+* `#define [I2C_INSTANCE](num)`
+* `#define [I2C_DREQ_NUM](i2c, is_tx)`
+
+### 函数
+
+`uint i2c_init (i2c_inst_t *i2c, uint baudrate)`<br/>&emsp;初始化 I2C 硬件块。
+
+`void i2c_deinit (i2c_inst_t *i2c)`<br/>&emsp;禁用 I2C 硬件块。
+
+`uint i2c_set_baudrate (i2c_inst_t *i2c, uint baudrate)`<br/>&emsp;设置 I2C 波特率。
+
+`void i2c_set_slave_mode (i2c_inst_t *i2c, bool slave, uint8_t addr)`<br/>&emsp;将 I2C 端口设置为从设备模式。
+
+`static uint i2c_get_index (i2c_inst_t *i2c)`<br/>&emsp;将 I2C 实例转换为硬件实例编号。
+
+`static i2c_hw_t ** i2c_get_hw (i2c_inst_t **i2c)`<br/>&emsp;返回指向包含 i2c 硬件寄存器的结构体的指针。
+
+`static i2c_inst_t * i2c_get_instance (uint num)`<br/>&emsp;将 I2C 硬件实例编号转换为 I2C 实例。
+
+`int i2c_write_blocking_until (i2c_inst_t **i2c, uint8_t addr, const uint8_t **src, size_t len, bool nostop, absolute_time_t until)`<br/>&emsp;尝试向地址写入指定字节数，阻塞直到达到指定的绝对时间。
+
+`int i2c_read_blocking_until (i2c_inst_t **i2c, uint8_t addr, uint8_t **dst, size_t len, bool nostop, absolute_time_t until)`<br/>&emsp;尝试从地址读取指定字节数，阻塞直到达到指定的绝对时间。
+
+`static int i2c_write_timeout_us (i2c_inst_t **i2c, uint8_t addr, const uint8_t **src, size_t len, bool nostop, uint timeout_us)`<br/>&emsp;尝试向地址写入指定字节数，带超时。
+
+`static int i2c_read_timeout_us (i2c_inst_t **i2c, uint8_t addr, uint8_t **dst, size_t len, bool nostop, uint timeout_us)`<br/>&emsp;尝试从地址读取指定字节数，带超时。
+
+`int i2c_write_blocking (i2c_inst_t **i2c, uint8_t addr, const uint8_t **src, size_t len, bool nostop)`<br/>&emsp;尝试向地址写入指定字节数，阻塞。
+
+`int i2c_write_burst_blocking (i2c_inst_t **i2c, uint8_t addr, const uint8_t **src, size_t len)`<br/>&emsp;尝试以突发模式向地址写入指定字节数，阻塞。
+
+`int i2c_read_blocking (i2c_inst_t **i2c, uint8_t addr, uint8_t **dst, size_t len, bool nostop)`<br/>&emsp;尝试从地址读取指定字节数，阻塞。
+
+`int i2c_read_burst_blocking (i2c_inst_t **i2c, uint8_t addr, uint8_t **dst, size_t len)`<br/>&emsp;尝试以突发模式从地址读取指定字节数，阻塞。
+
+`static size_t i2c_get_write_available (i2c_inst_t *i2c)`<br/>&emsp;确定可用的非阻塞写入空间。
+
+`static size_t i2c_get_read_available (i2c_inst_t *i2c)`<br/>&emsp;确定已接收的字节数。
+
+`static void i2c_write_raw_blocking (i2c_inst_t **i2c, const uint8_t **src, size_t len)`<br/>&emsp;直接写入 TX FIFO。
+
+`static void i2c_read_raw_blocking (i2c_inst_t **i2c, uint8_t **dst, size_t len)`<br/>&emsp;直接从 RX FIFO 读取。
+
+`static uint8_t i2c_read_byte_raw (i2c_inst_t *i2c)`<br/>&emsp;从 I2C Rx FIFO 弹出一个字节。
+
+`static void i2c_write_byte_raw (i2c_inst_t *i2c, uint8_t value)`<br/>&emsp;将一个字节推入 I2C Tx FIFO。
+
+`static uint i2c_get_dreq (i2c_inst_t *i2c, bool is_tx)`<br/>&emsp;返回用于调节特定 I2C 实例传输速率的 DREQ。
+
+#### i2c0_inst
+
+`i2c_inst_t i2c0_inst`
+
+用于 I2C 函数的 I2C 标识符。
+
+例如：i2c_init(i2c0, 48000)
+
+### 宏定义文档
+
+#### I2C_NUM
+
+`#define I2C_NUM(i2c)`
+
+返回 I2C 实例的 I2C 编号。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### I2C_INSTANCE
+
+`#define I2C_INSTANCE(num)`
+
+返回具有给定 I2C 编号的 I2C 实例。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### I2C_DREQ_NUM
+
+`#define I2C_DREQ_NUM(i2c, is_tx)`
+
+返回用于调节此 I2C 实例 DMA 传输速率的 `dreq_num_t`。若 is_tx 为 true，则用于向 I2C 实例传输；否则用于从 I2C 实例传输。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+
+### 函数文档
+
+#### i2c_deinit
+
+`void i2c_deinit (i2c_inst_t * i2c)`
+
+禁用 I2C 硬件块。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+
+如果不再使用 I2C，则将其再次禁用。再次使用前必须重新初始化。
+
+#### i2c_get_dreq
+
+`static uint i2c_get_dreq (i2c_inst_t * i2c, bool is_tx) [inline], [static]`
+
+返回用于调节特定 I2C 实例传输速率的 DREQ。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `is_tx`: true 表示向 I2C 实例发送数据，false 表示从 I2C 实例接收数据
+
+#### i2c_get_hw
+
+`static i2c_hw_t **` i2c_get_hw (i2c_inst_t ** i2c) [inline], [static]`
+
+返回指向包含 i2c 硬件寄存器的结构体的指针。
+
+**参数**
+
+- `i2c`: I2C 实例
+
+**返回**
+
+指向 `i2c_hw_t` 的指针
+
+#### i2c_get_index
+
+`static uint i2c_get_index (i2c_inst_t * i2c) [inline], [static]`
+
+将 I2C 实例转换为硬件实例编号。
+
+**参数**
+
+- `i2c`: I2C 实例
+
+**返回**
+
+I2C 编号，0 或 1。
+
+#### i2c_get_instance
+
+`static i2c_inst_t * i2c_get_instance (uint num) [inline], [static]`
+
+将 I2C 硬件实例编号转换为 I2C 实例。
+
+**参数**
+
+- `num`: I2C 编号，0 或 1
+
+**返回**
+
+I2C 硬件实例
+
+#### i2c_get_read_available
+
+`static size_t i2c_get_read_available (i2c_inst_t * i2c) [inline], [static]`
+
+确定已接收的字节数。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+
+**返回**
+
+若无可用数据则返回 0；若返回非零值，则至少可以读取该数量的字节而不会阻塞。
+
+#### i2c_get_write_available
+
+`static size_t i2c_get_write_available (i2c_inst_t * i2c) [inline], [static]`
+
+确定可用的非阻塞写入空间。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+
+**返回**
+
+若 I2C 中没有空间可写入更多数据则返回 0。若返回非零值，则至少可以写入该数量的字节而不会阻塞。
+
+#### i2c_init
+
+`uint i2c_init (i2c_inst_t * i2c, uint baudrate)`
+
+初始化 I2C 硬件块。
+
+将 I2C 硬件置于已知状态并启用它。必须在其他函数之前调用。默认情况下，I2C 配置为主设备模式运行。
+
+I2C 总线频率尽可能设置为请求值，并返回实际设置的速率。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `baudrate`: 波特率，单位 Hz（例如 100kHz 即 100000）
+
+**返回**
+
+实际设置的波特率
+
+#### i2c_read_blocking
+
+`int i2c_read_blocking (i2c_inst_t **` i2c, uint8_t addr, uint8_t ** dst, size_t len, bool nostop)`
+
+尝试从地址读取指定字节数，阻塞。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `addr`: 要读取的设备的 7 位地址
+- `dst`: 指向接收数据缓冲区的指针
+- `len`: 要接收的数据长度（字节）
+- `nostop`: 若为 true，主设备在传输结束时保持对总线的控制（不发出 Stop），下次传输将以 Restart 而非 Start 开始。
+
+**返回**
+
+读取的字节数；若地址未应答或设备不存在，则返回 PICO_ERROR_GENERIC。
+
+#### i2c_read_blocking_until
+
+`int i2c_read_blocking_until (i2c_inst_t **` i2c, uint8_t addr, uint8_t ** dst, size_t len, bool nostop, absolute_time_t until)`
+
+尝试从地址读取指定字节数，阻塞直到达到指定的绝对时间。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `addr`: 要读取的设备的 7 位地址
+- `dst`: 指向接收数据缓冲区的指针
+- `len`: 要接收的数据长度（字节）
+- `nostop`: 若为 true，主设备在传输结束时保持对总线的控制（不发出 Stop），下次传输将以 Restart 而非 Start 开始。
+- `until`: 阻塞等待整个事务完成的绝对时间。
+
+**返回**
+
+读取的字节数；若地址未应答或设备不存在则返回 PICO_ERROR_GENERIC；若发生超时则返回 PICO_ERROR_TIMEOUT。
+
+#### i2c_read_burst_blocking
+
+`int i2c_read_burst_blocking (i2c_inst_t **` i2c, uint8_t addr, uint8_t ** dst, size_t len)`
+
+尝试以突发模式从地址读取指定字节数，阻塞。
+
+此版本的函数不会发出 stop 并且不会在下次读取时重新启动。这允许连续读取字节数据，而无需重复发送 stop 位，也无需重复发送地址字节。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `addr`: 要读取的设备的 7 位地址
+- `dst`: 指向接收数据缓冲区的指针
+- `len`: 要接收的数据长度（字节）
+
+**返回**
+
+读取的字节数；若地址未应答或设备不存在，则返回 PICO_ERROR_GENERIC。
+
+#### i2c_read_byte_raw
+
+`static uint8_t i2c_read_byte_raw (i2c_inst_t * i2c) [inline], [static]`
+
+从 I2C Rx FIFO 弹出一个字节。
+
+此函数为非阻塞，假设 Rx FIFO 不为空。
+
+**参数**
+
+- `i2c`: I2C 实例。
+
+**返回**
+
+uint8_t 字节值。
+
+#### i2c_read_raw_blocking
+
+`static void i2c_read_raw_blocking (i2c_inst_t **` i2c, uint8_t ** dst, size_t len) [inline], [static]`
+
+直接从 RX FIFO 读取。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `dst`: 接受数据的缓冲区
+- `len`: 要读取的字节数
+
+直接从 I2C RX FIFO 读取，主要用于从设备模式操作。
+
+#### i2c_read_timeout_us
+
+`static int i2c_read_timeout_us (i2c_inst_t **` i2c, uint8_t addr, uint8_t ** dst, size_t len, bool nostop, uint timeout_us) [inline], [static]`
+
+尝试从地址读取指定字节数，带超时。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `addr`: 要读取的设备的 7 位地址
+- `dst`: 指向接收数据缓冲区的指针
+- `len`: 要接收的数据长度（字节）
+- `nostop`: 若为 true，主设备在传输结束时保持对总线的控制（不发出 Stop），下次传输将以 Restart 而非 Start 开始。
+- `timeout_us`: 函数等待整个事务完成的时间
+
+**返回**
+
+读取的字节数；若地址未应答或设备不存在则返回 PICO_ERROR_GENERIC；若发生超时则返回 PICO_ERROR_TIMEOUT。
+
+#### i2c_set_baudrate
+
+`uint i2c_set_baudrate (i2c_inst_t * i2c, uint baudrate)`
+
+设置 I2C 波特率。
+
+将 I2C 总线频率尽可能设置为请求值，并返回实际设置的速率。由于时钟限制，波特率可能无法精确达到请求值。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `baudrate`: 波特率，单位 Hz（例如 100kHz 即 100000）
+
+**返回**
+
+实际设置的波特率
+
+#### i2c_set_slave_mode
+
+`void i2c_set_slave_mode (i2c_inst_t * i2c, bool slave, uint8_t addr)`
+
+将 I2C 端口设置为从设备模式。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `slave`: true 使用从设备模式，false 使用主设备模式
+- `addr: 若 slave` 为 true，则将从设备地址设置为此值
+
+#### i2c_write_blocking
+
+`int i2c_write_blocking (i2c_inst_t **` i2c, uint8_t addr, const uint8_t ** src, size_t len, bool nostop)`
+
+尝试向地址写入指定字节数，阻塞。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `addr`: 要写入的设备的 7 位地址
+- `src`: 指向要发送数据的指针
+- `len`: 要发送的数据长度（字节）
+- `nostop`: 若为 true，主设备在传输结束时保持对总线的控制（不发出 Stop），下次传输将以 Restart 而非 Start 开始。
+
+**返回**
+
+写入的字节数；若地址未应答或设备不存在，则返回 PICO_ERROR_GENERIC。
+
+#### i2c_write_blocking_until
+
+`int i2c_write_blocking_until (i2c_inst_t **` i2c, uint8_t addr, const uint8_t ** src, size_t len, bool nostop, absolute_time_t until)`
+
+尝试向地址写入指定字节数，阻塞直到达到指定的绝对时间。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `addr`: 要写入的设备的 7 位地址
+- `src`: 指向要发送数据的指针
+- `len`: 要发送的数据长度（字节）
+- `nostop`: 若为 true，主设备在传输结束时保持对总线的控制（不发出 Stop），下次传输将以 Restart 而非 Start 开始。
+- `until`: 阻塞等待整个事务完成的绝对时间。注意，此值除以数据长度的各个超时将应用于每次字节传输，因此若第一个或后续字节在该子超时内传输失败，函数将返回错误。
+
+**返回**
+
+写入的字节数；若地址未应答或设备不存在则返回 PICO_ERROR_GENERIC；若发生超时则返回 PICO_ERROR_TIMEOUT。
+
+#### i2c_write_burst_blocking
+
+`int i2c_write_burst_blocking (i2c_inst_t **` i2c, uint8_t addr, const uint8_t ** src, size_t len)`
+
+尝试以突发模式向地址写入指定字节数，阻塞。
+
+此版本的函数不会发出 stop 并且不会在下次写入时重新启动。这允许连续写入字节数据，而无需重复发送 stop 位，也无需重复发送地址字节。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `addr`: 要写入的设备的 7 位地址
+- `src`: 指向要发送数据的指针
+- `len`: 要发送的数据长度（字节）
+
+**返回**
+
+写入的字节数；若地址未应答或设备不存在，则返回 PICO_ERROR_GENERIC。
+
+#### i2c_write_byte_raw
+
+`static void i2c_write_byte_raw (i2c_inst_t * i2c, uint8_t value) [inline], [static]`
+
+将一个字节推入 I2C Tx FIFO。
+
+此函数为非阻塞，假设 Tx FIFO 未满。
+
+**参数**
+
+- `i2c`: I2C 实例。
+- `value`: 字节值。
+
+#### i2c_write_raw_blocking
+
+`static void i2c_write_raw_blocking (i2c_inst_t **` i2c, const uint8_t ** src, size_t len) [inline], [static]`
+
+直接写入 TX FIFO。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `src`: 要发送的数据
+- `len`: 要发送的字节数
+
+直接写入 I2C TX FIFO，主要用于从设备模式操作。
+
+#### i2c_write_timeout_us
+
+`static int i2c_write_timeout_us (i2c_inst_t **` i2c, uint8_t addr, const uint8_t ** src, size_t len, bool nostop, uint timeout_us) [inline], [static]`
+
+尝试向地址写入指定字节数，带超时。
+
+**参数**
+
+- `i2c`: [i2c0] 或 i2c1 之一
+- `addr`: 要写入的设备的 7 位地址
+- `src`: 指向要发送数据的指针
+- `len`: 要发送的数据长度（字节）
+- `nostop`: 若为 true，主设备在传输结束时保持对总线的控制（不发出 Stop），下次传输将以 Restart 而非 Start 开始。
+- `timeout_us`: 函数等待整个事务完成的时间。注意，此值除以数据长度的各个超时将应用于每次字节传输，因此若第一个或后续字节在该子超时内传输失败，函数将返回错误。
+
+**返回**
+
+写入的字节数；若地址未应答或设备不存在则返回 PICO_ERROR_GENERIC；若发生超时则返回 PICO_ERROR_TIMEOUT。
+
+<Normal />

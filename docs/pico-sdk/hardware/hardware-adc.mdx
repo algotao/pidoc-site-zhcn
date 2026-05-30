@@ -1,0 +1,277 @@
+---
+sidebar_position: 0
+draft: false
+description: 模拟数字转换器（ADC）API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK adc, ADC]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+模拟数字转换器（ADC）API。
+
+### 详细描述
+
+RP 系列微控制器内置模拟数字转换器（ADC），具备以下特性：
+
+* 逐次逼近型 ADC（SAR ADC）
+
+* 500 kS/s（使用独立的 48MHz 时钟）
+
+* 12 位精度（RP2040 有效位数 8.7，RP2350 有效位数 9.2）
+
+* RP2040 5 路输入多路复用器：
+
+  * 4 路输入可在封装引脚上使用，与 GPIO[29:26] 共用
+
+  * 1 路输入专用于内部温度传感器
+
+  * 4 元素接收采样 FIFO
+
+* RP2350 5 路或 9 路输入多路复用器：
+
+  * 4 路输入可在 QFN-60 封装引脚上使用，与 GPIO[29:26] 共用
+
+  * 8 路输入可在 QFN-80 封装引脚上使用，与 GPIO[47:40] 共用
+
+  * 8 元素接收采样 FIFO
+
+* 一路输入专用于内部温度传感器（参见第 12.4.6 节）
+
+* 中断生成
+
+* DMA 接口
+
+虽然只有一个 ADC，但可以使用 `adc_select_input() 函数指定其输入。在轮询模式（adc_set_round_robin()`）下，ADC 将在读取后自动切换到下一个输入。
+
+RP2040、RP2350 QFN-60：用户 ADC 输入为 0-3（GPIO 26-29），温度传感器在输入 4。RP2350 QFN-80：用户 ADC 输入为 0-7（GPIO 40-47），温度传感器在输入 8。
+
+温度传感器值可以用以下公式近似转换为摄氏度：
+
+T = 27 - (ADC_Voltage - 0.706)/0.001721
+
+**示例**
+
+```c title="hello_adc.c"
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "hardware/gpio.h"
+#include "hardware/adc.h"
+
+int main() {
+    stdio_init_all();
+    printf("ADC Example, measuring GPIO26\n");
+
+    adc_init();
+
+    // Make sure GPIO is high-impedance, no pullups etc
+    adc_gpio_init(26);
+    // Select ADC input 0 (GPIO26)
+    adc_select_input(0);
+
+    while (1) {
+        // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
+        const float conversion_factor = 3.3f / (1 << 12);
+        uint16_t result = adc_read();
+        printf("Raw value: 0x%03x, voltage: %f V\n", result, result * conversion_factor);
+        sleep_ms(500);
+    }
+}
+```
+
+### 函数
+
+- `void adc_init (void)`: 初始化 ADC 硬件。
+- `static void adc_gpio_init (uint gpio)`: 初始化 GPIO 引脚以用作 ADC 输入。
+- `static void adc_select_input (uint input)`: 选择 ADC 输入通道。
+- `static uint adc_get_selected_input (void)`: 获取当前选中的 ADC 输入通道。
+- `static void adc_set_round_robin (uint input_mask)`: 轮询采样选择器。
+- `static void adc_set_temp_sensor_enabled (bool enable)`: 启用板载温度传感器。
+- `static uint16_t adc_read (void)`: 执行单次转换。
+- `static void adc_run (bool run)`: 启用或禁用自由运行采样模式。
+- `static void adc_set_clkdiv (float clkdiv)`: 设置 ADC 时钟分频器。
+- `static void adc_fifo_setup (bool en, bool dreq_en, uint16_t dreq_thresh, bool err_in_fifo, bool byte_shift)`: 配置 ADC FIFO。
+- `static bool adc_fifo_is_empty (void)`: 检查 FIFO 是否为空。
+- `static uint8_t adc_fifo_get_level (void)`: 获取 ADC FIFO 中的条目数。
+- `static uint16_t adc_fifo_get (void)`: 从 FIFO 获取 ADC 结果。
+- `static uint16_t adc_fifo_get_blocking (void)`: 等待 ADC FIFO 有数据。
+- `static void adc_fifo_drain (void)`: 清空 ADC FIFO。
+- `static void adc_irq_set_enabled (bool enabled)`: 启用/禁用 ADC 中断。
+
+### 函数文档
+
+#### adc_fifo_drain
+
+`static void adc_fifo_drain (void) [inline], [static]`
+
+清空 ADC FIFO。
+
+等待任何进行中的转换完成，然后清空 FIFO，丢弃所有结果。
+
+#### adc_fifo_get
+
+`static uint16_t adc_fifo_get (void) [inline], [static]`
+
+从 FIFO 获取 ADC 结果。
+
+从 ADC FIFO 中弹出最新结果。
+
+#### adc_fifo_get_blocking
+
+`static uint16_t adc_fifo_get_blocking (void) [inline], [static]`
+
+等待 ADC FIFO 有数据。
+
+阻塞，直到 FIFO 中有数据为止。
+
+#### adc_fifo_get_level
+
+`static uint8_t adc_fifo_get_level (void) [inline], [static]`
+
+获取 ADC FIFO 中的条目数。
+
+RP2040 的 FIFO 为 4 个采样。RP2350 的 FIFO 为 8 个采样。
+
+此函数返回当前 FIFO 中的采样数量。
+
+#### adc_fifo_is_empty
+
+`static bool adc_fifo_is_empty (void) [inline], [static]`
+
+检查 FIFO 是否为空。
+
+**返回**
+
+若 FIFO 为空则返回 true。
+
+#### adc_fifo_setup
+
+`static void adc_fifo_setup (bool en, bool dreq_en, uint16_t dreq_thresh, bool err_in_fifo, bool byte_shift) [inline], [static]`
+
+配置 ADC FIFO。
+
+RP2040 的 FIFO 为 4 个采样。
+
+RP2350 的 FIFO 为 8 个采样。
+
+若转换完成而 FIFO 已满，结果将被丢弃。
+
+**参数**
+
+- `en`: 启用将每次转换结果写入 FIFO
+- `dreq_en`: 当 FIFO 有数据时启用 DMA 请求
+- `dreq_thresh`: DMA 请求 / FIFO 中断的阈值（如已启用）
+- `err_in_fifo`: 若启用，每个采样的 FIFO 第 15 位包含错误标志
+- `byte_shift`: 将 FIFO 内容移位为单字节大小（用于字节 DMA），使 DMA 可写入字节缓冲区
+
+#### adc_get_selected_input
+
+`static uint adc_get_selected_input (void) [inline], [static]`
+
+获取当前选中的 ADC 输入通道。
+
+**返回**
+
+当前选中的输入通道。
+
+RP2040 上 0...3 分别对应 GPIO 26...29，输入 4 为板载温度传感器。
+
+RP2350A 上 0...3 分别对应 GPIO 26...29，输入 4 为板载温度传感器。RP2350B 上 0...7 分别对应 GPIO 40...47，输入 8 为板载温度传感器。
+
+#### adc_gpio_init
+
+`static void adc_gpio_init (uint gpio) [inline], [static]`
+
+初始化 GPIO 引脚以用作 ADC 输入。
+
+通过禁用所有数字功能，将 GPIO 准备好用于 ADC。
+
+**参数**
+
+- `gpio`: 要使用的 GPIO 编号。RP2040 或 RP2350A 上允许使用 GPIO 26 至 29，RP2350B 上为 40 至 48。
+
+#### adc_init
+
+`void adc_init (void)`
+
+初始化 ADC 硬件。
+
+#### adc_irq_set_enabled
+
+`static void adc_irq_set_enabled (bool enabled) [inline], [static]`
+
+启用/禁用 ADC 中断。
+
+**参数**
+
+- `enabled`: 设为 true 启用 ADC 中断，设为 false 禁用。
+
+#### adc_read
+
+`static uint16_t adc_read (void) [inline], [static]`
+
+执行单次转换。
+
+执行一次 ADC 转换，等待结果并返回。
+
+**返回**
+
+转换结果。
+
+#### adc_run
+
+`static void adc_run (bool run) [inline], [static]`
+
+启用或禁用自由运行采样模式。
+
+**参数**
+
+- `run`: false 禁用，true 启用自由运行转换模式。
+
+#### adc_select_input
+
+`static void adc_select_input (uint input) [inline], [static]`
+
+选择 ADC 输入通道。
+
+选择一个 ADC 输入。RP2040 上 0...3 分别对应 GPIO 26...29，输入 4 为板载温度传感器。RP2350A 上 0...3 分别对应 GPIO 26...29，输入 4 为板载温度传感器。RP2350B 上 0...7 分别对应 GPIO 40...47，输入 8 为板载温度传感器。
+
+**参数**
+
+- `input`: 要选择的输入通道。
+
+#### adc_set_clkdiv
+
+`static void adc_set_clkdiv (float clkdiv) [inline], [static]`
+
+设置 ADC 时钟分频器。
+
+采样周期平均为 (1 + div) 个时钟周期。注意执行一次转换需要 96 个时钟周期，因此任何小于该值的周期将被截断为 96。
+
+**参数**
+
+- `clkdiv`: 若非零，转换将按间隔启动，而非连续背靠背进行。
+
+#### adc_set_round_robin
+
+`static void adc_set_round_robin (uint input_mask) [inline], [static]`
+
+轮询采样选择器。
+
+此函数设置在轮询模式下需要轮询的输入通道。RP2040、RP2350 QFN-60：值在 0 到 0x1f 之间（位 0 至位 4 分别对应 GPIO 26 至 29 及温度传感器输入）。RP2350 QFN-80：值在 0 到 0xff 之间（位 0 至位 7 分别对应 GPIO 40 至 47 及温度传感器输入）。
+
+**参数**
+
+- `input_mask`: 指示哪些输入（共 5 路或 8 路）参与采样的位模式。写入 0 可禁用轮询采样。
+
+#### adc_set_temp_sensor_enabled
+
+`static void adc_set_temp_sensor_enabled (bool enable) [inline], [static]`
+
+启用板载温度传感器。
+
+**参数**
+
+- `enable`: 设为 true 给板载温度传感器上电，设为 false 断电。
+
+<Normal />

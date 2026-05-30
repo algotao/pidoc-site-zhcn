@@ -1,0 +1,104 @@
+---
+sidebar_position: 27
+draft: false
+description: RP2040 只有一个 tick 生成器，它是看门狗硬件的一部分。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK ticks]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件 Tick API。
+
+### 详细描述
+
+RP2040 只有一个 tick 生成器，它是看门狗硬件的一部分。
+
+RP2350 具有专用的 Tick 模块，用于向 TIMER0、TIMER1、RISC-V 平台定时器、Arm Cortex-M33 0 定时器、Arm Cortex-M33 1 定时器以及 WATCHDOG 模块提供 tick 信号。
+
+### 类型定义
+
+`typedef enum tick_gen_num_rp2350 tick_gen_num_t` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上的 tick 生成器编号（用作 typedef tick_gen_num_t）
+
+`typedef enum tick_gen_num_rp2040 tick_gen_num_t` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上的 tick 生成器编号（用作 typedef tick_gen_num_t）
+
+### 枚举
+
+`enum tick_gen_num_rp2350 { TICK_PROC0 = 0, TICK_PROC1 = 1, TICK_TIMER0 = 2, TICK_TIMER1 = 3, TICK_WATCHDOG = 4, TICK_RISCV = 5, TICK_COUNT }` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上的 tick 生成器编号（用作 typedef tick_gen_num_t）
+
+`enum tick_gen_num_rp2040 { TICK_WATCHDOG = 0, TICK_COUNT }` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上的 tick 生成器编号（用作 typedef tick_gen_num_t）
+
+### 函数
+
+- `void tick_start (tick_gen_num_t tick, uint cycles)`: 启动 tick 生成器。
+- `void tick_stop (tick_gen_num_t tick)`: 停止 tick 生成器。
+- `bool tick_is_running (tick_gen_num_t tick)`: 检查 tick 生成器当前是否正在运行。
+
+### 类型定义文档
+
+#### tick_gen_num_t <span className="chip-tag rp2350">RP2350</span>
+
+`typedef enum tick_gen_num_rp2350 tick_gen_num_t`
+
+RP2350 上的 tick 生成器编号（用作 typedef `tick_gen_num_t）
+#### tick_gen_num_t <span className="chip-tag rp2040">RP2040</span>
+
+`typedef enum tick_gen_num_rp2040 tick_gen_num_t`
+
+RP2040 上的 tick 生成器编号（用作 typedef `tick_gen_num_t）
+
+RP2040 只有一个 tick 生成器，它是看门狗硬件的一部分。
+
+### 枚举类型文档
+
+#### tick_gen_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
+
+`enum tick_gen_num_rp2350`
+
+RP2350 上的 tick 生成器编号（用作 typedef `tick_gen_num_t）
+#### tick_gen_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
+
+`enum tick_gen_num_rp2040`
+
+RP2040 上的 tick 生成器编号（用作 typedef `tick_gen_num_t）
+
+RP2040 只有一个 tick 生成器，它是看门狗硬件的一部分。
+
+### 函数文档
+
+#### tick_is_running
+
+`bool tick_is_running (tick_gen_num_t tick)`
+
+检查 tick 生成器当前是否正在运行。
+
+**参数**
+
+- `tick`: tick 生成器编号
+
+**返回值**
+
+如果指定的 tick 生成器正在运行，则返回 true。
+
+#### tick_start
+
+`void tick_start (tick_gen_num_t tick, uint cycles)`
+
+启动 tick 生成器。
+
+**参数**
+
+- `tick`: tick 生成器编号
+- `cycles`: 每个 tick 的时钟周期数
+
+#### tick_stop
+
+`void tick_stop (tick_gen_num_t tick)`
+
+停止 tick 生成器。
+
+**参数**
+
+- `tick`: tick 生成器编号
+
+<Normal />

@@ -1,0 +1,39 @@
+---
+sidebar_position: 11
+draft: false
+description: 聚合了大多数可执行程序所使用的 Raspberry Pi Pico SDK 核心库子集，以及一些附加的实用方法。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK stdlib]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+聚合了大多数可执行程序所使用的 Raspberry Pi Pico SDK 核心库子集，以及一些附加的实用方法。
+
+### 详细描述
+
+引入 pico_stdlib 可为你提供运行基本程序（向 stdout 打印或闪烁 LED）所需的一切。
+
+此库聚合了：
+
+* * * * * * * * 这些函数使用了一些基本的默认值，这些默认值通常是可用的，但也可以通过 config.h 或类似的板卡定义头文件进行自定义。
+
+### 函数
+
+- `void setup_default_uart (void)`: 设置默认 UART 并将其分配到默认 GPIO。
+
+### 函数文档
+
+#### setup_default_uart
+
+`void setup_default_uart (void)`
+
+设置默认 UART 并将其分配到默认 GPIO。
+
+默认情况下，将使用 UART 0，TX 接 GPIO 0，RX 接 GPIO 1，波特率为 115200。
+
+调用此方法时，如果 `pico_stdio_uart` 库已被链接，也会初始化通过 UART 的 stdin/stdout。
+
+可使用配置宏更改默认值：PICO_DEFAULT_UART_INSTANCE、PICO_DEFAULT_UART_BAUD_RATE、PICO_DEFAULT_UART_TX_PIN、PICO_DEFAULT_UART_RX_PIN。
+
+<Normal />

@@ -1,0 +1,751 @@
+---
+sidebar_position: 6
+draft: false
+description: 访问 bootrom 中的函数和数据。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK bootrom]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+访问 bootrom 中的函数和数据。
+
+### 详细描述
+
+此头文件可由汇编代码包含。
+
+### 宏
+
+* `#define [ROM_TABLE_CODE](c1, c2) \((c1) | ((c2) 
+
+### 函数
+
+- `static uint32_t rom_table_code (uint8_t c1, uint8_t c2)`: 根据两个 ASCII 字符返回 bootrom 查找码。
+`void * rom_func_lookup (uint32_t code)`<br/>&emsp;通过代码查找 bootrom 函数。
+
+`void * rom_data_lookup (uint32_t code)`<br/>&emsp;通过代码查找 bootrom 数据地址。
+
+`bool rom_funcs_lookup (uint32_t *table, unsigned int count)`<br/>&emsp;查找多个 bootrom 函数地址的辅助函数。
+
+`static __force_inline void * rom_func_lookup_inline (uint32_t code)`<br/>&emsp;通过代码查找 bootrom 函数。此方法被强制内联到调用者中，用于对 FLASH/RAM 敏感的代码。
+
+`static __force_inline void * rom_data_lookup_inline (uint32_t code)`<br/>&emsp;通过代码查找 bootrom 数据地址。此方法被强制内联到调用者中，用于对 FLASH/RAM 敏感的代码。
+- `void rom_reset_usb_boot (uint32_t usb_activity_gpio_pin_mask, uint32_t disable_interface_mask)`: 将设备重启至 BOOTSEL 模式。
+- `void rom_reset_usb_boot_extra (int usb_activity_gpio_pin, uint32_t disable_interface_mask, bool usb_activity_gpio_pin_active_low)`: 将设备重启至 BOOTSEL 模式。
+- `static void rom_connect_internal_flash (void)`: 将 SSI/QMI 连接到 QSPI 引脚。
+- `static void rom_flash_exit_xip (void)`: 将 QSPI 设备从 XIP 状态恢复到串行命令状态。
+- `static void rom_flash_range_erase (uint32_t addr, size_t count, uint32_t block_size, uint8_t block_cmd)`: 擦除 flash 中的字节。
+`static void rom_flash_range_program (uint32_t addr, const uint8_t *data, size_t count)`<br/>&emsp;向 flash 写入字节。
+- `static void rom_flash_flush_cache (void)`: 刷新 XIP 缓存。
+- `static void rom_flash_enter_cmd_xip (void)`: 使用标准命令配置 SSI/QMI。
+`static int rom_reboot (uint32_t flags, uint32_t delay_ms, uint32_t p0, uint32_t p1)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;使用看门狗重启。
+
+`static void rom_bootrom_state_reset (uint32_t flags)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;重置 bootrom 状态。
+
+`static void rom_flash_reset_address_trans (void)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;重置地址转换。
+
+`static void rom_flash_select_xip_read_mode (bootrom_xip_mode_t mode, uint8_t clkdiv)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;以 XIP 读取模式配置 QMI。
+
+`static int rom_flash_op (cflash_flags_t flags, uintptr_t addr, uint32_t size_bytes, uint8_t *buf)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;执行 flash 读取、擦除或写入操作。
+
+`static int rom_func_otp_access (uint8_t *buf, uint32_t buf_len, otp_cmd_t cmd)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;将缓冲区数据写入 OTP，或从 OTP 读取数据到缓冲区。
+
+`static int rom_get_partition_table_info (uint32_t *out_buffer, uint32_t out_buffer_word_size, uint32_t partition_and_flags)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;用分区表中的信息填充缓冲区。
+
+`static int rom_load_partition_table (uint8_t *workarea_base, uint32_t workarea_size, bool force_reload)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;从 flash 加载当前分区表（如果存在）。
+
+`static int rom_pick_ab_partition (uint8_t *workarea_base, uint32_t workarea_size, uint partition_a_num, uint32_t flash_update_boot_window_base)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;从 A/B 对中选择一个分区。
+
+`int rom_pick_ab_partition_during_update (uint32_t *workarea_base, uint32_t workarea_size, uint partition_a_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;在不干扰任何正在进行的 Flash 更新启动或 TBYB 启动的情况下选择 A/B 分区。
+
+`static int rom_get_b_partition (uint pi_a)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;获取 B 分区。
+
+`static int rom_get_uf2_target_partition (uint8_t **workarea_base, uint32_t workarea_size, uint32_t family_id, resident_partition_t **partition_out)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;获取 UF2 目标分区。
+
+`static intptr_t rom_flash_runtime_to_storage_addr (uintptr_t flash_runtime_addr)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;将运行时地址转换为存储地址。
+
+`static int rom_chain_image (uint8_t *workarea_base, uint32_t workarea_size, uint32_t region_base, uint32_t region_size)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;链式跳转到可启动镜像。
+
+`static int rom_explicit_buy (uint8_t *buffer, uint32_t buffer_size)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;购买（确认）镜像。
+
+`static int rom_set_ns_api_permission (uint ns_api_num, bool allowed)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;设置 NS API 权限。
+
+`static void ** rom_validate_ns_buffer (const void **addr, uint32_t size, uint32_t write, uint32_t *ok)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;验证 NS 缓冲区。
+
+`static intptr_t rom_set_rom_callback (uint callback_num, bootrom_api_callback_generic_t funcptr)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;设置 ROM 回调函数。
+
+`static int rom_get_sys_info (uint32_t *out_buffer, uint32_t out_buffer_word_size, uint32_t flags)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;获取系统信息。
+
+`int rom_add_flash_runtime_partition (uint32_t start_offset, uint32_t size, uint32_t permissions)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;向分区表添加运行时分区以指定 flash 权限。
+
+### 宏定义文档
+
+#### ROM_TABLE_CODE
+
+`#define ROM_TABLE_CODE(c1, c2) \((c1) | ((c2)
+
+根据两个 ASCII 字符返回 bootrom 查找码。
+
+这些代码用于在 bootrom 中查找数据或函数地址。
+
+**参数**
+
+- `c1`: 第一个字符
+- `c2`: 第二个字符
+
+**返回值**
+
+用于 `rom_func_lookup() 或 rom_data_lookup()` 的"代码"
+
+### 函数文档
+
+#### rom_add_flash_runtime_partition <span className="chip-tag rp2350">RP2350</span>
+
+`int rom_add_flash_runtime_partition (uint32_t start_offset, uint32_t size, uint32_t permissions)`
+
+向分区表添加运行时分区以指定 flash 权限。
+
+注意，如果有空间，分区将被添加到 bootrom 维护的分区表运行时视图中。
+
+注意，这些权限不能覆盖任何已有分区的权限，因为权限匹配基于"找到的第一个分区"原则。
+
+**参数**
+
+- `start_offset`: flash 中的起始偏移量（字节，必须是 4K 的倍数）
+- `size`: 大小（字节，必须是 4K 的倍数）
+- `permissions`: PICOBIN_PARTITION_PERMISSION_ 常量的按位或，例如来自 [boot/picobin.h] 的 PICOBIN_PARTITION_PERMISSION_S_R_BITS
+
+**返回值**
+
+>= 0 表示添加的分区号；PICO_ERROR_BAD_ALIGNMENT 表示 start_offset 或 size 不是 4K 的倍数；PICO_ERROR_INVALID_ARG 表示 start_offset 或 size 超出范围，或设置了无效的权限位。
+
+#### rom_bootrom_state_reset <span className="chip-tag rp2350">RP2350</span>
+
+`static void rom_bootrom_state_reset (uint32_t flags) [inline], [static]`
+
+重置 bootrom 状态。
+
+根据以下标志重置内部 bootrom 状态：
+
+STATE_RESET_CURRENT_CORE - 将当前核心的任何内部 bootrom 状态重置为干净状态。此方法应在当前核心上调用任何其他 bootrom API 之前调用，并在正常启动 core 0 及在 core 1 上启动代码时由 bootrom 自动调用。
+
+STATE_RESET_OTHER_CORE - 将另一个核心的任何内部 bootrom 状态重置为干净状态。通常由调试器在通过另一个核心上运行的代码重置某个核心状态时调用。
+
+STATE_RESET_GLOBAL_STATE - 重置所有非核心特定状态，包括：禁用从 ARM-NS 访问 bootrom API、解锁所有 BOOT 自旋锁、清除所有安全代码回调。
+
+注意：SDK 在运行时初始化时调用此方法，将 bootrom 置于已知状态。这允许程序在未经过通常启动路径（该路径会适当重置状态）的情况下（例如从调试器启动）正常运行。
+
+**参数**
+
+- `flags`: 如上所述的标志
+
+#### rom_chain_image <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_chain_image (uint8_t * workarea_base, uint32_t workarea_size, uint32_t region_base, uint32_t region_size) [inline], [static]`
+
+链式跳转到可启动镜像。
+
+在内存区域中搜索可启动镜像，并在可能的情况下执行它。
+
+region_base 和 region_size 指定了一个字对齐、字倍数大小的 RAM、XIP RAM 或 flash 区域供搜索。该区域的前 4 KiB 必须包含带有 IMAGE_DEF 的块循环的起始部分。如果新镜像被启动，则调用不返回；否则返回错误。
+
+region_base 是有符号的，可以传递负值，表示（取反后的正值）既是 region_base 也是"flash 更新"区域的基址。
+
+此方法在选择版本、检查签名等方面可能与启动路径具有相似的复杂度，因此需要用户提供的内存缓冲区作为工作区。工作区应字对齐，且大小足够，否则将返回 BOOTROM_ERROR_INSUFFICIENT_RESOURCES。当前所需的工作区大小为 3264，因此 3.25K 是个好选择。
+
+::::note
+此方法主要用于实现 bootloader。
+::::
+
+::::note
+链式跳转到镜像时，不会设置 OTP_DATA_BOOT_FLAGS0_ROLLBACK_REQUIRED 标志，以防止因启动具有回滚版本的二进制文件而使没有回滚版本的 bootloader 失效。
+::::
+
+**参数**
+
+- `workarea_base`: 工作区基地址
+- `workarea_size`: 工作区大小
+- `region_base`: 镜像基地址
+- `region_size`: 包含镜像的窗口大小
+
+#### rom_connect_internal_flash
+
+`static void rom_connect_internal_flash (void) [inline], [static]`
+
+将 SSI/QMI 连接到 QSPI 引脚。
+
+将所有 QSPI 引脚控制恢复为默认状态，并将 SSI/QMI 外设连接到 QSPI 引脚。
+
+在 RP2350 上，如果通过 OTP OTP_DATA_FLASH_DEVINFO 或通过写入 bootram 中的 FLASH_DEVINFO 运行时副本配置了辅助 flash 片选 GPIO，则该 bank 0 GPIO 也会被初始化，且 QMI 外设会连接到它。否则，bank 0 IO 不受影响。
+
+#### rom_data_lookup
+
+`void * rom_data_lookup (uint32_t code)`
+
+通过代码查找 bootrom 数据地址。
+
+**参数**
+
+- `code`: 查找码
+
+**返回值**
+
+指向数据的指针，如果代码不匹配任何 bootrom 函数则返回 NULL
+
+#### rom_data_lookup_inline
+
+`static __force_inline void * rom_data_lookup_inline (uint32_t code) [static]`
+
+通过代码查找 bootrom 数据地址。此方法被强制内联到调用者中，用于对 FLASH/RAM 敏感的代码。
+
+**参数**
+
+- `code`: 查找码
+
+**返回值**
+
+指向数据的指针，如果代码不匹配任何 bootrom 数据则返回 NULL
+
+#### rom_explicit_buy <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_explicit_buy (uint8_t * buffer, uint32_t buffer_size) [inline], [static]`
+
+购买（确认）镜像。
+
+对通过带有"显式购买"标志的 IMAGE_DEF 启动的可执行文件执行"显式"购买。对此类镜像进行"flash 更新"启动是一种让镜像只执行一次的方式，但只有在通过此调用回调 bootrom 时，该镜像才成为"当前"镜像。
+
+此调用可能执行以下操作：
+
+* 擦除并重写 flash 中包含"显式购买"标志的部分，以清除该标志。
+
+* 在 A/B 分区场景中，如果新 IMAGE_DEF 是版本降级，则擦除另一个分区的第一个扇区（这样当不进行"flash 更新"启动时，此镜像将再次启动）。
+
+* 如果芯片是安全的且镜像中存在回滚版本，则在 OTP 中更新回滚版本。
+
+::::note
+更新回滚版本时设备可能重启，如果需要写入多个回滚行——这发生在版本跨越 24 的倍数时（例如从版本 23 升级到 25 需要重启，但 23 到 24 或 24 到 25 则不需要）。因此，如果使用了回滚版本，应用程序在调用此函数时应做好重启准备。
+::::
+
+注意，上述第一项需要 4 KiB 的暂存空间，因此如果"显式购买"标志需要被清除，应向此方法传递至少 4 KiB 的字对齐缓冲区，否则将返回 BOOTROM_ERROR_INSUFFICIENT_RESOURCES。
+
+**参数**
+
+- `buffer`: 暂存空间基地址
+- `buffer_size`: 暂存空间大小
+
+#### rom_flash_enter_cmd_xip
+
+`static void rom_flash_enter_cmd_xip (void) [inline], [static]`
+
+使用标准命令配置 SSI/QMI。
+
+配置 SSI/QMI 以在每次 XIP 访问时生成标准 03h 串行读取命令（24 位地址）。这是一种速度较慢但被广泛支持的 XIP 配置。RP2350 上 CLKDIV 设置为 12。调试器可调用此函数以确保在写/擦操作后 flash 可读。
+
+注意，flash_exit_xip() 执行相同的设置，RP2350 的 flash 写/擦函数不会让 XIP 处于不可访问状态，因此在 RP2350 上调用此函数基本上是多余的。提供此函数是为了与 RP2040 兼容。
+
+#### rom_flash_exit_xip
+
+`static void rom_flash_exit_xip (void) [inline], [static]`
+
+将 QSPI 设备从 XIP 状态恢复到串行命令状态。
+
+在 RP2040 上，首先为串行模式操作设置 SSI，然后发出数据手册 2.8.1.2 节中描述的固定 XIP 退出序列。注意，bootrom 代码使用 IO 强制逻辑来驱动 CS 引脚，在将 SSI 恢复到 XIP 模式之前必须清除（例如通过调用 _flash_flush_cache）。此函数以固定的 SCK 时钟分频器 /6 配置 SSI。
+
+在 RP2350 上，初始化 QMI 用于串行操作（直接模式），同时初始化基本 XIP 模式，使 QMI 在响应 XIP 读取时以低速（CLKDIV=12）执行 03h 串行读取命令。
+
+然后，向片选 0 上的 QSPI 设备发送一个序列，旨在将其从连续读取模式（"XIP 模式"）和/或 QPI 模式返回到接受串行命令的状态。在系统重置后需要这样做，以将 QSPI 设备恢复到已知状态，因为重置 RP2350 不会重置所连接的 QSPI 设备。当用户代码在执行了一些连续读取模式或 QPI 模式访问后，希望将 QSPI 设备恢复到能接受 bootrom flash 访问函数发出的串行擦除和写入命令的状态时，也需要这样做。
+
+如果通过 FLASH_DEVINFO 配置了辅助片选的 GPIO，则 XIP 退出序列也会发送到片选 1。
+
+调用此函数后，QSPI 设备应可用于 XIP 读取；函数名 flash_exit_xip 指的是将 QSPI 设备从其 XIP 状态返回到串行命令状态。
+
+#### rom_flash_flush_cache
+
+`static void rom_flash_flush_cache (void) [inline], [static]`
+
+刷新 XIP 缓存。
+
+刷新并启用 XIP 缓存。同时清除 QSPI CSn 上的 IO 强制，使 SSI 能够正常驱动 flash 片选。
+
+通过向每条缓存行发出按组/路方式的无效化维护操作，刷新整个 XIP 缓存。这确保了 flash 写/擦操作对后续缓存 XIP 读取可见。
+
+注意，这会取消固定的缓存行，可能会干扰 XIP 缓存作为 SRAM 的使用。
+
+不执行其他操作。
+
+#### rom_flash_op <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_flash_op (cflash_flags_t flags, uintptr_t addr, uint32_t size_bytes, uint8_t * buf) [inline], [static]`
+
+执行 flash 读取、擦除或写入操作。
+
+flash 操作会根据 bootram 中存储的 FLASH_DEVINFO 运行时值对已知 flash 设备进行边界检查。如果设置了 OTP_DATA_BOOT_FLAGS0_FLASH_DEVINFO_ENABLE，bootrom 会将其初始化为 OTP 值 OTP_DATA_FLASH_DEVINFO；否则初始化为片选 0 的 16 MiB 和片选 1 的 0 字节。FLASH_DEVINFO 可在运行时通过写入其在 bootram 中的位置来更新，该指针可在 ROM 表中查找。
+
+如果存在常驻分区表，则 flash 操作也会根据分区权限进行检查。安全版本的此函数可以使用 flags 参数的 CFLASH_SECLEVEL_BITS 位字段指定调用者的有效安全级别（安全、非安全、引导加载程序），而非安全函数始终根据分区的非安全权限进行检查。跨越两个分区的 flash 操作不被允许，将无法通过地址验证。
+
+如果设置了 OTP_DATA_FLASH_DEVINFO_D8H_ERASE_SUPPORTED，则擦除操作在可能的情况下（不擦除指定区域外）将使用 D8h 64 KiB 块擦除命令，以获得更快的擦除速度。否则，仅使用 20h 4 KiB 扇区擦除命令。
+
+可选地，此 API 可以根据当前 QMI_ATRANS0 至 QMI_ATRANS7 地址转换寄存器配置，将 addr 从 flash 运行时地址转换为 flash 存储地址。例如，存储在 flash +2 MiB 偏移处（但在运行时映射到 XIP 地址 0）的镜像，写入镜像内 +1 MiB 偏移处时，将写入物理 flash 存储地址 3 MiB。通过在 flags 参数中设置 CFLASH_ASPACE_BITS 位字段来启用转换。
+
+启用转换时，跨越 XIP 运行时地址空间地址孔（由非最大 ATRANSx_SIZE 创建）的 flash 操作将返回错误响应。此检查可能会撕裂：传输可能在遇到地址孔并最终返回失败之前已部分执行。
+
+启用转换时，flash 操作允许跨越片选边界，前提是这不跨越 ATRANS 地址孔。禁用转换时，整个操作必须针对单个 flash 片选（由地址第 24 位及以上确定），否则地址验证将失败。
+
+**参数**
+
+- `flags`: 控制安全级别、地址空间和 flash 操作
+- `addr`: 要访问的第一个 flash 字节的地址，范围从 XIP_BASE 到 XIP_BASE + 0x1ffffff
+- `size_bytes`: buf 的大小（字节）
+- `buf`: 对于写入操作，包含要写入 flash 的数据；对于读取操作，包含从 flash 读回的数据
+
+#### rom_flash_range_erase
+
+`static void rom_flash_range_erase (uint32_t addr, size_t count, uint32_t block_size, uint8_t block_cmd) [inline], [static]`
+
+擦除 flash 中的字节。
+
+从 addr（从 flash 起始的偏移量）开始擦除 count 个字节。可选地传入块擦除命令（例如 D8h 块擦除）和该命令擦除的块大小——此函数将尽可能使用更大的块擦除，以显著提高擦除速度。addr 必须对齐到 4096 字节扇区，count 必须是 4096 字节的倍数。
+
+这是一个底层 flash API，不对参数进行验证。
+
+RP2350 上请参阅 rom_flash_op 获取更高级别的 API，它会检查对齐、flash 边界和分区权限，并可透明地应用运行时到存储地址的转换。
+
+调用此 API 前，QSPI 设备必须处于串行命令状态，这可通过调用 `rom_connect_internal_flash() 后再调用 rom_flash_exit_xip() 来实现。擦除后，应通过 `rom_flash_flush_cache()` 刷新 flash 缓存，以确保修改后的 flash 数据对缓存 XIP 访问可见。
+
+最后，应通过将 bootram 中保存的 XIP 设置函数复制到 SRAM 并执行来恢复原始 XIP 模式：bootrom 提供一个默认函数，用于恢复 flash 扫描期间发现的 flash 模式/时钟分频，用户程序可用自己的 XIP 设置函数覆盖它。
+
+在擦除操作期间，QMI 处于直接模式，来自 DMA、调试器或另一个核心的 XIP 访问将返回总线故障。函数返回后 XIP 再次可访问。
+
+**参数**
+
+- `addr`: 从 flash 起始的擦除偏移量
+- `count`: 要擦除的字节数
+- `block_size`: block_cmd 擦除的可选块大小
+- `block_cmd`: 可选的块擦除命令，例如 D8h 块擦除
+
+#### rom_flash_range_program
+
+`static void rom_flash_range_program (uint32_t addr, const uint8_t * data, size_t count) [inline], [static]`
+
+向 flash 写入字节。
+
+将数据写入从 addr（从 flash 起始的偏移量）开始、大小为 count 字节的 flash 地址范围。addr 必须对齐到 256 字节边界，count 必须是 256 的倍数。
+
+这是一个底层 flash API，不对参数进行验证。
+
+RP2350 上请参阅 rom_flash_op 获取更高级别的 API，它会检查对齐、flash 边界和分区权限，并可透明地应用运行时到存储地址的转换。
+
+调用此 API 前，QSPI 设备必须处于串行命令状态——参见 rom_flash_range_erase 的说明。
+
+**参数**
+
+- `addr`: 从 flash 起始的擦除偏移量
+- `data`: 包含要写入数据的缓冲区
+- `count`: 要擦除的字节数
+
+#### rom_flash_reset_address_trans <span className="chip-tag rp2350">RP2350</span>
+
+`static void rom_flash_reset_address_trans (void) [inline], [static]`
+
+重置地址转换。
+
+将 QMI 地址转换寄存器 QMI_ATRANS0 至 QMI_ATRANS7 恢复为复位状态。这使运行时到存储地址的映射成为恒等映射，即映射地址与未映射地址相同，整个空间完全映射。
+
+#### rom_flash_runtime_to_storage_addr <span className="chip-tag rp2350">RP2350</span>
+
+`static intptr_t rom_flash_runtime_to_storage_addr (uintptr_t flash_runtime_addr) [inline], [static]`
+
+将运行时地址转换为存储地址。
+
+应用当前 QMI 地址转换寄存器配置的地址转换。
+
+转换 XIP 运行时地址窗口之外的地址，或超出 ATRANSx_SIZE 字段边界的地址，将返回 BOOTROM_ERROR_INVALID_ADDRESS（这不是有效的 flash 存储地址）。否则，返回 QMI 在收到运行时地址 addr 时将访问的存储地址。这实际上是 QMI 的虚拟到物理地址转换。
+
+**参数**
+
+- `flash_runtime_addr`: 要转换的地址
+
+#### rom_flash_select_xip_read_mode <span className="chip-tag rp2350">RP2350</span>
+
+`static void rom_flash_select_xip_read_mode (bootrom_xip_mode_t mode, uint8_t clkdiv) [inline], [static]`
+
+以 XIP 读取模式配置 QMI。
+
+为 bootrom 支持的少数 XIP 读取模式之一配置 QMI。此模式为两个内存窗口（两个片选）配置，时钟分频器也应用于直接模式。
+
+**参数**
+
+- `mode`: bootrom_xip_mode_t 模式
+- `clkdiv`: 时钟分频器
+
+#### rom_func_lookup
+
+`void * rom_func_lookup (uint32_t code)`
+
+通过代码查找 bootrom 函数。
+
+**参数**
+
+- `code`: 查找码
+
+**返回值**
+
+指向函数的指针，如果代码不匹配任何 bootrom 函数则返回 NULL
+
+#### rom_func_lookup_inline
+
+`static __force_inline void * rom_func_lookup_inline (uint32_t code) [static]`
+
+通过代码查找 bootrom 函数。此方法被强制内联到调用者中，用于对 FLASH/RAM 敏感的代码。
+
+**参数**
+
+- `code`: 查找码
+
+**返回值**
+
+指向函数的指针，如果代码不匹配任何 bootrom 函数则返回 NULL
+
+#### rom_func_otp_access <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_func_otp_access (uint8_t * buf, uint32_t buf_len, otp_cmd_t cmd) [inline], [static]`
+
+将缓冲区数据写入 OTP，或从 OTP 读取数据到缓冲区。
+
+根据 IS_ECC 标志，缓冲区必须对齐到 2 字节或 4 字节。
+
+此方法将读写行，直到遇到第一个密钥或权限检查失败的行，此时返回 BOOTROM_ERROR_NOT_PERMITTED。
+
+写入也会在第一个尝试将 OTP 位从 1 设置为 0 的行处停止，并返回 BOOTROM_ERROR_UNSUPPORTED_MODIFICATION。
+
+如果所有行都成功读/写，则返回 BOOTROM_OK。
+
+**参数**
+
+- `buf`: 读取到/写入自的缓冲区
+- `buf_len`: buf 的大小
+- `cmd`: 要执行的 OTP 命令
+
+* 0x0000ffff - ROW_NUMBER：低 16 位为行号（0-4095）
+
+* 0x00010000 - IS_WRITE：如果设置，执行写入（而非读取）
+
+* 0x00020000 - IS_ECC：如果设置，缓冲区中每个值为 2 字节，读/写 OTP 中 24 位值时使用 ECC。如果未设置，缓冲区中每个值为 4 字节，其低 24 位写入或读取自 OTP。
+
+#### rom_funcs_lookup
+
+`bool rom_funcs_lookup (uint32_t * table, unsigned int count)`
+
+查找多个 bootrom 函数地址的辅助函数。
+
+此方法查找表中的"代码"，并将每个表条目转换为查找到的函数指针（如果该代码在 bootrom 中有对应函数）。
+
+**参数**
+
+- `table`: 输入/输出数组，输入时为代码，成功时为函数指针。
+- `count`: 表中的元素数量
+
+**返回值**
+
+如果所有代码都找到并转换为函数指针则返回 true，否则返回 false
+
+#### rom_get_b_partition <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_get_b_partition (uint pi_a) [inline], [static]`
+
+获取 B 分区。
+
+如果分区表存在且已加载，且存在具有 B 分区的分区 A，则返回该 B 分区的索引；否则返回 BOOTROM_ERROR_NOT_FOUND。
+
+**参数**
+
+- `pi_a`: A 分区号
+
+#### rom_get_partition_table_info <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_get_partition_table_info (uint32_t * out_buffer, uint32_t out_buffer_word_size, uint32_t partition_and_flags) [inline], [static]`
+
+用分区表中的信息填充缓冲区。
+
+用分区表中的信息填充缓冲区。注意，此 API 也用于通过 picoboot 接口返回信息。
+
+成功时，缓冲区被填充，并返回填充到缓冲区中的字数。如果分区表尚未加载（例如从看门狗或 RAM 启动），此方法将返回 BOOTROM_ERROR_NO_DATA，您应先通过 load_partition_table() 加载分区表。
+
+注意，由于大小限制，bootrom 不会将分区表中的所有数据保留在内存中。为了防止在 bootrom 加载常驻部分后 flash 中的更改被修改，bootrom 保留了加载时分区表的哈希值。如果调用此方法时哈希值已更改，将返回 BOOTROM_ERROR_INVALID_STATE。
+
+返回的信息由 partition_and_flags 参数选择；返回缓冲区中的第一个字是 API 支持的那些标志的（子）集。在解释缓冲区之前，应始终检查此值。
+
+第一个字之后，按顺序返回每个存在标志的数据字。除 PT_INFO 外，所有标志都选择"每分区"信息，因此每个字段按标志顺序为一个分区接一个分区地返回。特殊的 SINGLE_PARTITION 标志表示只需要单个分区的数据。
+
+**参数**
+
+- `out_buffer`: 要写入数据的缓冲区
+- `out_buffer_word_size`: out_buffer 的大小（字）
+- `partition_and_flags`: 分区号和标志
+
+#### rom_get_sys_info <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_get_sys_info (uint32_t * out_buffer, uint32_t out_buffer_word_size, uint32_t flags) [inline], [static]`
+
+获取系统信息。
+
+用各种系统信息填充缓冲区。注意，此 API 也用于通过 picoboot 接口返回信息。
+
+成功时，缓冲区被填充，并返回填充到缓冲区中的字数。
+
+返回的信息由 flags 参数选择；返回缓冲区中的第一个字是 API 支持的那些标志的（子）集。在解释缓冲区之前，应始终检查此值。
+
+"启动诊断"信息旨在帮助识别启动失败或启动到意外二进制文件的原因。此信息可在看门狗重启后通过 picoboot 获取，但不会在通过 RUN 引脚或 POWMAN 重置后保留。
+
+只有一个字的诊断信息。记录的内容基于上述 pp 选择，该选择在以编程方式重启进行正常启动时作为参数设置。
+
+要获取诊断信息，pp 必须引用插槽或"A"分区；从 OTP 或 RAM 镜像启动时，或调用 chain_image() 时，镜像诊断会自动选择。
+
+诊断字因此包含插槽 0 和插槽 1，或"A"分区（及其"B"分区，如有）的数据。诊断字的低半字包含来自插槽 0 或分区 A 的信息；高半字包含来自插槽 1 或分区 B 的信息。
+
+要获取涉及插槽和多个分区的失败启动的完整信息，可以多次重启设备以收集信息。
+
+**参数**
+
+- `out_buffer`: 要写入数据的缓冲区
+- `out_buffer_word_size`: out_buffer 的大小（字）
+- `flags`: 标志
+
+#### rom_get_uf2_target_partition <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_get_uf2_target_partition (uint8_t ** workarea_base, uint32_t workarea_size, uint32_t family_id, resident_partition_t` ** partition_out) [inline], [static]`
+
+获取 UF2 目标分区。
+
+此方法执行与在 BOOTSEL 模式下将 UF2 拖到 USB 驱动器时相同的操作，以确定 UF2 家族 ID 的目标分区。
+
+此方法在选择版本、检查签名等方面可能与启动路径具有相似的复杂度，因此需要用户提供的内存缓冲区作为工作区。工作区应字对齐，且大小足够，否则将返回 `BOOTROM_ERROR_INSUFFICIENT_RESOURCES`。当前所需的工作区大小为 3264，因此 3.25K 是个好选择。
+
+如果分区表尚未加载（例如从看门狗或 RAM 启动），此方法将返回 `BOOTROM_ERROR_PRECONDITION_NOT_MET`，您应先通过 [ load_partition_table()] 加载分区表。
+
+**参数**
+
+- `workarea_base`: 工作区基地址
+- `workarea_size`: 工作区大小
+- `family_id`: 要放置的家族 ID
+- `partition_out: 指向要填充分区数据的 resident_partition_t` 的指针
+
+#### rom_load_partition_table <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_load_partition_table (uint8_t * workarea_base, uint32_t workarea_size, bool force_reload) [inline], [static]`
+
+从 flash 加载当前分区表（如果存在）。
+
+此方法在选择版本、检查签名等方面可能与启动路径具有相似的复杂度，因此需要用户提供的内存缓冲区作为工作区。工作区应字对齐，且大小足够，否则将返回 BOOTROM_ERROR_INSUFFICIENT_RESOURCES。当前所需的工作区大小为 3264，因此 3.25K 是个好选择。
+
+如果 force_reload 为 false，则此方法在 bootrom 已加载时立即返回 BOOTROM_OK，否则如果分区表已加载，将重新加载它，允许在运行中的程序中更新分区表。
+
+**参数**
+
+- `workarea_base`: 工作区基地址
+- `workarea_size`: 工作区大小
+- `force_reload`: 强制重新加载分区表
+
+#### rom_pick_ab_partition <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_pick_ab_partition (uint8_t * workarea_base, uint32_t workarea_size, uint partition_a_num, uint32_t flash_update_boot_window_base) [inline], [static]`
+
+从 A/B 对中选择一个分区。
+
+确定哪个分区具有"更好"的 IMAGE_DEF。对于可执行镜像，这是将被启动的那个。
+
+此方法在选择版本、检查签名等方面可能与启动路径具有相似的复杂度，因此需要用户提供的内存缓冲区作为工作区。工作区应字对齐，且大小足够，否则将返回 BOOTROM_ERROR_INSUFFICIENT_RESOURCES。当前所需的工作区大小为 3264，因此 3.25K 是个好选择。
+
+传入的分区号可以是任何有效的分区号，但不能是 A/B 对的"B"分区。
+
+此方法返回负错误码，或选定分区的分区号（即 partition_a_num 或其"B"分区的编号，如有）。
+
+::::note
+此方法不查看所有者分区，只查看传入的 A 分区及其对应的 B 分区。
+::::
+
+::::note
+在调用 `explicit_buy 之前执行 Flash 更新启动时，不应直接调用此方法，因为它可能会阻止版本降级——请改用封装此函数的 rom_pick_ab_partition_during_update()`。
+::::
+
+**参数**
+
+- `workarea_base`: 工作区基地址
+- `workarea_size`: 工作区大小
+- `partition_a_num`: 对中的 A 分区
+- `flash_update_boot_window_base`: flash 更新基地址，用于选择该分区而非通常"更好"的分区
+
+**返回值**
+
+>= 0 表示从 A/B 对中选择的分区号
+
+#### rom_pick_ab_partition_during_update <span className="chip-tag rp2350">RP2350</span>
+
+`int rom_pick_ab_partition_during_update (uint32_t * workarea_base, uint32_t workarea_size, uint partition_a_num)`
+
+在不干扰任何正在进行的 Flash 更新启动或 TBYB 启动的情况下选择 A/B 分区。
+
+此方法将执行与 `rom_pick_ab_partition() 相同的功能，使用来自当前启动的 flash_update_boot_window_base，同时执行额外检查以防止干扰主镜像 TBYB 启动。它需要与 `rom_pick_ab_partition()` 相同的最小工作区大小。
+
+在调用 `rom_explicit_buy() 之前执行 Flash 更新启动时，应使用此方法代替 rom_pick_ab_partition()`，在 Flash 更新启动未进行时也可正常使用。
+
+此函数是必要的，因为如果 `explicit_buy 处于待定状态，调用 pick_ab_partition 会清除版本降级的已保存 flash 擦除地址，导致调用 `explicit_buy 时不会对另一个分区进行所需的擦除。此函数保存并恢复该地址以防止此问题，如果 pick_ab_partition` 选择的分区也需要 flash 擦除版本降级，则返回 BOOTROM_ERROR_NOT_PERMITTED（因为无法通过一次 explicit_buy` 调用擦除两个分区）。
+
+此函数还检查所选分区是否包含有效镜像（例如使用安全启动时的签名镜像），如果没有则返回 `BOOTROM_ERROR_NOT_FOUND`。
+
+**参数**
+
+- `workarea_base`: 工作区基地址
+- `workarea_size`: 工作区大小
+- `partition_a_num`: 对中的 A 分区
+
+**返回值**
+
+>= 0 表示 `rom_pick_ab_partition()` 选择的分区号；BOOTROM_ERROR_NOT_PERMITTED 表示无法正确进行更新，例如主镜像和数据镜像都是 TBYB；BOOTROM_ERROR_NOT_FOUND 表示所选分区验证失败
+
+#### rom_reboot <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_reboot (uint32_t flags, uint32_t delay_ms, uint32_t p0, uint32_t p1) [inline], [static]`
+
+使用看门狗重启。
+
+重置芯片并使用看门狗功能重新启动。
+
+delay_ms 是重启发生前的毫秒延迟。注意：默认情况下此方法是异步的（除非设置了 NO_RETURN_ON_SUCCESS——见下文），因此方法会返回，重启将在此毫秒数后发生。
+
+flags 字段包含以下值之一：
+
+REBOOT_TYPE_NORMAL - 重启进入正常启动路径。
+
+REBOOT_TYPE_BOOTSEL - 重启进入 BOOTSEL 模式。p0 - 用作活动指示灯的 GPIO 编号（由 p1 中的标志启用）。p1 - 一组标志：0x01：DISABLE_MSD_INTERFACE - 禁用 BOOTSEL USB 驱动器；0x02：DISABLE_PICOBOOT_INTERFACE - 禁用 PICOBOOT 接口；0x10：GPIO_PIN_ACTIVE_LOW - p0 中的 GPIO 低电平有效；0x20：GPIO_PIN_ENABLED - 在指定 GPIO 上启用活动指示灯。
+
+REBOOT_TYPE_RAM_IMAGE - 重启进入 RAM 中的镜像。搜索 RAM 或 XIP RAM 区域中的可运行镜像并执行它。这是拖动 RAM UF2 到 BOOTSEL USB 驱动器时使用的重启类型。p0 - 区域起始地址（字对齐）。p1 - 区域大小（字对齐）。
+
+REBOOT_TYPE_FLASH_UPDATE - REBOOT_TYPE_NORMAL 的变体，用于 flash 更新后使用。这是拖动 flash UF2 到 BOOTSEL USB 驱动器后使用的重启类型。p0 - 已更新 flash 区域的起始地址。如果此地址与分区或插槽的起始地址匹配，则在启动时（有选择时）优先处理该分区或插槽。这种启动类型便于 TBYB 和版本降级。
+
+REBOOT_TYPE_PC_SP - 重启到特定的 PC 和 SP。注意：ARM-NS 变体不允许此操作。p0 - 开始执行的初始程序计数器（PC），Arm 必须设置最低位，RISC-V 必须清除最低位。p1 - 初始堆栈指针（SP）。
+
+所有上述内容都可以通过 OR 加入可选标志：
+
+REBOOT_TO_ARM - 将两个核心切换到 Arm 架构（而不是保持原样）。如果不支持 Arm 架构，调用将以 BOOTROM_ERROR_INVALID_STATE 失败。REBOOT_TO_RISCV - 将两个核心切换到 RISC-V 架构（而不是保持原样）。如果不支持 RISC-V 架构，调用将以 BOOTROM_ERROR_INVALID_STATE 失败。NO_RETURN_ON_SUCCESS - 看门狗硬件是异步的。设置此位强制此方法在重启成功启动时不返回。
+
+**参数**
+
+- `flags`: 重启标志，如上所述
+- `delay_ms`: 重启发生前的毫秒延迟
+- `p0`: 参数 0，取决于标志
+- `p1`: 参数 1，取决于标志
+
+#### rom_reset_usb_boot
+
+`void rom_reset_usb_boot (uint32_t usb_activity_gpio_pin_mask, uint32_t disable_interface_mask)`
+
+将设备重启至 BOOTSEL 模式。
+
+此函数将设备重启进入 BOOTSEL 模式（"usb boot"）。提供了通过 GPIO 连接的 LED 为 USB 大容量存储设备启用"活动指示灯"以及限制暴露的 USB 接口的功能。
+
+**参数**
+
+- `usb_activity_gpio_pin_mask`: 0 表示不使用任何引脚，与冷启动相同。否则，设置单个位指示哪个 GPIO 引脚应设置为输出，并在来自主机的大容量存储活动时拉高。
+- `disable_interface_mask`: 控制暴露接口的值
+
+* 0 启用两个接口（与冷启动相同）
+
+* 1 禁用 USB 大容量存储接口
+
+* 2 禁用 USB PICOBOOT 接口
+
+#### rom_reset_usb_boot_extra
+
+`void rom_reset_usb_boot_extra (int usb_activity_gpio_pin, uint32_t disable_interface_mask, bool usb_activity_gpio_pin_active_low)`
+
+将设备重启至 BOOTSEL 模式。
+
+此函数将设备重启进入 BOOTSEL 模式（"usb boot"）。提供了通过 GPIO 连接的 LED 为 USB 大容量存储设备启用"活动指示灯"以及限制暴露的 USB 接口的功能。
+
+**参数**
+
+- `usb_activity_gpio_pin`: 用作活动引脚的 GPIO 引脚，-1 表示不使用。
+- `disable_interface_mask`: 控制暴露接口的值
+
+* 0 启用两个接口（与冷启动相同）
+
+* 1 禁用 USB 大容量存储接口
+
+* 2 禁用 USB PICOBOOT 接口
+
+- `usb_activity_gpio_pin_active_low`: 活动 GPIO 低电平有效（在 RP2040 上忽略）
+
+#### rom_set_ns_api_permission <span className="chip-tag rp2350">RP2350</span>
+
+`static int rom_set_ns_api_permission (uint ns_api_num, bool allowed) [inline], [static]`
+
+设置 NS API 权限。
+
+允许或禁止特定的 NS API（注意所有 NS API 默认禁用）。
+
+ns_api_num 配置对给定 API 的 ARM-NS 访问。当 NS API 被禁用时，调用它将返回 BOOTROM_ERROR_NOT_PERMITTED。
+
+::::note
+重置后所有权限默认为禁止。
+::::
+
+**参数**
+
+- `ns_api_num`: NS API 编号
+- `allowed`: 权限
+
+#### rom_set_rom_callback <span className="chip-tag rp2350">RP2350</span>
+
+`static intptr_t rom_set_rom_callback (uint callback_num, bootrom_api_callback_generic_t funcptr) [inline], [static]`
+
+设置 ROM 回调函数。
+
+当前唯一支持的 callback_number 为 0，用于设置 secure_call API 的回调。
+
+回调指针为 0 表示删除回调函数；正回调指针（RP2350 上所有有效函数指针均为正）设置回调函数；但可以传递负回调指针以获取旧值而不设置新值。
+
+成功时，返回 >= 0（函数进入时函数指针的现有值）。
+
+**参数**
+
+- `callback_num`: 要设置的回调编号——RP2350 上只支持 0
+- `funcptr`: 指向回调函数的指针
+
+#### rom_table_code
+
+`static uint32_t rom_table_code (uint8_t c1, uint8_t c2) [inline], [static]`
+
+根据两个 ASCII 字符返回 bootrom 查找码。
+
+这些代码用于在 bootrom 中查找数据或函数地址。
+
+**参数**
+
+- `c1`: 第一个字符
+- `c2`: 第二个字符
+
+**返回值**
+
+用于 `rom_func_lookup() 或 rom_data_lookup()` 的"代码"
+
+#### rom_validate_ns_buffer <span className="chip-tag rp2350">RP2350</span>
+
+`static void ** rom_validate_ns_buffer (const void **` addr, uint32_t size, uint32_t write, uint32_t * ok) [inline], [static]`
+
+验证 NS 缓冲区。
+
+安全 ARM 代码可使用此实用方法验证从非安全代码传递给它的缓冲区。
+
+write 参数和（输出）结果参数 ok 均为 RCP 布尔值，true 为 0xa500a500，false 为 0x00c300c3。这使得此函数可以被加固，实际上 write 参数必须是这些值之一，否则 RCP 将挂起系统。
+
+成功时，整个缓冲区必须在 XIP_BASE 到 SRAM_END 范围内，并且根据 SAU + NS MPU（基于当前处理器 IPSR 和 NS CONTROL 标志的特权或非特权）必须对非安全调用者可访问。如果通过 ACCESSCTRL 向 NS 授予了访问权限，则 USB RAM 中的缓冲区也允许。
+
+**参数**
+
+- `addr`: 缓冲区地址
+- `size`: 缓冲区大小
+- `write`: RCP 布尔值，true 表示可写
+- `ok`: RCP 布尔值结果
+
+<Normal />

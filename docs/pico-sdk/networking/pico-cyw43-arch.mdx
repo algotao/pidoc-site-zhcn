@@ -1,0 +1,2147 @@
+---
+sidebar_position: 2
+draft: false
+description: 将 CYW43 驱动（用于 Pico W 无线功能）和 lwIP（用于 TCP/IP 协议栈）集成到 SDK 中的架构层。访问 Pico W 板载 LED 也需要此模块。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK cyw43 arch, CYW43, lwIP]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+将 CYW43 驱动（用于 Pico W 无线功能）和 lwIP（用于 TCP/IP 协议栈）集成到 SDK 中的架构层。访问 Pico W 板载 LED 也需要此模块。
+
+### 详细描述
+
+底层 `cyw43_driver` 和 lwIP 协议栈都需要定期维护，并且对于是否可以从多个核心/线程调用有所限制。
+
+`pico_cyw43_arch` 尝试将这些复杂性抽象为几种行为模式：
+
+* *'poll'* - 非多核/IRQ 安全，需要用户在主循环中定期调用 `cyw43_arch_poll`。
+
+* _'thread_safe_background'_ - 多核/线程/任务安全，驱动和 TCP/IP 协议栈的维护在后台自动处理。
+
+* *'freertos'* - 多核/线程/任务安全，使用独立的 FreeRTOS 任务处理 lwIP 和驱动工作。
+
+目前 lwIP 是唯一支持的 TCP/IP 协议栈，但 `pico_cyw43_arch 的设计旨在未来独立于特定的 TCP/IP 协议栈（以及可能的蓝牙协议栈）。因此，lwIP 的集成在基础（pico_cyw43_arch）库中根据 cyw43_driver` 使用的 #define CYW43_LWIP 来处理。
+
+自 Raspberry Pi Pico SDK 1.5.0 版起，`pico_cyw43_arch 库不再直接实现各种行为抽象，这项工作现在由更通用的 pico_async_context 库负责。pico_cyw43_arch 的用户可见行为因此没有改变，但 pico_cyw43_arch 现在只是一个薄封装，负责创建适当的 `async_context 并简单调用以添加 lwIP 或 cyw43_driver 支持。您可以自由地执行上下文创建和添加 lwIP、cyw43_driver 或任何其他未来协议/驱动支持到您的 async_context`，但目前 pico_cyw43_arch 仍提供一些 cyw43_ 专用（即 Pico W）API，用于连接管理、锁定和 GPIO 交互。
+
+连接管理 API 在未来版本中至少可能会移至更通用的库。锁定方法现在由其 `pico_async_context 等价方法支持，这些方法可互换使用（详见 cyw43_arch_lwip_begin、`cyw43_arch_lwip_end 和 cyw43_arch_lwip_check）。
+
+有关创建自己的 `async_context 并添加 cyw43_driver 和 `lwIP 支持的示例，请参阅源文件 cyw43_arch_poll.c`、cyw43_arch_threadsafe_background.c 和 cyw43_arch_freertos.c`。
+
+虽然您可以直接使用 `pico_cyw43_arch` 库并自行指定 CYW43_LWIP（和其他定义），但构建系统还提供了几个其他库，它们为您聚合了定义和其他依赖项：
+
+* **pico_cyw43_arch_lwip_poll** - 使用 RAW lwIP API（`NO_SYS=1` 模式），不进行后台处理或多核/线程安全保证。
+
+用户必须在主循环中定期调用 `cyw43_arch_poll`。
+
+此封装库：
+
+  * 设置 `CYW43_LWIP=1 以在 pico_cyw43_arch 和 `cyw43_driver` 中启用 lwIP 支持。
+
+  * 设置 `PICO_CYW43_ARCH_POLL=1` 以选择轮询行为。
+
+  * 添加 `pico_lwip` 作为依赖项以引入 lwIP。
+
+* **pico_cyw43_arch_lwip_threadsafe_background** - 使用 RAW lwIP API（`NO_SYS=1 模式），具有多核/线程安全性，并在后台自动维护 cyw43_driver` 和 lwIP。
+
+对 `cyw43_driver 高级 API（[cyw43.h]）的调用可以从任一核心或 lwIP 回调中进行，但对 lwIP（非线程安全）的调用（除 lwIP 回调中的调用外）必须用 cyw43_arch_lwip_begin 和 `cyw43_arch_lwip_end` 括起来。在 lwIP 回调中括起来也可以，只是不必要。
+
+lwIP 回调在（低优先级）IRQ 上下文中发生（类似于告警回调），与其他代码交互时需要小心。
+
+此封装库：
+
+  * 设置 `CYW43_LWIP=1 以在 pico_cyw43_arch 和 `cyw43_driver` 中启用 lwIP 支持。
+
+  * 设置 `PICO_CYW43_ARCH_THREADSAFE_BACKGROUND=1` 以选择线程安全/非轮询行为。
+
+  * 添加 pico_lwip 作为依赖项以引入 lwIP。
+
+此库*也可以*在 RP2040 的 FreeRTOS 移植版本下以 `NO_SYS=1 模式的 lwIP 使用（允许您从任意任务调用 cyw43_driver API，以及从 lwIP 回调或任何任务（如果用 `cyw43_arch_lwip_begin 和 cyw43_arch_lwip_end` 括起来的调用）调用 lwIP。同样，在 lwIP 回调中执行操作时应谨慎，因为在 IRQ 上下文中不能调用大多数 FreeRTOS API。除非有充分理由，否则应使用 `pico_cyw43_arch_lwip_sys_freertos 提供的完整 FreeRTOS 集成（NO_SYS=0）。
+
+* **pico_cyw43_arch_lwip_sys_freertos** - 在 OS（`NO_SYS=0）模式下使用完整 lwIP API（包括阻塞套接字），具有多核/任务/线程安全性，并自动维护 cyw43_driver` 和 lwIP 协议栈。
+
+此封装库：
+
+  * 设置 `CYW43_LWIP=1 以在 pico_cyw43_arch 和 `cyw43_driver` 中启用 lwIP 支持。
+
+  * 设置 `PICO_CYW43_ARCH_FREERTOS=1` 以选择 NO_SYS=0 的 lwip/FreeRTOS 集成。
+
+  * 设置 `LWIP_PROVIDE_ERRNO=1` 以提供无 OS 编译所需的错误码。
+
+  * 添加 `pico_lwip` 作为依赖项以引入 lwIP。
+
+  * 从 lwip-contrib 添加 lwIP/FreeRTOS 代码（在 lwIP 的 contrib 目录中）。
+
+对 `cyw43_driver 高级 API（[cyw43.h]）的调用可以从任意任务或 lwIP 回调中进行，但不能从 IRQ 中进行。对 lwIP RAW API（非线程安全）的调用必须用 cyw43_arch_lwip_begin 和 `cyw43_arch_lwip_end` 括起来。在 lwIP 回调中括起来也可以，只是不必要。
+
+此封装库要求您自行将 FreeRTOS 功能链接到应用程序。
+
+* **pico_cyw43_arch_none** - 如果不需要 TCP/IP 协议栈，但希望使用板载 LED。
+
+此封装库：
+
+  * 设置 `CYW43_LWIP=0 以在 pico_cyw43_arch 和 `cyw43_driver` 中禁用 lwIP 支持。
+
+### 模块
+
+`cyw43_driver`<br/>&emsp;Pico W 无线驱动。
+
+### 宏
+
+* `#define cyw43_arch_lwip_check(void) cyw43_thread_lock_check()`
+
+### 函数
+
+- `int cyw43_arch_init (void)`: 初始化 CYW43 架构。
+- `int cyw43_arch_init_with_country (uint32_t country)`: 初始化 CYW43 架构，用于特定国家/地区。
+- `void cyw43_arch_deinit (void)`: 反初始化 CYW43 架构。
+`async_context_t * cyw43_arch_async_context (void)<br/>&emsp;返回 cyw43_arch 代码当前使用的 async_context`。
+
+`void cyw43_arch_set_async_context (async_context_t *context)<br/>&emsp;设置 cyw43_arch_init 要使用的 async_context`。
+
+`async_context_t * cyw43_arch_init_default_async_context (void)<br/>&emsp;为当前 cyw43_arch 类型初始化默认的 async_context`。
+- `void cyw43_arch_poll (void): 执行 `cyw43_driver` 或 TCP/IP 协议栈所需的任何处理。
+- `void cyw43_arch_wait_for_work_until (absolute_time_t until)`: 休眠直到有 cyw43_driver 工作需要处理。
+- `uint32_t cyw43_arch_get_country_code (void)`: 返回用于初始化 cyw43_arch 的国家代码。
+- `void cyw43_arch_enable_sta_mode (void)`: 启用 Wi-Fi STA（站点）模式。
+- `void cyw43_arch_disable_sta_mode (void)`: 禁用 Wi-Fi STA（站点）模式。
+`void cyw43_arch_enable_ap_mode (const char **ssid, const char **password, uint32_t auth)`<br/>&emsp;启用 Wi-Fi AP（接入点）模式。
+- `void cyw43_arch_disable_ap_mode (void)`: 禁用 Wi-Fi AP（接入点）模式。
+`int cyw43_arch_wifi_connect_blocking (const char **ssid, const char **pw, uint32_t auth)`<br/>&emsp;尝试连接到无线接入点，阻塞直到加入网络或检测到失败。
+
+`int cyw43_arch_wifi_connect_bssid_blocking (const char **ssid, const uint8_t **bssid, const char *pw, uint32_t auth)`<br/>&emsp;尝试连接到由 SSID 和 BSSID 指定的无线接入点，阻塞直到加入网络或检测到失败。
+
+`int cyw43_arch_wifi_connect_timeout_ms (const char **ssid, const char **pw, uint32_t auth, uint32_t timeout)`<br/>&emsp;尝试连接到无线接入点，阻塞直到加入网络、检测到失败或超时。
+
+`int cyw43_arch_wifi_connect_bssid_timeout_ms (const char **ssid, const uint8_t **bssid, const char *pw, uint32_t auth, uint32_t timeout)`<br/>&emsp;尝试连接到由 SSID 和 BSSID 指定的无线接入点，阻塞直到加入网络、检测到失败或超时。
+
+`int cyw43_arch_wifi_connect_async (const char **ssid, const char **pw, uint32_t auth)`<br/>&emsp;开始尝试连接到无线接入点。
+
+`int cyw43_arch_wifi_connect_bssid_async (const char **ssid, const uint8_t **bssid, const char *pw, uint32_t auth)`<br/>&emsp;开始尝试连接到由 SSID 和 BSSID 指定的无线接入点。
+- `void cyw43_arch_gpio_put (uint wl_gpio, bool value)`: 将无线芯片上的 GPIO 引脚设置为指定值。
+- `bool cyw43_arch_gpio_get (uint wl_gpio)`: 读取无线芯片上 GPIO 引脚的值。
+- `static void cyw43_arch_lwip_begin (void)`: 获取调用 lwIP 所需的锁。
+- `static void cyw43_arch_lwip_end (void)`: 释放调用 lwIP 所需的锁。
+`static int cyw43_arch_lwip_protect (int(**func)(void **param), void *param)`<br/>&emsp;以持有锁的方式调用函数。
+
+### 宏定义文档
+
+#### cyw43_arch_lwip_check
+
+`#define cyw43_arch_lwip_check(void) cyw43_thread_lock_check()`
+
+检查调用者是否持有调用 lwIP 所需的锁。
+
+lwIP API 非线程安全。应用 `cyw43_arch_lwip_begin` 和此方法将 lwIP API 的调用括起来。注意，从 lwIP 回调中回调 lwIP API 时，这些调用不是必须的（但无害）。
+
+如果不满足上述条件（即调用 lwIP API 不安全），此方法将在调试模式下断言。
+
+自 SDK 1.5.0 版起，等同于在与 cyw43_arch 和 lwIP 关联的 `async_context 上调用 async_context_lock_check`。
+
+**参见**
+
+`cyw43_arch_lwip_begin`
+
+`cyw43_arch_lwip_protect`
+
+
+`cyw43_arch_async_context`
+
+### 函数文档
+
+#### cyw43_arch_async_context
+
+`async_context_t * cyw43_arch_async_context (void)`
+
+返回 cyw43_arch 代码当前使用的 `async_context`。
+
+**返回值**
+
+`async_context`。
+
+#### cyw43_arch_deinit
+
+`void cyw43_arch_deinit (void)`
+
+反初始化 CYW43 架构。
+
+此方法反初始化 `cyw43_driver 代码并反初始化 lwIP 协议栈（如果在构建时启用）。注意，此方法应始终从与 cyw43_arch_init` 相同的核心（或 RTOS 任务，取决于环境）调用。
+
+此外，如果 cyw43_arch 使用其自己的 `async_context` 实例，则该实例也会被反初始化。
+
+#### cyw43_arch_disable_ap_mode
+
+`void cyw43_arch_disable_ap_mode (void)`
+
+禁用 Wi-Fi AP（接入点）模式。
+
+禁用*接入点*模式下的 Wi-Fi。
+
+#### cyw43_arch_disable_sta_mode
+
+`void cyw43_arch_disable_sta_mode (void)`
+
+禁用 Wi-Fi STA（站点）模式。
+
+禁用*站点*模式下的 Wi-Fi，断开所有活动连接。您应随后通过调用 `cyw43_wifi_link_status` 检查状态。
+
+#### cyw43_arch_enable_ap_mode
+
+`void cyw43_arch_enable_ap_mode (const char ** ssid, const char ** password, uint32_t auth)`
+
+启用 Wi-Fi AP（接入点）模式。
+
+在*接入点*模式下启用 Wi-Fi，使其他 Wi-Fi 客户端可以连接到此设备。
+
+**参数**
+
+- `ssid`: 接入点名称
+- `password`: 使用的密码，无密码时传 NULL。
+- `auth`: 启用密码时使用的授权类型。值为 [CYW43_AUTH_WPA_TKIP_PSK]、[CYW43_AUTH_WPA2_AES_PSK] 或 [CYW43_AUTH_WPA2_MIXED_PSK]（参见 [CYW43_AUTH_]）。
+
+#### cyw43_arch_enable_sta_mode
+
+`void cyw43_arch_enable_sta_mode (void)`
+
+启用 Wi-Fi STA（站点）模式。
+
+在*站点*模式下启用 Wi-Fi，使其可以连接到其他 Wi-Fi 接入点。
+
+#### cyw43_arch_get_country_code
+
+`uint32_t cyw43_arch_get_country_code (void)`
+
+返回用于初始化 cyw43_arch 的国家代码。
+
+**返回值**
+
+国家代码（参见 [CYW43_COUNTRY_]）
+
+#### cyw43_arch_gpio_get
+
+`bool cyw43_arch_gpio_get (uint wl_gpio)`
+
+读取无线芯片上 GPIO 引脚的值。
+
+此方法不检查设置 GPIO 时的错误。如果希望检查错误，可改用底层 `cyw43_gpio_get`。
+
+**参数**
+
+- `wl_gpio`: 无线芯片上的 GPIO 编号
+
+**返回值**
+
+GPIO 为高电平时返回 true，否则返回 false
+
+#### cyw43_arch_gpio_put
+
+`void cyw43_arch_gpio_put (uint wl_gpio, bool value)`
+
+将无线芯片上的 GPIO 引脚设置为指定值。
+
+此方法不检查设置 GPIO 时的错误。如果希望检查错误，可改用底层 `cyw43_gpio_set`。
+
+**参数**
+
+- `wl_gpio`: 无线芯片上的 GPIO 编号
+- `value`: true 设置 GPIO 为高，false 清除为低。
+
+#### cyw43_arch_init
+
+`int cyw43_arch_init (void)`
+
+初始化 CYW43 架构。
+
+此方法初始化 `cyw43_driver 代码并初始化 lwIP 协议栈（如果在构建时启用）。使用任何其他 pico_cyw43_arch、`cyw43_driver` 或 lwIP 函数之前必须调用此方法。
+
+此方法使用国家代码 `PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE（默认为 CYW43_COUNTRY_WORLDWIDE）初始化无线功能。全球设置可能无法提供最佳性能；考虑将 PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE 设置为其他值或调用 cyw43_arch_init_with_country`。
+
+默认情况下，此方法通过调用 `cyw43_arch_init_default_async_context 初始化 cyw43_arch 代码自己的 async_context，但用户可以通过在调用此方法前调用 `cyw43_arch_set_async_context() 来指定使用自己的 async_context`。
+
+**返回值**
+
+初始化成功返回 0，否则返回错误码，参见 `pico_error_codes`
+
+#### cyw43_arch_init_default_async_context
+
+`async_context_t * cyw43_arch_init_default_async_context (void)`
+
+为当前 cyw43_arch 类型初始化默认的 `async_context`。
+
+此方法初始化并返回指向与 cyw43_arch 关联的静态 `async_context 的指针。如果未通过 cyw43_arch_set_async_context 设置不同的 `async_context，cyw43_arch_init` 会自动调用此方法。
+
+**返回值**
+
+上下文，初始化失败则返回 NULL。
+
+#### cyw43_arch_init_with_country
+
+`int cyw43_arch_init_with_country (uint32_t country)`
+
+初始化 CYW43 架构，用于特定国家/地区。
+
+此方法初始化 `cyw43_driver 代码并初始化 lwIP 协议栈（如果在构建时启用）。使用任何其他 pico_cyw43_arch、`cyw43_driver` 或 lwIP 函数之前必须调用此方法。
+
+默认情况下，此方法通过调用 `cyw43_arch_init_default_async_context 初始化 cyw43_arch 代码自己的 async_context，但用户可以通过在调用此方法前调用 `cyw43_arch_set_async_context() 来指定使用自己的 async_context`。
+
+**参数**
+
+- `country`: 要使用的国家代码（参见 [CYW43_COUNTRY_]）
+
+**返回值**
+
+初始化成功返回 0，否则返回错误码，参见 `pico_error_codes`
+
+#### cyw43_arch_lwip_begin
+
+`static void cyw43_arch_lwip_begin (void) [inline], [static]`
+
+获取调用 lwIP 所需的锁。
+
+lwIP API 非线程安全。应用此方法和 `cyw43_arch_lwip_end` 将 lwIP API 的调用括起来。注意，从 lwIP 回调中回调 lwIP API 时，这些调用不是必须的（但无害）。如果仅使用单核轮询（pico_cyw43_arch_poll），这些调用是空操作，但在必要时调用它们仍是良好实践。
+
+自 SDK 1.5.0 版起，等同于在与 cyw43_arch 和 lwIP 关联的 `async_context 上调用 async_context_acquire_lock_blocking`。
+
+**参见**
+
+`cyw43_arch_lwip_end`
+
+`cyw43_arch_lwip_protect`
+
+
+`cyw43_arch_async_context`
+
+#### cyw43_arch_lwip_end
+
+`static void cyw43_arch_lwip_end (void) [inline], [static]`
+
+释放调用 lwIP 所需的锁。
+
+lwIP API 非线程安全。应用 `cyw43_arch_lwip_begin` 和此方法将 lwIP API 的调用括起来。注意，从 lwIP 回调中回调 lwIP API 时，这些调用不是必须的（但无害）。如果仅使用单核轮询（pico_cyw43_arch_poll），这些调用是空操作，但在必要时调用它们仍是良好实践。
+
+自 SDK 1.5.0 版起，等同于在与 cyw43_arch 和 lwIP 关联的 `async_context 上调用 async_context_release_lock`。
+
+**参见**
+
+`cyw43_arch_lwip_begin`
+
+`cyw43_arch_lwip_protect`
+
+
+`cyw43_arch_async_context`
+
+#### cyw43_arch_lwip_protect
+
+`static int cyw43_arch_lwip_protect (int(**)(void **`param) func, void * param) [inline], [static]`
+
+以持有调用 lwIP 所需的锁的方式调用函数。
+
+lwIP API 非线程安全。您可以使用此方法将函数与调用 lwIP API 所需的任何锁定一起封装。如果仅使用单核轮询（pico_cyw43_arch_poll），则不需要锁，但仍建议在需要时使用此函数。
+
+**参数**
+
+- `func`: 在持有所需锁的情况下调用的函数
+- `param: 传递给 func` 的参数
+
+**返回值**
+
+`func` 的返回值
+
+**参见**
+
+`cyw43_arch_lwip_begin`
+
+`cyw43_arch_lwip_end`
+
+#### cyw43_arch_poll
+
+`void cyw43_arch_poll (void)`
+
+执行 `cyw43_driver` 或 TCP/IP 协议栈所需的任何处理。
+
+使用*轮询*风格的 `pico_cyw43_arch（例如 pico_cyw43_arch_lwip_poll）时，此方法必须在主循环中定期调用。其他风格也可调用，但不是必须的。
+
+#### cyw43_arch_set_async_context
+
+`void cyw43_arch_set_async_context (async_context_t * context)`
+
+设置 cyw43_arch_init 要使用的 `async_context`。
+
+如果希望使用自定义 `async_context` 实例，必须在调用 cyw43_arch_init 或 cyw43_arch_init_with_country 之前调用此方法。
+
+**参数**
+
+- `context: 要使用的 async_context`
+
+#### cyw43_arch_wait_for_work_until
+
+`void cyw43_arch_wait_for_work_until (absolute_time_t until)`
+
+休眠直到有 cyw43_driver 工作需要处理。
+
+此方法可由等待 cyw43_driver 事件且没有其他工作要做、但希望在不阻塞与 cyw43_driver 相关的后台工作的情况下休眠的代码调用。
+
+**参数**
+
+- `until`: 如果没有工作要做，等待到此时间。
+
+#### cyw43_arch_wifi_connect_async
+
+`int cyw43_arch_wifi_connect_async (const char ** ssid, const char ** pw, uint32_t auth)`
+
+开始尝试连接到无线接入点。
+
+此方法告知 CYW43 驱动开始连接到接入点。您应随后通过调用 `cyw43_wifi_link_status` 检查状态。
+
+**参数**
+
+- `ssid`: 要连接的网络名称
+- `pw`: 网络密码，无需密码时传 NULL
+- `auth`: 启用密码时使用的授权类型。值为 [CYW43_AUTH_WPA_TKIP_PSK]、[CYW43_AUTH_WPA2_AES_PSK] 或 [CYW43_AUTH_WPA2_MIXED_PSK]（参见 [CYW43_AUTH_]）。
+
+**返回值**
+
+扫描成功启动返回 0，否则返回错误码，参见 `pico_error_codes`
+
+#### cyw43_arch_wifi_connect_blocking
+
+`int cyw43_arch_wifi_connect_blocking (const char ** ssid, const char ** pw, uint32_t auth)`
+
+尝试连接到无线接入点，阻塞直到加入网络或检测到失败。
+
+**参数**
+
+- `ssid`: 要连接的网络名称
+- `pw`: 网络密码，无需密码时传 NULL
+- `auth`: 启用密码时使用的授权类型。值为 [CYW43_AUTH_WPA_TKIP_PSK]、[CYW43_AUTH_WPA2_AES_PSK] 或 [CYW43_AUTH_WPA2_MIXED_PSK]（参见 [CYW43_AUTH_]）。
+
+**返回值**
+
+连接成功返回 0。Wi-Fi 密码错误返回 PICO_ERROR_BADAUTH。其他原因连接失败返回 PICO_ERROR_CONNECT_FAILED。
+
+#### cyw43_arch_wifi_connect_bssid_async
+
+`int cyw43_arch_wifi_connect_bssid_async (const char ** ssid, const uint8_t **` bssid, const char * pw, uint32_t auth)`
+
+开始尝试连接到由 SSID 和 BSSID 指定的无线接入点。
+
+此方法告知 CYW43 驱动开始连接到接入点。您应随后通过调用 `cyw43_wifi_link_status` 检查状态。
+
+**参数**
+
+- `ssid`: 要连接的网络名称
+- `bssid`: 要连接的网络 BSSID，忽略时传 NULL
+- `pw`: 网络密码，无需密码时传 NULL
+- `auth`: 启用密码时使用的授权类型。值为 [CYW43_AUTH_WPA_TKIP_PSK]、[CYW43_AUTH_WPA2_AES_PSK] 或 [CYW43_AUTH_WPA2_MIXED_PSK]（参见 [CYW43_AUTH_]）。
+
+**返回值**
+
+扫描成功启动返回 0，否则返回错误码，参见 `pico_error_codes`
+
+#### cyw43_arch_wifi_connect_bssid_blocking
+
+`int cyw43_arch_wifi_connect_bssid_blocking (const char ** ssid, const uint8_t **` bssid, const char * pw, uint32_t auth)`
+
+尝试连接到由 SSID 和 BSSID 指定的无线接入点，阻塞直到加入网络或检测到失败。
+
+**参数**
+
+- `ssid`: 要连接的网络名称
+- `bssid`: 要连接的网络 BSSID，忽略时传 NULL
+- `pw`: 网络密码，无需密码时传 NULL
+- `auth`: 启用密码时使用的授权类型。值为 [CYW43_AUTH_WPA_TKIP_PSK]、[CYW43_AUTH_WPA2_AES_PSK] 或 [CYW43_AUTH_WPA2_MIXED_PSK]（参见 [CYW43_AUTH_]）。
+
+**返回值**
+
+连接成功返回 0。Wi-Fi 密码错误返回 PICO_ERROR_BADAUTH。其他原因连接失败返回 PICO_ERROR_CONNECT_FAILED。
+
+#### cyw43_arch_wifi_connect_bssid_timeout_ms
+
+`int cyw43_arch_wifi_connect_bssid_timeout_ms (const char ** ssid, const uint8_t **` bssid, const char * pw, uint32_t auth, uint32_t timeout)`
+
+尝试连接到由 SSID 和 BSSID 指定的无线接入点，阻塞直到加入网络、检测到失败或超时。
+
+**参数**
+
+- `ssid`: 要连接的网络名称
+- `bssid`: 要连接的网络 BSSID，忽略时传 NULL
+- `pw`: 网络密码，无需密码时传 NULL
+- `auth`: 启用密码时使用的授权类型。值为 [CYW43_AUTH_WPA_TKIP_PSK]、[CYW43_AUTH_WPA2_AES_PSK] 或 [CYW43_AUTH_WPA2_MIXED_PSK]（参见 [CYW43_AUTH_]）。
+- `timeout`: 在放弃之前等待连接成功的毫秒数
+
+**返回值**
+
+连接成功返回 0。达到超时前未成功连接返回 PICO_ERROR_TIMEOUT。Wi-Fi 密码错误返回 PICO_ERROR_BADAUTH。其他原因连接失败返回 PICO_ERROR_CONNECT_FAILED。
+
+#### cyw43_arch_wifi_connect_timeout_ms
+
+`int cyw43_arch_wifi_connect_timeout_ms (const char ** ssid, const char ** pw, uint32_t auth, uint32_t timeout)`
+
+尝试连接到无线接入点，阻塞直到加入网络、检测到失败或超时。
+
+**参数**
+
+- `ssid`: 要连接的网络名称
+- `pw`: 网络密码，无需密码时传 NULL
+- `auth`: 启用密码时使用的授权类型。值为 [CYW43_AUTH_WPA_TKIP_PSK]、[CYW43_AUTH_WPA2_AES_PSK] 或 [CYW43_AUTH_WPA2_MIXED_PSK]（参见 [CYW43_AUTH_]）。
+- `timeout`: 在放弃之前等待连接成功的毫秒数
+
+**返回值**
+
+连接成功返回 0。达到超时前未成功连接返回 PICO_ERROR_TIMEOUT。Wi-Fi 密码错误返回 PICO_ERROR_BADAUTH。其他原因连接失败返回 PICO_ERROR_CONNECT_FAILED。
+
+### cyw43_driver
+
+Pico W 无线驱动。
+
+#### 模块
+
+`cyw43_ll`<br/>&emsp;底层 CYW43 驱动接口。
+
+#### 宏
+
+* `#define [CYW43_DEFAULT_PM] (CYW43_PERFORMANCE_PM)`
+* `#define [CYW43_NONE_PM] (cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 10, 0, 0, 0))`
+* `#define [CYW43_AGGRESSIVE_PM] (cyw43_pm_value(CYW43_PM1_POWERSAVE_MODE, 10, 0, 0, 0))`
+* `#define [CYW43_PERFORMANCE_PM] (cyw43_pm_value(CYW43_PM2_POWERSAVE_MODE, 200, 1, 1, 10))`
+* `#define [CYW43_COUNTRY](A, B, REV) \((unsigned char)(A) | ((unsigned char)(B) 
+
+#### 类型定义
+
+- `typedef struct _cyw43_t cyw43_t`
+
+#### 函数
+
+`void cyw43_init (cyw43_t *self)`<br/>&emsp;初始化驱动。
+
+`void cyw43_deinit (cyw43_t *self)`<br/>&emsp;关闭驱动。
+
+`int cyw43_ioctl (cyw43_t **self, uint32_t cmd, size_t len, uint8_t **buf, uint32_t iface)`<br/>&emsp;向 cyw43 发送 ioctl 命令。
+
+`int cyw43_send_ethernet (cyw43_t **self, int itf, size_t len, const void **buf, bool is_pbuf)`<br/>&emsp;发送原始以太网数据包。
+
+`int cyw43_wifi_pm (cyw43_t *self, uint32_t pm)`<br/>&emsp;设置 Wi-Fi 电源管理模式。
+
+`int cyw43_wifi_get_pm (cyw43_t **self, uint32_t **pm)`<br/>&emsp;获取 Wi-Fi 电源管理模式。
+
+`int cyw43_wifi_link_status (cyw43_t *self, int itf)`<br/>&emsp;获取 Wi-Fi 链路状态。
+
+`void cyw43_wifi_set_up (cyw43_t *self, int itf, bool up, uint32_t country)`<br/>&emsp;设置并初始化 Wi-Fi。
+
+`int cyw43_wifi_get_mac (cyw43_t *self, int itf, uint8_t mac[6])`<br/>&emsp;获取设备的 MAC 地址。
+
+`int cyw43_wifi_update_multicast_filter (cyw43_t **self, uint8_t **addr, bool add)`<br/>&emsp;添加/删除多播组地址。
+
+`int cyw43_wifi_scan (cyw43_t **self, cyw43_wifi_scan_options_t **opts, void **env, int(**result_cb)(void **, const cyw43_ev_scan_result_t **))`<br/>&emsp;执行 Wi-Fi 网络扫描。
+
+`static bool cyw43_wifi_scan_active (cyw43_t *self)`<br/>&emsp;判断 Wi-Fi 扫描是否正在进行。
+
+`int cyw43_wifi_join (cyw43_t **self, size_t ssid_len, const uint8_t **ssid, size_t key_len, const uint8_t **key, uint32_t auth_type, const uint8_t **bssid, uint32_t channel)`<br/>&emsp;连接或*加入* Wi-Fi 网络。
+
+`int cyw43_wifi_leave (cyw43_t *self, int itf)`<br/>&emsp;从 Wi-Fi 网络解除关联。
+
+`int cyw43_wifi_get_rssi (cyw43_t **self, int32_t **rssi)`<br/>&emsp;获取 Wi-Fi 网络的信号强度（RSSI）。
+
+`int cyw43_wifi_get_bssid (cyw43_t *self, uint8_t bssid[6])`<br/>&emsp;获取已连接 Wi-Fi 网络的 BSSID。
+
+`static void cyw43_wifi_ap_get_ssid (cyw43_t **self, size_t **len, const uint8_t ****buf)`<br/>&emsp;获取接入点的 SSID。
+
+`static uint32_t cyw43_wifi_ap_get_auth (cyw43_t *self)`<br/>&emsp;获取 AP 模式下使用的安全授权方式。
+
+`static void cyw43_wifi_ap_set_channel (cyw43_t *self, uint32_t channel)`<br/>&emsp;设置接入点使用的信道。
+
+`static void cyw43_wifi_ap_set_ssid (cyw43_t **self, size_t len, const uint8_t **buf)`<br/>&emsp;设置接入点的 SSID。
+
+`static void cyw43_wifi_ap_set_password (cyw43_t **self, size_t len, const uint8_t **buf)`<br/>&emsp;设置 Wi-Fi 接入点的密码。
+
+`static void cyw43_wifi_ap_set_auth (cyw43_t *self, uint32_t auth)`<br/>&emsp;设置 AP 模式下使用的安全授权方式。
+
+`void cyw43_wifi_ap_get_max_stas (cyw43_t **self, int **max_stas)`<br/>&emsp;获取可与 Wi-Fi 接入点关联的设备（STA）最大数量。
+
+`void cyw43_wifi_ap_get_stas (cyw43_t **self, int **num_stas, uint8_t *macs)`<br/>&emsp;获取已与 Wi-Fi 接入点关联的设备（STA）数量。
+
+`static bool cyw43_is_initialized (cyw43_t *self)`<br/>&emsp;判断 cyw43 驱动是否已初始化。
+
+`void cyw43_cb_tcpip_init (cyw43_t *self, int itf)`<br/>&emsp;初始化 IP 协议栈。
+
+`void cyw43_cb_tcpip_deinit (cyw43_t *self, int itf)`<br/>&emsp;反初始化 IP 协议栈。
+
+`void cyw43_cb_tcpip_set_link_up (cyw43_t *self, int itf)`<br/>&emsp;通知 IP 协议栈链路已连通。
+
+`void cyw43_cb_tcpip_set_link_down (cyw43_t *self, int itf)`<br/>&emsp;通知 IP 协议栈链路已断开。
+
+`int cyw43_tcpip_link_status (cyw43_t *self, int itf)`<br/>&emsp;获取链路状态。
+
+`int cyw43_gpio_set (cyw43_t *self, int gpio, bool val)`<br/>&emsp;设置 cyw43 GPIO 的值。
+
+`int cyw43_gpio_get (cyw43_t **self, int gpio, bool **val)`<br/>&emsp;获取 cyw43 GPIO 的值。
+- `static uint32_t cyw43_pm_value (uint8_t pm_mode, uint16_t pm2_sleep_ret_ms, uint8_t li_beacon_period, uint8_t li_dtim_period, uint8_t li_assoc)`: 返回要传递给 cyw43_wifi_pm 的电源管理值。
+
+#### 变量
+
+- `cyw43_t cyw43_state`
+`void(* cyw43_poll)(void)`
+- `uint32_t cyw43_sleep`
+
+#### CYW43 驱动版本组件
+
+CYW43 驱动的当前版本，以主版本号/次版本号/微版本号形式表示。
+
+**CYW43_VERSION_MAJOR**
+
+`#define CYW43_VERSION_MAJOR 1`
+**CYW43_VERSION_MINOR**
+
+`#define CYW43_VERSION_MINOR 1`
+**CYW43_VERSION_MICRO**
+
+`#define CYW43_VERSION_MICRO 0`
+
+#### CYW43 驱动版本
+
+CYW43 驱动的组合版本（32 位整数）。
+
+**CYW43_VERSION**
+
+`#define CYW43_VERSION (CYW43_VERSION_MAJOR
+
+#### 追踪标志
+
+**CYW43_TRACE_ASYNC_EV**
+
+`#define CYW43_TRACE_ASYNC_EV (0x0001)`
+**CYW43_TRACE_ETH_TX**
+
+`#define CYW43_TRACE_ETH_TX (0x0002)`
+**CYW43_TRACE_ETH_RX**
+
+`#define CYW43_TRACE_ETH_RX (0x0004)`
+**CYW43_TRACE_ETH_FULL**
+
+`#define CYW43_TRACE_ETH_FULL (0x0008)`
+**CYW43_TRACE_MAC**
+
+`#define CYW43_TRACE_MAC (0x0010)`
+
+#### 链路状态
+
+**参见**
+
+status_name() 用于获取状态的用户可读名称（用于调试）
+
+`cyw43_wifi_link_status()` 获取 Wi-Fi 状态
+
+`cyw43_tcpip_link_status()` 获取整体链路状态
+
+**CYW43_LINK_DOWN**
+
+`#define CYW43_LINK_DOWN (0)`
+
+链路已断开。
+**CYW43_LINK_JOIN**
+
+`#define CYW43_LINK_JOIN (1)`
+
+已连接到 Wi-Fi。
+**CYW43_LINK_NOIP**
+
+`#define CYW43_LINK_NOIP (2)`
+
+已连接到 Wi-Fi，但无 IP 地址。
+**CYW43_LINK_UP**
+
+`#define CYW43_LINK_UP (3)`
+
+已连接到 Wi-Fi 并具有 IP 地址。
+**CYW43_LINK_FAIL**
+
+`#define CYW43_LINK_FAIL (-1)`
+
+连接失败。
+**CYW43_LINK_NONET**
+
+`#define CYW43_LINK_NONET (-2)`
+
+未找到匹配的 SSID（可能超出范围或已关闭）。
+**CYW43_LINK_BADAUTH**
+
+`#define CYW43_LINK_BADAUTH (-3)`
+
+认证失败。
+
+#### 国家代码
+
+**CYW43_COUNTRY_WORLDWIDE**
+
+`#define CYW43_COUNTRY_WORLDWIDE CYW43_COUNTRY('X', 'X', 0)`
+**CYW43_COUNTRY_AUSTRALIA**
+
+`#define CYW43_COUNTRY_AUSTRALIA CYW43_COUNTRY('A', 'U', 0)`
+**CYW43_COUNTRY_AUSTRIA**
+
+`#define CYW43_COUNTRY_AUSTRIA CYW43_COUNTRY('A', 'T', 0)`
+**CYW43_COUNTRY_BELGIUM**
+
+`#define CYW43_COUNTRY_BELGIUM CYW43_COUNTRY('B', 'E', 0)`
+**CYW43_COUNTRY_BRAZIL**
+
+`#define CYW43_COUNTRY_BRAZIL CYW43_COUNTRY('B', 'R', 0)`
+**CYW43_COUNTRY_CANADA**
+
+`#define CYW43_COUNTRY_CANADA CYW43_COUNTRY('C', 'A', 0)`
+**CYW43_COUNTRY_CHILE**
+
+`#define CYW43_COUNTRY_CHILE CYW43_COUNTRY('C', 'L', 0)`
+**CYW43_COUNTRY_CHINA**
+
+`#define CYW43_COUNTRY_CHINA CYW43_COUNTRY('C', 'N', 0)`
+**CYW43_COUNTRY_COLOMBIA**
+
+`#define CYW43_COUNTRY_COLOMBIA CYW43_COUNTRY('C', 'O', 0)`
+**CYW43_COUNTRY_CZECH_REPUBLIC**
+
+`#define CYW43_COUNTRY_CZECH_REPUBLIC CYW43_COUNTRY('C', 'Z', 0)`
+**CYW43_COUNTRY_DENMARK**
+
+`#define CYW43_COUNTRY_DENMARK CYW43_COUNTRY('D', 'K', 0)`
+**CYW43_COUNTRY_ESTONIA**
+
+`#define CYW43_COUNTRY_ESTONIA CYW43_COUNTRY('E', 'E', 0)`
+**CYW43_COUNTRY_FINLAND**
+
+`#define CYW43_COUNTRY_FINLAND CYW43_COUNTRY('F', 'I', 0)`
+**CYW43_COUNTRY_FRANCE**
+
+`#define CYW43_COUNTRY_FRANCE CYW43_COUNTRY('F', 'R', 0)`
+**CYW43_COUNTRY_GERMANY**
+
+`#define CYW43_COUNTRY_GERMANY CYW43_COUNTRY('D', 'E', 0)`
+**CYW43_COUNTRY_GREECE**
+
+`#define CYW43_COUNTRY_GREECE CYW43_COUNTRY('G', 'R', 0)`
+**CYW43_COUNTRY_HONG_KONG**
+
+`#define CYW43_COUNTRY_HONG_KONG CYW43_COUNTRY('H', 'K', 0)`
+**CYW43_COUNTRY_HUNGARY**
+
+`#define CYW43_COUNTRY_HUNGARY CYW43_COUNTRY('H', 'U', 0)`
+**CYW43_COUNTRY_ICELAND**
+
+`#define CYW43_COUNTRY_ICELAND CYW43_COUNTRY('I', 'S', 0)`
+**CYW43_COUNTRY_INDIA**
+
+`#define CYW43_COUNTRY_INDIA CYW43_COUNTRY('I', 'N', 0)`
+**CYW43_COUNTRY_ISRAEL**
+
+`#define CYW43_COUNTRY_ISRAEL CYW43_COUNTRY('I', 'L', 0)`
+**CYW43_COUNTRY_ITALY**
+
+`#define CYW43_COUNTRY_ITALY CYW43_COUNTRY('I', 'T', 0)`
+**CYW43_COUNTRY_JAPAN**
+
+`#define CYW43_COUNTRY_JAPAN CYW43_COUNTRY('J', 'P', 0)`
+**CYW43_COUNTRY_KENYA**
+
+`#define CYW43_COUNTRY_KENYA CYW43_COUNTRY('K', 'E', 0)`
+**CYW43_COUNTRY_LATVIA**
+
+`#define CYW43_COUNTRY_LATVIA CYW43_COUNTRY('L', 'V', 0)`
+**CYW43_COUNTRY_LIECHTENSTEIN**
+
+`#define CYW43_COUNTRY_LIECHTENSTEIN CYW43_COUNTRY('L', 'I', 0)`
+**CYW43_COUNTRY_LITHUANIA**
+
+`#define CYW43_COUNTRY_LITHUANIA CYW43_COUNTRY('L', 'T', 0)`
+**CYW43_COUNTRY_LUXEMBOURG**
+
+`#define CYW43_COUNTRY_LUXEMBOURG CYW43_COUNTRY('L', 'U', 0)`
+**CYW43_COUNTRY_MALAYSIA**
+
+`#define CYW43_COUNTRY_MALAYSIA CYW43_COUNTRY('M', 'Y', 0)`
+**CYW43_COUNTRY_MALTA**
+
+`#define CYW43_COUNTRY_MALTA CYW43_COUNTRY('M', 'T', 0)`
+**CYW43_COUNTRY_MEXICO**
+
+`#define CYW43_COUNTRY_MEXICO CYW43_COUNTRY('M', 'X', 0)`
+**CYW43_COUNTRY_NETHERLANDS**
+
+`#define CYW43_COUNTRY_NETHERLANDS CYW43_COUNTRY('N', 'L', 0)`
+**CYW43_COUNTRY_NEW_ZEALAND**
+
+`#define CYW43_COUNTRY_NEW_ZEALAND CYW43_COUNTRY('N', 'Z', 0)`
+**CYW43_COUNTRY_NIGERIA**
+
+`#define CYW43_COUNTRY_NIGERIA CYW43_COUNTRY('N', 'G', 0)`
+**CYW43_COUNTRY_NORWAY**
+
+`#define CYW43_COUNTRY_NORWAY CYW43_COUNTRY('N', 'O', 0)`
+**CYW43_COUNTRY_PERU**
+
+`#define CYW43_COUNTRY_PERU CYW43_COUNTRY('P', 'E', 0)`
+**CYW43_COUNTRY_PHILIPPINES**
+
+`#define CYW43_COUNTRY_PHILIPPINES CYW43_COUNTRY('P', 'H', 0)`
+**CYW43_COUNTRY_POLAND**
+
+`#define CYW43_COUNTRY_POLAND CYW43_COUNTRY('P', 'L', 0)`
+**CYW43_COUNTRY_PORTUGAL**
+
+`#define CYW43_COUNTRY_PORTUGAL CYW43_COUNTRY('P', 'T', 0)`
+**CYW43_COUNTRY_SINGAPORE**
+
+`#define CYW43_COUNTRY_SINGAPORE CYW43_COUNTRY('S', 'G', 0)`
+**CYW43_COUNTRY_SLOVAKIA**
+
+`#define CYW43_COUNTRY_SLOVAKIA CYW43_COUNTRY('S', 'K', 0)`
+**CYW43_COUNTRY_SLOVENIA**
+
+`#define CYW43_COUNTRY_SLOVENIA CYW43_COUNTRY('S', 'I', 0)`
+**CYW43_COUNTRY_SOUTH_AFRICA**
+
+`#define CYW43_COUNTRY_SOUTH_AFRICA CYW43_COUNTRY('Z', 'A', 0)`
+**CYW43_COUNTRY_SOUTH_KOREA**
+
+`#define CYW43_COUNTRY_SOUTH_KOREA CYW43_COUNTRY('K', 'R', 0)`
+**CYW43_COUNTRY_SPAIN**
+
+`#define CYW43_COUNTRY_SPAIN CYW43_COUNTRY('E', 'S', 0)`
+**CYW43_COUNTRY_SWEDEN**
+
+`#define CYW43_COUNTRY_SWEDEN CYW43_COUNTRY('S', 'E', 0)`
+**CYW43_COUNTRY_SWITZERLAND**
+
+`#define CYW43_COUNTRY_SWITZERLAND CYW43_COUNTRY('C', 'H', 0)`
+**CYW43_COUNTRY_TAIWAN**
+
+`#define CYW43_COUNTRY_TAIWAN CYW43_COUNTRY('T', 'W', 0)`
+**CYW43_COUNTRY_THAILAND**
+
+`#define CYW43_COUNTRY_THAILAND CYW43_COUNTRY('T', 'H', 0)`
+**CYW43_COUNTRY_TURKEY**
+
+`#define CYW43_COUNTRY_TURKEY CYW43_COUNTRY('T', 'R', 0)`
+**CYW43_COUNTRY_UK**
+
+`#define CYW43_COUNTRY_UK CYW43_COUNTRY('G', 'B', 0)`
+**CYW43_COUNTRY_USA**
+
+`#define CYW43_COUNTRY_USA CYW43_COUNTRY('U', 'S', 0)`
+
+#### 宏定义文档
+
+**CYW43_DEFAULT_PM**
+
+`#define CYW43_DEFAULT_PM (CYW43_PERFORMANCE_PM)`
+
+默认电源管理模式。
+**CYW43_NONE_PM**
+
+`#define CYW43_NONE_PM (cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 10, 0, 0, 0))`
+
+无电源管理。
+**CYW43_AGGRESSIVE_PM**
+
+`#define CYW43_AGGRESSIVE_PM (cyw43_pm_value(CYW43_PM1_POWERSAVE_MODE, 10, 0, 0, 0))`
+
+激进省电模式，以牺牲性能换取最优功耗。
+**CYW43_PERFORMANCE_PM**
+
+`#define CYW43_PERFORMANCE_PM (cyw43_pm_value(CYW43_PM2_POWERSAVE_MODE, 200, 1, 1, 10))`
+
+性能省电模式，以更多功耗换取更高性能。
+**CYW43_COUNTRY**
+
+`#define CYW43_COUNTRY(A, B, REV) \((unsigned char)(A) | ((unsigned char)(B)
+
+根据两个字符的国家代码和修订号创建国家代码。
+
+#### 类型定义文档
+
+**cyw43_t**
+
+`typedef struct _cyw43_t cyw43_t`
+
+#### 函数文档
+
+**cyw43_cb_tcpip_deinit**
+
+`void cyw43_cb_tcpip_deinit (cyw43_t * self, int itf)`
+
+反初始化 IP 协议栈。
+
+此方法必须由网络栈接口提供，用于关闭 IP 协议栈并释放资源。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 使用的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+
+**cyw43_cb_tcpip_init**
+
+`void cyw43_cb_tcpip_init (cyw43_t * self, int itf)`
+
+初始化 IP 协议栈。
+
+此方法必须由网络栈接口提供，用于初始化 IP 协议栈。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 使用的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+
+**cyw43_cb_tcpip_set_link_down**
+
+`void cyw43_cb_tcpip_set_link_down (cyw43_t * self, int itf)`
+
+通知 IP 协议栈链路已断开。
+
+此方法必须由网络栈接口提供，用于通知 IP 协议栈链路已断开。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 使用的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+
+**cyw43_cb_tcpip_set_link_up**
+
+`void cyw43_cb_tcpip_set_link_up (cyw43_t * self, int itf)`
+
+通知 IP 协议栈链路已连通。
+
+此方法必须由网络栈接口提供，用于通知 IP 协议栈链路已连通。例如，可用于通过 DHCP 请求 IP 地址。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 使用的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+
+**cyw43_deinit**
+
+`void cyw43_deinit (cyw43_t * self)`
+
+关闭驱动。
+
+此方法将关闭网络接口，并释放资源。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+
+**cyw43_gpio_get**
+
+`int cyw43_gpio_get (cyw43_t **` self, int gpio, bool ** val)`
+
+获取 cyw43 GPIO 的值。
+
+请查阅数据手册了解 cyw43 GPIO 的编号和用途。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `gpio`: 要读取的 GPIO 编号
+- `val`: 返回 GPIO 的值
+
+**返回值**
+
+成功返回 0
+
+**cyw43_gpio_set**
+
+`int cyw43_gpio_set (cyw43_t * self, int gpio, bool val)`
+
+设置 cyw43 GPIO 的值。
+
+请查阅数据手册了解 cyw43 GPIO 的编号和用途。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `gpio`: 要设置的 GPIO 编号
+- `val`: GPIO 的值
+
+**返回值**
+
+成功返回 0
+
+**cyw43_init**
+
+`void cyw43_init (cyw43_t * self)`
+
+初始化驱动。
+
+使用驱动前必须调用此方法。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+
+**cyw43_ioctl**
+
+`int cyw43_ioctl (cyw43_t **` self, uint32_t cmd, size_t len, uint8_t ** buf, uint32_t iface)`
+
+向 cyw43 发送 ioctl 命令。
+
+此方法向 cyw43 发送命令。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `cmd`: 要发送的命令
+- `len`: 随命令发送的数据量
+- `buf`: 包含要发送数据的缓冲区
+- `iface`: 使用的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+
+**返回值**
+
+成功返回 0
+
+**cyw43_is_initialized**
+
+`static bool cyw43_is_initialized (cyw43_t * self) [inline], [static]`
+
+判断 cyw43 驱动是否已初始化。
+
+如果已通过 `cyw43_init` 调用初始化了 cyw43 驱动，则返回 true。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+
+**返回值**
+
+cyw43 驱动已初始化则返回 true
+
+**cyw43_pm_value**
+
+`static uint32_t cyw43_pm_value (uint8_t pm_mode, uint16_t pm2_sleep_ret_ms, uint8_t li_beacon_period, uint8_t li_dtim_period, uint8_t li_assoc) [inline], [static]`
+
+返回要传递给 cyw43_wifi_pm 的电源管理值。
+
+生成要传递给 cyw43_wifi_pm 的电源管理（PM）值。
+
+| pm_mode | 含义 |
+| --- | --- |
+| CYW43_NO_POWERSAVE_MODE | 无省电 |
+| CYW43_PM1_POWERSAVE_MODE | 激进省电，降低 Wi-Fi 吞吐量 |
+| CYW43_PM2_POWERSAVE_MODE | 高吞吐量省电（推荐）。在一段时间内无 Wi-Fi 活动时进入省电状态。 |
+
+**参见**
+
+[CYW43_DEFAULT_PM]
+
+[CYW43_NONE_PM]
+
+[CYW43_AGGRESSIVE_PM]
+
+[CYW43_PERFORMANCE_PM]
+
+**参数**
+
+- `pm_mode`: 电源管理模式
+- `pm2_sleep_ret_ms`: CYW43_PM2_POWERSAVE_MODE 模式下重新进入睡眠前的最大等待时间（毫秒，10-2000ms，10 的倍数）
+- `li_beacon_period`: 唤醒周期以信标周期为单位
+- `li_dtim_period`: 唤醒间隔以 DTIM 为单位，设为 0 则以信标周期为单位
+- `li_assoc`: 发送给接入点的唤醒间隔
+
+**cyw43_send_ethernet**
+
+`int cyw43_send_ethernet (cyw43_t **` self, int itf, size_t len, const void ** buf, bool is_pbuf)`
+
+发送原始以太网数据包。
+
+此方法发送原始以太网数据包。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 使用的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+- `len`: 要发送的数据量
+- `buf`: 要发送的数据
+- `is_pbuf`: buf 指向 lwip struct pbuf 时为 true
+
+**返回值**
+
+成功返回 0
+
+**cyw43_tcpip_link_status**
+
+`int cyw43_tcpip_link_status (cyw43_t * self, int itf)`
+
+获取链路状态。
+
+返回链路状态，是 `cyw43_wifi_link_status` 返回的 Wi-Fi 链路状态的超集。
+
+链路状态为负值表示错误。
+
+| 链路状态 | 含义 |
+| --- | --- |
+| CYW43_LINK_DOWN | Wi-Fi 断开 |
+| CYW43_LINK_JOIN | 已连接到 Wi-Fi |
+| CYW43_LINK_NOIP | 已连接到 Wi-Fi，但无 IP 地址 |
+| CYW43_LINK_UP | 已连接到 Wi-Fi 并具有 IP 地址 |
+| CYW43_LINK_FAIL | 连接失败 |
+| CYW43_LINK_NONET | 未找到匹配的 SSID（可能超出范围或已关闭） |
+| CYW43_LINK_BADAUTH | 认证失败 |
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 要返回链路状态的接口，应为 CYW43_ITF_STA 或 CYW43_ITF_AP
+
+**返回值**
+
+表示链路状态的值
+
+**cyw43_wifi_ap_get_auth**
+
+`static uint32_t cyw43_wifi_ap_get_auth (cyw43_t * self) [inline], [static]`
+
+获取 AP 模式下使用的安全授权方式。
+
+在接入点（AP）模式下，此方法可用于获取安全授权模式。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+
+**返回值**
+
+接入点的当前安全授权模式
+
+**cyw43_wifi_ap_get_max_stas**
+
+`void cyw43_wifi_ap_get_max_stas (cyw43_t **` self, int ** max_stas)`
+
+获取可与 Wi-Fi 接入点关联的设备（STA）最大数量。
+
+在接入点（AP）模式下，此方法可用于获取可连接到 Wi-Fi 接入点的最大设备数量。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `max_stas`: 返回可连接到接入点的最大设备（STA）数量（出错时设置为 0）
+
+**cyw43_wifi_ap_get_ssid**
+
+`static void cyw43_wifi_ap_get_ssid (cyw43_t **` self, size_t ** len, const uint8_t `**** buf) [inline], [static]`
+
+获取接入点的 SSID。
+
+在接入点（AP）模式下，此方法可用于获取 Wi-Fi 接入点的 SSID 名称。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `len`: 返回 AP SSID 名称的长度
+- `buf`: 返回指向包含 AP SSID 名称的内部缓冲区的指针
+
+**cyw43_wifi_ap_get_stas**
+
+`void cyw43_wifi_ap_get_stas (cyw43_t **` self, int ** num_stas, uint8_t * macs)`
+
+获取已与 Wi-Fi 接入点关联的设备（STA）数量。
+
+在接入点（AP）模式下，此方法可用于获取已连接到 Wi-Fi 接入点的设备数量和 MAC 地址。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `num_stas`: 调用者必须提供 macs 缓冲区可容纳的 MAC 数量；提供的缓冲区应为每个 MAC 地址预留 6 字节空间。返回已连接到接入点的设备（STA）数量。
+- `macs: 返回最多 num_stas 个已连接到接入点的设备（STA）的 MAC 地址。调用 cyw43_wifi_ap_get_max_stas` 以确定可返回多少个 MAC 地址。
+
+**cyw43_wifi_ap_set_auth**
+
+`static void cyw43_wifi_ap_set_auth (cyw43_t * self, uint32_t auth) [inline], [static]`
+
+设置 AP 模式下使用的安全授权方式。
+
+在接入点（AP）模式下，此方法可用于设置访问接入点的授权方式。
+
+| 授权模式 | 含义 |
+| --- | --- |
+| CYW43_AUTH_OPEN | 使用无需授权的开放接入点 |
+| CYW43_AUTH_WPA_TKIP_PSK | 使用 WPA 授权 |
+| CYW43_AUTH_WPA2_AES_PSK | 使用 WPA2（推荐） |
+| CYW43_AUTH_WPA2_MIXED_PSK | 使用 WPA2/WPA 混合（当前与 [CYW43_AUTH_WPA2_AES_PSK] 处理相同） |
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `auth`: 接入点的授权模式
+
+**cyw43_wifi_ap_set_channel**
+
+`static void cyw43_wifi_ap_set_channel (cyw43_t * self, uint32_t channel) [inline], [static]`
+
+设置接入点使用的信道。
+
+在接入点（AP）模式下，此方法可用于设置 Wi-Fi 接入点使用的信道。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `channel`: Wi-Fi 接入点使用的 Wi-Fi 信道
+
+**cyw43_wifi_ap_set_password**
+
+`static void cyw43_wifi_ap_set_password (cyw43_t **` self, size_t len, const uint8_t ** buf) [inline], [static]`
+
+设置 Wi-Fi 接入点的密码。
+
+在接入点（AP）模式下，此方法可用于设置 Wi-Fi 接入点的密码。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `len`: AP 密码的长度
+- `buf`: 包含 AP 密码的缓冲区
+
+**cyw43_wifi_ap_set_ssid**
+
+`static void cyw43_wifi_ap_set_ssid (cyw43_t **` self, size_t len, const uint8_t ** buf) [inline], [static]`
+
+设置接入点的 SSID。
+
+在接入点（AP）模式下，此方法可用于设置 Wi-Fi 接入点的 SSID 名称。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `len`: AP SSID 名称的长度
+- `buf`: 包含 AP SSID 名称的缓冲区
+
+**cyw43_wifi_get_bssid**
+
+`int cyw43_wifi_get_bssid (cyw43_t * self, uint8_t bssid)`
+
+获取已连接 Wi-Fi 网络的 BSSID。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `bssid`: 接收 BSSID 的缓冲区
+
+**返回值**
+
+成功返回 0
+
+**cyw43_wifi_get_mac**
+
+`int cyw43_wifi_get_mac (cyw43_t * self, int itf, uint8_t mac)`
+
+获取设备的 MAC 地址。
+
+此方法返回接口的 MAC 地址。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 使用的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+- `mac`: 接收 MAC 地址的缓冲区
+
+**返回值**
+
+成功返回 0
+
+**cyw43_wifi_get_pm**
+
+`int cyw43_wifi_get_pm (cyw43_t **` self, uint32_t ** pm)`
+
+获取 Wi-Fi 电源管理模式。
+
+此方法获取 cyw43 使用的电源管理模式。值表示为无符号整数 0x00adbrrm，其中 m=pm_mode，rr=pm2_sleep_ret（以 10ms 为单位），b=li_beacon_period，d=li_dtim_period，a=li_assoc。
+
+**参见**
+
+`cyw43_pm_value 了解这些值的解释。应在 cyw43_wifi_set_up` 之后调用。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `pm`: 电源管理值
+
+**返回值**
+
+成功返回 0
+
+**cyw43_wifi_get_rssi**
+
+`int cyw43_wifi_get_rssi (cyw43_t **` self, int32_t ** rssi)`
+
+获取 Wi-Fi 网络的信号强度（RSSI）。
+
+在 STA（客户端）模式下，返回 Wi-Fi 网络的信号强度或 RSSI。在网络连接之前调用此函数将返回 RSSI 值为零。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `rssi`: 存储返回 RSSI 值的指针
+
+**返回值**
+
+成功返回 0
+
+**cyw43_wifi_join**
+
+`int cyw43_wifi_join (cyw43_t **` self, size_t ssid_len, const uint8_t ** ssid, size_t key_len, const uint8_t `** key, uint32_t auth_type, const uint8_t ** bssid, uint32_t channel)`
+
+连接或*加入* Wi-Fi 网络。
+
+以 STA（客户端）模式连接到 Wi-Fi 网络。返回成功后，定期调用 `cyw43_wifi_link_status 或 cyw43_tcpip_link_status` 查询链路状态。完全加入网络可能需要数秒时间。
+
+调用 `cyw43_wifi_leave` 以从 Wi-Fi 网络解除关联。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `ssid_len`: Wi-Fi 网络名称的长度
+- `ssid`: 包含 Wi-Fi 网络名称的缓冲区
+- `key_len`: Wi-Fi *密码*的长度
+- `key`: 包含 Wi-Fi *密码*的缓冲区
+- `auth_type`: 授权类型，
+
+**参见**
+
+CYW43_AUTH_
+
+**参数**
+
+- `bssid`: 要连接的接入点的 MAC 地址，可以为 NULL。
+- `channel`: 用于设置连接的频段，仅在 bssid 非 NULL 时使用。
+
+**返回值**
+
+成功返回 0
+
+**cyw43_wifi_leave**
+
+`int cyw43_wifi_leave (cyw43_t * self, int itf)`
+
+从 Wi-Fi 网络解除关联。
+
+此方法从 Wi-Fi 网络解除关联。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 要断开的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+
+**返回值**
+
+成功返回 0
+
+**cyw43_wifi_link_status**
+
+`int cyw43_wifi_link_status (cyw43_t * self, int itf)`
+
+获取 Wi-Fi 链路状态。
+
+返回 Wi-Fi 链路的状态。
+
+| 链路状态 | 含义 |
+| --- | --- |
+| CYW43_LINK_DOWN | Wi-Fi 断开 |
+| CYW43_LINK_JOIN | 已连接到 Wi-Fi |
+| CYW43_LINK_FAIL | 连接失败 |
+| CYW43_LINK_NONET | 未找到匹配的 SSID（可能超出范围或已关闭） |
+| CYW43_LINK_BADAUTH | 认证失败 |
+
+链路状态为负值表示错误。CYW43_ITF_AP 接口的 Wi-Fi 链路状态始终为 CYW43_LINK_DOWN。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 使用的接口，应为 CYW43_ITF_STA 或 CYW43_ITF_AP
+
+**返回值**
+
+表示链路状态的整数值
+
+**cyw43_wifi_pm**
+
+`int cyw43_wifi_pm (cyw43_t * self, uint32_t pm)`
+
+设置 Wi-Fi 电源管理模式。
+
+此方法设置 cyw43 使用的电源管理模式。应在 cyw43_wifi_set_up 之后调用。
+
+**参见**
+
+`cyw43_pm_value`
+
+[CYW43_DEFAULT_PM]
+
+[CYW43_NONE_PM]
+
+[CYW43_AGGRESSIVE_PM]
+
+[CYW43_PERFORMANCE_PM]
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `pm`: 电源管理值
+
+**返回值**
+
+成功返回 0
+
+**cyw43_wifi_scan**
+
+`int cyw43_wifi_scan (cyw43_t **` self, cyw43_wifi_scan_options_t `** opts, void ** env, int(`**`)(void **, const cyw43_ev_scan_result_t` **) result_cb)`
+
+执行 Wi-Fi 网络扫描。
+
+开始扫描 Wi-Fi 网络。结果通过回调返回。
+
+当 `cyw43_wifi_scan_active` 返回 false 时，扫描完成。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `opts: cyw43_wifi_scan_options_t` 实例，其中的值当前被忽略。
+- `env`: 在回调中传回的指针
+- `result_cb: Wi-Fi 扫描结果回调，参见 cyw43_ev_scan_result_t`
+
+**返回值**
+
+成功返回 0
+
+**cyw43_wifi_scan_active**
+
+`static bool cyw43_wifi_scan_active (cyw43_t * self) [inline], [static]`
+
+判断 Wi-Fi 扫描是否正在进行。
+
+此方法告知您扫描是否仍在进行中。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+
+**返回值**
+
+Wi-Fi 扫描正在进行则返回 true
+
+**cyw43_wifi_set_up**
+
+`void cyw43_wifi_set_up (cyw43_t * self, int itf, bool up, uint32_t country)`
+
+设置并初始化 Wi-Fi。
+
+此方法启用 Wi-Fi 并为法规目的设置国家代码。电源管理模式初始化为 [CYW43_DEFAULT_PM]。对于 CYW43_ITF_AP，启用接入点；对于 CYW43_ITF_STA，重新初始化 TCP/IP 协议栈。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `itf`: 使用的接口，CYW43_ITF_STA 或 CYW43_ITF_AP
+- `up`: true 表示启用链路。设置为 false 表示禁用 AP 模式。对于 CYW43_ITF_STA，将 *up* 参数设为 false 将被忽略。
+- `country`: 国家代码，参见 [CYW43_COUNTRY_]
+
+**cyw43_wifi_update_multicast_filter**
+
+`int cyw43_wifi_update_multicast_filter (cyw43_t **` self, uint8_t ** addr, bool add)`
+
+添加/删除多播组地址。
+
+此方法从多播过滤器中添加/删除地址，允许接收发送到此组的帧。
+
+**参数**
+
+- `self: 驱动状态对象，应始终为 &cyw43_state`
+- `addr`: 包含组 MAC 地址的缓冲区
+- `add`: true 表示添加地址，false 表示删除
+
+**返回值**
+
+成功返回 0
+
+#### 变量文档
+
+**cyw43_state**
+
+`cyw43_t cyw43_state`
+**cyw43_poll**
+
+`void(* cyw43_poll) (void)`
+**cyw43_sleep**
+
+`uint32_t cyw43_sleep`
+
+#### cyw43_ll
+
+底层 CYW43 驱动接口。
+
+[role=h6]
+**宏**
+
+* `#define [CYW43_IOCTL_GET_SSID] (0x32)`
+* `#define [CYW43_IOCTL_GET_CHANNEL] (0x3a)`
+* `#define [CYW43_IOCTL_SET_DISASSOC] (0x69)`
+* `#define [CYW43_IOCTL_GET_ANTDIV] (0x7e)`
+* `#define [CYW43_IOCTL_SET_ANTDIV] (0x81)`
+* `#define [CYW43_IOCTL_SET_MONITOR] (0xd9)`
+* `#define [CYW43_IOCTL_GET_RSSI] (0xfe)`
+* `#define [CYW43_IOCTL_GET_VAR] (0x20c)`
+* `#define [CYW43_IOCTL_SET_VAR] (0x20f)`
+* `#define [CYW43_EV_SET_SSID] (0)`
+* `#define [CYW43_EV_JOIN] (1)`
+* `#define [CYW43_EV_AUTH] (3)`
+* `#define [CYW43_EV_DEAUTH] (5)`
+* `#define [CYW43_EV_DEAUTH_IND] (6)`
+* `#define [CYW43_EV_ASSOC] (7)`
+* `#define [CYW43_EV_DISASSOC] (11)`
+* `#define [CYW43_EV_DISASSOC_IND] (12)`
+* `#define [CYW43_EV_LINK] (16)`
+* `#define [CYW43_EV_PRUNE] (23)`
+* `#define [CYW43_EV_PSK_SUP] (46)`
+* `#define [CYW43_EV_ICV_ERROR] (49)`
+* `#define [CYW43_EV_ESCAN_RESULT] (69)`
+* `#define [CYW43_EV_CSA_COMPLETE_IND] (80)`
+* `#define [CYW43_EV_ASSOC_REQ_IE] (87)`
+* `#define [CYW43_EV_ASSOC_RESP_IE] (88)`
+* `#define [CYW43_STATUS_SUCCESS] (0)`
+* `#define [CYW43_STATUS_FAIL] (1)`
+* `#define [CYW43_STATUS_TIMEOUT] (2)`
+* `#define [CYW43_STATUS_NO_NETWORKS] (3)`
+* `#define [CYW43_STATUS_ABORT] (4)`
+* `#define [CYW43_STATUS_NO_ACK] (5)`
+* `#define [CYW43_STATUS_UNSOLICITED] (6)`
+* `#define [CYW43_STATUS_ATTEMPT] (7)`
+* `#define [CYW43_STATUS_PARTIAL] (8)`
+* `#define [CYW43_STATUS_NEWSCAN] (9)`
+* `#define [CYW43_STATUS_NEWASSOC] (10)`
+* `#define [CYW43_SUP_DISCONNECTED] (0)`
+* `#define [CYW43_SUP_CONNECTING] (1)`
+* `#define [CYW43_SUP_IDREQUIRED] (2)`
+* `#define [CYW43_SUP_AUTHENTICATING] (3)`
+* `#define [CYW43_SUP_AUTHENTICATED] (4)`
+* `#define [CYW43_SUP_KEYXCHANGE] (5)`
+* `#define [CYW43_SUP_KEYED] (6)`
+* `#define [CYW43_SUP_TIMEOUT] (7)`
+* `#define [CYW43_SUP_LAST_BASIC_STATE] (8)`
+* `#define [CYW43_SUP_KEYXCHANGE_WAIT_M1] CYW43_SUP_AUTHENTICATED`
+* `#define [CYW43_SUP_KEYXCHANGE_PREP_M2] CYW43_SUP_KEYXCHANGE`
+* `#define [CYW43_SUP_KEYXCHANGE_WAIT_M3] CYW43_SUP_LAST_BASIC_STATE`
+* `#define [CYW43_SUP_KEYXCHANGE_PREP_M4] (9)`
+* `#define [CYW43_SUP_KEYXCHANGE_WAIT_G1] (10)`
+* `#define [CYW43_SUP_KEYXCHANGE_PREP_G2] (11)`
+* `#define [CYW43_REASON_INITIAL_ASSOC] (0)`
+* `#define [CYW43_REASON_LOW_RSSI] (1)`
+* `#define [CYW43_REASON_DEAUTH] (2)`
+* `#define [CYW43_REASON_DISASSOC] (3)`
+* `#define [CYW43_REASON_BCNS_LOST] (4)`
+* `#define [CYW43_REASON_FAST_ROAM_FAILED] (5)`
+* `#define [CYW43_REASON_DIRECTED_ROAM] (6)`
+* `#define [CYW43_REASON_TSPEC_REJECTED] (7)`
+* `#define [CYW43_REASON_BETTER_AP] (8)`
+* `#define [CYW43_REASON_PRUNE_ENCR_MISMATCH] (1)`
+* `#define [CYW43_REASON_PRUNE_BCAST_BSSID] (2)`
+* `#define [CYW43_REASON_PRUNE_MAC_DENY] (3)`
+* `#define [CYW43_REASON_PRUNE_MAC_NA] (4)`
+* `#define [CYW43_REASON_PRUNE_REG_PASSV] (5)`
+* `#define [CYW43_REASON_PRUNE_SPCT_MGMT] (6)`
+* `#define [CYW43_REASON_PRUNE_RADAR] (7)`
+* `#define [CYW43_REASON_RSN_MISMATCH] (8)`
+* `#define [CYW43_REASON_PRUNE_NO_COMMON_RATES] (9)`
+* `#define [CYW43_REASON_PRUNE_BASIC_RATES] (10)`
+* `#define [CYW43_REASON_PRUNE_CCXFAST_PREVAP] (11)`
+* `#define [CYW43_REASON_PRUNE_CIPHER_NA] (12)`
+* `#define [CYW43_REASON_PRUNE_KNOWN_STA] (13)`
+* `#define [CYW43_REASON_PRUNE_CCXFAST_DROAM] (14)`
+* `#define [CYW43_REASON_PRUNE_WDS_PEER] (15)`
+* `#define [CYW43_REASON_PRUNE_QBSS_LOAD] (16)`
+* `#define [CYW43_REASON_PRUNE_HOME_AP] (17)`
+* `#define [CYW43_REASON_PRUNE_AP_BLOCKED] (18)`
+* `#define [CYW43_REASON_PRUNE_NO_DIAG_SUPPORT] (19)`
+* `#define [CYW43_REASON_SUP_OTHER] (0)`
+* `#define [CYW43_REASON_SUP_DECRYPT_KEY_DATA] (1)`
+* `#define [CYW43_REASON_SUP_BAD_UCAST_WEP128] (2)`
+* `#define [CYW43_REASON_SUP_BAD_UCAST_WEP40] (3)`
+* `#define [CYW43_REASON_SUP_UNSUP_KEY_LEN] (4)`
+* `#define [CYW43_REASON_SUP_PW_KEY_CIPHER] (5)`
+* `#define [CYW43_REASON_SUP_MSG3_TOO_MANY_IE] (6)`
+* `#define [CYW43_REASON_SUP_MSG3_IE_MISMATCH] (7)`
+* `#define [CYW43_REASON_SUP_NO_INSTALL_FLAG] (8)`
+* `#define [CYW43_REASON_SUP_MSG3_NO_GTK] (9)`
+* `#define [CYW43_REASON_SUP_GRP_KEY_CIPHER] (10)`
+* `#define [CYW43_REASON_SUP_GRP_MSG1_NO_GTK] (11)`
+* `#define [CYW43_REASON_SUP_GTK_DECRYPT_FAIL] (12)`
+* `#define [CYW43_REASON_SUP_SEND_FAIL] (13)`
+* `#define [CYW43_REASON_SUP_DEAUTH] (14)`
+* `#define [CYW43_REASON_SUP_WPA_PSK_TMO] (15)`
+* `#define [CYW43_NO_POWERSAVE_MODE] (0)`
+* `#define [CYW43_PM1_POWERSAVE_MODE] (1)`
+* `#define [CYW43_PM2_POWERSAVE_MODE] (2)`
+* `#define [CYW43_BUS_MAX_BLOCK_SIZE] 64`
+* `#define [CYW43_BACKPLANE_READ_PAD_LEN_BYTES] 16<br/>&emsp;* `#define [CYW43_LL_STATE_SIZE_WORDS] (526 + 1 + ((CYW43_BACKPLANE_READ_PAD_LEN_BYTES / 4) + 1) + CYW43_INCLUDE_LEGACY_F1_OVERFLOW_WORKAROUND_VARIABLES ** 4)`
+* `#define [CYW43_CHANNEL_NONE] (0xffffffff)`
+
+[role=h6]
+**类型定义**
+
+- `typedef struct _cyw43_async_event_t cyw43_async_event_t`
+- `typedef struct _cyw43_ll_t cyw43_ll_t`
+
+[role=h6]
+**函数**
+
+`void cyw43_ll_init (cyw43_ll_t **self, void **cb_data)`
+`void cyw43_ll_deinit (cyw43_ll_t *self)`
+`int cyw43_ll_bus_init (cyw43_ll_t **self, const uint8_t **mac)`
+`void cyw43_ll_bus_sleep (cyw43_ll_t *self, bool can_sleep)`
+`void cyw43_ll_process_packets (cyw43_ll_t *self)`
+`int cyw43_ll_ioctl (cyw43_ll_t **self, uint32_t cmd, size_t len, uint8_t **buf, uint32_t iface)`
+`int cyw43_ll_send_ethernet (cyw43_ll_t **self, int itf, size_t len, const void **buf, bool is_pbuf)`
+`int cyw43_ll_wifi_on (cyw43_ll_t *self, uint32_t country)`
+`int cyw43_ll_wifi_pm (cyw43_ll_t *self, uint32_t pm, uint32_t pm_sleep_ret, uint32_t li_bcn, uint32_t li_dtim, uint32_t li_assoc)`
+`int cyw43_ll_wifi_get_pm (cyw43_ll_t **self, uint32_t **pm, uint32_t **pm_sleep_ret, uint32_t **li_bcn, uint32_t **li_dtim, uint32_t **li_assoc)`
+`int cyw43_ll_wifi_scan (cyw43_ll_t **self, cyw43_wifi_scan_options_t **opts)`
+`int cyw43_ll_wifi_join (cyw43_ll_t **self, size_t ssid_len, const uint8_t **ssid, size_t key_len, const uint8_t **key, uint32_t auth_type, const uint8_t **bssid, uint32_t channel)`
+`void cyw43_ll_wifi_set_wpa_auth (cyw43_ll_t *self)`
+`void cyw43_ll_wifi_rejoin (cyw43_ll_t *self)`
+`int cyw43_ll_wifi_get_bssid (cyw43_ll_t **self_in, uint8_t **bssid)`
+`int cyw43_ll_wifi_ap_init (cyw43_ll_t **self, size_t ssid_len, const uint8_t **ssid, uint32_t auth, size_t key_len, const uint8_t *key, uint32_t channel)`
+`int cyw43_ll_wifi_ap_set_up (cyw43_ll_t *self, bool up)`
+`int cyw43_ll_wifi_ap_get_stas (cyw43_ll_t **self, int **num_stas, uint8_t *macs)`
+`int cyw43_ll_gpio_set (cyw43_ll_t *self, int gpio_n, bool gpio_en)`
+`int cyw43_ll_gpio_get (cyw43_ll_t **self_in, int gpio_n, bool **gpio_en)`
+`int cyw43_ll_wifi_get_mac (cyw43_ll_t **self_in, uint8_t **addr)`
+`int cyw43_ll_wifi_update_multicast_filter (cyw43_ll_t **self_in, uint8_t **addr, bool add)`
+`bool cyw43_ll_has_work (cyw43_ll_t *self)`
+`bool cyw43_ll_bt_has_work (cyw43_ll_t *self)`
+`int cyw43_cb_read_host_interrupt_pin (void *cb_data)`
+`void cyw43_cb_ensure_awake (void *cb_data)`
+`void cyw43_cb_process_async_event (void **cb_data, const cyw43_async_event_t **ev)`
+`void cyw43_cb_process_ethernet (void **cb_data, int itf, size_t len, const uint8_t **buf)`
+`void cyw43_ll_write_backplane_reg (cyw43_ll_t *self_in, uint32_t addr, uint32_t val)`
+`uint32_t cyw43_ll_read_backplane_reg (cyw43_ll_t *self_in, uint32_t addr)`
+`int cyw43_ll_write_backplane_mem (cyw43_ll_t **self_in, uint32_t addr, uint32_t len, const uint8_t **buf)`
+`int cyw43_ll_read_backplane_mem (cyw43_ll_t **self_in, uint32_t addr, uint32_t len, uint8_t **buf)`
+
+**anonymous enum**
+
+`anonymous enum`
+
+网络接口类型。
+
+| 枚举值 | 说明 |
+| --- | --- |
+| CYW43_ITF_STA | 客户端接口 STA 模式。 |
+| CYW43_ITF_AP | 接入点（AP）接口模式。 |
+
+**cyw43_ev_scan_result_t**
+
+`typedef struct _cyw43_ev_scan_result_t cyw43_ev_scan_result_t`
+
+用于返回 Wi-Fi 扫描结果的结构体。
+
+**cyw43_wifi_scan_options_t**
+
+`typedef struct _cyw43_wifi_scan_options_t cyw43_wifi_scan_options_t`
+
+传递给 cyw43_wifi_scan 的 Wi-Fi 扫描选项。
+
+[role=h6]
+**授权类型**
+
+用于设置接入点或连接到接入点时使用。
+
+**CYW43_AUTH_OPEN**
+
+`#define CYW43_AUTH_OPEN (0)`
+
+无需授权（开放）。
+**CYW43_AUTH_WPA_TKIP_PSK**
+
+`#define CYW43_AUTH_WPA_TKIP_PSK (0x00200002)`
+
+WPA 授权。
+**CYW43_AUTH_WPA2_AES_PSK**
+
+`#define CYW43_AUTH_WPA2_AES_PSK (0x00400004)`
+
+WPA2 授权（推荐）。
+**CYW43_AUTH_WPA2_MIXED_PSK**
+
+`#define CYW43_AUTH_WPA2_MIXED_PSK (0x00400006)`
+
+WPA2/WPA 混合授权。
+**CYW43_AUTH_WPA3_SAE_AES_PSK**
+
+`#define CYW43_AUTH_WPA3_SAE_AES_PSK (0x01000004)`
+
+WPA3 AES 授权。
+**CYW43_AUTH_WPA3_WPA2_AES_PSK**
+
+`#define CYW43_AUTH_WPA3_WPA2_AES_PSK (0x01400004)`
+
+WPA2/WPA3 授权。
+
+[role=h6]
+**宏定义文档**
+
+**CYW43_IOCTL_GET_SSID**
+
+`#define CYW43_IOCTL_GET_SSID (0x32)`
+**CYW43_IOCTL_GET_CHANNEL**
+
+`#define CYW43_IOCTL_GET_CHANNEL (0x3a)`
+**CYW43_IOCTL_SET_DISASSOC**
+
+`#define CYW43_IOCTL_SET_DISASSOC (0x69)`
+**CYW43_IOCTL_GET_ANTDIV**
+
+`#define CYW43_IOCTL_GET_ANTDIV (0x7e)`
+**CYW43_IOCTL_SET_ANTDIV**
+
+`#define CYW43_IOCTL_SET_ANTDIV (0x81)`
+**CYW43_IOCTL_SET_MONITOR**
+
+`#define CYW43_IOCTL_SET_MONITOR (0xd9)`
+**CYW43_IOCTL_GET_RSSI**
+
+`#define CYW43_IOCTL_GET_RSSI (0xfe)`
+**CYW43_IOCTL_GET_VAR**
+
+`#define CYW43_IOCTL_GET_VAR (0x20c)`
+**CYW43_IOCTL_SET_VAR**
+
+`#define CYW43_IOCTL_SET_VAR (0x20f)`
+**CYW43_EV_SET_SSID**
+
+`#define CYW43_EV_SET_SSID (0)`
+**CYW43_EV_JOIN**
+
+`#define CYW43_EV_JOIN (1)`
+**CYW43_EV_AUTH**
+
+`#define CYW43_EV_AUTH (3)`
+**CYW43_EV_DEAUTH**
+
+`#define CYW43_EV_DEAUTH (5)`
+**CYW43_EV_DEAUTH_IND**
+
+`#define CYW43_EV_DEAUTH_IND (6)`
+**CYW43_EV_ASSOC**
+
+`#define CYW43_EV_ASSOC (7)`
+**CYW43_EV_DISASSOC**
+
+`#define CYW43_EV_DISASSOC (11)`
+**CYW43_EV_DISASSOC_IND**
+
+`#define CYW43_EV_DISASSOC_IND (12)`
+**CYW43_EV_LINK**
+
+`#define CYW43_EV_LINK (16)`
+**CYW43_EV_PRUNE**
+
+`#define CYW43_EV_PRUNE (23)`
+**CYW43_EV_PSK_SUP**
+
+`#define CYW43_EV_PSK_SUP (46)`
+**CYW43_EV_ICV_ERROR**
+
+`#define CYW43_EV_ICV_ERROR (49)`
+**CYW43_EV_ESCAN_RESULT**
+
+`#define CYW43_EV_ESCAN_RESULT (69)`
+**CYW43_EV_CSA_COMPLETE_IND**
+
+`#define CYW43_EV_CSA_COMPLETE_IND (80)`
+**CYW43_EV_ASSOC_REQ_IE**
+
+`#define CYW43_EV_ASSOC_REQ_IE (87)`
+**CYW43_EV_ASSOC_RESP_IE**
+
+`#define CYW43_EV_ASSOC_RESP_IE (88)`
+**CYW43_STATUS_SUCCESS**
+
+`#define CYW43_STATUS_SUCCESS (0)`
+**CYW43_STATUS_FAIL**
+
+`#define CYW43_STATUS_FAIL (1)`
+**CYW43_STATUS_TIMEOUT**
+
+`#define CYW43_STATUS_TIMEOUT (2)`
+**CYW43_STATUS_NO_NETWORKS**
+
+`#define CYW43_STATUS_NO_NETWORKS (3)`
+**CYW43_STATUS_ABORT**
+
+`#define CYW43_STATUS_ABORT (4)`
+**CYW43_STATUS_NO_ACK**
+
+`#define CYW43_STATUS_NO_ACK (5)`
+**CYW43_STATUS_UNSOLICITED**
+
+`#define CYW43_STATUS_UNSOLICITED (6)`
+**CYW43_STATUS_ATTEMPT**
+
+`#define CYW43_STATUS_ATTEMPT (7)`
+**CYW43_STATUS_PARTIAL**
+
+`#define CYW43_STATUS_PARTIAL (8)`
+**CYW43_STATUS_NEWSCAN**
+
+`#define CYW43_STATUS_NEWSCAN (9)`
+**CYW43_STATUS_NEWASSOC**
+
+`#define CYW43_STATUS_NEWASSOC (10)`
+**CYW43_SUP_DISCONNECTED**
+
+`#define CYW43_SUP_DISCONNECTED (0)`
+**CYW43_SUP_CONNECTING**
+
+`#define CYW43_SUP_CONNECTING (1)`
+**CYW43_SUP_IDREQUIRED**
+
+`#define CYW43_SUP_IDREQUIRED (2)`
+**CYW43_SUP_AUTHENTICATING**
+
+`#define CYW43_SUP_AUTHENTICATING (3)`
+**CYW43_SUP_AUTHENTICATED**
+
+`#define CYW43_SUP_AUTHENTICATED (4)`
+**CYW43_SUP_KEYXCHANGE**
+
+`#define CYW43_SUP_KEYXCHANGE (5)`
+**CYW43_SUP_KEYED**
+
+`#define CYW43_SUP_KEYED (6)`
+**CYW43_SUP_TIMEOUT**
+
+`#define CYW43_SUP_TIMEOUT (7)`
+**CYW43_SUP_LAST_BASIC_STATE**
+
+`#define CYW43_SUP_LAST_BASIC_STATE (8)`
+**CYW43_SUP_KEYXCHANGE_WAIT_M1**
+
+`#define CYW43_SUP_KEYXCHANGE_WAIT_M1 CYW43_SUP_AUTHENTICATED`
+**CYW43_SUP_KEYXCHANGE_PREP_M2**
+
+`#define CYW43_SUP_KEYXCHANGE_PREP_M2 CYW43_SUP_KEYXCHANGE`
+**CYW43_SUP_KEYXCHANGE_WAIT_M3**
+
+`#define CYW43_SUP_KEYXCHANGE_WAIT_M3 CYW43_SUP_LAST_BASIC_STATE`
+**CYW43_SUP_KEYXCHANGE_PREP_M4**
+
+`#define CYW43_SUP_KEYXCHANGE_PREP_M4 (9)`
+**CYW43_SUP_KEYXCHANGE_WAIT_G1**
+
+`#define CYW43_SUP_KEYXCHANGE_WAIT_G1 (10)`
+**CYW43_SUP_KEYXCHANGE_PREP_G2**
+
+`#define CYW43_SUP_KEYXCHANGE_PREP_G2 (11)`
+**CYW43_REASON_INITIAL_ASSOC**
+
+`#define CYW43_REASON_INITIAL_ASSOC (0)`
+**CYW43_REASON_LOW_RSSI**
+
+`#define CYW43_REASON_LOW_RSSI (1)`
+**CYW43_REASON_DEAUTH**
+
+`#define CYW43_REASON_DEAUTH (2)`
+**CYW43_REASON_DISASSOC**
+
+`#define CYW43_REASON_DISASSOC (3)`
+**CYW43_REASON_BCNS_LOST**
+
+`#define CYW43_REASON_BCNS_LOST (4)`
+**CYW43_REASON_FAST_ROAM_FAILED**
+
+`#define CYW43_REASON_FAST_ROAM_FAILED (5)`
+**CYW43_REASON_DIRECTED_ROAM**
+
+`#define CYW43_REASON_DIRECTED_ROAM (6)`
+**CYW43_REASON_TSPEC_REJECTED**
+
+`#define CYW43_REASON_TSPEC_REJECTED (7)`
+**CYW43_REASON_BETTER_AP**
+
+`#define CYW43_REASON_BETTER_AP (8)`
+**CYW43_REASON_PRUNE_ENCR_MISMATCH**
+
+`#define CYW43_REASON_PRUNE_ENCR_MISMATCH (1)`
+**CYW43_REASON_PRUNE_BCAST_BSSID**
+
+`#define CYW43_REASON_PRUNE_BCAST_BSSID (2)`
+**CYW43_REASON_PRUNE_MAC_DENY**
+
+`#define CYW43_REASON_PRUNE_MAC_DENY (3)`
+**CYW43_REASON_PRUNE_MAC_NA**
+
+`#define CYW43_REASON_PRUNE_MAC_NA (4)`
+**CYW43_REASON_PRUNE_REG_PASSV**
+
+`#define CYW43_REASON_PRUNE_REG_PASSV (5)`
+**CYW43_REASON_PRUNE_SPCT_MGMT**
+
+`#define CYW43_REASON_PRUNE_SPCT_MGMT (6)`
+**CYW43_REASON_PRUNE_RADAR**
+
+`#define CYW43_REASON_PRUNE_RADAR (7)`
+**CYW43_REASON_RSN_MISMATCH**
+
+`#define CYW43_REASON_RSN_MISMATCH (8)`
+**CYW43_REASON_PRUNE_NO_COMMON_RATES**
+
+`#define CYW43_REASON_PRUNE_NO_COMMON_RATES (9)`
+**CYW43_REASON_PRUNE_BASIC_RATES**
+
+`#define CYW43_REASON_PRUNE_BASIC_RATES (10)`
+**CYW43_REASON_PRUNE_CCXFAST_PREVAP**
+
+`#define CYW43_REASON_PRUNE_CCXFAST_PREVAP (11)`
+**CYW43_REASON_PRUNE_CIPHER_NA**
+
+`#define CYW43_REASON_PRUNE_CIPHER_NA (12)`
+**CYW43_REASON_PRUNE_KNOWN_STA**
+
+`#define CYW43_REASON_PRUNE_KNOWN_STA (13)`
+**CYW43_REASON_PRUNE_CCXFAST_DROAM**
+
+`#define CYW43_REASON_PRUNE_CCXFAST_DROAM (14)`
+**CYW43_REASON_PRUNE_WDS_PEER**
+
+`#define CYW43_REASON_PRUNE_WDS_PEER (15)`
+**CYW43_REASON_PRUNE_QBSS_LOAD**
+
+`#define CYW43_REASON_PRUNE_QBSS_LOAD (16)`
+**CYW43_REASON_PRUNE_HOME_AP**
+
+`#define CYW43_REASON_PRUNE_HOME_AP (17)`
+**CYW43_REASON_PRUNE_AP_BLOCKED**
+
+`#define CYW43_REASON_PRUNE_AP_BLOCKED (18)`
+**CYW43_REASON_PRUNE_NO_DIAG_SUPPORT**
+
+`#define CYW43_REASON_PRUNE_NO_DIAG_SUPPORT (19)`
+**CYW43_REASON_SUP_OTHER**
+
+`#define CYW43_REASON_SUP_OTHER (0)`
+**CYW43_REASON_SUP_DECRYPT_KEY_DATA**
+
+`#define CYW43_REASON_SUP_DECRYPT_KEY_DATA (1)`
+**CYW43_REASON_SUP_BAD_UCAST_WEP128**
+
+`#define CYW43_REASON_SUP_BAD_UCAST_WEP128 (2)`
+**CYW43_REASON_SUP_BAD_UCAST_WEP40**
+
+`#define CYW43_REASON_SUP_BAD_UCAST_WEP40 (3)`
+**CYW43_REASON_SUP_UNSUP_KEY_LEN**
+
+`#define CYW43_REASON_SUP_UNSUP_KEY_LEN (4)`
+**CYW43_REASON_SUP_PW_KEY_CIPHER**
+
+`#define CYW43_REASON_SUP_PW_KEY_CIPHER (5)`
+**CYW43_REASON_SUP_MSG3_TOO_MANY_IE**
+
+`#define CYW43_REASON_SUP_MSG3_TOO_MANY_IE (6)`
+**CYW43_REASON_SUP_MSG3_IE_MISMATCH**
+
+`#define CYW43_REASON_SUP_MSG3_IE_MISMATCH (7)`
+**CYW43_REASON_SUP_NO_INSTALL_FLAG**
+
+`#define CYW43_REASON_SUP_NO_INSTALL_FLAG (8)`
+**CYW43_REASON_SUP_MSG3_NO_GTK**
+
+`#define CYW43_REASON_SUP_MSG3_NO_GTK (9)`
+**CYW43_REASON_SUP_GRP_KEY_CIPHER**
+
+`#define CYW43_REASON_SUP_GRP_KEY_CIPHER (10)`
+**CYW43_REASON_SUP_GRP_MSG1_NO_GTK**
+
+`#define CYW43_REASON_SUP_GRP_MSG1_NO_GTK (11)`
+**CYW43_REASON_SUP_GTK_DECRYPT_FAIL**
+
+`#define CYW43_REASON_SUP_GTK_DECRYPT_FAIL (12)`
+**CYW43_REASON_SUP_SEND_FAIL**
+
+`#define CYW43_REASON_SUP_SEND_FAIL (13)`
+**CYW43_REASON_SUP_DEAUTH**
+
+`#define CYW43_REASON_SUP_DEAUTH (14)`
+**CYW43_REASON_SUP_WPA_PSK_TMO**
+
+`#define CYW43_REASON_SUP_WPA_PSK_TMO (15)`
+**CYW43_NO_POWERSAVE_MODE**
+
+`#define CYW43_NO_POWERSAVE_MODE (0)`
+
+传递给 cyw43_ll_wifi_pm 的电源节省模式参数。
+
+无省电模式。
+**CYW43_PM1_POWERSAVE_MODE**
+
+`#define CYW43_PM1_POWERSAVE_MODE (1)`
+
+在指定接口上启用省电模式，不考虑吞吐量降低。
+**CYW43_PM2_POWERSAVE_MODE**
+
+`#define CYW43_PM2_POWERSAVE_MODE (2)`
+
+在指定接口上启用高吞吐量省电模式。
+**CYW43_BUS_MAX_BLOCK_SIZE**
+
+`#define CYW43_BUS_MAX_BLOCK_SIZE 64`
+**CYW43_BACKPLANE_READ_PAD_LEN_BYTES**
+
+`#define CYW43_BACKPLANE_READ_PAD_LEN_BYTES 16`
+**CYW43_LL_STATE_SIZE_WORDS**
+
+`#define CYW43_LL_STATE_SIZE_WORDS (526 + 1 + ((CYW43_BACKPLANE_READ_PAD_LEN_BYTES / 4) + 1) + CYW43_INCLUDE_LEGACY_F1_OVERFLOW_WORKAROUND_VARIABLES * 4)`
+**CYW43_CHANNEL_NONE**
+
+`#define CYW43_CHANNEL_NONE (0xffffffff)`
+
+调用 cyw43_ll_wifi_join 时指定 bssid 但不指定特定信道时使用。
+
+未指定信道（使用 AP 的信道）。
+
+[role=h6]
+**类型定义文档**
+
+**cyw43_async_event_t**
+
+`typedef struct _cyw43_async_event_t cyw43_async_event_t`
+**cyw43_ll_t**
+
+`typedef struct _cyw43_ll_t cyw43_ll_t`
+
+[role=h6]
+**函数文档**
+
+**cyw43_cb_ensure_awake**
+
+`void cyw43_cb_ensure_awake (void * cb_data)`
+
+**cyw43_cb_process_async_event**
+
+`void cyw43_cb_process_async_event (void ** cb_data, const cyw43_async_event_t` ** ev)`
+
+**cyw43_cb_process_ethernet**
+
+`void cyw43_cb_process_ethernet (void ** cb_data, int itf, size_t len, const uint8_t ** buf)`
+
+**cyw43_cb_read_host_interrupt_pin**
+
+`int cyw43_cb_read_host_interrupt_pin (void * cb_data)`
+
+**cyw43_ll_bt_has_work**
+
+`bool cyw43_ll_bt_has_work (cyw43_ll_t * self)`
+
+**cyw43_ll_bus_init**
+
+`int cyw43_ll_bus_init (cyw43_ll_t **` self, const uint8_t ** mac)`
+
+**cyw43_ll_bus_sleep**
+
+`void cyw43_ll_bus_sleep (cyw43_ll_t * self, bool can_sleep)`
+
+**cyw43_ll_deinit**
+
+`void cyw43_ll_deinit (cyw43_ll_t * self)`
+
+**cyw43_ll_gpio_get**
+
+`int cyw43_ll_gpio_get (cyw43_ll_t **` self_in, int gpio_n, bool ** gpio_en)`
+
+**cyw43_ll_gpio_set**
+
+`int cyw43_ll_gpio_set (cyw43_ll_t * self, int gpio_n, bool gpio_en)`
+
+**cyw43_ll_has_work**
+
+`bool cyw43_ll_has_work (cyw43_ll_t * self)`
+
+**cyw43_ll_init**
+
+`void cyw43_ll_init (cyw43_ll_t **` self, void ** cb_data)`
+
+**cyw43_ll_ioctl**
+
+`int cyw43_ll_ioctl (cyw43_ll_t **` self, uint32_t cmd, size_t len, uint8_t ** buf, uint32_t iface)`
+
+**cyw43_ll_process_packets**
+
+`void cyw43_ll_process_packets (cyw43_ll_t * self)`
+
+**cyw43_ll_read_backplane_mem**
+
+`int cyw43_ll_read_backplane_mem (cyw43_ll_t **` self_in, uint32_t addr, uint32_t len, uint8_t ** buf)`
+
+**cyw43_ll_read_backplane_reg**
+
+`uint32_t cyw43_ll_read_backplane_reg (cyw43_ll_t * self_in, uint32_t addr)`
+
+**cyw43_ll_send_ethernet**
+
+`int cyw43_ll_send_ethernet (cyw43_ll_t **` self, int itf, size_t len, const void ** buf, bool is_pbuf)`
+
+**cyw43_ll_wifi_ap_get_stas**
+
+`int cyw43_ll_wifi_ap_get_stas (cyw43_ll_t **` self, int ** num_stas, uint8_t * macs)`
+
+**cyw43_ll_wifi_ap_init**
+
+`int cyw43_ll_wifi_ap_init (cyw43_ll_t **` self, size_t ssid_len, const uint8_t ** ssid, uint32_t auth, size_t key_len, const uint8_t * key, uint32_t channel)`
+
+**cyw43_ll_wifi_ap_set_up**
+
+`int cyw43_ll_wifi_ap_set_up (cyw43_ll_t * self, bool up)`
+
+**cyw43_ll_wifi_get_bssid**
+
+`int cyw43_ll_wifi_get_bssid (cyw43_ll_t **` self_in, uint8_t ** bssid)`
+
+**cyw43_ll_wifi_get_mac**
+
+`int cyw43_ll_wifi_get_mac (cyw43_ll_t **` self_in, uint8_t ** addr)`
+
+**cyw43_ll_wifi_get_pm**
+
+`int cyw43_ll_wifi_get_pm (cyw43_ll_t **` self, uint32_t ** pm, uint32_t `** pm_sleep_ret, uint32_t ** li_bcn, uint32_t `**` li_dtim, uint32_t ** li_assoc)`
+
+**cyw43_ll_wifi_join**
+
+`int cyw43_ll_wifi_join (cyw43_ll_t **` self, size_t ssid_len, const uint8_t ** ssid, size_t key_len, const uint8_t `** key, uint32_t auth_type, const uint8_t ** bssid, uint32_t channel)`
+
+**cyw43_ll_wifi_on**
+
+`int cyw43_ll_wifi_on (cyw43_ll_t * self, uint32_t country)`
+
+**cyw43_ll_wifi_pm**
+
+`int cyw43_ll_wifi_pm (cyw43_ll_t * self, uint32_t pm, uint32_t pm_sleep_ret, uint32_t li_bcn, uint32_t li_dtim, uint32_t li_assoc)`
+
+**cyw43_ll_wifi_rejoin**
+
+`void cyw43_ll_wifi_rejoin (cyw43_ll_t * self)`
+
+**cyw43_ll_wifi_scan**
+
+`int cyw43_ll_wifi_scan (cyw43_ll_t **` self, cyw43_wifi_scan_options_t ** opts)`
+
+**cyw43_ll_wifi_set_wpa_auth**
+
+`void cyw43_ll_wifi_set_wpa_auth (cyw43_ll_t * self)`
+
+**cyw43_ll_wifi_update_multicast_filter**
+
+`int cyw43_ll_wifi_update_multicast_filter (cyw43_ll_t **` self_in, uint8_t ** addr, bool add)`
+
+**cyw43_ll_write_backplane_mem**
+
+`int cyw43_ll_write_backplane_mem (cyw43_ll_t **` self_in, uint32_t addr, uint32_t len, const uint8_t ** buf)`
+
+**cyw43_ll_write_backplane_reg**
+
+`void cyw43_ll_write_backplane_reg (cyw43_ll_t * self_in, uint32_t addr, uint32_t val)`
+
+<Normal />

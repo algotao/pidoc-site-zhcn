@@ -1,0 +1,1127 @@
+---
+sidebar_position: 13
+draft: false
+description: 用于精确时间戳、睡眠和基于时间回调的 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK time]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+用于精确时间戳、睡眠和基于时间回调的 API。
+
+### 详细描述
+
+此处定义的函数对底层硬件定时器功能提供了更强大、更友好的封装。为使这些函数（以及依赖它们的任何其他 SDK 功能，如超时）正常工作，不应修改硬件定时器，即它预期每微秒单调递增一次。幸运的是，无需修改硬件定时器，因为任何你能想到的此处未涵盖的功能，都可以通过对未修改的硬件定时器值加减常量来轻松建模。
+
+**另请参阅**
+
+
+### 模块
+
+`timestamp`<br/>&emsp;与时间点（包括当前时间）相关的时间戳函数。
+
+`sleep`<br/>&emsp;用于以较低功耗状态延迟执行的睡眠函数。
+
+`alarm`<br/>&emsp;用于调度未来执行的定时器函数。
+
+`repeating_timer`<br/>&emsp;用于简单调度重复执行的重复定时器函数。
+
+### timestamp
+
+与时间点（包括当前时间）相关的时间戳函数。
+
+#### 详细描述
+
+这些函数用于处理以 absolute_time_t 类型表示的时间戳（即时间点）。提供此不透明类型是为了帮助防止时间戳与相对时间值意外混用。
+
+#### 类型定义
+
+- `typedef uint64_t absolute_time_t`: 以微秒为单位的不透明 64 位时间戳。
+
+#### 函数
+
+- `static uint64_t to_us_since_boot (absolute_time_t t)`: 将 absolute_time_t 转换为自启动以来的微秒数。
+`static void update_us_since_boot (absolute_time_t *t, uint64_t us_since_boot)`<br/>&emsp;更新 absolute_time_t 值以表示自启动以来的给定微秒数。
+- `static absolute_time_t from_us_since_boot` (uint64_t us_since_boot)`: 将自启动以来的微秒数转换为 absolute_time_t。
+- `static absolute_time_t get_absolute_time` (void)`: 返回当前时间的表示。
+- `static uint32_t to_ms_since_boot (absolute_time_t t)`: 将时间戳转换为自启动以来的毫秒数。
+- `static absolute_time_t delayed_by_us` (const absolute_time_t t, uint64_t us)`: 返回在另一个时间戳基础上加上若干微秒后得到的时间戳值。
+- `static absolute_time_t delayed_by_ms` (const absolute_time_t t, uint32_t ms)`: 返回在另一个时间戳基础上加上若干毫秒后得到的时间戳值。
+- `static absolute_time_t make_timeout_time_us` (uint64_t us)`: 获取距当前时间若干微秒后时间戳的便捷方法。
+- `static absolute_time_t make_timeout_time_ms` (uint32_t ms)`: 获取距当前时间若干毫秒后时间戳的便捷方法。
+- `static int64_t absolute_time_diff_us (absolute_time_t from, absolute_time_t to)`: 返回两个时间戳之间的微秒差值。
+- `static absolute_time_t absolute_time_min` (absolute_time_t a, absolute_time_t b)`: 返回两个时间戳中较早的一个。
+- `static bool is_at_the_end_of_time (absolute_time_t t)`: 判断给定时间戳是否为"时间终点"。
+- `static bool is_nil_time (absolute_time_t t)`: 判断给定时间戳是否为空。
+
+#### 变量
+
+- `const absolute_time_t at_the_end_of_time``: 表示时间终点的时间戳；实际上并非最大可能的时间戳，而是设置为 0x7fffffff_ffffffff 微秒，以避免时间运算中的符号溢出。这大约是 300,000 年，应该足够用了。
+- `const absolute_time_t nil_time``: 表示空时间戳的时间戳。
+
+#### 类型定义文档
+
+**absolute_time_t**
+
+`typedef uint64_t absolute_time_t`
+
+以微秒为单位的不透明 64 位时间戳。
+
+使用此类型而非原始 uint64_t，是为了防止在需要绝对时间的地方意外传入相对时间或单位错误的时间。
+
+注意：从 SDK 2.0.0 起，此类型默认为 uint64_t（即无保护）；可通过将 PICO_OPAQUE_ABSOLUTE_TIME_T 设为 1 来启用保护。
+
+**另请参阅**
+
+`to_us_since_boot()`
+
+`update_us_since_boot()`
+
+#### 函数文档
+
+**absolute_time_diff_us**
+
+`static int64_t absolute_time_diff_us (absolute_time_t from, absolute_time_t to) [inline], [static]`
+
+返回两个时间戳之间的微秒差值。
+
+在与大时间戳（如 `at_the_end_of_time）求差时要小心，因为有符号整数可能溢出。
+
+**参数**
+
+- `from`: 第一个时间戳
+- `to`: 第二个时间戳
+
+**返回**
+
+两个时间戳之间的微秒数（若 `to 在 from` 之后则为正值，溢出情况除外）。
+
+**absolute_time_min**
+
+`static absolute_time_t absolute_time_min (absolute_time_t` a, absolute_time_t b) [inline], [static]`
+
+返回两个时间戳中较早的一个。
+
+**参数**
+
+- `a`: 第一个时间戳
+- `b`: 第二个时间戳
+
+**返回**
+
+两个时间戳中较早的一个。
+
+**delayed_by_ms**
+
+`static absolute_time_t delayed_by_ms (const absolute_time_t t, uint32_t ms) [inline], [static]`
+
+返回在另一个时间戳基础上加上若干毫秒后得到的时间戳值。
+
+**参数**
+
+- `t`: 基础时间戳
+- `ms`: 要加的毫秒数
+
+**返回**
+
+表示结果时间的时间戳。
+
+**delayed_by_us**
+
+`static absolute_time_t delayed_by_us (const absolute_time_t t, uint64_t us) [inline], [static]`
+
+返回在另一个时间戳基础上加上若干微秒后得到的时间戳值。
+
+**参数**
+
+- `t`: 基础时间戳
+- `us`: 要加的微秒数
+
+**返回**
+
+表示结果时间的时间戳。
+
+**from_us_since_boot**
+
+`static absolute_time_t from_us_since_boot (uint64_t us_since_boot) [inline], [static]`
+
+将自启动以来的微秒数转换为 absolute_time_t。
+
+fn from_us_since_boot
+
+**参数**
+
+- `us_since_boot`: 自启动以来的微秒数
+
+**返回**
+
+等价于 us_since_boot 的绝对时间。
+
+**get_absolute_time**
+
+`static absolute_time_t get_absolute_time (void) [inline], [static]`
+
+返回当前时间的表示。
+
+返回调用时采样的当前时间的不透明高精度表示。
+
+**返回**
+
+硬件定时器的绝对时间（当前时间）。
+
+**另请参阅**
+
+
+`sleep_until()`
+
+`time_us_64()`
+
+**is_at_the_end_of_time**
+
+`static bool is_at_the_end_of_time (absolute_time_t t) [inline], [static]`
+
+判断给定时间戳是否为"时间终点"。
+
+**参数**
+
+- `t`: 时间戳
+
+**返回**
+
+若时间戳为 at_the_end_of_time 返回 true。
+
+**另请参阅**
+
+
+**is_nil_time**
+
+`static bool is_nil_time (absolute_time_t t) [inline], [static]`
+
+判断给定时间戳是否为空。
+
+**参数**
+
+- `t`: 时间戳
+
+**返回**
+
+若时间戳为空返回 true。
+
+**另请参阅**
+
+
+**make_timeout_time_ms**
+
+`static absolute_time_t make_timeout_time_ms (uint32_t ms) [inline], [static]`
+
+获取距当前时间若干毫秒后时间戳的便捷方法。
+
+**参数**
+
+- `ms`: 要加到当前时间戳的毫秒数
+
+**返回**
+
+未来的时间戳。
+
+**make_timeout_time_us**
+
+`static absolute_time_t make_timeout_time_us (uint64_t us) [inline], [static]`
+
+获取距当前时间若干微秒后时间戳的便捷方法。
+
+**参数**
+
+- `us`: 要加到当前时间戳的微秒数
+
+**返回**
+
+未来的时间戳。
+
+**to_ms_since_boot**
+
+`static uint32_t to_ms_since_boot (absolute_time_t t) [inline], [static]`
+
+将时间戳转换为自启动以来的毫秒数。
+
+fn to_ms_since_boot
+
+**参数**
+
+- `t`: 要转换的 absolute_time_t 值
+
+**返回**
+
+t 所表示的自启动以来的毫秒数。
+
+**另请参阅**
+
+`to_us_since_boot()`
+
+**to_us_since_boot**
+
+`static uint64_t to_us_since_boot (absolute_time_t t) [inline], [static]`
+
+将 absolute_time_t 转换为自启动以来的微秒数。
+
+fn to_us_since_boot
+
+**参数**
+
+- `t`: 要转换的绝对时间
+
+**返回**
+
+等价于 t 的自启动以来的微秒数。
+
+**update_us_since_boot**
+
+`static void update_us_since_boot (absolute_time_t * t, uint64_t us_since_boot) [inline], [static]`
+
+更新 absolute_time_t 值以表示自启动以来的给定微秒数。
+
+fn update_us_since_boot
+
+**参数**
+
+- `t`: 要更新的绝对时间值
+- `us_since_boot`: 要表示的自启动以来的微秒数。注意，此值应可表示为有符号 64 位整数。
+
+#### 变量文档
+
+**at_the_end_of_time**
+
+`const absolute_time_t at_the_end_of_time`
+
+表示时间终点的时间戳；实际上并非最大可能的时间戳，而是设置为 0x7fffffff_ffffffff 微秒，以避免时间运算中的符号溢出。这大约是 300,000 年，应该足够用了。
+**nil_time**
+
+`const absolute_time_t nil_time`
+
+表示空时间戳的时间戳。
+
+### sleep
+
+用于以较低功耗状态延迟执行的睡眠函数。
+
+#### 详细描述
+
+这些函数允许调用核心进入睡眠状态。这是一种较低功耗的睡眠：在每次处理器事件（WFE）时唤醒并重新检查时间。
+
+这些函数不应从 IRQ 处理程序中调用。
+
+较低功耗的睡眠需要使用[默认定时器池]，该池可能被 PICO_TIME_DEFAULT_ALARM_POOL_DISABLED 宏禁用，或者当前已满，在这种情况下这些函数将退化为忙等待。
+
+从功耗角度来说，_sleep__ 函数比 _busy_wait_ 函数更优选，但 _busy_wait_ 等价函数可能在目标时间到达后略早返回。
+
+**另请参阅**
+
+`busy_wait_until()`
+
+`busy_wait_us()`
+
+`busy_wait_us_32()`
+
+#### 函数
+
+- `void sleep_until (absolute_time_t target)`: 等待直到给定时间戳之后再返回。
+- `void sleep_us (uint64_t us)`: 等待给定的微秒数后返回。
+- `void sleep_ms (uint32_t ms)`: 等待给定的毫秒数后返回。
+- `bool best_effort_wfe_or_timeout (absolute_time_t timeout_timestamp)`: 用于在超时上阻塞的辅助方法。
+
+#### 函数文档
+
+**best_effort_wfe_or_timeout**
+
+`bool best_effort_wfe_or_timeout (absolute_time_t timeout_timestamp)`
+
+用于在超时上阻塞的辅助方法。
+
+此方法将在响应事件（如 `__wfe）时返回，或在目标时间到达时返回，也可能在此之前的任何时刻返回。
+
+此方法可用于实现较低功耗的轮询循环，等待由事件（[`__sev`()]）发出信号的某个条件。
+
+之所以称为 _best_effort_，是因为在某些情况下（尤其是默认定时器池被禁用或已满时），最佳努力就是直接返回而不执行 `__wfe`，从而将调用代码变为忙等待。
+
+示例用法：
+
+// .c
+```c
+bool my_function_with_timeout_us(uint64_t timeout_us) {
+    absolute_time_t timeout_time = make_timeout_time_us(timeout_us);
+    do {
+        // each time round the loop, we check to see if the condition
+        // we are waiting on has happened
+        if (my_check_done()) {
+            // do something
+            return true;
+        }
+        // will try to sleep until timeout or the next processor event
+    } while (!best_effort_wfe_or_timeout(timeout_time));
+    return false; // timed out
+}
+```
+
+::::note
+此方法应始终在与检查另一个"事件"变量相关联的循环中使用，因为处理器事件是共享资源，可能由于大量原因而发生。
+::::
+
+**参数**
+
+- `timeout_timestamp`: 超时时间
+
+**返回**
+
+若目标时间到达返回 true，否则返回 false。
+
+**sleep_ms**
+
+`void sleep_ms (uint32_t ms)`
+
+等待给定的毫秒数后返回。
+
+此方法尽可能尝试执行较低功耗的睡眠（使用 WFE）。
+
+**参数**
+
+- `ms`: 睡眠的毫秒数
+
+**sleep_until**
+
+`void sleep_until (absolute_time_t target)`
+
+等待直到给定时间戳之后再返回。
+
+此方法尝试执行较低功耗（WFE）睡眠。
+
+**参数**
+
+- `target`: 返回后的时间
+
+**另请参阅**
+
+`sleep_us()`
+
+`busy_wait_until()`
+
+**sleep_us**
+
+`void sleep_us (uint64_t us)`
+
+等待给定的微秒数后返回。
+
+此方法尝试执行较低功耗（WFE）睡眠。
+
+**参数**
+
+- `us`: 睡眠的微秒数
+
+**另请参阅**
+
+`busy_wait_us()`
+
+### alarm
+
+用于调度未来执行的定时器函数。
+
+#### 详细描述
+
+定时器被添加到定时器池中，定时器池可以持有一定数量的活跃定时器。每个定时器池利用四个底层 timer_alarm 之一，因此最多可以有四个定时器池。定时器池在创建它的核心上调用回调（除非回调在设置期间或之前就应触发）。回调从 timer_alarm IRQ 处理程序中调用，因此实现时需要小心。
+
+默认池在 core 0 上由 PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM 指定的核心创建，可被不带定时器池参数的方法变体使用。
+
+**另请参阅**
+
+struct `alarm_pool`
+
+
+#### 宏
+
+* `#define [PICO_TIME_DEFAULT_ALARM_POOL_DISABLED] 0`
+* `#define [PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM] 3`
+* `#define [PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS] 16`
+
+#### 类型定义
+
+- `typedef int32_t alarm_id_t`: 定时器的标识符。
+`typedef int64_t(** alarm_callback_t)(alarm_id_t id, void **user_data)`<br/>&emsp;用户定时器回调函数。
+
+#### 函数
+
+- `void alarm_pool_init_default (void)`: 创建默认定时器池（如果尚未创建或未禁用）。
+`alarm_pool_t * alarm_pool_get_default (void)`<br/>&emsp;在不指定定时器池时用于添加定时器的默认定时器池，也被 SDK 用于支持较低功耗的睡眠和超时。
+
+`static alarm_pool_t * alarm_pool_create (uint timer_alarm_num, uint max_timers)`<br/>&emsp;创建一个定时器池。
+
+`static alarm_pool_t * alarm_pool_create_with_unused_hardware_alarm (uint max_timers)`<br/>&emsp;创建一个定时器池，申请一个未使用的 timer_alarm 来支持它。
+
+`uint alarm_pool_timer_alarm_num (alarm_pool_t *pool)`<br/>&emsp;返回定时器池使用的 timer_alarm。
+
+`uint alarm_pool_core_num (alarm_pool_t *pool)`<br/>&emsp;返回定时器池初始化时所在的核心编号（也是回调被调用的核心）。
+
+`void alarm_pool_destroy (alarm_pool_t *pool)`<br/>&emsp;销毁定时器池，取消所有定时器并释放底层 timer_alarm。
+
+`alarm_id_t alarm_pool_add_alarm_at (alarm_pool_t **pool, absolute_time_t time, alarm_callback_t callback, void **user_data, bool fire_if_past)`<br/>&emsp;添加一个在指定时间调用的定时器回调。
+
+`alarm_id_t alarm_pool_add_alarm_at_force_in_context (alarm_pool_t **pool, absolute_time_t time, alarm_callback_t callback, void **user_data)`<br/>&emsp;添加一个在指定时间或之后调用的定时器回调。
+
+`static alarm_id_t alarm_pool_add_alarm_in_us (alarm_pool_t **pool, uint64_t us, alarm_callback_t callback, void **user_data, bool fire_if_past)`<br/>&emsp;添加一个在指定微秒延迟后调用的定时器回调。
+
+`static alarm_id_t alarm_pool_add_alarm_in_ms (alarm_pool_t **pool, uint32_t ms, alarm_callback_t callback, void **user_data, bool fire_if_past)`<br/>&emsp;添加一个在指定毫秒延迟后调用的定时器回调。
+
+`int64_t alarm_pool_remaining_alarm_time_us (alarm_pool_t *pool, alarm_id_t alarm_id)`<br/>&emsp;返回定时器下次触发前的剩余时间。
+
+`int32_t alarm_pool_remaining_alarm_time_ms (alarm_pool_t *pool, alarm_id_t alarm_id)`<br/>&emsp;返回定时器下次触发前的剩余时间。
+
+`bool alarm_pool_cancel_alarm (alarm_pool_t *pool, alarm_id_t alarm_id)`<br/>&emsp;取消一个定时器。
+
+`static alarm_id_t add_alarm_at (absolute_time_t time, alarm_callback_t callback, void *user_data, bool fire_if_past)`<br/>&emsp;添加一个在指定时间调用的定时器回调。
+
+`static alarm_id_t add_alarm_in_us (uint64_t us, alarm_callback_t callback, void *user_data, bool fire_if_past)`<br/>&emsp;添加一个在指定微秒延迟后调用的定时器回调。
+
+`static alarm_id_t add_alarm_in_ms (uint32_t ms, alarm_callback_t callback, void *user_data, bool fire_if_past)`<br/>&emsp;添加一个在指定毫秒延迟后调用的定时器回调。
+- `static bool cancel_alarm (alarm_id_t alarm_id)`: 从默认定时器池取消一个定时器。
+- `int64_t remaining_alarm_time_us (alarm_id_t alarm_id)`: 返回定时器下次触发前的剩余时间。
+- `int32_t remaining_alarm_time_ms (alarm_id_t alarm_id)`: 返回定时器下次触发前的剩余时间。
+
+#### 宏定义文档
+
+**PICO_TIME_DEFAULT_ALARM_POOL_DISABLED**
+
+`#define PICO_TIME_DEFAULT_ALARM_POOL_DISABLED 0`
+
+若为 1，则禁用默认定时器池（不为池申请 timer_alarm）。
+
+设为 1 可能导致某些代码无法编译，因为默认定时器池相关方法会被移除。
+
+禁用默认定时器池时，_sleep__ 方法和超时将不再是低功耗（它们变为 _busy_wait__）。
+
+**另请参阅**
+
+[PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM]
+
+`alarm_pool_get_default()`
+**PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM**
+
+`#define PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM 3`
+
+选择用于默认定时器池的 timer_alarm。
+
+**另请参阅**
+
+`alarm_pool_get_default()`
+**PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS**
+
+`#define PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS 16`
+
+选择默认定时器池中并发定时器的最大数量。
+
+由于实现原因，此值受限于 PICO_PHEAP_MAX_ENTRIES（默认为 255）。
+
+**另请参阅**
+
+[PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM]
+
+`alarm_pool_get_default()`
+
+#### 类型定义文档
+
+**alarm_id_t**
+
+`typedef int32_t alarm_id_t`
+
+定时器的标识符。
+
+此标识符是有符号的，因为创建定时器时 &lt;0 用作错误条件。
+
+定时器 ID 可能被重用，但为方便起见，实现会尽量推迟重用时间。通常在某个 ID 被重用之前会经历数百个 ID，大多数情况下更多。尽管如此，在取消定时器或基于定时器的其他功能时，若定时器可能已过期，仍需小心处理，因为定时器 ID 最终可能被另一个定时器重用。
+
+**另请参阅**
+
+**alarm_callback_t**
+
+`typedef int64_t(** alarm_callback_t) (alarm_id_t id, void **user_data)`
+
+用户定时器回调函数。
+
+**参数**
+
+- `id`: 添加定时器时返回的 alarm_id
+- `user_data`: 添加定时器时传入的用户数据
+
+**返回**
+
+&lt;0 以从定时器原计划触发时间起的该微秒数重新调度同一定时器
+
+**返回**
+
+&gt;0 以从此方法返回时间起的该微秒数重新调度同一定时器
+
+**返回**
+
+0 以不重新调度定时器
+
+#### 函数文档
+
+**add_alarm_at**
+
+`static alarm_id_t add_alarm_at (absolute_time_t` time, alarm_callback_t callback, void * user_data, bool fire_if_past) [inline], [static]`
+
+添加一个在指定时间调用的定时器回调。
+
+通常回调在指定时间后尽快从默认定时器池核心（通常是 core 0）的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `time`: 回调应触发的时间戳（在此时间或之后）
+- `callback`: 回调函数
+- `user_data`: 传递给回调函数的用户数据
+- `fire_if_past`: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+
+**返回**
+
+&gt;0 定时器 ID
+
+**返回**
+
+0 若定时器时间在调用之前或期间已过去且 fire_if_past 为 false
+
+**返回**
+
+&lt;0 若无可用定时器槽或发生其他错误
+
+**add_alarm_in_ms**
+
+`static alarm_id_t add_alarm_in_ms (uint32_t ms, alarm_callback_t` callback, void * user_data, bool fire_if_past) [inline], [static]`
+
+添加一个在指定毫秒延迟后调用的定时器回调。
+
+通常回调在指定时间后尽快从默认定时器池核心（通常是 core 0）的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `ms`: 回调应触发的延迟（从现在起）的毫秒数
+- `callback`: 回调函数
+- `user_data`: 传递给回调函数的用户数据
+- `fire_if_past`: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+
+**返回**
+
+&gt;0 定时器 ID
+
+**返回**
+
+0 若定时器时间在调用之前或期间已过去且 fire_if_past 为 false
+
+**返回**
+
+&lt;0 若无可用定时器槽或发生其他错误
+
+**add_alarm_in_us**
+
+`static alarm_id_t add_alarm_in_us (uint64_t us, alarm_callback_t` callback, void * user_data, bool fire_if_past) [inline], [static]`
+
+添加一个在指定微秒延迟后调用的定时器回调。
+
+通常回调在指定时间后尽快从默认定时器池核心（通常是 core 0）的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `us`: 回调应触发的延迟（从现在起）的微秒数
+- `callback`: 回调函数
+- `user_data`: 传递给回调函数的用户数据
+- `fire_if_past`: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+
+**返回**
+
+&gt;0 定时器 ID
+
+**返回**
+
+0 若定时器时间在调用之前或期间已过去且 fire_if_past 为 false
+
+**返回**
+
+&lt;0 若无可用定时器槽或发生其他错误
+
+**alarm_pool_add_alarm_at**
+
+`alarm_id_t alarm_pool_add_alarm_at (alarm_pool_t **` pool, absolute_time_t time, `alarm_callback_t callback, void ** user_data, bool fire_if_past)`
+
+添加一个在指定时间调用的定时器回调。
+
+通常回调在指定时间后尽快从创建定时器池的核心的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `pool`: 用于调度回调的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- `time`: 回调应触发的时间戳（在此时间或之后）
+- `callback`: 回调函数
+- `user_data`: 传递给回调函数的用户数据
+- `fire_if_past`: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+
+**返回**
+
+&gt;0 活跃定时器（返回时）的定时器 ID
+
+**返回**
+
+0 若定时器时间在调用之前或期间已过去且 fire_if_past 为 false
+
+**返回**
+
+&lt;0 若无可用定时器槽或发生其他错误
+
+**alarm_pool_add_alarm_at_force_in_context**
+
+`alarm_id_t alarm_pool_add_alarm_at_force_in_context (alarm_pool_t **` pool, absolute_time_t time, `alarm_callback_t callback, void ** user_data)`
+
+添加一个在指定时间或之后调用的定时器回调。
+
+回调在指定时间后尽快从创建定时器池的核心的 IRQ 处理程序中调用。与 `alarm_pool_add_alarm_at` 不同，此方法保证即使时间在此方法调用期间或过去也会从该核心调用回调。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `pool`: 用于调度回调的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- `time`: 回调应触发的时间戳（在此时间或之后）
+- `callback`: 回调函数
+- `user_data`: 传递给回调函数的用户数据
+
+**返回**
+
+&gt;0 活跃定时器（返回时）的定时器 ID
+
+**返回**
+
+&lt;0 若无可用定时器槽或发生其他错误
+
+**alarm_pool_add_alarm_in_ms**
+
+`static alarm_id_t alarm_pool_add_alarm_in_ms (alarm_pool_t` ** pool, uint32_t ms, `alarm_callback_t callback, void ** user_data, bool fire_if_past) [inline], [static]`
+
+添加一个在指定毫秒延迟后调用的定时器回调。
+
+通常回调在指定时间后尽快从创建定时器池的核心的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `pool`: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- `ms`: 回调应触发的延迟（从现在起）的毫秒数
+- `callback`: 回调函数
+- `user_data`: 传递给回调函数的用户数据
+- `fire_if_past`: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+
+**返回**
+
+&gt;0 定时器 ID
+
+**返回**
+
+0 若定时器时间在调用之前或期间已过去且 fire_if_past 为 false
+
+**返回**
+
+&lt;0 若无可用定时器槽或发生其他错误
+
+**alarm_pool_add_alarm_in_us**
+
+`static alarm_id_t alarm_pool_add_alarm_in_us (alarm_pool_t` ** pool, uint64_t us, `alarm_callback_t callback, void ** user_data, bool fire_if_past) [inline], [static]`
+
+添加一个在指定微秒延迟后调用的定时器回调。
+
+通常回调在指定时间后尽快从创建定时器池的核心的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `pool`: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- `us`: 回调应触发的延迟（从现在起）的微秒数
+- `callback`: 回调函数
+- `user_data`: 传递给回调函数的用户数据
+- `fire_if_past`: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+
+**返回**
+
+&gt;0 定时器 ID
+
+**返回**
+
+0 若定时器时间在调用之前或期间已过去且 fire_if_past 为 false
+
+**返回**
+
+&lt;0 若无可用定时器槽或发生其他错误
+
+**alarm_pool_cancel_alarm**
+
+`bool alarm_pool_cancel_alarm (alarm_pool_t *` pool, alarm_id_t alarm_id)`
+
+取消一个定时器。
+
+**参数**
+
+- `pool: 包含该定时器的 alarm_pool`
+- `alarm_id`: 定时器
+
+**返回**
+
+若定时器已取消返回 true，若定时器不存在返回 false。
+
+**另请参阅**
+
+`alarm_id_t` 关于 ID 重用的说明
+
+**alarm_pool_core_num**
+
+`uint alarm_pool_core_num (alarm_pool_t * pool)`
+
+返回定时器池初始化时所在的核心编号（也是回调被调用的核心）。
+
+**参数**
+
+- `pool`: 定时器池
+
+**返回**
+
+池使用的核心
+
+**alarm_pool_create**
+
+`static alarm_pool_t * alarm_pool_create (uint timer_alarm_num, uint max_timers) [inline], [static]`
+
+创建一个定时器池。
+
+定时器池将从调用此函数所在核心的定时器 IRQ 处理程序中调用回调。
+
+在许多情况下，除了默认定时器池之外无需其他定时器池，但如果你需要在 core 1 上进行定时器回调，或需要不同优先级的定时器池（基于 IRQ 优先级的回调抢占），则可能需要创建另一个。
+
+如果 timer_alarm 已被申请，此方法将触发硬断言。
+
+**参数**
+
+- `timer_alarm_num`: 用于支持此池的 timer_alarm
+- `max_timers`: 最大定时器数量
+
+由于实现原因，此值受限于 PICO_PHEAP_MAX_ENTRIES（默认为 255）。
+
+**另请参阅**
+
+`alarm_pool_get_default()`
+
+
+**alarm_pool_create_with_unused_hardware_alarm**
+
+`static alarm_pool_t * alarm_pool_create_with_unused_hardware_alarm (uint max_timers) [inline], [static]`
+
+创建一个定时器池，申请一个未使用的 timer_alarm 来支持它。
+
+定时器池将从调用此函数所在核心的定时器 IRQ 处理程序中调用回调。
+
+在许多情况下，除了默认定时器池之外无需其他定时器池，但如果你需要在 core 1 上进行定时器回调，或需要不同优先级的定时器池（基于 IRQ 优先级的回调抢占），则可能需要创建另一个。
+
+如果没有空闲硬件可申请，此方法将触发硬断言。
+
+**参数**
+
+- `max_timers`: 最大定时器数量
+
+由于实现原因，此值受限于 PICO_PHEAP_MAX_ENTRIES（默认为 255）。
+
+**另请参阅**
+
+`alarm_pool_get_default()`
+
+
+**alarm_pool_destroy**
+
+`void alarm_pool_destroy (alarm_pool_t * pool)`
+
+销毁定时器池，取消所有定时器并释放底层 timer_alarm。
+
+**参数**
+
+- `pool`: 定时器池
+
+**alarm_pool_get_default**
+
+`alarm_pool_t * alarm_pool_get_default (void)`
+
+在不指定定时器池时用于添加定时器的默认定时器池，也被 SDK 用于支持较低功耗的睡眠和超时。
+
+**另请参阅**
+
+[PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM]
+
+**alarm_pool_init_default**
+
+`void alarm_pool_init_default (void)`
+
+创建默认定时器池（如果尚未创建或未禁用）。
+
+**alarm_pool_remaining_alarm_time_ms**
+
+`int32_t alarm_pool_remaining_alarm_time_ms (alarm_pool_t *` pool, alarm_id_t alarm_id)`
+
+返回定时器下次触发前的剩余时间。
+
+**参数**
+
+- `pool: 包含该定时器的 alarm_pool`
+- `alarm_id`: 定时器
+
+**返回**
+
+>=0 下次触发前的毫秒数（若毫秒数超出 INT32_MAX 可表示范围则返回 INT32_MAX）
+
+**返回**
+
+&lt;0 若给定定时器未在进行中或已过期
+
+**alarm_pool_remaining_alarm_time_us**
+
+`int64_t alarm_pool_remaining_alarm_time_us (alarm_pool_t *` pool, alarm_id_t alarm_id)`
+
+返回定时器下次触发前的剩余时间。
+
+**参数**
+
+- `pool: 包含该定时器的 alarm_pool`
+- `alarm_id`: 定时器
+
+**返回**
+
+>=0 下次触发前的微秒数
+
+**返回**
+
+&lt;0 若给定定时器未在进行中或已过期
+
+**alarm_pool_timer_alarm_num**
+
+`uint alarm_pool_timer_alarm_num (alarm_pool_t * pool)`
+
+返回定时器池使用的 timer_alarm。
+
+**参数**
+
+- `pool`: 定时器池
+
+**返回**
+
+池使用的 timer_alarm
+
+**cancel_alarm**
+
+`static bool cancel_alarm (alarm_id_t alarm_id) [inline], [static]`
+
+从默认定时器池取消一个定时器。
+
+**参数**
+
+- `alarm_id`: 定时器
+
+**返回**
+
+若定时器已取消返回 true，若定时器不存在返回 false。
+
+**另请参阅**
+
+`alarm_id_t` 关于 ID 重用的说明
+
+**remaining_alarm_time_ms**
+
+`int32_t remaining_alarm_time_ms (alarm_id_t alarm_id)`
+
+返回定时器下次触发前的剩余时间。
+
+**参数**
+
+- `alarm_id`: 定时器
+
+**返回**
+
+>=0 下次触发前的毫秒数（若毫秒数超出 INT32_MAX 可表示范围则返回 INT32_MAX）
+
+**返回**
+
+&lt;0 若给定定时器未在进行中或已过期
+
+**remaining_alarm_time_us**
+
+`int64_t remaining_alarm_time_us (alarm_id_t alarm_id)`
+
+返回定时器下次触发前的剩余时间。
+
+**参数**
+
+- `alarm_id`: 定时器
+
+**返回**
+
+>=0 下次触发前的微秒数
+
+**返回**
+
+&lt;0 若给定定时器未在进行中或已过期
+
+### repeating_timer
+
+用于简单调度重复执行的重复定时器函数。
+
+#### 详细描述
+
+普通 _alarm__ 功能可以用于创建重复定时器（通过从回调返回非零值），但这些方法在此基础上进行了进一步抽象（代价是需要一个用户结构来存储重复延迟，因为定时器框架没有空间存储它）。
+
+#### 类型定义
+
+`typedef bool(** repeating_timer_callback_t)(repeating_timer_t **rt)`<br/>&emsp;重复定时器的回调函数。
+
+#### 函数
+
+`bool alarm_pool_add_repeating_timer_us (alarm_pool_t **pool, int64_t delay_us, repeating_timer_callback_t callback, void **user_data, repeating_timer_t *out)`<br/>&emsp;添加一个以指定微秒间隔重复调用的定时器。
+
+`static bool alarm_pool_add_repeating_timer_ms (alarm_pool_t **pool, int32_t delay_ms, repeating_timer_callback_t callback, void **user_data, repeating_timer_t *out)`<br/>&emsp;添加一个以指定毫秒间隔重复调用的定时器。
+
+`static bool add_repeating_timer_us (int64_t delay_us, repeating_timer_callback_t callback, void **user_data, repeating_timer_t **out)`<br/>&emsp;添加一个以指定微秒间隔重复调用的定时器。
+
+`static bool add_repeating_timer_ms (int32_t delay_ms, repeating_timer_callback_t callback, void **user_data, repeating_timer_t **out)`<br/>&emsp;添加一个以指定毫秒间隔重复调用的定时器。
+
+`bool cancel_repeating_timer (repeating_timer_t *timer)`<br/>&emsp;取消重复定时器。
+
+#### 类型定义文档
+
+**repeating_timer_callback_t**
+
+`typedef bool(** repeating_timer_callback_t) (repeating_timer_t **rt)`
+
+重复定时器的回调函数。
+
+**参数**
+
+- `rt`: 包含重复定时器信息的重复定时器结构。用户数据对用户而言最为重要。
+
+**返回**
+
+true 表示继续重复，false 表示停止。
+
+#### 函数文档
+
+**add_repeating_timer_ms**
+
+`static bool add_repeating_timer_ms (int32_t delay_ms, repeating_timer_callback_t callback, void **` user_data, repeating_timer_t ** out) [inline], [static]`
+
+添加一个以指定毫秒间隔重复调用的定时器。
+
+通常回调在指定时间后尽快从默认定时器池核心（通常是 core 0）的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `delay_ms`: 重复延迟（毫秒）；若 &gt;0 则为一次回调结束到下一次开始的延迟；若 &lt;0 则为各次回调开始时间间隔的负值。值 0 被视为 1 微秒。
+- `callback`: 重复定时器回调函数
+- `user_data: 存储在 repeating_timer` 结构中供回调使用的用户数据
+- `out`: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
+
+**返回**
+
+若无可用定时器槽来创建定时器返回 false，否则返回 true。
+
+**add_repeating_timer_us**
+
+`static bool add_repeating_timer_us (int64_t delay_us, repeating_timer_callback_t callback, void **` user_data, repeating_timer_t ** out) [inline], [static]`
+
+添加一个以指定微秒间隔重复调用的定时器。
+
+通常回调在指定时间后尽快从默认定时器池核心（通常是 core 0）的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `delay_us`: 重复延迟（微秒）；若 &gt;0 则为一次回调结束到下一次开始的延迟；若 &lt;0 则为各次回调开始时间间隔的负值。值 0 被视为 1。
+- `callback`: 重复定时器回调函数
+- `user_data: 存储在 repeating_timer` 结构中供回调使用的用户数据
+- `out`: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
+
+**返回**
+
+若无可用定时器槽来创建定时器返回 false，否则返回 true。
+
+**alarm_pool_add_repeating_timer_ms**
+
+`static bool alarm_pool_add_repeating_timer_ms (alarm_pool_t **` pool, int32_t delay_ms, repeating_timer_callback_t callback, void `** user_data, repeating_timer_t * out) [inline], [static]`
+
+添加一个以指定毫秒间隔重复调用的定时器。
+
+通常回调在指定时间后尽快从创建定时器池的核心的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `pool`: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- `delay_ms`: 重复延迟（毫秒）；若 &gt;0 则为一次回调结束到下一次开始的延迟；若 &lt;0 则为各次回调开始时间间隔的负值。值 0 被视为 1 微秒。
+- `callback`: 重复定时器回调函数
+- `user_data: 存储在 repeating_timer` 结构中供回调使用的用户数据
+- `out`: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
+
+**返回**
+
+若无可用定时器槽来创建定时器返回 false，否则返回 true。
+
+**alarm_pool_add_repeating_timer_us**
+
+`bool alarm_pool_add_repeating_timer_us (alarm_pool_t **` pool, int64_t delay_us, repeating_timer_callback_t callback, void `** user_data, repeating_timer_t * out)`
+
+添加一个以指定微秒间隔重复调用的定时器。
+
+通常回调在指定时间后尽快从创建定时器池的核心的 IRQ 处理程序中调用。如果回调时间在过去或在定时器设置完成之前发生，此方法将可选地自行调用回调，然后返回一个返回码表示目标时间已过去。
+
+从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
+
+**参数**
+
+- `pool`: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- `delay_us`: 重复延迟（微秒）；若 &gt;0 则为一次回调结束到下一次开始的延迟；若 &lt;0 则为各次回调开始时间间隔的负值。值 0 被视为 1。
+- `callback`: 重复定时器回调函数
+- `user_data: 存储在 repeating_timer` 结构中供回调使用的用户数据
+- `out`: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
+
+**返回**
+
+若无可用定时器槽来创建定时器返回 false，否则返回 true。
+
+**cancel_repeating_timer**
+
+`bool cancel_repeating_timer (repeating_timer_t * timer)`
+
+取消重复定时器。
+
+**参数**
+
+- `timer`: 要取消的重复定时器
+
+**返回**
+
+若重复定时器已取消返回 true，若不存在返回 false。
+
+**另请参阅**
+
+`alarm_id_t` 关于 ID 重用的说明
+
+<Normal />

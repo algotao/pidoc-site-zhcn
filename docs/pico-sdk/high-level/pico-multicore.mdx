@@ -1,0 +1,622 @@
+---
+sidebar_position: 7
+draft: false
+description: 支持在第二个处理器核心（core 1）上运行代码并与其交互。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK multicore]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+支持在第二个处理器核心（core 1）上运行代码并与其交互。
+
+### 详细描述
+
+**示例**
+
+```c title="multicore.c"
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "pico/multicore.h"
+
+#define FLAG_VALUE 123
+
+void core1_entry() {
+
+    multicore_fifo_push_blocking(FLAG_VALUE);
+
+    uint32_t g = multicore_fifo_pop_blocking();
+
+    if (g != FLAG_VALUE)
+        printf("Hmm, that's not right on core 1!\n");
+    else
+        printf("Its all gone well on core 1!");
+
+    while (1)
+        tight_loop_contents();
+}
+
+int main() {
+    stdio_init_all();
+    printf("Hello, multicore!\n");
+
+    multicore_launch_core1(core1_entry);
+
+    // Wait for it to start up
+
+    uint32_t g = multicore_fifo_pop_blocking();
+
+    if (g != FLAG_VALUE)
+        printf("Hmm, that's not right on core 0!\n");
+    else {
+        multicore_fifo_push_blocking(FLAG_VALUE);
+        printf("It's all gone well on core 0!");
+    }
+
+}
+```
+
+### 模块
+
+`fifo`<br/>&emsp;核间 FIFO 相关函数。
+
+`doorbell`<br/>&emsp;与门铃相关的函数，核心可使用它向自身或另一个核心触发 IRQ。
+
+`lockout`<br/>&emsp;使一个核心强制另一个核心在已知状态下暂停执行的函数。
+
+### 宏
+
+* `#define [SIO_FIFO_IRQ_NUM](core)`
+
+### 函数
+
+- `void multicore_reset_core1 (void)`: 重置 core 1。
+`void multicore_launch_core1 (void(*entry)(void))`<br/>&emsp;在 core 1 上运行代码。
+
+`void multicore_launch_core1_with_stack (void(**entry)(void), uint32_t **stack_bottom, size_t stack_size_bytes)`<br/>&emsp;在 core 1 上使用指定栈启动代码。
+
+`void multicore_launch_core1_raw (void(**entry)(void), uint32_t **sp, uint32_t vector_table)`<br/>&emsp;在 core 1 上不带栈保护地启动代码。
+
+### 宏定义文档
+
+#### SIO_FIFO_IRQ_NUM
+
+`#define SIO_FIFO_IRQ_NUM(core)`
+
+返回给定核心上 FIFO IRQ 的 `irq_num_t`。
+
+在 RP2040 上，每个核心有不同的 IRQ 编号：`SIO_IRQ_PROC0 和 SIO_IRQ_PROC1。在 RP2350 上，两个核心共享相同的 IRQ 编号（`SIO_IRQ_PROC），只是每个核心有不同的 SIO 中断输出路由到该 IRQ 输入。
+
+注意，此宏旨在编译时解析，不进行参数检查。
+
+### 函数文档
+
+#### multicore_launch_core1
+
+`void multicore_launch_core1 (void(*)(void) entry)`
+
+在 core 1 上运行代码。
+
+唤醒（之前已重置的）core 1，并使用默认的 core 1 栈（位于 core 0 栈下方）在 core 1 上进入给定函数。
+
+core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 `multicore_reset_core1` 的结果。
+
+core 1 将使用与 core 0 相同的向量表。
+
+**参数**
+
+- `entry`: 函数入口点
+
+**另请参阅**
+
+`multicore_reset_core1`
+
+#### multicore_launch_core1_raw
+
+`void multicore_launch_core1_raw (void(**)(void) entry, uint32_t ** sp, uint32_t vector_table)`
+
+在 core 1 上不带栈保护地启动代码。
+
+唤醒（之前已重置的）core 1，并以指定的入口点、栈指针和向量表启动执行。
+
+这是一个低级函数，即使定义了 USE_STACK_GUARDS 也不提供栈保护。
+
+core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 `multicore_reset_core1` 的结果。
+
+**参数**
+
+- `entry`: 函数入口点
+- `sp`: 指向 core 1 栈顶的指针
+- `vector_table`: core 1 使用的向量表地址
+
+**另请参阅**
+
+`multicore_reset_core1`
+
+#### multicore_launch_core1_with_stack
+
+`void multicore_launch_core1_with_stack (void(**)(void) entry, uint32_t ** stack_bottom, size_t stack_size_bytes)`
+
+在 core 1 上使用指定栈启动代码。
+
+唤醒（之前已重置的）core 1，并使用传入的栈在 core 1 上进入给定函数。
+
+core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 `multicore_reset_core1` 的结果。
+
+core 1 将使用与 core 0 相同的向量表。
+
+**参数**
+
+- `entry`: 函数入口点
+- `stack_bottom`: 栈的底部（最低地址）
+- `stack_size_bytes`: 栈的大小（字节，必须是 4 的倍数）
+
+**另请参阅**
+
+`multicore_reset_core1`
+
+#### multicore_reset_core1
+
+`void multicore_reset_core1 (void)`
+
+重置 core 1。
+
+此函数可用于将 core 1 重置到初始状态（准备好通过 `multicore_launch_core1` 及类似方法启动代码）。
+
+此函数只应从 core 0 调用。
+
+### fifo
+
+核间 FIFO 相关函数。
+
+#### 详细描述
+
+RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据、消息或有序事件。每个 FIFO 宽 32 位，在 RP2040 上深度为 8 项，在 RP2350 上深度为 4 项。其中一个 FIFO 只能由 core 0 写入、core 1 读取；另一个只能由 core 1 写入、core 0 读取。
+
+核间 FIFO 是非常宝贵的资源，SDK 功能（例如 core 1 启动或 [lockout] 函数）会频繁使用它们。此外，它们通常需要供 RTOS（如 FreeRTOS SMP）独占使用。因此，建议不要将 FIFO 用于自定义目的，除非上述顾虑均不适用；大多数核间数据传输场景可以同样很好地通过使用 queue 来处理。
+
+#### 函数
+
+- `static bool multicore_fifo_rvalid (void)`: 检查读取 FIFO 中是否有可用数据（由另一个核心发送）。
+- `static bool multicore_fifo_wready (void)`: 检查写入 FIFO 是否有空间容纳更多数据。
+- `void multicore_fifo_push_blocking (uint32_t data)`: 将数据推送到写入 FIFO（发送给另一个核心）。
+- `static void multicore_fifo_push_blocking_inline (uint32_t data)`: 将数据推送到写入 FIFO（发送给另一个核心）。
+- `bool multicore_fifo_push_timeout_us (uint32_t data, uint64_t timeout_us)`: 带超时地将数据推送到写入 FIFO（发送给另一个核心）。
+- `uint32_t multicore_fifo_pop_blocking (void)`: 从读取 FIFO 中弹出数据（来自另一个核心的数据）。
+- `static uint32_t multicore_fifo_pop_blocking_inline (void)`: 从读取 FIFO 中弹出数据（来自另一个核心的数据）。
+`bool multicore_fifo_pop_timeout_us (uint64_t timeout_us, uint32_t *out)`<br/>&emsp;带超时地从读取 FIFO 中弹出数据（来自另一个核心的数据）。
+- `static void multicore_fifo_drain (void)`: 丢弃读取 FIFO 中的所有数据。
+- `static void multicore_fifo_clear_irq (void)`: 清除 FIFO 中断。
+- `static uint32_t multicore_fifo_get_status (void)`: 获取 FIFO 状态。
+
+#### 函数文档
+
+**multicore_fifo_clear_irq**
+
+`static void multicore_fifo_clear_irq (void) [inline], [static]`
+
+清除 FIFO 中断。
+
+注意，此操作只清除由 ROE 或 WOF 标志引起的中断。要清除 VLD 标志，需要使用 'pop' 或 'drain' 函数之一。
+
+参见 [fifo] 章节中关于使用核间 FIFO 的注意事项。
+
+**另请参阅**
+
+
+**multicore_fifo_drain**
+
+`static void multicore_fifo_drain (void) [inline], [static]`
+
+丢弃读取 FIFO 中的所有数据。
+
+参见 [fifo] 章节中关于使用核间 FIFO 的注意事项。
+
+**multicore_fifo_get_status**
+
+`static uint32_t multicore_fifo_get_status (void) [inline], [static]`
+
+获取 FIFO 状态。
+
+**返回**
+
+以位域形式表示的状态值。
+
+| 位 | 描述 |
+| --- | --- |
+| 3 |  |
+| 粘性标志，表示 RX FIFO 在空时被读取（ROE）。此次读取已被 FIFO 忽略。 |  |
+| 2 |  |
+| 粘性标志，表示 TX FIFO 在满时被写入（WOF）。此次写入已被 FIFO 忽略。 |  |
+| 1 |  |
+| 若此核心的 TX FIFO 未满（即 FIFO_WR 准备好接收更多数据），值为 1。 |  |
+| 0 |  |
+| 若此核心的 RX FIFO 非空（即 FIFO_RD 有效），值为 1。 |  |
+
+参见 [fifo] 章节中关于使用核间 FIFO 的注意事项。
+
+**multicore_fifo_pop_blocking**
+
+`uint32_t multicore_fifo_pop_blocking (void)`
+
+从读取 FIFO 中弹出数据（来自另一个核心的数据）。
+
+此函数将阻塞直到有数据可读。如果不希望阻塞，可使用 `multicore_fifo_rvalid()` 检查数据是否已准备好。
+
+参见 fifo 章节中关于使用核间 FIFO 的注意事项。
+
+**返回**
+
+来自读取 FIFO 的 32 位数据。
+
+**multicore_fifo_pop_blocking_inline**
+
+`static uint32_t multicore_fifo_pop_blocking_inline (void) inline, [static]`
+
+从读取 FIFO 中弹出数据（来自另一个核心的数据）。
+
+此函数将阻塞直到有数据可读。如果不希望阻塞，可使用 `multicore_fifo_rvalid()` 检查数据是否已准备好。
+
+参见 fifo 章节中关于使用核间 FIFO 的注意事项。
+
+**返回**
+
+来自读取 FIFO 的 32 位数据。
+
+**multicore_fifo_pop_timeout_us**
+
+`bool multicore_fifo_pop_timeout_us (uint64_t timeout_us, uint32_t * out)`
+
+带超时地从读取 FIFO 中弹出数据（来自另一个核心的数据）。
+
+此函数将阻塞直到有数据可读或超时。
+
+参见 fifo 章节中关于使用核间 FIFO 的注意事项。
+
+**参数**
+
+- `timeout_us`: 超时时间（微秒）
+- `out`: 若有可用数据，用于存储弹出数据的位置
+
+**返回**
+
+如果数据已弹出并将值复制到 `out`，返回 true；如果超时前无法弹出数据，返回 false。
+
+**multicore_fifo_push_blocking**
+
+`void multicore_fifo_push_blocking (uint32_t data)`
+
+将数据推送到写入 FIFO（发送给另一个核心）。
+
+此函数将阻塞直到有空间发送数据。如果不希望阻塞，可使用 `multicore_fifo_wready()` 检查是否可以写入 FIFO。
+
+参见 fifo 章节中关于使用核间 FIFO 的注意事项。
+
+**参数**
+
+- `data`: 要推送到 FIFO 的 32 位值
+
+**multicore_fifo_push_blocking_inline**
+
+`static void multicore_fifo_push_blocking_inline (uint32_t data) [inline], [static]`
+
+将数据推送到写入 FIFO（发送给另一个核心）。
+
+此函数将阻塞直到有空间发送数据。如果不希望阻塞，可使用 `multicore_fifo_wready()` 检查是否可以写入 FIFO。
+
+参见 fifo 章节中关于使用核间 FIFO 的注意事项。
+
+**参数**
+
+- `data`: 要推送到 FIFO 的 32 位值
+
+**multicore_fifo_push_timeout_us**
+
+`bool multicore_fifo_push_timeout_us (uint32_t data, uint64_t timeout_us)`
+
+带超时地将数据推送到写入 FIFO（发送给另一个核心）。
+
+此函数将阻塞直到有空间发送数据或超时。
+
+**参数**
+
+- `data`: 要推送到 FIFO 的 32 位值
+- `timeout_us`: 超时时间（微秒）
+
+**返回**
+
+如果数据已推送，返回 true；如果超时前无法推送数据，返回 false。
+
+**multicore_fifo_rvalid**
+
+`static bool multicore_fifo_rvalid (void) [inline], [static]`
+
+检查读取 FIFO 中是否有可用数据（由另一个核心发送）。
+
+参见 [fifo] 章节中关于使用核间 FIFO 的注意事项。
+
+**返回**
+
+如果 FIFO 中有数据返回 true，否则返回 false。
+
+**multicore_fifo_wready**
+
+`static bool multicore_fifo_wready (void) [inline], [static]`
+
+检查写入 FIFO 是否有空间容纳更多数据。
+
+参见 [fifo] 章节中关于使用核间 FIFO 的注意事项。
+
+**返回**
+
+如果 FIFO 有空间容纳更多数据返回 true，否则返回 false。
+
+### doorbell
+
+与门铃相关的函数，核心可使用它向自身或另一个核心触发 IRQ。
+
+#### 宏
+
+* `#define [DOORBELL_IRQ_NUM](doorbell_num)`
+
+#### 函数
+
+`void multicore_doorbell_claim (uint doorbell_num, uint core_mask)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式申请使用此硬件 alarm_num。
+
+`int multicore_doorbell_claim_unused (uint core_mask, bool required)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式申请使用此硬件 alarm_num。
+
+`void multicore_doorbell_unclaim (uint doorbell_num, uint core_mask)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式释放对此硬件 alarm_num 的申请。
+
+`static void multicore_doorbell_set_other_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;激活另一个核心上的指定门铃。
+
+`static void multicore_doorbell_clear_other_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;停用另一个核心上的指定门铃。
+
+`static void multicore_doorbell_set_current_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;激活当前核心上的指定门铃。
+
+`static void multicore_doorbell_clear_current_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;停用当前核心上的指定门铃。
+
+`static bool multicore_doorbell_is_set_current_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;判断指定门铃是否在另一个核心上处于激活状态。
+
+`static bool multicore_doorbell_is_set_other_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;判断指定门铃是否在当前核心上处于激活状态。
+
+#### 宏定义文档
+
+**DOORBELL_IRQ_NUM** <span className="chip-tag rp2350">RP2350</span>
+
+`#define DOORBELL_IRQ_NUM(doorbell_num)`
+
+返回给定门铃编号的处理器中断的 `irq_num_t`。
+
+注意，此宏旨在编译时解析，不进行参数检查。
+
+#### 函数文档
+
+**multicore_doorbell_claim** <span className="chip-tag rp2350">RP2350</span>
+
+`void multicore_doorbell_claim (uint doorbell_num, uint core_mask)`
+
+协作式申请使用此硬件 alarm_num。
+
+如果硬件 alarm 当前已被申请，此方法将触发硬断言。
+
+**参数**
+
+- `doorbell_num`: 要申请的门铃编号
+- `core_mask`: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
+
+**另请参阅**
+
+
+**multicore_doorbell_claim_unused** <span className="chip-tag rp2350">RP2350</span>
+
+`int multicore_doorbell_claim_unused (uint core_mask, bool required)`
+
+协作式申请使用此硬件 alarm_num。
+
+此方法尝试申请一个未使用的硬件 alarm。
+
+**参数**
+
+- `core_mask`: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
+- `required`: 若为 true，则在无可用资源时函数将触发 panic
+
+**返回**
+
+申请到的门铃编号；若 required 为 false 且无可用资源，返回 -1。
+
+**另请参阅**
+
+
+**multicore_doorbell_clear_current_core** <span className="chip-tag rp2350">RP2350</span>
+
+`static void multicore_doorbell_clear_current_core (uint doorbell_num) [inline], [static]`
+
+停用当前核心上的指定门铃。
+
+**参数**
+
+- `doorbell_num`: 门铃编号
+
+**multicore_doorbell_clear_other_core** <span className="chip-tag rp2350">RP2350</span>
+
+`static void multicore_doorbell_clear_other_core (uint doorbell_num) [inline], [static]`
+
+停用另一个核心上的指定门铃。
+
+**参数**
+
+- `doorbell_num`: 门铃编号
+
+**multicore_doorbell_is_set_current_core** <span className="chip-tag rp2350">RP2350</span>
+
+`static bool multicore_doorbell_is_set_current_core (uint doorbell_num) [inline], [static]`
+
+判断指定门铃是否在另一个核心上处于激活状态。
+
+**参数**
+
+- `doorbell_num`: 门铃编号
+
+**multicore_doorbell_is_set_other_core** <span className="chip-tag rp2350">RP2350</span>
+
+`static bool multicore_doorbell_is_set_other_core (uint doorbell_num) [inline], [static]`
+
+判断指定门铃是否在当前核心上处于激活状态。
+
+**参数**
+
+- `doorbell_num`: 门铃编号
+
+**multicore_doorbell_set_current_core** <span className="chip-tag rp2350">RP2350</span>
+
+`static void multicore_doorbell_set_current_core (uint doorbell_num) [inline], [static]`
+
+激活当前核心上的指定门铃。
+
+**参数**
+
+- `doorbell_num`: 门铃编号
+
+**multicore_doorbell_set_other_core** <span className="chip-tag rp2350">RP2350</span>
+
+`static void multicore_doorbell_set_other_core (uint doorbell_num) [inline], [static]`
+
+激活另一个核心上的指定门铃。
+
+**参数**
+
+- `doorbell_num`: 门铃编号
+
+**multicore_doorbell_unclaim** <span className="chip-tag rp2350">RP2350</span>
+
+`void multicore_doorbell_unclaim (uint doorbell_num, uint core_mask)`
+
+协作式释放对此硬件 alarm_num 的申请。
+
+**参数**
+
+- `doorbell_num`: 要释放的门铃编号
+- `core_mask`: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
+
+**另请参阅**
+
+
+### lockout
+
+使一个核心强制另一个核心在已知状态下暂停执行的函数。
+
+#### 详细描述
+
+有时需要在两个核心上同时进入临界区。在单核系统上，通过禁用中断可以轻松进入临界区；然而在多核系统中，这样做是不够的——除非另一个核心正在以某种方式轮询，否则需要通过中断来使其协作进入阻塞状态。
+
+这些 "lockout" 函数使用核间 FIFO 从一个核心向另一个核心发出中断，并管理等待另一个核心进入 "locked out" 状态的过程。
+
+使用方式是："victim" 核心（即可被另一个核心 "lock out" 的核心）调用 `multicore_lockout_victim_init` 来挂钩 FIFO 中断。注意任意一个或两个核心都可以执行此操作。
+
+当处于 "locked out" 状态时，victim 核心会暂停（实际上是在 RAM 中执行一个紧循环）并禁用中断。这使得 lockout 函数适合用于需要向 Flash 写入数据的代码（此时不允许从 Flash 执行任何代码）。
+
+希望锁定另一个核心的核心调用 `multicore_lockout_start_blocking 或 multicore_lockout_start_timeout_us 来中断另一个 "victim" 核心并等待其进入 "locked out" 状态。一旦不再需要锁定，它调用 `multicore_lockout_end_blocking 或 multicore_lockout_end_timeout_us` 来解除锁定。
+
+由于 multicore lockout 使用核间 FIFO，FIFO **不能**用于任何其他目的。
+
+#### 函数
+
+- `void multicore_lockout_victim_init (void)`: 初始化当前核心，使其可以成为 lockout 的 "victim"（即被另一个核心强制在已知状态下暂停）。
+- `void multicore_lockout_victim_deinit (void)`: 使当前核心不再能够成为 lockout 的 "victim"（即被另一个核心强制在已知状态下暂停）。
+- `bool multicore_lockout_victim_is_initialized (uint core_num): 判断指定核心是否已调用过 `multicore_lockout_victim_init()`。
+- `void multicore_lockout_start_blocking (void)`: 请求另一个核心在已知状态下暂停，并等待其完成。
+- `bool multicore_lockout_start_timeout_us (uint64_t timeout_us)`: 请求另一个核心在已知状态下暂停，并在超时时间内等待。
+- `void multicore_lockout_end_blocking (void)`: 释放另一个核心的锁定状态。
+- `bool multicore_lockout_end_timeout_us (uint64_t timeout_us)`: 释放另一个核心的锁定状态。
+
+#### 函数文档
+
+**multicore_lockout_end_blocking**
+
+`void multicore_lockout_end_blocking (void)`
+
+释放另一个核心的锁定状态。
+
+另一个核心必须之前已通过从此核心调用 `multicore_lockout_start_` 函数而进入 "locked out" 状态。
+
+调用此函数后，另一个核心将离开锁定状态。此函数仅阻塞以等待访问 lockout 互斥锁，不等待另一个核心离开锁定状态。
+
+**multicore_lockout_end_timeout_us**
+
+`bool multicore_lockout_end_timeout_us (uint64_t timeout_us)`
+
+释放另一个核心的锁定状态。
+
+另一个核心必须之前已通过从此核心调用 `multicore_lockout_start_` 函数而进入 "locked out" 状态。
+
+如果此函数返回 true，另一个核心将离开锁定状态。此函数仅阻塞以等待访问 lockout 互斥锁，不等待另一个核心离开锁定状态。如果无法获取 lockout 互斥锁，则函数返回 false，不执行任何操作。
+
+**参数**
+
+- `timeout_us`: 超时时间（微秒）
+
+**返回**
+
+如果另一个核心将离开锁定状态返回 true，否则返回 false。
+
+**multicore_lockout_start_blocking**
+
+`void multicore_lockout_start_blocking (void)`
+
+请求另一个核心在已知状态下暂停，并等待其完成。
+
+另一个（victim）核心必须已预先执行过 `multicore_lockout_victim_init()`。
+
+multicore_lockout_start_ 函数不可嵌套，必须与对应的 `multicore_lockout_end_blocking` 调用配对使用。
+
+**multicore_lockout_start_timeout_us**
+
+`bool multicore_lockout_start_timeout_us (uint64_t timeout_us)`
+
+请求另一个核心在已知状态下暂停，并在超时时间内等待。
+
+另一个核心必须已预先执行过 `multicore_lockout_victim_init()`。
+
+multicore_lockout_start_ 函数不可嵌套，必须与对应的 `multicore_lockout_end_blocking` 调用配对使用。
+
+**参数**
+
+- `timeout_us`: 超时时间（微秒）
+
+**返回**
+
+如果另一个核心在超时内进入锁定状态返回 true，否则返回 false。
+
+**multicore_lockout_victim_deinit**
+
+`void multicore_lockout_victim_deinit (void)`
+
+使当前核心不再能够成为 lockout 的 "victim"（即被另一个核心强制在已知状态下暂停）。
+
+此代码会取消挂钩核间 FIFO IRQ，此后 FIFO 可用于任何其他目的。
+
+**multicore_lockout_victim_init**
+
+`void multicore_lockout_victim_init (void)`
+
+初始化当前核心，使其可以成为 lockout 的 "victim"（即被另一个核心强制在已知状态下暂停）。
+
+此代码会挂钩核间 FIFO IRQ，此后 FIFO 不得用于任何其他目的。
+
+**multicore_lockout_victim_is_initialized**
+
+`bool multicore_lockout_victim_is_initialized (uint core_num)`
+
+判断指定核心是否已调用过 `multicore_lockout_victim_init()`。
+
+此状态在核心随后被重置后仍会保留；因此，建议在重置之前已初始化过的核心后，始终重新调用 `multicore_lockout_victim_init()`。
+
+**参数**
+
+- `core_num`: 核心编号（0 或 1）
+
+**返回**
+
+如果指定核心已调用过 `multicore_lockout_victim_init()` 返回 true，否则返回 false。
+
+<Normal />

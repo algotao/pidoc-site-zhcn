@@ -1,0 +1,17 @@
+---
+sidebar_position: 3
+draft: false
+description: 可选支持：通过快速双重复位使系统进入 BOOTSEL 模式。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK bootsel via double reset]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+可选支持：通过快速双重复位使系统进入 BOOTSEL 模式。
+
+### 详细描述
+
+当链接了 'pico_bootsel_via_double_reset' 库时，会在 main() 之前注入一个函数，用于检测系统是否在极短时间内被复位了两次。若检测到这种情况，则进入 USB ROM 引导加载程序（BOOTSEL 模式）。这样，只要始终链接此库，就可以通过双击开发板上的复位按钮来进入 ROM 引导加载程序。
+
+<Normal />

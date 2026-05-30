@@ -1,0 +1,38 @@
+---
+sidebar_position: 1
+draft: false
+description: Index
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK index]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+# Runtime
+
+本章包含以下 API 分组：
+
+- `boot_stage2`(boot-stage2.mdx): Second stage boot loaders responsible for setting up external flash.
+- `pico_atomic`(pico-atomic.mdx): Helper implementations for C11 atomics.
+- `pico_base`(pico-base.mdx): Core types and macros for the Raspberry Pi Pico SDK.
+- `pico_binary_info`(pico-binary-info.mdx): Binary info is intended for embedding machine readable information with the binary in FLASH.
+- `pico_bootrom`(pico-bootrom.mdx): Access to functions and data in the bootrom.
+- `pico_bit_ops`(pico-bit-ops.mdx): Optimized bit manipulation functions.
+- `pico_cxx_options`(pico-cxx-options.mdx): non-code library controlling C++ related compile options
+- `pico_clib_interface`(pico-clib-interface.mdx): Provides the necessary glue code required by the particular C/C++ runtime being used.
+- `pico_crt0`(pico-crt0.mdx): Provides the default linker scripts and the program entry/exit point.
+- `pico_divider`(pico-divider.mdx): Optimized 32 and 64 bit division functions accelerated by the RP2040 hardware divider.
+- `pico_double`(pico-double.mdx): Optimized double-precision floating point functions.
+- `pico_float`(pico-float.mdx): Optimized single-precision floating point functions.
+- `pico_int64_ops`(pico-int64-ops.mdx): Optimized replacement implementations of the compiler built-in 64 bit multiplication.
+- `pico_malloc`(pico-malloc.mdx): Multi-core safety for malloc, calloc and free.
+- `pico_mem_ops`(pico-mem-ops.mdx): Provides optimized replacement implementations of the compiler built-in memcpy, memset and related functions.
+- `pico_platform`(pico-platform.mdx): Macros and definitions (and functions when included by non assembly code) for the RP2 family device / architecture to pr
+- `pico_printf`(pico-printf.mdx): Compact replacement for printf by Marco Paland (mailto:info@paland.com[info@paland.com])
+- `pico_runtime`(pico-runtime.mdx): Basic runtime support for running pre-main initializers provided by other libraries.
+- `pico_runtime_init`(pico-runtime-init.mdx): Main runtime initialization functions required to set up the runtime environment before entering main.
+- `pico_stdio`(pico-stdio.mdx): Customized stdio support allowing for input and output from UART, USB, semi-hosting etc.
+- `pico_standard_binary_info`(pico-standard-binary-info.mdx): Includes default information about the binary that can be displayed by picotool.
+- `pico_standard_link`(pico-standard-link.mdx): Setup for link options for a standard SDK executable.
+
+<Normal />

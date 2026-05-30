@@ -1,0 +1,100 @@
+---
+sidebar_position: 1
+draft: false
+description: 内存映射硬件寄存器的低级类型和（原子）访问器。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK base]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+内存映射硬件寄存器的低级类型和（原子）访问器。
+
+### 详细描述
+
+`hardware_base` 定义了内存映射硬件寄存器的低级类型和访问函数，默认情况下被所有其他硬件库包含。
+
+以下寄存器访问类型定义（typedef）规定了硬件寄存器的访问类型（读/写）和总线宽度（8/16/32 位）。寄存器类型名称由以下三部分各取一项拼接而成：
+
+| A | B | C | 含义 |
+| --- | --- | --- | --- |
+| io_ |  |  | 内存映射 IO 寄存器 |
+| &nbsp; | ro_ |  | 只读访问 |
+| &nbsp; | rw_ |  | 读写访问 |
+| &nbsp; | wo_ |  | 只写访问（C API 无法实际强制执行） |
+| &nbsp; |  | 8 | 8 位宽访问 |
+| &nbsp; |  | 16 | 16 位宽访问 |
+| &nbsp; |  | 32 | 32 位宽访问 |
+
+使用这些类型时，始终使用指针，即 `io_rw_32 **some_reg 是指向读写 32 位寄存器的指针，可以通过 `**some_reg = value` 写入，或通过 value = *some_reg` 读取。
+
+RP 系列硬件还通过别名支持对硬件寄存器部分位的原子置位、清零或翻转，从而保证两个核心并发访问时，始终表现为先执行一个原子操作再执行另一个原子操作。
+
+参见 `hw_set_bits()、hw_clear_bits() 和 `hw_xor_bits()`，通过指向 32 位寄存器的指针提供原子访问。
+
+此外，给定一个指向表示某硬件（如 `dma_hw_t *dma_hw` 代表 DMA 控制器）的结构体指针，可以获取整个结构体的别名，使得对结构体中任意成员（寄存器）的写入等效于通过 hw_set_alias()、hw_clear_alias() 或 hw_xor_alias() 执行的原子操作……
+
+例如，`hw_set_alias(dma_hw)\->inte1 = 0x80;` 将设置 DMA 控制器 INTE1 寄存器的第 7 位，而保持其他位不变。
+
+### 函数
+
+`static __force_inline void hw_set_bits (io_rw_32 *addr, uint32_t mask)`<br/>&emsp;原子地将 HW 寄存器中指定位置 1。
+
+`static __force_inline void hw_clear_bits (io_rw_32 *addr, uint32_t mask)`<br/>&emsp;原子地将 HW 寄存器中指定位清零。
+
+`static __force_inline void hw_xor_bits (io_rw_32 *addr, uint32_t mask)`<br/>&emsp;原子地翻转 HW 寄存器中指定位。
+
+`static __force_inline void hw_write_masked (io_rw_32 *addr, uint32_t values, uint32_t write_mask)`<br/>&emsp;为 HW 寄存器中的部分位设置新值。
+
+### 函数文档
+
+#### hw_clear_bits
+
+`static __force_inline void hw_clear_bits (io_rw_32 * addr, uint32_t mask) [static]`
+
+原子地将 HW 寄存器中指定位清零。
+
+**参数**
+
+- `addr`: 可写寄存器的地址
+- `mask`: 指定要清零的位的位掩码
+
+#### hw_set_bits
+
+`static __force_inline void hw_set_bits (io_rw_32 * addr, uint32_t mask) [static]`
+
+原子地将 HW 寄存器中指定位置 1。
+
+**参数**
+
+- `addr`: 可写寄存器的地址
+- `mask`: 指定要置 1 的位的位掩码
+
+#### hw_write_masked
+
+`static __force_inline void hw_write_masked (io_rw_32 * addr, uint32_t values, uint32_t write_mask) [static]`
+
+为 HW 寄存器中的部分位设置新值。
+
+将目标位设置为 `values 中指定的值，当且仅当 write_mask` 中对应位为 1 时生效。
+
+注意：此方法允许对寄存器的*不同*位进行安全的并发修改，但对同一位的多次并发访问仍不安全。
+
+**参数**
+
+- `addr`: 可写寄存器的地址
+- `values`: 位值
+- `write_mask`: 要更改的位的掩码
+
+#### hw_xor_bits
+
+`static __force_inline void hw_xor_bits (io_rw_32 * addr, uint32_t mask) [static]`
+
+原子地翻转 HW 寄存器中指定位。
+
+**参数**
+
+- `addr`: 可写寄存器的地址
+- `mask`: 指定要翻转的位的位掩码
+
+<Normal />

@@ -1,0 +1,185 @@
+---
+sidebar_position: 8
+draft: false
+description: 设置处理器异常处理程序的方法。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK exception]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+设置处理器异常处理程序的方法。
+
+### 详细描述
+
+异常由 `exception_number` 标识，该数值范围为 -15 到 -1；这些是相对于向量表中第一个 IRQ 向量索引的相对编号。（即向量表索引等于 exception_num 加 16）
+
+每个核心有一套独立的异常处理程序，因此通过这些方法为每个核心设置的异常处理程序是相互独立的。
+
+所有异常 API 仅影响当前执行的核心（即调用函数的那个核心）。
+
+### 类型定义
+
+`typedef void(* exception_handler_t)(void)`<br/>&emsp;异常处理函数类型。
+
+### 枚举
+
+- `enum exception_number { MIN_EXCEPTION_NUM = 2, [NMI_EXCEPTION] = 2, [HARDFAULT_EXCEPTION] = 3, [MEMMANAGE_EXCEPTION] = 4, [BUSFAULT_EXCEPTION] = 5, [USAGEFAULT_EXCEPTION] = 6, [SECUREFAULT_EXCEPTION] = 7, [SVCALL_EXCEPTION] = 11, [PENDSV_EXCEPTION] = 14, [SYSTICK_EXCEPTION] = 15, MAX_EXCEPTION_NUM = 15 }`: 异常编号定义。
+
+### 函数
+
+- `exception_handler_t exception_set_exclusive_handler (enum exception_number num, exception_handler_t handler)`: 为当前执行核心的指定异常设置处理程序。
+- `void exception_restore_handler (enum exception_number num, exception_handler_t original_handler)`: 为当前核心恢复指定异常的原始处理程序。
+- `exception_handler_t exception_get_vtable_handler (enum exception_number num)`: 从当前执行核心已安装的向量表中获取指定异常的当前处理程序。
+- `bool exception_set_priority (uint num, uint8_t hardware_priority)`: 设置指定异常的优先级。
+- `uint exception_get_priority (uint num)`: 获取指定异常的优先级。
+
+### 类型定义文档
+
+#### exception_handler_t
+
+`typedef void(* exception_handler_t) (void)`
+
+异常处理函数类型。
+
+所有异常处理函数均应为此类型，并遵循标准 ARM EABI 寄存器保存约定。
+
+### 枚举类型文档
+
+#### exception_number
+
+`enum exception_number`
+
+异常编号定义。
+
+在 Arm 上，这些是向量表索引：
+
+| 名称 | 值 | 异常 |
+| --- | --- | --- |
+| NMI_EXCEPTION | 2 | 不可屏蔽中断 |
+| HARDFAULT_EXCEPTION | 3 | HardFault |
+| MEMMANAGE_EXCEPTION | 4 | MemManage |
+| BUSFAULT_EXCEPTION | 5 | BusFault |
+| USAGEFAULT_EXCEPTION | 6 | UsageFault |
+| SECUREFAULT_EXCEPTION | 7 | SecureFault |
+| SVCALL_EXCEPTION | 11 | SV Call |
+| PENDSV_EXCEPTION | 14 | Pend SV |
+| SYSTICK_EXCEPTION | 15 | System Tick |
+
+在 RISC-V 上，这些是异常原因编号：
+
+| 名称 | 值 | 异常 |
+| --- | --- | --- |
+| INSTR_ALIGN_EXCEPTION | 0 | 指令取址未对齐 |
+| INSTR_FAULT_EXCEPTION | 1 | 指令取址总线故障 |
+| INSTR_ILLEGAL_EXCEPTION | 2 | 无效或非法指令 |
+| EBREAK_EXCEPTION | 3 | ebreak 未被异常捕获 |
+| LOAD_ALIGN_EXCEPTION | 4 | 加载地址未自然对齐 |
+| LOAD_FAULT_EXCEPTION | 5 | 加载总线故障 |
+| STORE_ALIGN_EXCEPTION | 6 | Store 或 AMO 地址未自然对齐 |
+| STORE_FAULT_EXCEPTION | 7 | Store 或 AMO 总线故障 |
+| ECALL_UMODE_EXCEPTION | 8 | ecall 在 U 模式下执行 |
+| ECALL_SMODE_EXCEPTION | 9 | ecall 在 S 模式下执行 |
+| ECALL_MMODE_EXCEPTION | 11 | ecall 在 M 模式下执行 |
+
+| 枚举值 | 说明 |
+| --- | --- |
+| NMI_EXCEPTION | 不可屏蔽中断。 |
+| HARDFAULT_EXCEPTION | HardFault 中断。 |
+| MEMMANAGE_EXCEPTION | MemManage 中断。 |
+| BUSFAULT_EXCEPTION | BusFault 中断。 |
+| USAGEFAULT_EXCEPTION | UsageFault 中断。 |
+| SECUREFAULT_EXCEPTION | SecureFault 中断。 |
+| SVCALL_EXCEPTION | SV Call 中断。 |
+| PENDSV_EXCEPTION | Pend SV 中断。 |
+| SYSTICK_EXCEPTION | System Tick 中断。 |
+
+### 函数文档
+
+#### exception_get_priority
+
+`uint exception_get_priority (uint num)`
+
+获取指定异常的优先级。
+
+数值越小优先级越高。硬件优先级范围为 0（最高优先级）到 255（最低优先级）。
+
+RP2040 上 ARM Cortex-M0+ 仅高 2 位有效。
+
+RP2350 上 ARM Cortex-M33 仅高 4 位有效，RISC-V 不支持异常优先级。
+
+**参数**
+
+- `num: 异常编号 exception_number`
+
+**返回**
+
+异常优先级。
+
+#### exception_get_vtable_handler
+
+`exception_handler_t exception_get_vtable_handler (enum exception_number num)`
+
+从当前执行核心已安装的向量表中获取指定异常的当前处理程序。
+
+**参数**
+
+- `num`: 异常编号
+
+**返回**
+
+存储在 VTABLE 中给定异常编号处的地址。
+
+#### exception_restore_handler
+
+`void exception_restore_handler (enum exception_number num, exception_handler_t original_handler)`
+
+为当前核心恢复指定异常的原始处理程序。
+
+此方法可用于将当前核心上某异常的处理程序恢复至调用 `exception_set_exclusive_handler() 之前的状态，以便将来再次调用 exception_set_exclusive_handler()`。
+
+**参数**
+
+- `num: 异常编号 exception_number`
+- `original_handler: 从 exception_set_exclusive_handler` 返回的原始处理程序
+
+**参见**
+
+`exception_set_exclusive_handler()`
+
+#### exception_set_exclusive_handler
+
+`exception_handler_t exception_set_exclusive_handler (enum exception_number num, exception_handler_t handler)`
+
+为当前执行核心的指定异常设置处理程序。
+
+若此核心上已通过此方法为该异常编号设置了处理程序，且未通过 exception_restore_handler 恢复，此方法将断言失败。
+
+此方法不能用于覆盖在链接时通过为弱定义存根异常处理程序提供强替换来指定的异常处理程序，在这种情况下也会断言失败。
+
+**参数**
+
+- `num`: 异常编号
+- `handler`: 要设置的处理程序
+
+**参见**
+
+
+#### exception_set_priority
+
+`bool exception_set_priority (uint num, uint8_t hardware_priority)`
+
+设置指定异常的优先级。
+
+**参数**
+
+- `num: 异常编号 exception_number`
+- `hardware_priority`: 要设置的优先级。
+
+数值越小优先级越高。硬件优先级范围为 0（最高优先级）到 255（最低优先级）。
+
+RP2040 上 ARM Cortex-M0+ 仅高 2 位有效。
+
+RP2350 上 ARM Cortex-M33 仅高 4 位有效，RISC-V 不支持异常优先级。
+
+<Normal />

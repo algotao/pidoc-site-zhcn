@@ -1,0 +1,114 @@
+---
+sidebar_position: 11
+draft: false
+description: 优化的双精度浮点函数。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK double]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+优化的双精度浮点函数。
+
+### 详细描述
+
+应用程序可以通过依赖 pico_double 库，对程序中使用的浮点运算例程进行比编译器所提供的更深层次的控制。用户可能希望这样做的原因包括：
+
+. 
+使用 RP2-series 设备 bootrom 或 SDK 提供的优化软件实现
+
+. 
+使用利用 RP2-series 自定义硬件加速的优化软硬件组合实现
+
+. 
+控制 C 编译器/库代码体积膨胀的程度
+
+. 
+确保程序中完全不调用浮点运算
+
+pico_double 库有三种主要版本：
+
+. 
+`pico_double_none` - 所有浮点操作都会引发 panic —— 不包含任何双精度浮点代码
+
+. 
+`pico_double_compiler` - 不提供自定义函数；所有双精度浮点运算均由 C 编译器/库处理
+
+. 
+`pico_double_pico` - 适用于该平台的最小且最快的版本，并附带额外功能（如定点数转换），详见下文
+
+用户可以通过设置 CMake 全局变量 `PICO_DEFAULT_DOUBLE_IMPL=xxx，或使用 CMake 函数 pico_set_double_implementation(<TARGET> xxx)` 来控制使用哪个版本（即 **pico_double_xxx**）。注意：若两者均未设置，默认使用 pico_double_pico。
+
+在 RP2040 上，`pico_double_pico` 使用来自 bootrom 和 SDK 的优化手写实现，涵盖基本双精度浮点运算和浮点数学库函数。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
+
+在 RP2350 上，`pico_double_pico` 使用 RP2350 DCP 指令（双精度协处理器）实现基本算术函数的快速版本，并为三角函数和科学计算函数提供优化的 M33 实现。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
+
+在 Arm 上，使用 `pico_double_pico` 时，以下编译器内置函数和数学库函数将提供（替换性的）优化实现：
+
+* 基本算术：
+
+`__aeabi_dadd, __aeabi_ddiv, `__aeabi_dmul, __aeabi_drsub, __aeabi_dsub`
+
+* 比较：
+
+`__aeabi_cfcmpeq, __aeabi_cfrcmple, `__aeabi_cfcmple, __aeabi_dcmpeq`, __aeabi_dcmplt, __aeabi_dcmple`, `__aeabi_dcmpge, __aeabi_dcmpgt, __aeabi_dcmpun`
+
+* (u)int32 &lt;\-> double：
+
+`__aeabi_i2d, __aeabi_ui2d, `__aeabi_d2iz, __aeabi_d2uiz`
+
+* (u)int64 &lt;\-> double：
+
+`__aeabi_l2d, __aeabi_ul2d, `__aeabi_d2lz, __aeabi_d2ulz`
+
+* double \-> float：
+
+`__aeabi_d2d`
+
+* 基本三角函数：
+
+sqrt, cos, sin, tan, atan2, exp, log
+
+* 三角函数和科学计算函数：
+
+ldexp, copysign, trunc, floor, ceil, round, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, exp2, log2, exp10, log10, pow, hypot, cbrt, fmod, drem, remainder, remquo, expm1, log1p, fma
+
+* GNU 扩展：
+
+powint, sincos
+
+在 Arm 上，使用 `pico_double_pico` 时还提供以下额外的优化函数：
+
+* 与整数类型之间的转换：
+
+  * (u)int \-> double（四舍五入到最近）：
+int2double, uint2double, int642double, uint642double
+
+  * (u)double \-> int（向零舍入）：
+double2int_z, double2uint_z, double2int64_z, double2uint64_z
+
+  * (u)double \-> int（向负无穷舍入）：
+double2int, double2uint, double2int64, double2uint64
+
+* 与定点整数之间的转换：
+
+  * (u)fix \-> double（四舍五入到最近）：
+fix2double, ufix2double, fix642double, ufix642double
+
+  * double \-> (u)fix（向零舍入）：
+double2fix_z, double2ufix_z, double2fix64_z, double2ufix64_z
+
+  * double \-> (u)fix（向负无穷舍入）：
+double2fix, double2ufix, double2fix64, double2ufix64
+
+* 不能正确舍入的更快版本的除法和平方根函数：
+
+ddiv_fast, sqrt_fast（这些函数不能正确舍入）
+
+* 更快的非融合乘加：
+
+mla（快速 fma）
+
+在 RISC-V 上，不支持自定义双精度浮点运算，因此 `pico_double_pico 等同于 pico_double_compiler`。
+
+<Normal />

@@ -1,0 +1,341 @@
+---
+sidebar_position: 17
+draft: false
+description: 电源管理 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK powman]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+电源管理 API。
+
+### 枚举
+
+- `enum powman_power_domains { [POWMAN_POWER_DOMAIN_SRAM_BANK1] = 0, [POWMAN_POWER_DOMAIN_SRAM_BANK0] = 1, [POWMAN_POWER_DOMAIN_XIP_CACHE] = 2, [POWMAN_POWER_DOMAIN_SWITCHED_CORE] = 3, POWMAN_POWER_DOMAIN_COUNT = 4 }`: powman 的电源域。
+
+### 函数
+
+- `void powman_timer_set_1khz_tick_source_lposc (void)`: 使用约 32KHz 低功耗振荡器作为 powman 定时器源。
+- `void powman_timer_set_1khz_tick_source_lposc_with_hz (uint32_t lposc_freq_hz)`: 使用低功耗振荡器（指定频率）作为 powman 定时器源。
+- `void powman_timer_set_1khz_tick_source_xosc (void)`: 使用晶体振荡器作为 powman 定时器源。
+- `void powman_timer_set_1khz_tick_source_xosc_with_hz (uint32_t xosc_freq_hz)`: 使用晶体振荡器作为 powman 定时器源。
+- `void powman_timer_set_1khz_tick_source_gpio (uint32_t gpio)`: 使用 1KHz 外部时钟作为 powman 定时器源。
+- `void powman_timer_enable_gpio_1hz_sync (uint32_t gpio)`: 仅使用 1Hz 外部信号作为 powman 定时器的秒计数源。
+- `void powman_timer_disable_gpio_1hz_sync (void)`: 停止使用 1Hz 外部信号作为 powman 定时器的秒计数源。
+- `uint64_t powman_timer_get_ms (void)`: 返回当前时间（毫秒）。
+- `void powman_timer_set_ms (uint64_t time_ms)`: 设置当前时间（毫秒）。
+- `void powman_timer_enable_alarm_at_ms (uint64_t alarm_time_ms)`: 在指定的绝对时间（毫秒）设置闹钟。
+- `void powman_timer_disable_alarm (void)`: 禁用闹钟。
+`static void powman_set_bits (volatile uint32_t *reg, uint32_t bits)`<br/>&emsp;hw_set_bits 辅助函数
+
+`static void powman_clear_bits (volatile uint32_t *reg, uint32_t bits)`<br/>&emsp;hw_clear_bits 辅助函数
+- `static bool powman_timer_is_running (void)`: 判断 powman 定时器是否正在运行。
+- `static void powman_timer_stop (void)`: 停止 powman 定时器。
+- `static void powman_timer_start (void)`: 启动 powman 定时器。
+- `static void powman_clear_alarm (void)`: 清除 powman 闹钟。
+- `powman_power_state powman_get_power_state (void)`: 获取当前电源状态。
+- `int powman_set_power_state (powman_power_state state)`: 设置电源状态。
+- `static powman_power_state powman_power_state_with_domain_on (powman_power_state orig, enum powman_power_domains domain)`: 辅助函数，修改 powman_power_state 以开启某个域。
+- `static powman_power_state powman_power_state_with_domain_off (powman_power_state orig, enum powman_power_domains domain)`: 辅助函数，修改 powman_power_state 以关闭某个域。
+- `static bool powman_power_state_is_domain_on (powman_power_state state, enum powman_power_domains domain)`: 辅助函数，检查给定 powman_power_state 中某个域是否已开启。
+- `void powman_enable_alarm_wakeup_at_ms (uint64_t alarm_time_ms)`: 在指定时间通过闹钟唤醒。
+- `void powman_enable_gpio_wakeup (uint gpio_wakeup_num, uint32_t gpio, bool edge, bool high)`: 通过 GPIO 唤醒。
+- `void powman_disable_alarm_wakeup (void)`: 禁用通过闹钟唤醒。
+- `void powman_disable_gpio_wakeup (uint gpio_wakeup_num)`: 禁用通过指定 GPIO 唤醒。
+- `void powman_disable_all_wakeups (void)`: 禁用所有唤醒源。
+- `bool powman_configure_wakeup_state (powman_power_state sleep_state, powman_power_state wakeup_state)`: 配置睡眠状态和唤醒状态。
+- `static void powman_set_debug_power_request_ignored (bool ignored)`: 在调试器连接时忽略唤醒请求。
+
+### 枚举类型文档
+
+#### powman_power_domains
+
+`enum powman_power_domains`
+
+powman 的电源域。
+
+.枚举值
+| POWMAN_POWER_DOMAIN_SRAM_BANK1 | bank1 包含 SRAM 顶部 256K 以及 SRAM 8 和 9（scratch x 和 scratch y） |
+| POWMAN_POWER_DOMAIN_SRAM_BANK0 | bank0 为 SRAM 底部 256K |
+| POWMAN_POWER_DOMAIN_XIP_CACHE | XIP 缓存为 2x8K 实例。 |
+| POWMAN_POWER_DOMAIN_SWITCHED_CORE | 切换核心逻辑（处理器、总线矩阵、外设等） |
+
+### 函数文档
+
+#### powman_clear_alarm
+
+`static void powman_clear_alarm (void) [inline], [static]`
+
+清除 powman 闹钟。
+
+注意，在清除闹钟之前必须先禁用闹钟（参见 `powman_timer_disable_alarm），因为闹钟在时间大于等于目标时间时就会触发，所以一旦时间已过，启用状态下的闹钟将持续触发。
+
+#### powman_clear_bits
+
+`static void powman_clear_bits (volatile uint32_t * reg, uint32_t bits) [inline], [static]`
+
+hw_clear_bits 辅助函数
+
+Powman 的写操作需要密码以防止意外写入。此函数使用适当的密码实现 hw_clear_bits。
+
+**参数**
+
+- `reg`: 要清除的寄存器
+- `bits`: 要清除的寄存器位
+
+#### powman_configure_wakeup_state
+
+`bool powman_configure_wakeup_state (powman_power_state sleep_state, powman_power_state wakeup_state)`
+
+配置睡眠状态和唤醒状态。
+
+**参数**
+
+- `sleep_state`: 睡眠时 powman 进入的电源状态，用于验证唤醒状态
+- `wakeup_state`: 唤醒时 powman 进入的电源状态。注意切换核心和 XIP 始终上电，SRAM bank0 和 bank1 可保持断电
+
+**返回值**
+
+若状态有效则返回 true，否则返回 false
+
+#### powman_disable_alarm_wakeup
+
+`void powman_disable_alarm_wakeup (void)`
+
+禁用通过闹钟唤醒。
+
+#### powman_disable_all_wakeups
+
+`void powman_disable_all_wakeups (void)`
+
+禁用所有唤醒源。
+
+#### powman_disable_gpio_wakeup
+
+`void powman_disable_gpio_wakeup (uint gpio_wakeup_num)`
+
+禁用通过指定 GPIO 唤醒。
+
+**参数**
+
+- `gpio_wakeup_num`: 要使用的硬件唤醒实例（0-3）
+
+#### powman_enable_alarm_wakeup_at_ms
+
+`void powman_enable_alarm_wakeup_at_ms (uint64_t alarm_time_ms)`
+
+在指定时间通过闹钟唤醒。
+
+**参数**
+
+- `alarm_time_ms`: 唤醒时间（毫秒）
+
+#### powman_enable_gpio_wakeup
+
+`void powman_enable_gpio_wakeup (uint gpio_wakeup_num, uint32_t gpio, bool edge, bool high)`
+
+通过 GPIO 唤醒。
+
+**参数**
+
+- `gpio_wakeup_num`: 要使用的硬件唤醒实例（0-3）
+- `gpio`: 用于唤醒的 GPIO（0-47）
+- `edge`: true 为边沿触发，false 为电平触发
+- `high`: true 为高电平有效，false 为低电平有效
+
+#### powman_get_power_state
+
+`powman_power_state powman_get_power_state (void)`
+
+获取当前电源状态。
+
+#### powman_power_state_is_domain_on
+
+`static bool powman_power_state_is_domain_on (powman_power_state state, enum powman_power_domains domain) [inline], [static]`
+
+辅助函数，检查给定 powman_power_state 中某个域是否已开启。
+
+**参数**
+
+- `state`: powman_power_state
+- `domain`: 要检查是否开启的域
+
+#### powman_power_state_with_domain_off
+
+`static powman_power_state powman_power_state_with_domain_off (powman_power_state orig, enum powman_power_domains domain) [inline], [static]`
+
+辅助函数，修改 powman_power_state 以关闭某个域。
+
+**参数**
+
+- `orig`: 原始状态
+- `domain`: 要关闭的域
+
+#### powman_power_state_with_domain_on
+
+`static powman_power_state powman_power_state_with_domain_on (powman_power_state orig, enum powman_power_domains domain) [inline], [static]`
+
+辅助函数，修改 powman_power_state 以开启某个域。
+
+**参数**
+
+- `orig`: 原始状态
+- `domain`: 要开启的域
+
+#### powman_set_bits
+
+`static void powman_set_bits (volatile uint32_t * reg, uint32_t bits) [inline], [static]`
+
+hw_set_bits 辅助函数
+
+**参数**
+
+- `reg`: 要设置的寄存器
+- `bits`: 要设置的寄存器位。Powman 的写操作需要密码以防止意外写入，此函数使用适当的密码实现 hw_set_bits。
+
+#### powman_set_debug_power_request_ignored
+
+`static void powman_set_debug_power_request_ignored (bool ignored) [inline], [static]`
+
+在调试器连接时忽略唤醒请求。
+
+通常情况下，调试器连接时会断言 pwrupreq 信号。OpenOCD 在退出时不会清除此信号，因此一旦连接了调试器，powman 将永远不会进入睡眠。此函数允许忽略调试器的 pwrupreq，从而在调试器连接时也能进入睡眠。如果在调试器连接时尝试关闭切换核心，调试器将会报错，因为处理器已被断电。
+
+**参数**
+
+- `ignored`: 是否忽略调试器上电请求
+
+#### powman_set_power_state
+
+`int powman_set_power_state (powman_power_state state)`
+
+设置电源状态。
+
+检查所需状态是否有效。若有效且无待处理的上电请求，powman 将进入该状态。
+
+注意，如果正在关闭切换核心，则此函数永远不会返回，因为处理器最终会被断电。
+
+**参数**
+
+- `state`: 要进入的电源状态
+
+**返回值**
+
+若状态有效则返回 PICO_OK，否则返回相应的 PICO_ERROR
+
+#### powman_timer_disable_alarm
+
+`void powman_timer_disable_alarm (void)`
+
+禁用闹钟。
+
+闹钟触发后必须禁用，否则会持续触发，因为闹钟比较条件为 alarm = alarm_time >= current_time
+
+#### powman_timer_disable_gpio_1hz_sync
+
+`void powman_timer_disable_gpio_1hz_sync (void)`
+
+停止使用 1Hz 外部信号作为 powman 定时器的秒计数源。
+
+#### powman_timer_enable_alarm_at_ms
+
+`void powman_timer_enable_alarm_at_ms (uint64_t alarm_time_ms)`
+
+在指定的绝对时间（毫秒）设置闹钟。
+
+注意，此函数会先停止再重启定时器。此函数仅控制闹钟本身，若要使用闹钟唤醒 powman，应使用 `powman_enable_alarm_wakeup_at_ms`。
+
+**参数**
+
+- `alarm_time_ms`: 闹钟触发时间
+
+#### powman_timer_enable_gpio_1hz_sync
+
+`void powman_timer_enable_gpio_1hz_sync (uint32_t gpio)`
+
+仅使用 1Hz 外部信号作为 powman 定时器的秒计数源。
+
+使用 1Hz 同步信号（例如来自 GPS）作为定时器的秒计数部分，毫秒部分仍由其他已配置的源（如 xosc 或 lposc）提供。
+
+**参数**
+
+- `gpio`: 要使用的 GPIO，必须为 12、14、20 或 22
+
+#### powman_timer_get_ms
+
+`uint64_t powman_timer_get_ms (void)`
+
+返回当前时间（毫秒）。
+
+#### powman_timer_is_running
+
+`static bool powman_timer_is_running (void) [inline], [static]`
+
+判断 powman 定时器是否正在运行。
+
+#### powman_timer_set_1khz_tick_source_gpio
+
+`void powman_timer_set_1khz_tick_source_gpio (uint32_t gpio)`
+
+使用 1KHz 外部时钟作为 powman 定时器源。
+
+**参数**
+
+- `gpio`: 要使用的 GPIO，必须为 12、14、20 或 22
+
+#### powman_timer_set_1khz_tick_source_lposc
+
+`void powman_timer_set_1khz_tick_source_lposc (void)`
+
+使用约 32KHz 低功耗振荡器作为 powman 定时器源。
+
+#### powman_timer_set_1khz_tick_source_lposc_with_hz
+
+`void powman_timer_set_1khz_tick_source_lposc_with_hz (uint32_t lposc_freq_hz)`
+
+使用低功耗振荡器（指定频率）作为 powman 定时器源。
+
+**参数**
+
+- `lposc_freq_hz`: 指定精确的 lposc 频率以进行校准
+
+#### powman_timer_set_1khz_tick_source_xosc
+
+`void powman_timer_set_1khz_tick_source_xosc (void)`
+
+使用晶体振荡器作为 powman 定时器源。
+
+#### powman_timer_set_1khz_tick_source_xosc_with_hz
+
+`void powman_timer_set_1khz_tick_source_xosc_with_hz (uint32_t xosc_freq_hz)`
+
+使用晶体振荡器作为 powman 定时器源。
+
+**参数**
+
+- `xosc_freq_hz`: 指定晶体频率
+
+#### powman_timer_set_ms
+
+`void powman_timer_set_ms (uint64_t time_ms)`
+
+设置当前时间（毫秒）。
+
+**参数**
+
+- `time_ms`: 当前时间（毫秒）
+
+#### powman_timer_start
+
+`static void powman_timer_start (void) [inline], [static]`
+
+启动 powman 定时器。
+
+#### powman_timer_stop
+
+`static void powman_timer_stop (void) [inline], [static]`
+
+停止 powman 定时器。
+
+<Normal />

@@ -1,0 +1,516 @@
+---
+sidebar_position: 13
+draft: false
+description: 硬件插值器 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK interp]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件插值器 API。
+
+### 详细描述
+
+每个核心配备两个插值器（INTERP0 和 INTERP1），可通过将某些预配置的简单操作组合到单个处理器周期中来加速任务。这适用于预配置操作重复大量次的情况，可使代码在时间敏感部分同时减少 CPU 周期和 CPU 寄存器的使用。
+
+SDK 内部大量使用插值器来加速音频操作，但其灵活的配置也使其能够优化许多其他任务，例如量化和抖动、查找表地址生成、仿射纹理映射、解压缩和线性反馈。
+
+有关 HW 插值器及其工作原理的更多信息，请参阅相应的 RP 系列微控制器数据手册。
+
+### 模块
+
+`interp_config`<br/>&emsp;插值器配置。
+
+### 函数
+
+`void interp_claim_lane (interp_hw_t *interp, uint lane)`<br/>&emsp;占用指定的插值器通道。
+
+`void interp_claim_lane_mask (interp_hw_t *interp, uint lane_mask)`<br/>&emsp;占用掩码中指定的插值器通道。
+
+`void interp_unclaim_lane (interp_hw_t *interp, uint lane)`<br/>&emsp;释放先前占用的插值器通道。
+
+`bool interp_lane_is_claimed (interp_hw_t *interp, uint lane)`<br/>&emsp;判断插值器通道是否已被占用。
+
+`void interp_unclaim_lane_mask (interp_hw_t *interp, uint lane_mask)<br/>&emsp;释放先前占用的插值器通道，参见 interp_claim_lane_mask`。
+
+`static void interp_set_force_bits (interp_hw_t *interp, uint lane, uint bits)`<br/>&emsp;直接设置指定通道上的强制位。
+
+`void interp_save (interp_hw_t **interp, interp_hw_save_t **saver)`<br/>&emsp;保存指定插值器的状态。
+
+`void interp_restore (interp_hw_t **interp, interp_hw_save_t **saver)`<br/>&emsp;恢复插值器状态。
+
+`static void interp_set_base (interp_hw_t *interp, uint lane, uint32_t val)`<br/>&emsp;按通道设置插值器基址寄存器。
+
+`static uint32_t interp_get_base (interp_hw_t *interp, uint lane)`<br/>&emsp;按通道获取插值器基址寄存器的内容。
+
+`static void interp_set_base_both (interp_hw_t *interp, uint32_t val)`<br/>&emsp;同时设置插值器基址寄存器。
+
+`static void interp_set_accumulator (interp_hw_t *interp, uint lane, uint32_t val)`<br/>&emsp;按通道设置插值器累加器寄存器。
+
+`static uint32_t interp_get_accumulator (interp_hw_t *interp, uint lane)`<br/>&emsp;按通道获取插值器累加器寄存器的内容。
+
+`static uint32_t interp_pop_lane_result (interp_hw_t *interp, uint lane)`<br/>&emsp;读取通道结果，并将通道结果写入两个累加器以更新插值器。
+
+`static uint32_t interp_peek_lane_result (interp_hw_t *interp, uint lane)`<br/>&emsp;读取通道结果。
+
+`static uint32_t interp_pop_full_result (interp_hw_t *interp)`<br/>&emsp;读取通道结果，并将通道结果写入两个累加器以更新插值器。
+
+`static uint32_t interp_peek_full_result (interp_hw_t *interp)`<br/>&emsp;读取通道结果。
+
+`static void interp_add_accumulator (interp_hw_t *interp, uint lane, uint32_t val)`<br/>&emsp;向累加器添加值。
+
+`static uint32_t interp_get_raw (interp_hw_t *interp, uint lane)`<br/>&emsp;获取原始通道值。
+
+### 函数文档
+
+#### interp_add_accumulator
+
+`static void interp_add_accumulator (interp_hw_t * interp, uint lane, uint32_t val) [inline], [static]`
+
+向累加器添加值。
+
+原子地将指定值添加到指定通道的累加器。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 通道编号，0 或 1
+- `val`: 要添加的值
+
+#### interp_claim_lane
+
+`void interp_claim_lane (interp_hw_t * interp, uint lane)`
+
+占用指定的插值器通道。
+
+使用此函数可独占访问指定的插值器通道。
+
+若通道已被占用，此函数将触发 panic。
+
+**参数**
+
+- `interp`: 要占用通道的插值器，interp0 或 interp1
+- `lane`: 通道编号，0 或 1。
+
+#### interp_claim_lane_mask
+
+`void interp_claim_lane_mask (interp_hw_t * interp, uint lane_mask)`
+
+占用掩码中指定的插值器通道。
+
+**参数**
+
+- `interp`: 要占用通道的插值器，interp0 或 interp1
+- `lane_mask`: 要占用的通道位模式（仅位 0 和 1 有效）
+
+#### interp_get_accumulator
+
+`static uint32_t interp_get_accumulator (interp_hw_t * interp, uint lane) [inline], [static]`
+
+按通道获取插值器累加器寄存器的内容。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 通道编号，0 或 1
+
+**返回**
+
+寄存器的当前内容
+
+#### interp_get_base
+
+`static uint32_t interp_get_base (interp_hw_t * interp, uint lane) [inline], [static]`
+
+按通道获取插值器基址寄存器的内容。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 通道编号，0、1 或 2
+
+**返回**
+
+通道基址寄存器的当前内容
+
+#### interp_get_raw
+
+`static uint32_t interp_get_raw (interp_hw_t * interp, uint lane) [inline], [static]`
+
+获取原始通道值。
+
+返回指定通道的原始移位和掩码值，不添加 BASE0。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 通道编号，0 或 1
+
+**返回**
+
+原始移位/掩码值
+
+#### interp_lane_is_claimed
+
+`bool interp_lane_is_claimed (interp_hw_t * interp, uint lane)`
+
+判断插值器通道是否已被占用。
+
+**参数**
+
+- `interp`: 要检查通道的插值器
+- `lane`: 通道编号，0 或 1
+
+**返回**
+
+若已占用则返回 true，否则返回 false
+
+**参见**
+
+
+
+#### interp_peek_full_result
+
+`static uint32_t interp_peek_full_result (interp_hw_t * interp) [inline], [static]`
+
+读取通道结果。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+
+**返回**
+
+FULL 寄存器的内容
+
+#### interp_peek_lane_result
+
+`static uint32_t interp_peek_lane_result (interp_hw_t * interp, uint lane) [inline], [static]`
+
+读取通道结果。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 通道编号，0 或 1
+
+**返回**
+
+通道结果寄存器的内容
+
+#### interp_pop_full_result
+
+`static uint32_t interp_pop_full_result (interp_hw_t * interp) [inline], [static]`
+
+读取通道结果，并将通道结果写入两个累加器以更新插值器。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+
+**返回**
+
+FULL 寄存器的内容
+
+#### interp_pop_lane_result
+
+`static uint32_t interp_pop_lane_result (interp_hw_t * interp, uint lane) [inline], [static]`
+
+读取通道结果，并将通道结果写入两个累加器以更新插值器。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 通道编号，0 或 1
+
+**返回**
+
+通道结果寄存器的内容
+
+#### interp_restore
+
+`void interp_restore (interp_hw_t **` interp, interp_hw_save_t ** saver)`
+
+恢复插值器状态。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `saver`: 指向要重新应用到指定插值器的保存结构体的指针
+
+#### interp_save
+
+`void interp_save (interp_hw_t **` interp, interp_hw_save_t ** saver)`
+
+保存指定插值器的状态。
+
+可用于在需要将插值器用于其他目的时保存状态，之后可以恢复状态并从该点继续。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `saver`: 指向要填写的保存结构体的指针
+
+#### interp_set_accumulator
+
+`static void interp_set_accumulator (interp_hw_t * interp, uint lane, uint32_t val) [inline], [static]`
+
+按通道设置插值器累加器寄存器。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 通道编号，0 或 1
+- `val`: 要写入寄存器的值
+
+#### interp_set_base
+
+`static void interp_set_base (interp_hw_t * interp, uint lane, uint32_t val) [inline], [static]`
+
+按通道设置插值器基址寄存器。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 通道编号，0、1 或 2
+- `val`: 要写入寄存器的值
+
+#### interp_set_base_both
+
+`static void interp_set_base_both (interp_hw_t * interp, uint32_t val) [inline], [static]`
+
+同时设置插值器基址寄存器。
+
+低 16 位同时写入 BASE0，高位写入 BASE1。若该通道的 SIGNED 标志被设置，则每一半都会符号扩展到 32 位。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `val`: 要写入寄存器的值
+
+#### interp_set_force_bits
+
+`static void interp_set_force_bits (interp_hw_t * interp, uint lane, uint bits) [inline], [static]`
+
+直接设置指定通道上的强制位。
+
+这些位被 OR 入呈现给处理器总线的通道结果的 29:28 位。对内部 32 位数据路径无影响。
+
+适用于使用通道生成指向 flash 或 SRAM 的指针序列，可省去后续的 OR 或 add 操作。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 要设置的通道
+- `bits`: 要设置的位（位 0 和 1，取值范围 0-3）
+
+#### interp_unclaim_lane
+
+`void interp_unclaim_lane (interp_hw_t * interp, uint lane)`
+
+释放先前占用的插值器通道。
+
+**参数**
+
+- `interp`: 要释放通道的插值器，interp0 或 interp1
+- `lane`: 通道编号，0 或 1
+
+#### interp_unclaim_lane_mask
+
+`void interp_unclaim_lane_mask (interp_hw_t * interp, uint lane_mask)`
+
+释放先前占用的插值器通道，参见 `interp_claim_lane_mask`。
+
+**参数**
+
+- `interp`: 要释放通道的插值器，interp0 或 interp1
+- `lane_mask`: 要释放的通道位模式（仅位 0 和 1 有效）
+
+### interp_config
+
+插值器配置。
+
+#### 详细描述
+
+每个插值器都需要配置，这些函数提供了设置配置结构体的便捷辅助工具。
+
+#### 函数
+
+`static void interp_config_set_shift (interp_config *c, uint shift)`<br/>&emsp;设置插值器移位值。
+
+`static void interp_config_set_mask (interp_config *c, uint mask_lsb, uint mask_msb)`<br/>&emsp;设置插值器掩码范围。
+
+`static void interp_config_set_cross_input (interp_config *c, bool cross_input)`<br/>&emsp;启用交叉输入。
+
+`static void interp_config_set_cross_result (interp_config *c, bool cross_result)`<br/>&emsp;启用交叉结果。
+
+`static void interp_config_set_signed (interp_config *c, bool _signed)`<br/>&emsp;设置符号扩展。
+
+`static void interp_config_set_add_raw (interp_config *c, bool add_raw)`<br/>&emsp;设置原始添加选项。
+
+`static void interp_config_set_blend (interp_config *c, bool blend)`<br/>&emsp;设置混合模式。
+
+`static void interp_config_set_clamp (interp_config *c, bool clamp)`<br/>&emsp;设置插值器钳位模式（仅限插值器 1）
+
+`static void interp_config_set_force_bits (interp_config *c, uint bits)`<br/>&emsp;设置插值器强制位。
+- `static interp_config interp_default_config` (void)`: 获取默认配置。
+`static void interp_set_config (interp_hw_t **interp, uint lane, interp_config **config)`<br/>&emsp;向通道发送配置。
+
+#### 函数文档
+
+**interp_config_set_add_raw**
+
+`static void interp_config_set_add_raw (interp_config * c, bool add_raw) [inline], [static]`
+
+设置原始添加选项。
+
+启用后，LANE0 结果会绕过掩码和移位。这不影响 FULL 结果。
+
+**参数**
+
+- `c`: 插值配置的指针
+- `add_raw`: 若为 true，则启用原始添加选项。
+
+**interp_config_set_blend**
+
+`static void interp_config_set_blend (interp_config * c, bool blend) [inline], [static]`
+
+设置混合模式。
+
+若启用，LANE1 结果为 BASE0 和 BASE1 之间的线性插值，由通道 1 移位和掩码值的低 8 位控制（0 到 255/256 之间的分数）
+
+LANE0 结果不添加 BASE0（仅产生通道 1 移位+掩码值的低 8 位）
+
+FULL 结果不添加通道 1 移位+掩码值（BASE2 + 通道 0 移位+掩码）
+
+LANE1 SIGNED 标志控制插值是有符号还是无符号
+
+**参数**
+
+- `c`: 插值配置的指针
+- `blend`: 设为 true 以启用混合模式。
+
+**interp_config_set_clamp**
+
+`static void interp_config_set_clamp (interp_config * c, bool clamp) [inline], [static]`
+
+设置插值器钳位模式（仅限插值器 1）
+
+仅存在于每个核心的 INTERP1 上。若启用 CLAMP 模式：
+
+* LANE0 结果是经过移位和掩码处理的 ACCUM0，由 BASE0 的下界和 BASE1 的上界进行钳位。
+
+* 这些比较的有符号性由 LANE0_CTRL_SIGNED 决定
+
+**参数**
+
+- `c`: 插值配置的指针
+- `clamp`: 设为 true 以启用钳位模式
+
+**interp_config_set_cross_input**
+
+`static void interp_config_set_cross_input (interp_config * c, bool cross_input) [inline], [static]`
+
+启用交叉输入。
+
+允许将另一通道的累加器内容反馈到该通道的移位+掩码硬件。即使设置了 interp_config_set_add_raw 选项，此操作也会生效，因为交叉输入多路复用器位于移位+掩码绕过之前。
+
+**参数**
+
+- `c`: 插值配置的指针
+- `cross_input`: 若为 true，则启用交叉输入。
+
+**interp_config_set_cross_result**
+
+`static void interp_config_set_cross_result (interp_config * c, bool cross_result) [inline], [static]`
+
+启用交叉结果。
+
+允许在 POP 操作时将另一通道的结果输入到该通道的累加器。
+
+**参数**
+
+- `c`: 插值配置的指针
+- `cross_result`: 若为 true，则启用交叉结果
+
+**interp_config_set_force_bits**
+
+`static void interp_config_set_force_bits (interp_config * c, uint bits) [inline], [static]`
+
+设置插值器强制位。
+
+OR 入呈现给处理器总线的通道结果的 29:28 位。
+
+对内部 32 位数据路径无影响。适用于使用通道生成指向 flash 或 SRAM 的指针序列。
+
+**参数**
+
+- `c`: 插值配置的指针
+- `bits`: 设置为指定的强制位。范围 0-3（两位）
+
+**interp_config_set_mask**
+
+`static void interp_config_set_mask (interp_config * c, uint mask_lsb, uint mask_msb) [inline], [static]`
+
+设置插值器掩码范围。
+
+设置允许通过插值器的位范围（从最低位到最高位）
+
+**参数**
+
+- `c`: 插值配置的指针
+- `mask_lsb`: 允许通过的最低有效位
+- `mask_msb`: 允许通过的最高有效位
+
+**interp_config_set_shift**
+
+`static void interp_config_set_shift (interp_config * c, uint shift) [inline], [static]`
+
+设置插值器移位值。
+
+设置每次迭代时累加器在掩码之前移位的位数。
+
+**参数**
+
+- `c`: 插值配置的指针
+- `shift`: 位数
+
+**interp_config_set_signed**
+
+`static void interp_config_set_signed (interp_config * c, bool _signed) [inline], [static]`
+
+设置符号扩展。
+
+启用有符号模式，此时经移位和掩码处理的累加器值在加到 BASE1 之前会被符号扩展到 32 位，处理器读取的 LANE1 PEEK/POP 结果也会扩展到 32 位。
+
+**参数**
+
+- `c`: 插值配置的指针
+- `_signed`: 若为 true，则启用符号扩展
+
+**interp_default_config**
+
+`static interp_config interp_default_config (void) [inline], [static]`
+
+获取默认配置。
+
+**返回**
+
+默认插值配置
+
+**interp_set_config**
+
+`static void interp_set_config (interp_hw_t **` interp, uint lane, interp_config ** config) [inline], [static]`
+
+向通道发送配置。
+
+若指定了无效配置（即在错误通道上设置了通道专用项），根据设置，此函数可能触发 panic。
+
+**参数**
+
+- `interp`: 插值器实例，interp0 或 interp1。
+- `lane`: 要设置的通道
+- `config`: 插值配置的指针
+
+<Normal />

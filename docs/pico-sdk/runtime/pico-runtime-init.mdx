@@ -1,0 +1,53 @@
+---
+sidebar_position: 18
+draft: false
+description: 在进入 main 之前设置运行时环境所需的主要运行时初始化函数。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK runtime init]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+在进入 main 之前设置运行时环境所需的主要运行时初始化函数。
+
+### 详细描述
+
+运行时初始化基于注册机制：
+
+对于初始化的每个步骤，都有一个 5 位数字的序号，用于指示步骤的执行顺序（按 5 位数字的字母升序排列）。
+
+例如，对于步骤"bootrom_reset"，有：
+
+```c
+#ifndef PICO_RUNTIME_INIT_BOOTROM_RESET
+#define PICO_RUNTIME_INIT_BOOTROM_RESET   "00050"
+#endif
+```
+
+如有需要，用户可以通过重新定义 PICO_RUNTIME_INIT_BOOTROM_RESET 来覆盖执行顺序。
+
+对于每个步骤，可以通过定义（此处为）PICO_RUNTIME_SKIP_INIT_BOOTROM_RESET = 1 来跳过自动初始化。用户可以选择完全省略该步骤，或注册自己的替换初始化。
+
+提供了执行初始化的默认方法，以便用户在需要时手动调用；此处为：
+
+```c
+void runtime_init_bootrom_reset(void);
+```
+
+若设置了 PICO_RUNTIME_NO_INIT_BOOTOROM_RESET（NO 与上面的 SKIP 不同），则该函数不会被定义，允许用户提供替换实现（同时避免因缺少依赖导致默认实现无法编译的情况）。
+
+### 函数
+
+- `static void clocks_init (void)`: 初始化时钟硬件。
+
+### 函数文档
+
+#### clocks_init
+
+`static void clocks_init (void) [inline], [static]`
+
+初始化时钟硬件。
+
+必须在调用任何其他时钟函数之前调用。
+
+<Normal />

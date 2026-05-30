@@ -1,0 +1,25 @@
+---
+sidebar_position: 4
+draft: false
+description: "USB 设备枚举问题的暴力绕过方案"
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK fix, USB]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+### 函数
+
+- `void rp2040_usb_device_enumeration_fix (void)`: 对 USB 设备枚举问题执行暴力绕过方案。
+
+### 函数文档
+
+#### rp2040_usb_device_enumeration_fix
+
+`void rp2040_usb_device_enumeration_fix (void)`
+
+对 USB 设备枚举问题执行暴力绕过方案。
+
+此方法应在总线复位的 IRQ 处理程序中调用。
+
+<Normal />

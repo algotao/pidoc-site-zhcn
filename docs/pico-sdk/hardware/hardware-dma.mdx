@@ -1,0 +1,1256 @@
+---
+sidebar_position: 7
+draft: false
+description: RP 系列微控制器直接内存访问（DMA）主控器代表处理器执行批量数据传输，使处理器可以专注于其他任务或进入低功耗睡眠状态。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK dma, DMA]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+DMA 控制器 API。
+
+### 详细描述
+
+RP 系列微控制器直接内存访问（DMA）主控器代表处理器执行批量数据传输，使处理器可以专注于其他任务或进入低功耗睡眠状态。DMA 的数据吞吐量也显著高于 RP 系列微控制器的处理器。
+
+DMA 每个时钟周期可执行一次读访问和一次写访问，每次最多 32 位。共有 12 个独立通道，每个通道监管一系列总线传输，通常适用于以下场景：
+
+* 内存到外设
+
+* 外设到内存
+
+* 内存到内存
+
+### 模块
+
+`channel_config`<br/>&emsp;DMA 通道配置。
+
+### 宏
+
+* `#define [DMA_IRQ_NUM](irq_index)`
+
+### 类型定义
+
+`typedef enum dreq_num_rp2350 dreq_num_t` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上 DMA 节拍的 DREQ 编号（用作 typedef dreq_num_t）
+
+`typedef enum dreq_num_rp2040 dreq_num_t` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上 DMA 节拍的 DREQ 编号（用作 typedef dreq_num_t）
+- `typedef enum dma_channel_transfer_size dma_channel_transfer_size_t``: 可用 DMA 通道传输大小的枚举。
+- `typedef enum dma_address_update_type dma_address_update_type_t``: 每次传输后可对 DMA 读写地址进行的更新类型枚举。
+
+### 枚举
+
+`enum dreq_num_rp2350 { [DREQ_PIO0_TX0] = 0, [DREQ_PIO0_TX1] = 1, [DREQ_PIO0_TX2] = 2, [DREQ_PIO0_TX3] = 3, [DREQ_PIO0_RX0] = 4, [DREQ_PIO0_RX1] = 5, [DREQ_PIO0_RX2] = 6, [DREQ_PIO0_RX3] = 7, [DREQ_PIO1_TX0] = 8, [DREQ_PIO1_TX1] = 9, [DREQ_PIO1_TX2] = 10, [DREQ_PIO1_TX3] = 11, [DREQ_PIO1_RX0] = 12, [DREQ_PIO1_RX1] = 13, [DREQ_PIO1_RX2] = 14, [DREQ_PIO1_RX3] = 15, [DREQ_PIO2_TX0] = 16, [DREQ_PIO2_TX1] = 17, [DREQ_PIO2_TX2] = 18, [DREQ_PIO2_TX3] = 19, [DREQ_PIO2_RX0] = 20, [DREQ_PIO2_RX1] = 21, [DREQ_PIO2_RX2] = 22, [DREQ_PIO2_RX3] = 23, [DREQ_SPI0_TX] = 24, [DREQ_SPI0_RX] = 25, [DREQ_SPI1_TX] = 26, [DREQ_SPI1_RX] = 27, [DREQ_UART0_TX] = 28, [DREQ_UART0_RX] = 29, [DREQ_UART1_TX] = 30, [DREQ_UART1_RX] = 31, [DREQ_PWM_WRAP0] = 32, [DREQ_PWM_WRAP1] = 33, [DREQ_PWM_WRAP2] = 34, [DREQ_PWM_WRAP3] = 35, [DREQ_PWM_WRAP4] = 36, [DREQ_PWM_WRAP5] = 37, [DREQ_PWM_WRAP6] = 38, [DREQ_PWM_WRAP7] = 39, [DREQ_PWM_WRAP8] = 40, [DREQ_PWM_WRAP9] = 41, [DREQ_PWM_WRAP10] = 42, [DREQ_PWM_WRAP11] = 43, [DREQ_I2C0_TX] = 44, [DREQ_I2C0_RX] = 45, [DREQ_I2C1_TX] = 46, [DREQ_I2C1_RX] = 47, [DREQ_ADC] = 48, [DREQ_XIP_STREAM] = 49, [DREQ_XIP_QMITX] = 50, [DREQ_XIP_QMIRX] = 51, [DREQ_HSTX] = 52, [DREQ_CORESIGHT] = 53, [DREQ_SHA256] = 54, [DREQ_DMA_TIMER0] = 59, [DREQ_DMA_TIMER1] = 60, [DREQ_DMA_TIMER2] = 61, [DREQ_DMA_TIMER3] = 62, [DREQ_FORCE] = 63, DREQ_COUNT }` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上 DMA 节拍的 DREQ 编号（用作 typedef dreq_num_t）
+
+`enum dreq_num_rp2040 { [DREQ_PIO0_TX0] = 0, [DREQ_PIO0_TX1] = 1, [DREQ_PIO0_TX2] = 2, [DREQ_PIO0_TX3] = 3, [DREQ_PIO0_RX0] = 4, [DREQ_PIO0_RX1] = 5, [DREQ_PIO0_RX2] = 6, [DREQ_PIO0_RX3] = 7, [DREQ_PIO1_TX0] = 8, [DREQ_PIO1_TX1] = 9, [DREQ_PIO1_TX2] = 10, [DREQ_PIO1_TX3] = 11, [DREQ_PIO1_RX0] = 12, [DREQ_PIO1_RX1] = 13, [DREQ_PIO1_RX2] = 14, [DREQ_PIO1_RX3] = 15, [DREQ_SPI0_TX] = 16, [DREQ_SPI0_RX] = 17, [DREQ_SPI1_TX] = 18, [DREQ_SPI1_RX] = 19, [DREQ_UART0_TX] = 20, [DREQ_UART0_RX] = 21, [DREQ_UART1_TX] = 22, [DREQ_UART1_RX] = 23, [DREQ_PWM_WRAP0] = 24, [DREQ_PWM_WRAP1] = 25, [DREQ_PWM_WRAP2] = 26, [DREQ_PWM_WRAP3] = 27, [DREQ_PWM_WRAP4] = 28, [DREQ_PWM_WRAP5] = 29, [DREQ_PWM_WRAP6] = 30, [DREQ_PWM_WRAP7] = 31, [DREQ_I2C0_TX] = 32, [DREQ_I2C0_RX] = 33, [DREQ_I2C1_TX] = 34, [DREQ_I2C1_RX] = 35, [DREQ_ADC] = 36, [DREQ_XIP_STREAM] = 37, [DREQ_XIP_SSITX] = 38, [DREQ_XIP_SSIRX] = 39, [DREQ_DMA_TIMER0] = 59, [DREQ_DMA_TIMER1] = 60, [DREQ_DMA_TIMER2] = 61, [DREQ_DMA_TIMER3] = 62, [DREQ_FORCE] = 63, DREQ_COUNT }` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上 DMA 节拍的 DREQ 编号（用作 typedef dreq_num_t）
+- `enum dma_channel_transfer_size { [DMA_SIZE_8] = 0, [DMA_SIZE_16] = 1, [DMA_SIZE_32] = 2 }`: 可用 DMA 通道传输大小的枚举。
+- `enum dma_address_update_type { [DMA_ADDRESS_UPDATE_NONE] = 0, [DMA_ADDRESS_UPDATE_INCREMENT] = 1 }`: 每次传输后可对 DMA 读写地址进行的更新类型枚举。
+
+### 函数
+
+- `void dma_channel_claim (uint channel)`: 将 DMA 通道标记为已使用。
+- `void dma_claim_mask (uint32_t channel_mask)`: 将多个 DMA 通道标记为已使用。
+- `void dma_channel_unclaim (uint channel)`: 将 DMA 通道标记为不再使用。
+- `void dma_unclaim_mask (uint32_t channel_mask)`: 将多个 DMA 通道标记为不再使用。
+- `int dma_claim_unused_channel (bool required)`: 申请一个空闲的 DMA 通道。
+- `bool dma_channel_is_claimed (uint channel)`: 判断 DMA 通道是否已被申请。
+`static void dma_channel_set_config (uint channel, const dma_channel_config_t *config, bool trigger)`<br/>&emsp;设置通道配置。
+
+`static void dma_channel_set_read_addr (uint channel, const volatile void *read_addr, bool trigger)`<br/>&emsp;设置 DMA 初始读取地址。
+
+`static void dma_channel_set_write_addr (uint channel, volatile void *write_addr, bool trigger)`<br/>&emsp;设置 DMA 初始写入地址。
+- `static uint32_t dma_encode_transfer_count (uint transfer_count)`: 将指定传输长度编码为适合相关方法的"encoded_transfer_length"值。
+- `static uint32_t dma_encode_transfer_count_with_self_trigger (uint transfer_count)`: 将指定传输长度以及自触发标志编码为适合相关方法的"encoded_transfer_length"值。
+- `static uint32_t dma_encode_endless_transfer_count (void)`: 返回无限传输的"encoded_transfer_length"值。
+- `static void dma_channel_set_transfer_count (uint channel, uint32_t encoded_transfer_count, bool trigger)`: 设置通道将执行的总线传输次数。
+`static void dma_channel_configure (uint channel, const dma_channel_config_t **config, volatile void **write_addr, const volatile void *read_addr, uint32_t encoded_transfer_count, bool trigger)`<br/>&emsp;配置所有 DMA 参数并可选地启动传输。
+
+`static void dma_channel_transfer_from_buffer_now (uint channel, const volatile void *read_addr, uint32_t encoded_transfer_count)`<br/>&emsp;立即从缓冲区启动 DMA 传输。
+
+`static void dma_channel_transfer_to_buffer_now (uint channel, volatile void *write_addr, uint32_t encoded_transfer_count)`<br/>&emsp;立即向缓冲区启动 DMA 传输。
+- `static void dma_start_channel_mask (uint32_t chan_mask)`: 同时启动一个或多个通道。
+- `static void dma_channel_start (uint channel)`: 启动单个 DMA 通道。
+- `static void dma_channel_abort (uint channel)`: 停止 DMA 传输。
+- `static void dma_channel_set_irq0_enabled (uint channel, bool enabled)`: 通过 DMA_IRQ_0 启用单个 DMA 通道的中断。
+- `static void dma_set_irq0_channel_mask_enabled (uint32_t channel_mask, bool enabled)`: 通过 DMA_IRQ_0 启用多个 DMA 通道的中断。
+- `static void dma_channel_set_irq1_enabled (uint channel, bool enabled)`: 通过 DMA_IRQ_1 启用单个 DMA 通道的中断。
+- `static void dma_set_irq1_channel_mask_enabled (uint32_t channel_mask, bool enabled)`: 通过 DMA_IRQ_1 启用多个 DMA 通道的中断。
+- `static void dma_irqn_set_channel_enabled (uint irq_index, uint channel, bool enabled)`: 在 DMA_IRQ_0 或 DMA_IRQ_1 上启用单个 DMA 通道中断。
+- `static void dma_irqn_set_channel_mask_enabled (uint irq_index, uint32_t channel_mask, bool enabled)`: 通过 DMA_IRQ_0 或 DMA_IRQ_1 启用多个 DMA 通道的中断。
+- `static bool dma_channel_get_irq0_status (uint channel)`: 判断特定通道是否是 DMA_IRQ_0 的触发原因。
+- `static bool dma_channel_get_irq1_status (uint channel)`: 判断特定通道是否是 DMA_IRQ_1 的触发原因。
+- `static bool dma_irqn_get_channel_status (uint irq_index, uint channel)`: 判断特定通道是否是 DMA_IRQ_N 的触发原因。
+- `static void dma_channel_acknowledge_irq0 (uint channel)`: 确认通道 IRQ，将其从 DMA_IRQ_0 的触发原因中清除。
+- `static void dma_channel_acknowledge_irq1 (uint channel)`: 确认通道 IRQ，将其从 DMA_IRQ_1 的触发原因中清除。
+- `static void dma_irqn_acknowledge_channel (uint irq_index, uint channel)`: 确认通道 IRQ，将其从 DMA_IRQ_N 的触发原因中清除。
+- `static bool dma_channel_is_busy (uint channel)`: 检查 DMA 通道是否忙碌。
+- `static void dma_channel_wait_for_finish_blocking (uint channel)`: 等待 DMA 通道传输完成。
+- `static void dma_sniffer_enable (uint channel, uint mode, bool force_channel_enable)`: 启用针对指定通道的 DMA 嗅探器。
+- `static void dma_sniffer_set_byte_swap_enabled (bool swap)`: 启用嗅探器字节交换功能。
+- `static void dma_sniffer_set_output_invert_enabled (bool invert)`: 启用嗅探器输出反转功能。
+- `static void dma_sniffer_set_output_reverse_enabled (bool reverse)`: 启用嗅探器输出位反转功能。
+- `static void dma_sniffer_disable (void)`: 禁用 DMA 嗅探器。
+- `static void dma_sniffer_set_data_accumulator (uint32_t seed_value)`: 用初始值设置嗅探器的数据累加器。
+- `static uint32_t dma_sniffer_get_data_accumulator (void)`: 获取嗅探器的数据累加器值。
+- `void dma_timer_claim (uint timer)`: 将 DMA 定时器标记为已使用。
+- `void dma_timer_unclaim (uint timer)`: 将 DMA 定时器标记为不再使用。
+- `int dma_claim_unused_timer (bool required)`: 申请一个空闲的 DMA 定时器。
+- `bool dma_timer_is_claimed (uint timer)`: 判断 DMA 定时器是否已被申请。
+- `static void dma_timer_set_fraction (uint timer, uint16_t numerator, uint16_t denominator)`: 设置给定 DMA 定时器的乘数。
+- `static uint dma_get_timer_dreq (uint timer_num)`: 返回给定 DMA 定时器的 DREQ 编号。
+- `static int dma_get_irq_num (uint irq_index)`: 返回 DMA_IRQ_&lt;irqn>
+- `void dma_channel_cleanup (uint channel)`: 使用后对 DMA 通道进行清理。
+
+### 宏定义文档
+
+#### DMA_IRQ_NUM
+
+`#define DMA_IRQ_NUM(irq_index)`
+
+返回第 n 个 DMA 中断的 `irq_num_t`。
+
+注意此宏旨在在编译期求值，不做参数检查。
+
+### 类型定义文档
+
+#### dreq_num_t <span className="chip-tag rp2350">RP2350</span>
+
+`typedef enum dreq_num_rp2350 dreq_num_t`
+
+RP2350 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t）
+#### dreq_num_t <span className="chip-tag rp2040">RP2040</span>
+
+`typedef enum dreq_num_rp2040 dreq_num_t`
+
+RP2040 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t）
+#### dma_channel_transfer_size_t
+
+`typedef enum dma_channel_transfer_size dma_channel_transfer_size_t`
+
+可用 DMA 通道传输大小的枚举。
+
+名称表示位数。
+#### dma_address_update_type_t
+
+`typedef enum dma_address_update_type dma_address_update_type_t`
+
+每次传输后可对 DMA 读写地址进行的更新类型枚举。
+
+### 枚举类型文档
+
+#### dreq_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
+
+`enum dreq_num_rp2350`
+
+RP2350 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| DREQ_PIO0_TX0 | 选择 PIO0 的 TX FIFO 0 作为 DREQ。 |
+| DREQ_PIO0_TX1 | 选择 PIO0 的 TX FIFO 1 作为 DREQ。 |
+| DREQ_PIO0_TX2 | 选择 PIO0 的 TX FIFO 2 作为 DREQ。 |
+| DREQ_PIO0_TX3 | 选择 PIO0 的 TX FIFO 3 作为 DREQ。 |
+| DREQ_PIO0_RX0 | 选择 PIO0 的 RX FIFO 0 作为 DREQ。 |
+| DREQ_PIO0_RX1 | 选择 PIO0 的 RX FIFO 1 作为 DREQ。 |
+| DREQ_PIO0_RX2 | 选择 PIO0 的 RX FIFO 2 作为 DREQ。 |
+| DREQ_PIO0_RX3 | 选择 PIO0 的 RX FIFO 3 作为 DREQ。 |
+| DREQ_PIO1_TX0 | 选择 PIO1 的 TX FIFO 0 作为 DREQ。 |
+| DREQ_PIO1_TX1 | 选择 PIO1 的 TX FIFO 1 作为 DREQ。 |
+| DREQ_PIO1_TX2 | 选择 PIO1 的 TX FIFO 2 作为 DREQ。 |
+| DREQ_PIO1_TX3 | 选择 PIO1 的 TX FIFO 3 作为 DREQ。 |
+| DREQ_PIO1_RX0 | 选择 PIO1 的 RX FIFO 0 作为 DREQ。 |
+| DREQ_PIO1_RX1 | 选择 PIO1 的 RX FIFO 1 作为 DREQ。 |
+| DREQ_PIO1_RX2 | 选择 PIO1 的 RX FIFO 2 作为 DREQ。 |
+| DREQ_PIO1_RX3 | 选择 PIO1 的 RX FIFO 3 作为 DREQ。 |
+| DREQ_PIO2_TX0 | 选择 PIO2 的 TX FIFO 0 作为 DREQ。 |
+| DREQ_PIO2_TX1 | 选择 PIO2 的 TX FIFO 1 作为 DREQ。 |
+| DREQ_PIO2_TX2 | 选择 PIO2 的 TX FIFO 2 作为 DREQ。 |
+| DREQ_PIO2_TX3 | 选择 PIO2 的 TX FIFO 3 作为 DREQ。 |
+| DREQ_PIO2_RX0 | 选择 PIO2 的 RX FIFO 0 作为 DREQ。 |
+| DREQ_PIO2_RX1 | 选择 PIO2 的 RX FIFO 1 作为 DREQ。 |
+| DREQ_PIO2_RX2 | 选择 PIO2 的 RX FIFO 2 作为 DREQ。 |
+| DREQ_PIO2_RX3 | 选择 PIO2 的 RX FIFO 3 作为 DREQ。 |
+| DREQ_SPI0_TX | 选择 SPI0 的 TX FIFO 作为 DREQ。 |
+| DREQ_SPI0_RX | 选择 SPI0 的 RX FIFO 作为 DREQ。 |
+| DREQ_SPI1_TX | 选择 SPI1 的 TX FIFO 作为 DREQ。 |
+| DREQ_SPI1_RX | 选择 SPI1 的 RX FIFO 作为 DREQ。 |
+| DREQ_UART0_TX | 选择 UART0 的 TX FIFO 作为 DREQ。 |
+| DREQ_UART0_RX | 选择 UART0 的 RX FIFO 作为 DREQ。 |
+| DREQ_UART1_TX | 选择 UART1 的 TX FIFO 作为 DREQ。 |
+| DREQ_UART1_RX | 选择 UART1 的 RX FIFO 作为 DREQ。 |
+| DREQ_PWM_WRAP0 | 选择 PWM 计数器 0 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP1 | 选择 PWM 计数器 1 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP2 | 选择 PWM 计数器 2 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP3 | 选择 PWM 计数器 3 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP4 | 选择 PWM 计数器 4 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP5 | 选择 PWM 计数器 5 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP6 | 选择 PWM 计数器 6 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP7 | 选择 PWM 计数器 7 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP8 | 选择 PWM 计数器 8 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP9 | 选择 PWM 计数器 9 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP10 | 选择 PWM 计数器 10 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP11 | 选择 PWM 计数器 11 的环绕值作为 DREQ。 |
+| DREQ_I2C0_TX | 选择 I2C0 的 TX FIFO 作为 DREQ。 |
+| DREQ_I2C0_RX | 选择 I2C0 的 RX FIFO 作为 DREQ。 |
+| DREQ_I2C1_TX | 选择 I2C1 的 TX FIFO 作为 DREQ。 |
+| DREQ_I2C1_RX | 选择 I2C1 的 RX FIFO 作为 DREQ。 |
+| DREQ_ADC | 选择 ADC 作为 DREQ。 |
+| DREQ_XIP_STREAM | 选择 XIP 流式 FIFO 作为 DREQ。 |
+| DREQ_XIP_QMITX | 选择 XIP_QMITX 作为 DREQ。 |
+| DREQ_XIP_QMIRX | 选择 XIP_QMIRX 作为 DREQ。 |
+| DREQ_HSTX | 选择 HSTX 作为 DREQ。 |
+| DREQ_CORESIGHT | 选择 CORESIGHT 作为 DREQ。 |
+| DREQ_SHA256 | 选择 SHA256 作为 DREQ。 |
+| DREQ_DMA_TIMER0 | 选择 DMA_TIMER0 作为 DREQ。 |
+| DREQ_DMA_TIMER1 | 选择 DMA_TIMER1 作为 DREQ。 |
+| DREQ_DMA_TIMER2 | 选择 DMA_TIMER2 作为 DREQ。 |
+| DREQ_DMA_TIMER3 | 选择 DMA_TIMER3 作为 DREQ。 |
+| DREQ_FORCE | 选择 FORCE 作为 DREQ。 |
+
+#### dreq_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
+
+`enum dreq_num_rp2040`
+
+RP2040 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| DREQ_PIO0_TX0 | 选择 PIO0 的 TX FIFO 0 作为 DREQ。 |
+| DREQ_PIO0_TX1 | 选择 PIO0 的 TX FIFO 1 作为 DREQ。 |
+| DREQ_PIO0_TX2 | 选择 PIO0 的 TX FIFO 2 作为 DREQ。 |
+| DREQ_PIO0_TX3 | 选择 PIO0 的 TX FIFO 3 作为 DREQ。 |
+| DREQ_PIO0_RX0 | 选择 PIO0 的 RX FIFO 0 作为 DREQ。 |
+| DREQ_PIO0_RX1 | 选择 PIO0 的 RX FIFO 1 作为 DREQ。 |
+| DREQ_PIO0_RX2 | 选择 PIO0 的 RX FIFO 2 作为 DREQ。 |
+| DREQ_PIO0_RX3 | 选择 PIO0 的 RX FIFO 3 作为 DREQ。 |
+| DREQ_PIO1_TX0 | 选择 PIO1 的 TX FIFO 0 作为 DREQ。 |
+| DREQ_PIO1_TX1 | 选择 PIO1 的 TX FIFO 1 作为 DREQ。 |
+| DREQ_PIO1_TX2 | 选择 PIO1 的 TX FIFO 2 作为 DREQ。 |
+| DREQ_PIO1_TX3 | 选择 PIO1 的 TX FIFO 3 作为 DREQ。 |
+| DREQ_PIO1_RX0 | 选择 PIO1 的 RX FIFO 0 作为 DREQ。 |
+| DREQ_PIO1_RX1 | 选择 PIO1 的 RX FIFO 1 作为 DREQ。 |
+| DREQ_PIO1_RX2 | 选择 PIO1 的 RX FIFO 2 作为 DREQ。 |
+| DREQ_PIO1_RX3 | 选择 PIO1 的 RX FIFO 3 作为 DREQ。 |
+| DREQ_SPI0_TX | 选择 SPI0 的 TX FIFO 作为 DREQ。 |
+| DREQ_SPI0_RX | 选择 SPI0 的 RX FIFO 作为 DREQ。 |
+| DREQ_SPI1_TX | 选择 SPI1 的 TX FIFO 作为 DREQ。 |
+| DREQ_SPI1_RX | 选择 SPI1 的 RX FIFO 作为 DREQ。 |
+| DREQ_UART0_TX | 选择 UART0 的 TX FIFO 作为 DREQ。 |
+| DREQ_UART0_RX | 选择 UART0 的 RX FIFO 作为 DREQ。 |
+| DREQ_UART1_TX | 选择 UART1 的 TX FIFO 作为 DREQ。 |
+| DREQ_UART1_RX | 选择 UART1 的 RX FIFO 作为 DREQ。 |
+| DREQ_PWM_WRAP0 | 选择 PWM 计数器 0 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP1 | 选择 PWM 计数器 1 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP2 | 选择 PWM 计数器 2 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP3 | 选择 PWM 计数器 3 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP4 | 选择 PWM 计数器 4 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP5 | 选择 PWM 计数器 5 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP6 | 选择 PWM 计数器 6 的环绕值作为 DREQ。 |
+| DREQ_PWM_WRAP7 | 选择 PWM 计数器 7 的环绕值作为 DREQ。 |
+| DREQ_I2C0_TX | 选择 I2C0 的 TX FIFO 作为 DREQ。 |
+| DREQ_I2C0_RX | 选择 I2C0 的 RX FIFO 作为 DREQ。 |
+| DREQ_I2C1_TX | 选择 I2C1 的 TX FIFO 作为 DREQ。 |
+| DREQ_I2C1_RX | 选择 I2C1 的 RX FIFO 作为 DREQ。 |
+| DREQ_ADC | 选择 ADC 作为 DREQ。 |
+| DREQ_XIP_STREAM | 选择 XIP 流式 FIFO 作为 DREQ。 |
+| DREQ_XIP_SSITX | 选择 XIP SSI TX FIFO 作为 DREQ。 |
+| DREQ_XIP_SSIRX | 选择 XIP SSI RX FIFO 作为 DREQ。 |
+| DREQ_DMA_TIMER0 | 选择 DMA_TIMER0 作为 DREQ。 |
+| DREQ_DMA_TIMER1 | 选择 DMA_TIMER0 作为 DREQ。 |
+| DREQ_DMA_TIMER2 | 选择 DMA_TIMER1 作为 DREQ。 |
+| DREQ_DMA_TIMER3 | 选择 DMA_TIMER3 作为 DREQ。 |
+| DREQ_FORCE | 选择 FORCE 作为 DREQ。 |
+
+#### dma_channel_transfer_size
+
+`enum dma_channel_transfer_size`
+
+可用 DMA 通道传输大小的枚举。
+
+名称表示位数。
+
+| 枚举值 | 说明 |
+| --- | --- |
+| DMA_SIZE_8 | 字节传输（8 位） |
+| DMA_SIZE_16 | 半字传输（16 位） |
+| DMA_SIZE_32 | 字传输（32 位） |
+
+#### dma_address_update_type
+
+`enum dma_address_update_type`
+
+每次传输后可对 DMA 读写地址进行的更新类型枚举。
+
+| 枚举值 | 说明 |
+| --- | --- |
+| DMA_ADDRESS_UPDATE_NONE | 每次传输后地址保持不变。 |
+| DMA_ADDRESS_UPDATE_INCREMENT | 每次传输后地址按传输大小递增。 |
+
+### 函数文档
+
+#### dma_channel_abort
+
+`static void dma_channel_abort (uint channel) [inline], [static]`
+
+停止 DMA 传输。
+
+函数仅在 DMA 停止后返回。
+
+仅 RP2040：注意由于勘误 RP2040-E13，中止正在进行传输的通道（即已完成单次读取但对应写入尚未完成）时，ABORT 状态位会过早清除，随后正在进行的传输在完成后会触发完成中断。
+
+其效果是，调用此方法后可能会看到该通道上出现一个虚假的完成中断。
+
+调用代码应确保忽略因此方法导致的完成 IRQ。这可能不需要额外工作，因为中止一个可能即将完成的通道，而您又注册了完成 IRQ 处理程序，本身就容易发生竞争，因此代码可能已经需要区分这两种情况。
+
+如果不是这种情况，但您确实注册了通道完成 IRQ 处理程序，可以简单地在调用此方法前后禁用/重新启用 IRQ，如以下代码片段所示（使用 DMA IRQ0）：
+
+```c
+// disable the channel on IRQ0
+dma_channel_set_irq0_enabled(channel, false);
+// abort the channel
+dma_channel_abort(channel);
+// clear the spurious IRQ (if there was one)
+dma_channel_acknowledge_irq0(channel);
+// re-enable the channel on IRQ0
+dma_channel_set_irq0_enabled(channel, true);
+```
+
+仅 RP2350：由于勘误 RP2350-E5（详见 RP2350 数据手册），在中止前有必要清除被中止通道及任何链接通道的使能位，以防止重新触发。
+
+**参数**
+
+- `channel`: DMA 通道
+
+#### dma_channel_acknowledge_irq0
+
+`static void dma_channel_acknowledge_irq0 (uint channel) [inline], [static]`
+
+确认通道 IRQ，将其从 DMA_IRQ_0 的触发原因中清除。
+
+**参数**
+
+- `channel`: DMA 通道
+
+#### dma_channel_acknowledge_irq1
+
+`static void dma_channel_acknowledge_irq1 (uint channel) [inline], [static]`
+
+确认通道 IRQ，将其从 DMA_IRQ_1 的触发原因中清除。
+
+**参数**
+
+- `channel`: DMA 通道
+
+#### dma_channel_claim
+
+`void dma_channel_claim (uint channel)`
+
+将 DMA 通道标记为已使用。
+
+硬件协作申请方法。若通道已被申请则触发 panic。库使用此方法可检测会以不可预知方式失败的意外配置。
+
+**参数**
+
+- `channel`: DMA 通道
+
+#### dma_channel_cleanup
+
+`void dma_channel_cleanup (uint channel)`
+
+使用后对 DMA 通道进行清理。
+
+可用于不再需要 DMA 通道时对其进行清理，使其处于干净状态以供复用。通道的 IRQ 将被禁用，任何正在进行的传输将被中止，任何未处理的中断将被清除。通道随后可以用于其他用途。
+
+```c
+if (dma_channel >= 0) {
+    dma_channel_cleanup(dma_channel);
+    dma_channel_unclaim(dma_channel);
+    dma_channel = -1;
+}
+```
+
+**参数**
+
+- `channel`: DMA 通道
+
+#### dma_channel_configure
+
+`static void dma_channel_configure (uint channel, const dma_channel_config_t **` config, volatile void ** write_addr, const volatile void * read_addr, uint32_t encoded_transfer_count, bool trigger) [inline], [static]`
+
+配置所有 DMA 参数并可选地启动传输。
+
+**参数**
+
+- `channel`: DMA 通道
+- `config`: 指向 DMA 配置结构体的指针
+- `write_addr`: 初始写入地址
+- `read_addr`: 初始读取地址
+- `encoded_transfer_count`: 编码的传输计数
+
+RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size），范围 0 \-> 2^32 - 1。
+
+RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_config_set_transfer_data_size），高 4 位非零值用于指定其他选项。
+
+最佳实践是始终使用 `dma_encode_transfer_count、dma_encode_transfer_count_with_self_trigger 或 `dma_encode_endless_transfer_count` 来生成此参数的值。
+
+**参数**
+
+- `trigger`: 设为 true 可立即启动传输
+
+#### dma_channel_get_irq0_status
+
+`static bool dma_channel_get_irq0_status (uint channel) [inline], [static]`
+
+判断特定通道是否是 DMA_IRQ_0 的触发原因。
+
+**参数**
+
+- `channel`: DMA 通道
+
+**返回**
+
+若该通道是 DMA_IRQ_0 的触发原因则返回 true，否则返回 false。
+
+#### dma_channel_get_irq1_status
+
+`static bool dma_channel_get_irq1_status (uint channel) [inline], [static]`
+
+判断特定通道是否是 DMA_IRQ_1 的触发原因。
+
+**参数**
+
+- `channel`: DMA 通道
+
+**返回**
+
+若该通道是 DMA_IRQ_1 的触发原因则返回 true，否则返回 false。
+
+#### dma_channel_is_busy
+
+`static bool dma_channel_is_busy (uint channel) [inline], [static]`
+
+检查 DMA 通道是否忙碌。
+
+**参数**
+
+- `channel`: DMA 通道
+
+**返回**
+
+若通道当前忙碌则返回 true。
+
+#### dma_channel_is_claimed
+
+`bool dma_channel_is_claimed (uint channel)`
+
+判断 DMA 通道是否已被申请。
+
+**参数**
+
+- `channel`: DMA 通道
+
+**返回**
+
+若通道已被申请则返回 true，否则返回 false。
+
+**参见**
+
+
+
+#### dma_channel_set_config
+
+`static void dma_channel_set_config (uint channel, const dma_channel_config_t * config, bool trigger) [inline], [static]`
+
+设置通道配置。
+
+**参数**
+
+- `channel`: DMA 通道
+- `config`: 指向包含所需配置的配置结构体的指针
+- `trigger`: 设为 true 可立即触发传输
+
+#### dma_channel_set_irq0_enabled
+
+`static void dma_channel_set_irq0_enabled (uint channel, bool enabled) [inline], [static]`
+
+通过 DMA_IRQ_0 启用单个 DMA 通道的中断。
+
+**参数**
+
+- `channel`: DMA 通道
+- `enabled`: 设为 true 在指定通道上启用中断 0，设为 false 禁用。
+
+#### dma_channel_set_irq1_enabled
+
+`static void dma_channel_set_irq1_enabled (uint channel, bool enabled) [inline], [static]`
+
+通过 DMA_IRQ_1 启用单个 DMA 通道的中断。
+
+**参数**
+
+- `channel`: DMA 通道
+- `enabled`: 设为 true 在指定通道上启用中断 1，设为 false 禁用。
+
+#### dma_channel_set_read_addr
+
+`static void dma_channel_set_read_addr (uint channel, const volatile void * read_addr, bool trigger) [inline], [static]`
+
+设置 DMA 初始读取地址。
+
+**参数**
+
+- `channel`: DMA 通道
+- `read_addr`: 传输的初始读取地址。
+- `trigger`: 设为 true 可立即启动传输。
+
+#### dma_channel_set_transfer_count
+
+`static void dma_channel_set_transfer_count (uint channel, uint32_t encoded_transfer_count, bool trigger) [inline], [static]`
+
+设置通道将执行的总线传输次数。
+
+**参数**
+
+- `channel`: DMA 通道
+- `encoded_transfer_count`: 编码的传输计数
+
+RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size），范围 0 \-> 2^32 - 1。
+
+RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_config_set_transfer_data_size），高 4 位非零值用于指定其他选项。
+
+最佳实践是始终使用 `dma_encode_transfer_count、dma_encode_transfer_count_with_self_trigger 或 `dma_encode_endless_transfer_count` 来生成此参数的值。
+
+**参数**
+
+- `trigger`: 设为 true 可立即启动传输。
+
+#### dma_channel_set_write_addr
+
+`static void dma_channel_set_write_addr (uint channel, volatile void * write_addr, bool trigger) [inline], [static]`
+
+设置 DMA 初始写入地址。
+
+**参数**
+
+- `channel`: DMA 通道
+- `write_addr`: 传输的初始写入地址。
+- `trigger`: 设为 true 可立即启动传输。
+
+#### dma_channel_start
+
+`static void dma_channel_start (uint channel) [inline], [static]`
+
+启动单个 DMA 通道。
+
+**参数**
+
+- `channel`: DMA 通道
+
+#### dma_channel_transfer_from_buffer_now
+
+`static void dma_channel_transfer_from_buffer_now (uint channel, const volatile void * read_addr, uint32_t encoded_transfer_count) [inline], [static]`
+
+立即从缓冲区启动 DMA 传输。
+
+**参数**
+
+- `channel`: DMA 通道
+- `read_addr`: 设置初始读取地址
+- `encoded_transfer_count`: 编码的传输计数
+
+RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size），范围 0 \-> 2^32 - 1。
+
+RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_config_set_transfer_data_size），高 4 位非零值用于指定其他选项。
+
+最佳实践是始终使用 `dma_encode_transfer_count、dma_encode_transfer_count_with_self_trigger 或 `dma_encode_endless_transfer_count` 来生成此参数的值。
+
+#### dma_channel_transfer_to_buffer_now
+
+`static void dma_channel_transfer_to_buffer_now (uint channel, volatile void * write_addr, uint32_t encoded_transfer_count) [inline], [static]`
+
+立即向缓冲区启动 DMA 传输。
+
+**参数**
+
+- `channel`: DMA 通道
+- `write_addr`: 设置初始写入地址
+- `encoded_transfer_count`: 编码的传输计数
+
+RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size），范围 0 \-> 2^32 - 1。
+
+RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_config_set_transfer_data_size），高 4 位非零值用于指定其他选项。
+
+最佳实践是始终使用 `dma_encode_transfer_count、dma_encode_transfer_count_with_self_trigger 或 `dma_encode_endless_transfer_count` 来生成此参数的值。
+
+#### dma_channel_unclaim
+
+`void dma_channel_unclaim (uint channel)`
+
+将 DMA 通道标记为不再使用。
+
+**参数**
+
+- `channel`: 要释放的 DMA 通道
+
+#### dma_channel_wait_for_finish_blocking
+
+`static void dma_channel_wait_for_finish_blocking (uint channel) [inline], [static]`
+
+等待 DMA 通道传输完成。
+
+**参数**
+
+- `channel`: DMA 通道
+
+#### dma_claim_mask
+
+`void dma_claim_mask (uint32_t channel_mask)`
+
+将多个 DMA 通道标记为已使用。
+
+硬件协作申请方法。若任意通道已被申请则触发 panic。库使用此方法可检测会以不可预知方式失败的意外配置。
+
+**参数**
+
+- `channel_mask`: 所有需要申请的通道的位域（位 0 == 通道 0，位 1 == 通道 1，以此类推）
+
+#### dma_claim_unused_channel
+
+`int dma_claim_unused_channel (bool required)`
+
+申请一个空闲的 DMA 通道。
+
+**参数**
+
+- `required`: 若为 true，则在无可用通道时函数将触发 panic
+
+**返回**
+
+DMA 通道编号，若 required 为 false 且无空闲通道则返回 -1。
+
+#### dma_claim_unused_timer
+
+`int dma_claim_unused_timer (bool required)`
+
+申请一个空闲的 DMA 定时器。
+
+**参数**
+
+- `required`: 若为 true，则在无可用定时器时函数将触发 panic
+
+**返回**
+
+DMA 定时器编号，若 required 为 false 且无空闲定时器则返回 -1。
+
+#### dma_encode_endless_transfer_count
+
+`static uint32_t dma_encode_endless_transfer_count (void) [inline], [static]`
+
+返回无限传输的"encoded_transfer_length"值，适用于相关方法。
+
+RP2040 不支持无限 DMA 传输，因此不应使用此方法。
+
+**返回**
+
+encoded_transfer_count 值。
+
+**参见**
+
+
+
+
+
+#### dma_encode_transfer_count
+
+`static uint32_t dma_encode_transfer_count (uint transfer_count) [inline], [static]`
+
+将指定传输长度编码为适合相关方法的"encoded_transfer_length"值。
+
+**参数**
+
+- `transfer_count: 传输次数（非字节数，参见 channel_config_set_transfer_data_size）
+
+RP2040 上有效范围为 0 \-> 2^32 - 1。
+
+RP2350 上有效范围为 0 \-> 2^28 - 1。
+
+**返回**
+
+encoded_transfer_count 值。
+
+**参见**
+
+
+
+
+
+#### dma_encode_transfer_count_with_self_trigger
+
+`static uint32_t dma_encode_transfer_count_with_self_trigger (uint transfer_count) [inline], [static]`
+
+将指定传输长度以及自触发标志编码为适合相关方法的"encoded_transfer_length"值。
+
+**参数**
+
+- `transfer_count: 传输次数（非字节数，参见 channel_config_set_transfer_data_size）
+
+RP2040 不支持自触发 DMA，因此不应使用此方法。
+
+RP2350 上有效范围为 0 \-> 2^28 - 1。
+
+**返回**
+
+encoded_transfer_count 值。
+
+**参见**
+
+
+
+
+
+#### dma_get_irq_num
+
+`static int dma_get_irq_num (uint irq_index) [inline], [static]`
+
+返回 DMA_IRQ_&lt;irqn>
+
+**参数**
+
+- `irq_index`: 0 表示 DMA irq 索引
+
+**返回**
+
+用于 DMA 的 `irq_num_t`。
+
+#### dma_get_timer_dreq
+
+`static uint dma_get_timer_dreq (uint timer_num) [inline], [static]`
+
+返回给定 DMA 定时器的 DREQ 编号。
+
+**参数**
+
+- `timer_num`: DMA 定时器编号 0-3
+
+#### dma_irqn_acknowledge_channel
+
+`static void dma_irqn_acknowledge_channel (uint irq_index, uint channel) [inline], [static]`
+
+确认通道 IRQ，将其从 DMA_IRQ_N 的触发原因中清除。
+
+**参数**
+
+- `irq_index`: IRQ 索引；DMA_IRQ_0 或 DMA_IRQ_1 分别对应 0 或 1
+- `channel`: DMA 通道
+
+#### dma_irqn_get_channel_status
+
+`static bool dma_irqn_get_channel_status (uint irq_index, uint channel) [inline], [static]`
+
+判断特定通道是否是 DMA_IRQ_N 的触发原因。
+
+**参数**
+
+- `irq_index`: IRQ 索引；DMA_IRQ_0 或 DMA_IRQ_1 分别对应 0 或 1
+- `channel`: DMA 通道
+
+**返回**
+
+若该通道是 DMA_IRQ_N 的触发原因则返回 true，否则返回 false。
+
+#### dma_irqn_set_channel_enabled
+
+`static void dma_irqn_set_channel_enabled (uint irq_index, uint channel, bool enabled) [inline], [static]`
+
+在 DMA_IRQ_0 或 DMA_IRQ_1 上启用单个 DMA 通道中断。
+
+**参数**
+
+- `irq_index`: IRQ 索引；DMA_IRQ_0 或 DMA_IRQ_1 分别对应 0 或 1
+- `channel`: DMA 通道
+- `enabled`: 设为 true 通过 irq_index 在指定通道上启用中断，设为 false 禁用。
+
+#### dma_irqn_set_channel_mask_enabled
+
+`static void dma_irqn_set_channel_mask_enabled (uint irq_index, uint32_t channel_mask, bool enabled) [inline], [static]`
+
+通过 DMA_IRQ_0 或 DMA_IRQ_1 启用多个 DMA 通道的中断。
+
+**参数**
+
+- `irq_index`: IRQ 索引；DMA_IRQ_0 或 DMA_IRQ_1 分别对应 0 或 1
+- `channel_mask`: 所有需要启用/禁用的通道的位掩码。通道 0 = 位 0，通道 1 = 位 1，以此类推。
+- `enabled`: 设为 true 启用掩码中指定的所有中断，设为 false 禁用掩码中指定的所有中断。
+
+#### dma_set_irq0_channel_mask_enabled
+
+`static void dma_set_irq0_channel_mask_enabled (uint32_t channel_mask, bool enabled) [inline], [static]`
+
+通过 DMA_IRQ_0 启用多个 DMA 通道的中断。
+
+**参数**
+
+- `channel_mask`: 所有需要启用/禁用的通道的位掩码。通道 0 = 位 0，通道 1 = 位 1，以此类推。
+- `enabled`: 设为 true 启用掩码中指定的所有中断，设为 false 禁用掩码中指定的所有中断。
+
+#### dma_set_irq1_channel_mask_enabled
+
+`static void dma_set_irq1_channel_mask_enabled (uint32_t channel_mask, bool enabled) [inline], [static]`
+
+通过 DMA_IRQ_1 启用多个 DMA 通道的中断。
+
+**参数**
+
+- `channel_mask`: 所有需要启用/禁用的通道的位掩码。通道 0 = 位 0，通道 1 = 位 1，以此类推。
+- `enabled`: 设为 true 启用掩码中指定的所有中断，设为 false 禁用掩码中指定的所有中断。
+
+#### dma_sniffer_disable
+
+`static void dma_sniffer_disable (void) [inline], [static]`
+
+禁用 DMA 嗅探器。
+
+#### dma_sniffer_enable
+
+`static void dma_sniffer_enable (uint channel, uint mode, bool force_channel_enable) [inline], [static]`
+
+启用针对指定通道的 DMA 嗅探器。
+
+mode 可以是以下值之一：
+
+| 模式 | 功能 |
+| --- | --- |
+| 0x0 | 计算 CRC-32（IEEE802.3 多项式） |
+| 0x1 | 计算位反转数据的 CRC-32（IEEE802.3 多项式） |
+| 0x2 | 计算 CRC-16-CCITT |
+| 0x3 | 计算位反转数据的 CRC-16-CCITT |
+| 0xe | 对所有数据进行异或规约。若总 1 的数量为奇数则为 1。 |
+| 0xf | 计算简单的 32 位校验和（使用 32 位累加器的加法） |
+
+**参数**
+
+- `channel`: DMA 通道
+- `mode`: 参见描述
+- `force_channel_enable`: 设为 true 同时在通道配置中启用嗅探（通常这是您想要的，但有时您可能有一个链式 DMA，其中只对链的某些段进行嗅探，这种情况下可以传入 false）。
+
+#### dma_sniffer_get_data_accumulator
+
+`static uint32_t dma_sniffer_get_data_accumulator (void) [inline], [static]`
+
+获取嗅探器的数据累加器值。
+
+读取硬件通过嗅探 DMA 流计算出的值。
+
+#### dma_sniffer_set_byte_swap_enabled
+
+`static void dma_sniffer_set_byte_swap_enabled (bool swap) [inline], [static]`
+
+启用嗅探器字节交换功能。
+
+在将嗅探数据送入校验和之前，在本地对其进行字节反转。
+
+注意嗅探硬件位于读取主控中 DMA 通道字节交换的下游：如果 `channel_config_set_bswap() 和 dma_sniffer_set_byte_swap_enabled()` 同时启用，从嗅探器的角度来看它们的效果相互抵消。
+
+**参数**
+
+- `swap`: 设为 true 启用字节交换
+
+#### dma_sniffer_set_data_accumulator
+
+`static void dma_sniffer_set_data_accumulator (uint32_t seed_value) [inline], [static]`
+
+用初始值设置嗅探器的数据累加器。
+
+通常，CRC 算法使用初始种子为 0xFFFF 或 0xFFFFFFFF（分别对应 crc16 和 crc32 算法）的数据累加器。
+
+**参数**
+
+- `seed_value`: 设置数据累加器的值
+
+#### dma_sniffer_set_output_invert_enabled
+
+`static void dma_sniffer_set_output_invert_enabled (bool invert) [inline], [static]`
+
+启用嗅探器输出反转功能。
+
+若启用，读取嗅探数据结果时将显示为位反转。这不影响校验和的计算方式。
+
+**参数**
+
+- `invert`: 设为 true 启用输出位反转
+
+#### dma_sniffer_set_output_reverse_enabled
+
+`static void dma_sniffer_set_output_reverse_enabled (bool reverse) [inline], [static]`
+
+启用嗅探器输出位反转功能。
+
+若启用，读取嗅探数据结果时将显示为位序反转。这不影响校验和的计算方式。
+
+**参数**
+
+- `reverse`: 设为 true 启用输出位序反转
+
+#### dma_start_channel_mask
+
+`static void dma_start_channel_mask (uint32_t chan_mask) [inline], [static]`
+
+同时启动一个或多个通道。
+
+**参数**
+
+- `chan_mask`: 所有需要启动的通道的位掩码。通道 0 = 位 0，通道 1 = 位 1，以此类推。
+
+#### dma_timer_claim
+
+`void dma_timer_claim (uint timer)`
+
+将 DMA 定时器标记为已使用。
+
+硬件协作申请方法。若定时器已被申请则触发 panic。库使用此方法可检测会以不可预知方式失败的意外配置。
+
+**参数**
+
+- `timer`: DMA 定时器
+
+#### dma_timer_is_claimed
+
+`bool dma_timer_is_claimed (uint timer)`
+
+判断 DMA 定时器是否已被申请。
+
+**参数**
+
+- `timer`: DMA 定时器
+
+**返回**
+
+若定时器已被申请则返回 true，否则返回 false。
+
+**参见**
+
+
+#### dma_timer_set_fraction
+
+`static void dma_timer_set_fraction (uint timer, uint16_t numerator, uint16_t denominator) [inline], [static]`
+
+设置给定 DMA 定时器的乘数。
+
+定时器将以 system_clock_freq `*` numerator / denominator 的速率运行，因此这是通过使用该定时器作为 DREQ 的 DMA 通道传输数据元素的速率。乘数必须小于或等于 1。
+
+**参数**
+
+- `timer`: DMA 定时器
+- `numerator`: 分数的分子
+- `denominator`: 分数的分母
+
+#### dma_timer_unclaim
+
+`void dma_timer_unclaim (uint timer)`
+
+将 DMA 定时器标记为不再使用。
+
+硬件协作申请方法。
+
+**参数**
+
+- `timer`: 要释放的 DMA 定时器
+
+#### dma_unclaim_mask
+
+`void dma_unclaim_mask (uint32_t channel_mask)`
+
+将多个 DMA 通道标记为不再使用。
+
+**参数**
+
+- `channel_mask`: 所有需要取消申请的通道的位域（位 0 == 通道 0，位 1 == 通道 1，以此类推）
+
+### channel_config
+
+DMA 通道配置。
+
+#### 详细描述
+
+DMA 通道需要进行配置，这些函数提供了方便的帮助函数来设置配置结构体。参见 dma_channel_config。
+
+#### 函数
+
+`static void channel_config_set_read_address_update_type (dma_channel_config_t *c, dma_address_update_type_t update_type)`<br/>&emsp;在通道配置对象中设置 DMA 通道读取地址更新类型。
+
+`static void channel_config_set_write_address_update_type (dma_channel_config_t *c, dma_address_update_type_t update_type)`<br/>&emsp;在通道配置对象中设置 DMA 通道写入地址更新类型。
+
+`static void channel_config_set_read_increment (dma_channel_config_t *c, bool incr)`<br/>&emsp;在通道配置对象中设置 DMA 通道读取递增。
+
+`static void channel_config_set_write_increment (dma_channel_config_t *c, bool incr)`<br/>&emsp;在通道配置对象中设置 DMA 通道写入递增。
+
+`static void channel_config_set_dreq (dma_channel_config_t *c, uint dreq)`<br/>&emsp;在通道配置对象中选择传输请求信号。
+
+`static void channel_config_set_chain_to (dma_channel_config_t *c, uint chain_to)`<br/>&emsp;在通道配置对象中设置 DMA 通道的 chain_to 通道。
+
+`static void channel_config_set_transfer_data_size (dma_channel_config_t *c, dma_channel_transfer_size_t size)`<br/>&emsp;在通道配置对象中设置每次 DMA 总线传输的大小。
+
+`static void channel_config_set_ring (dma_channel_config_t *c, bool write, uint size_bits)`<br/>&emsp;在通道配置对象中设置地址环绕参数。
+
+`static void channel_config_set_bswap (dma_channel_config_t *c, bool bswap)`<br/>&emsp;在通道配置对象中设置 DMA 字节交换配置。
+
+`static void channel_config_set_irq_quiet (dma_channel_config_t *c, bool irq_quiet)`<br/>&emsp;在通道配置对象中设置 IRQ 安静模式。
+
+`static void channel_config_set_high_priority (dma_channel_config_t *c, bool high_priority)`<br/>&emsp;在通道配置对象中设置通道优先级。
+
+`static void channel_config_set_enable (dma_channel_config_t *c, bool enable)`<br/>&emsp;在通道配置对象中启用/禁用 DMA 通道。
+
+`static void channel_config_set_sniff_enable (dma_channel_config_t *c, bool sniff_enable)`<br/>&emsp;在通道配置对象中启用嗅探硬件对通道的访问。
+- `static dma_channel_config_t dma_channel_get_default_config` (uint channel)`: 获取给定通道的默认通道配置。
+- `static dma_channel_config_t dma_get_channel_config` (uint channel)`: 获取指定通道的当前配置。
+`static uint32_t channel_config_get_ctrl_value (const dma_channel_config_t *config)`<br/>&emsp;从通道配置中获取原始配置寄存器值。
+
+#### 函数文档
+
+**channel_config_get_ctrl_value**
+
+`static uint32_t channel_config_get_ctrl_value (const dma_channel_config_t * config) [inline], [static]`
+
+从通道配置中获取原始配置寄存器值。
+
+**参数**
+
+- `config`: 指向配置结构体的指针。
+
+**返回**
+
+寄存器内容。
+
+**channel_config_set_bswap**
+
+`static void channel_config_set_bswap (dma_channel_config_t * c, bool bswap) [inline], [static]`
+
+在通道配置对象中设置 DMA 字节交换配置。
+
+对字节数据无效；对半字数据，每个半字的两个字节互换；对字数据，每个字的四个字节互换以反转其顺序。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `bswap`: 设为 true 启用字节交换
+
+**channel_config_set_chain_to**
+
+`static void channel_config_set_chain_to (dma_channel_config_t * c, uint chain_to) [inline], [static]`
+
+在通道配置对象中设置 DMA 通道的 chain_to 通道。
+
+当此通道完成时，将触发 chain_to 指定的通道。通过将 chain_to 设置为自身（同一通道）来禁用。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `chain_to`: 此通道完成时触发的通道。
+
+**channel_config_set_dreq**
+
+`static void channel_config_set_dreq (dma_channel_config_t * c, uint dreq) [inline], [static]`
+
+在通道配置对象中选择传输请求信号。
+
+通道使用传输请求信号来控制数据传输速率。TREQ 信号的来源可以是内部（TIMERS）或外部（DREQ，系统的数据请求）。0x0 到 0x3a -> 选择 DREQ n 作为 TREQ；0x3b -> 选择定时器 0；0x3c -> 选择定时器 1；0x3d -> 选择定时器 2（可选）；0x3e -> 选择定时器 3（可选）；0x3f -> 永久请求，用于不受节拍控制的传输。
+
+**参数**
+
+- `c`: 指向通道配置数据的指针
+- `dreq`: 来源（参见描述）
+
+**channel_config_set_enable**
+
+`static void channel_config_set_enable (dma_channel_config_t * c, bool enable) [inline], [static]`
+
+在通道配置对象中启用/禁用 DMA 通道。
+
+为 false 时，通道将忽略触发信号，停止发起传输，并暂停当前传输序列（即若 BUSY 已为高则保持高）。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `enable`: 设为 true 启用 DMA 通道。启用后，通道将响应触发事件并开始传输数据。
+
+**channel_config_set_high_priority**
+
+`static void channel_config_set_high_priority (dma_channel_config_t * c, bool high_priority) [inline], [static]`
+
+在通道配置对象中设置通道优先级。
+
+为 true 时，在调度中给予通道优先处理：每轮调度中，先考虑所有高优先级通道，再考虑单个低优先级通道，然后返回高优先级通道。
+
+这只影响 DMA 调度通道的顺序，不改变 DMA 的总线优先级。若 DMA 未达到饱和，低优先级通道不会看到吞吐量损失。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `high_priority`: 设为 true 启用高优先级
+
+**channel_config_set_irq_quiet**
+
+`static void channel_config_set_irq_quiet (dma_channel_config_t * c, bool irq_quiet) [inline], [static]`
+
+在通道配置对象中设置 IRQ 安静模式。
+
+在 QUIET 模式下，通道不会在每次传输块结束时生成 IRQ。而是当向触发寄存器写入 NULL 时（表示控制块链结束）才产生 IRQ。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `irq_quiet`: 设为 true 启用安静模式，设为 false 禁用。
+
+**channel_config_set_read_address_update_type**
+
+`static void channel_config_set_read_address_update_type (dma_channel_config_t *` c, dma_address_update_type_t update_type) [inline], [static]`
+
+在通道配置对象中设置 DMA 通道读取地址更新类型。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `update_type`: 每次传输后对读取地址进行的调整类型。外设到内存传输通常设置为 DMA_ADDRESS_UPDATE_NONE。
+
+**参见**
+
+
+**channel_config_set_read_increment**
+
+`static void channel_config_set_read_increment (dma_channel_config_t * c, bool incr) [inline], [static]`
+
+在通道配置对象中设置 DMA 通道读取递增。
+
+此方法等同于：
+
+```c
+channel_config_set_read_address_update_type(c, incr ? DMA_ADDRESS_UPDATE_INCREMENT : DMA_ADDRESS_UPDATE_NONE)
+```
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `incr`: 设为 true 启用读取地址递增，即每次传输后读取地址按传输大小递增。设为 false 则每次从相同地址读取。外设到内存传输通常禁用。
+
+**参见**
+
+
+**channel_config_set_ring**
+
+`static void channel_config_set_ring (dma_channel_config_t * c, bool write, uint size_bits) [inline], [static]`
+
+在通道配置对象中设置地址环绕参数。
+
+地址环绕区域的大小。若为 0，则不环绕。对于 n > 0 的值，只有地址的低 n 位会改变。
+
+0x0 \-> 不环绕。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `write`: 设为 true 应用于写地址，设为 false 应用于读地址
+- `size_bits`: 0 禁用环绕，否则为地址变化部分的位数（有效实现地址在 (1 的大小边界上环绕）
+
+**channel_config_set_sniff_enable**
+
+`static void channel_config_set_sniff_enable (dma_channel_config_t * c, bool sniff_enable) [inline], [static]`
+
+在通道配置对象中启用嗅探硬件对通道的访问。
+
+嗅探硬件必须已启用并选中此通道。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `sniff_enable`: 设为 true 启用嗅探硬件访问此 DMA 通道。
+
+**channel_config_set_transfer_data_size**
+
+`static void channel_config_set_transfer_data_size (dma_channel_config_t *` c, dma_channel_transfer_size_t size) [inline], [static]`
+
+在通道配置对象中设置每次 DMA 总线传输的大小。
+
+设置每次总线传输的大小（字节/半字/字）。读写地址随每次传输按指定量（1/2/4 字节）递增。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `size`: 参见枚举的可能值。
+
+**channel_config_set_write_address_update_type**
+
+`static void channel_config_set_write_address_update_type (dma_channel_config_t *` c, dma_address_update_type_t update_type) [inline], [static]`
+
+在通道配置对象中设置 DMA 通道写入地址更新类型。
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `update_type`: 每次传输后对写入地址进行的调整类型。内存到外设传输通常设置为 DMA_ADDRESS_UPDATE_NONE。
+
+**参见**
+
+
+**channel_config_set_write_increment**
+
+`static void channel_config_set_write_increment (dma_channel_config_t * c, bool incr) [inline], [static]`
+
+在通道配置对象中设置 DMA 通道写入递增。
+
+此方法等同于：
+
+```c
+channel_config_set_write_address_update_type(c, incr ? DMA_ADDRESS_UPDATE_INCREMENT : DMA_ADDRESS_UPDATE_NONE)
+```
+
+**参数**
+
+- `c`: 指向通道配置对象的指针
+- `incr`: 设为 true 启用写入地址递增，即每次传输后写入地址按传输大小递增。设为 false 则每次写入相同地址。内存到外设传输通常禁用。
+
+**参见**
+
+
+**dma_channel_get_default_config**
+
+`static dma_channel_config_t dma_channel_get_default_config (uint channel) [inline], [static]`
+
+获取给定通道的默认通道配置。
+
+| 设置 | 默认值 |
+| --- | --- |
+| 读取递增 | true |
+| 写入递增 | false |
+| DReq | DREQ_FORCE |
+| 链接到 | 自身 |
+| 数据大小 | DMA_SIZE_32 |
+| 环绕 | write=false, size=0（关闭） |
+| 字节交换 | false |
+| 安静 IRQ | false |
+| 高优先级 | false |
+| 通道使能 | true |
+| 嗅探使能 | false |
+
+**参数**
+
+- `channel`: DMA 通道
+
+**返回**
+
+可进一步修改的默认配置。
+
+**dma_get_channel_config**
+
+`static dma_channel_config_t dma_get_channel_config (uint channel) [inline], [static]`
+
+获取指定通道的当前配置。
+
+**参数**
+
+- `channel`: DMA 通道
+
+**返回**
+
+从硬件寄存器读取的当前配置（非缓存值）。
+
+<Normal />

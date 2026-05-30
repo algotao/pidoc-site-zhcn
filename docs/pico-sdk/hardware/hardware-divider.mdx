@@ -1,0 +1,491 @@
+---
+sidebar_position: 6
+draft: false
+description: RP2040 低级硬件除法器 API。非 RP2040 平台提供所有函数的软件实现版本。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK divider]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+RP2040 低级硬件除法器 API。非 RP2040 平台提供所有函数的软件实现版本。
+
+### 详细描述
+
+SIO 包含一个 8 周期有符号/无符号除法/取余电路，每个核心各一个。计算通过向 DIVIDEND 和 DIVISOR 两个参数寄存器写入被除数和除数来启动。除法器在接下来的 8 个周期内计算除法的商（/）和余数（%），并在第 9 个周期可以从 DIV_QUOTIENT 和 DIV_REMAINDER 两个结果寄存器中读取结果。可以轮询寄存器 DIV_CSR 中的"就绪"位等待计算完成，或者软件可以插入固定的 8 周期延迟。
+
+此头文件提供了直接访问硬件除法器的低级宏和内联函数，也许最有用的是执行异步除法。但这些函数不遵循常规 SDK 中保存/恢复除法器状态的约定，因此通常不能安全地从中断处理程序中调用。
+
+pico_divider 库在除法器基础上提供了更友好的 API 集合（并支持 64 位除法），默认情况下常规 C 语言整数除法操作会重定向到该库，这意味着可以直接使用 C 的 `/ 和 %` 运算符，并享受快速硬件除法器带来的好处。
+
+RP2350 上没有硬件除法器，相关函数以软件方式实现。
+
+**参见**
+
+
+**示例**
+
+// hello_divider.c
+```c
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "hardware/divider.h"
+
+int main() {
+    stdio_init_all();
+    printf("Hello, divider!\n");
+
+    // This is the basic hardware divider function
+    int32_t dividend = 123456;
+    int32_t divisor = -321;
+    divmod_result_t result = hw_divider_divmod_s32(dividend, divisor);
+
+    printf("%d/%d = %d remainder %d\n", dividend, divisor, to_quotient_s32(result), to_remainder_s32(result));
+
+    // Is it right?
+
+    printf("Working backwards! Result %d should equal %d!\n\n",
+           to_quotient_s32(result) * divisor + to_remainder_s32(result), dividend);
+
+    // This is the recommended unsigned fast divider for general use.
+    int32_t udividend = 123456;
+    int32_t udivisor = 321;
+    divmod_result_t uresult = hw_divider_divmod_u32(udividend, udivisor);
+
+    printf("%d/%d = %d remainder %d\n", udividend, udivisor, to_quotient_u32(uresult), to_remainder_u32(uresult));
+
+    // Is it right?
+
+    printf("Working backwards! Result %d should equal %d!\n\n",
+           to_quotient_u32(result) * divisor + to_remainder_u32(result), dividend);
+
+    // You can also do divides asynchronously. Divides will be complete after 8 cycles.
+
+    hw_divider_divmod_s32_start(dividend, divisor);
+
+    // Do something for 8 cycles!
+
+    // In this example, our results function will wait for completion.
+    // Use hw_divider_result_nowait() if you don't want to wait, but are sure you have delayed at least 8 cycles
+
+    result = hw_divider_result_wait();
+
+    printf("Async result %d/%d = %d remainder %d\n", dividend, divisor, to_quotient_s32(result),
+           to_remainder_s32(result));
+
+    printf("%d / %d = (by operator %d) (inlined %d)\n", dividend, divisor,
+           dividend / divisor, hw_divider_s32_quotient_inlined(dividend, divisor));
+
+    hw_divider_state_t state;
+    hw_divider_divmod_s32_start(dividend, divisor);
+    hw_divider_save_state(&state);
+
+    hw_divider_divmod_s32_start(123, 7);
+    printf("inner %d / %d = %d\n", 123, 7, hw_divider_s32_quotient_wait());
+
+    hw_divider_restore_state(&state);
+    int32_t tmp = hw_divider_s32_quotient_wait();
+    printf("outer divide %d / %d = %d\n", dividend, divisor, tmp);
+    return 0;
+}
+```
+
+### 函数
+
+- `static divmod_result_t hw_divider_divmod_s32 (int32_t a, int32_t b)`: 执行有符号硬件除法并等待结果。
+- `static divmod_result_t hw_divider_divmod_u32 (uint32_t a, uint32_t b)`: 执行无符号硬件除法并等待结果。
+- `static void hw_divider_divmod_s32_start (int32_t a, int32_t b)`: 启动有符号异步除法。
+- `static void hw_divider_divmod_u32_start (uint32_t a, uint32_t b)`: 启动无符号异步除法。
+- `static void hw_divider_wait_ready (void)`: 等待除法完成。
+- `static divmod_result_t hw_divider_result_nowait (void)`: 立即返回硬件除法结果（不等待）。
+- `static divmod_result_t hw_divider_result_wait (void)`: 返回最近一次异步硬件除法的结果。
+- `static uint32_t to_quotient_u32 (divmod_result_t r)`: 从 32p32 定点数中高效提取无符号商。
+- `static int32_t to_quotient_s32 (divmod_result_t r)`: 从 32p32 定点数中高效提取有符号商。
+- `static uint32_t to_remainder_u32 (divmod_result_t r)`: 从 32p32 定点数中高效提取无符号余数。
+- `static int32_t to_remainder_s32 (divmod_result_t r)`: 从 32p32 定点数中高效提取有符号余数。
+- `static uint32_t hw_divider_u32_quotient_wait (void)`: 返回最近一次异步硬件除法的结果，仅返回无符号商。
+- `static int32_t hw_divider_s32_quotient_wait (void)`: 返回最近一次异步硬件除法的结果，仅返回有符号商。
+- `static uint32_t hw_divider_u32_remainder_wait (void)`: 返回最近一次异步硬件除法的结果，仅返回无符号余数。
+- `static int32_t hw_divider_s32_remainder_wait (void)`: 返回最近一次异步硬件除法的结果，仅返回有符号余数。
+- `static uint32_t hw_divider_u32_quotient (uint32_t a, uint32_t b)`: 执行无符号硬件除法，等待结果，返回商。
+- `static uint32_t hw_divider_u32_remainder (uint32_t a, uint32_t b)`: 执行无符号硬件除法，等待结果，返回余数。
+- `static int32_t hw_divider_quotient_s32 (int32_t a, int32_t b)`: 执行有符号硬件除法，等待结果，返回商。
+- `static int32_t hw_divider_remainder_s32 (int32_t a, int32_t b)`: 执行有符号硬件除法，等待结果，返回余数。
+- `static void hw_divider_pause (void)`: 暂停精确所需的时间以等待异步除法完成。
+- `static uint32_t hw_divider_u32_quotient_inlined (uint32_t a, uint32_t b)`: 执行无符号硬件除法（内联版本），等待结果，返回商。
+- `static uint32_t hw_divider_u32_remainder_inlined (uint32_t a, uint32_t b)`: 执行无符号硬件除法（内联版本），等待结果，返回余数。
+- `static int32_t hw_divider_s32_quotient_inlined (int32_t a, int32_t b)`: 执行有符号硬件除法（内联版本），等待结果，返回商。
+- `static int32_t hw_divider_s32_remainder_inlined (int32_t a, int32_t b)`: 执行有符号硬件除法（内联版本），等待结果，返回余数。
+`static void hw_divider_save_state (hw_divider_state_t *dest)`<br/>&emsp;保存调用核心的硬件除法器状态。
+
+`static void hw_divider_restore_state (hw_divider_state_t *src)`<br/>&emsp;将已保存的硬件除法器状态加载到当前核心的硬件除法器中。
+
+### 函数文档
+
+#### hw_divider_divmod_s32
+
+`static divmod_result_t hw_divider_divmod_s32 (int32_t a, int32_t b) [inline], [static]`
+
+执行有符号硬件除法并等待结果。
+
+将 `a 除以 b`，等待计算完成，以一对 32 位商/余数值的形式返回结果。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+以一对 32 位商/余数值形式返回的除法结果。
+
+#### hw_divider_divmod_s32_start
+
+`static void hw_divider_divmod_s32_start (int32_t a, int32_t b) [inline], [static]`
+
+启动有符号异步除法。
+
+使用指定的有符号参数启动除法。在读取结果之前，应等待 8 个周期（`__div_pause()）或等待就绪位置位（hw_divider_wait_ready()`）。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+#### hw_divider_divmod_u32
+
+`static divmod_result_t hw_divider_divmod_u32 (uint32_t a, uint32_t b) [inline], [static]`
+
+执行无符号硬件除法并等待结果。
+
+将 `a 除以 b`，等待计算完成，以一对 32 位商/余数值的形式返回结果。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+以一对 32 位商/余数值形式返回的除法结果。
+
+#### hw_divider_divmod_u32_start
+
+`static void hw_divider_divmod_u32_start (uint32_t a, uint32_t b) [inline], [static]`
+
+启动无符号异步除法。
+
+使用指定的无符号参数启动除法。在读取结果之前，应等待 8 个周期（`__div_pause()）或等待就绪位置位（hw_divider_wait_ready()`）。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+#### hw_divider_pause
+
+`static void hw_divider_pause (void) [inline], [static]`
+
+暂停精确所需的时间以等待异步除法完成。
+
+#### hw_divider_quotient_s32
+
+`static int32_t hw_divider_quotient_s32 (int32_t a, int32_t b) [inline], [static]`
+
+执行有符号硬件除法，等待结果，返回商。
+
+将 `a 除以 b`，等待计算完成，返回商。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+除法的商结果。
+
+#### hw_divider_remainder_s32
+
+`static int32_t hw_divider_remainder_s32 (int32_t a, int32_t b) [inline], [static]`
+
+执行有符号硬件除法，等待结果，返回余数。
+
+将 `a 除以 b`，等待计算完成，返回余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+除法的余数结果。
+
+#### hw_divider_restore_state
+
+`static void hw_divider_restore_state (hw_divider_state_t * src) [inline], [static]`
+
+将已保存的硬件除法器状态加载到当前核心的硬件除法器中。
+
+将传入的硬件除法器状态复制到硬件除法器中。
+
+**参数**
+
+- `src`: 加载除法器状态的源位置
+
+#### hw_divider_result_nowait
+
+`static divmod_result_t hw_divider_result_nowait (void) [inline], [static]`
+
+立即返回硬件除法结果（不等待）。
+
+这是不安全的，因为计算可能尚未完成。
+
+**返回**
+
+当前结果。高 32 位为余数，低 32 位为商。
+
+#### hw_divider_result_wait
+
+`static divmod_result_t hw_divider_result_wait (void) [inline], [static]`
+
+返回最近一次异步硬件除法的结果。
+
+此函数通过调用 `hw_divider_wait_ready()` 等待结果就绪。
+
+**返回**
+
+当前结果。高 32 位为余数，低 32 位为商。
+
+#### hw_divider_s32_quotient_inlined
+
+`static int32_t hw_divider_s32_quotient_inlined (int32_t a, int32_t b) [inline], [static]`
+
+执行有符号硬件除法（内联版本），等待结果，返回商。
+
+将 `a 除以 b`，等待计算完成，返回商。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+除法的商结果。
+
+#### hw_divider_s32_quotient_wait
+
+`static int32_t hw_divider_s32_quotient_wait (void) [inline], [static]`
+
+返回最近一次异步硬件除法的结果，仅返回有符号商。
+
+此函数通过调用 `hw_divider_wait_ready()` 等待结果就绪。
+
+**返回**
+
+当前有符号商结果。
+
+#### hw_divider_s32_remainder_inlined
+
+`static int32_t hw_divider_s32_remainder_inlined (int32_t a, int32_t b) [inline], [static]`
+
+执行有符号硬件除法（内联版本），等待结果，返回余数。
+
+将 `a 除以 b`，等待计算完成，返回余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+除法的余数结果。
+
+#### hw_divider_s32_remainder_wait
+
+`static int32_t hw_divider_s32_remainder_wait (void) [inline], [static]`
+
+返回最近一次异步硬件除法的结果，仅返回有符号余数。
+
+此函数通过调用 `hw_divider_wait_ready()` 等待结果就绪。
+
+**返回**
+
+当前余数结果。
+
+#### hw_divider_save_state
+
+`static void hw_divider_save_state (hw_divider_state_t * dest) [inline], [static]`
+
+保存调用核心的硬件除法器状态。
+
+将当前核心的硬件除法器状态复制到提供的结构体中。此方法等待除法器结果稳定后，将其复制到内存中。可通过 `hw_divider_restore_state()` 恢复。
+
+**参数**
+
+- `dest`: 存储除法器状态的目标位置
+
+#### hw_divider_u32_quotient
+
+`static uint32_t hw_divider_u32_quotient (uint32_t a, uint32_t b) [inline], [static]`
+
+执行无符号硬件除法，等待结果，返回商。
+
+将 `a 除以 b`，等待计算完成，返回商。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+除法的商结果。
+
+#### hw_divider_u32_quotient_inlined
+
+`static uint32_t hw_divider_u32_quotient_inlined (uint32_t a, uint32_t b) [inline], [static]`
+
+执行无符号硬件除法（内联版本），等待结果，返回商。
+
+将 `a 除以 b`，等待计算完成，返回商。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+除法的商结果。
+
+#### hw_divider_u32_quotient_wait
+
+`static uint32_t hw_divider_u32_quotient_wait (void) [inline], [static]`
+
+返回最近一次异步硬件除法的结果，仅返回无符号商。
+
+此函数通过调用 `hw_divider_wait_ready()` 等待结果就绪。
+
+**返回**
+
+当前无符号商结果。
+
+#### hw_divider_u32_remainder
+
+`static uint32_t hw_divider_u32_remainder (uint32_t a, uint32_t b) [inline], [static]`
+
+执行无符号硬件除法，等待结果，返回余数。
+
+将 `a 除以 b`，等待计算完成，返回余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+除法的余数结果。
+
+#### hw_divider_u32_remainder_inlined
+
+`static uint32_t hw_divider_u32_remainder_inlined (uint32_t a, uint32_t b) [inline], [static]`
+
+执行无符号硬件除法（内联版本），等待结果，返回余数。
+
+将 `a 除以 b`，等待计算完成，返回余数。
+
+**参数**
+
+- `a`: 被除数
+- `b`: 除数
+
+**返回**
+
+除法的余数结果。
+
+#### hw_divider_u32_remainder_wait
+
+`static uint32_t hw_divider_u32_remainder_wait (void) [inline], [static]`
+
+返回最近一次异步硬件除法的结果，仅返回无符号余数。
+
+此函数通过调用 `hw_divider_wait_ready()` 等待结果就绪。
+
+**返回**
+
+当前无符号余数结果。
+
+#### hw_divider_wait_ready
+
+`static void hw_divider_wait_ready (void) [inline], [static]`
+
+等待除法完成。
+
+等待除法完成。
+
+#### to_quotient_s32
+
+`static int32_t to_quotient_s32 (divmod_result_t r) [inline], [static]`
+
+从 32p32 定点数中高效提取有符号商。
+
+**参数**
+
+- `r`: 一对 32 位商/余数值。
+
+**返回**
+
+无符号商。
+
+#### to_quotient_u32
+
+`static uint32_t to_quotient_u32 (divmod_result_t r) [inline], [static]`
+
+从 32p32 定点数中高效提取无符号商。
+
+**参数**
+
+- `r`: 一对 32 位商/余数值。
+
+**返回**
+
+无符号商。
+
+#### to_remainder_s32
+
+`static int32_t to_remainder_s32 (divmod_result_t r) [inline], [static]`
+
+从 32p32 定点数中高效提取有符号余数。
+
+**参数**
+
+- `r`: 一对 32 位商/余数值。
+
+**返回**
+
+有符号余数。
+
+在 ARM 上，这仅是一次 32 位寄存器移动或空操作。
+
+#### to_remainder_u32
+
+`static uint32_t to_remainder_u32 (divmod_result_t r) [inline], [static]`
+
+从 32p32 定点数中高效提取无符号余数。
+
+**参数**
+
+- `r`: 一对 32 位商/余数值。
+
+**返回**
+
+无符号余数。
+
+在 ARM 上，这仅是一次 32 位寄存器移动或空操作。
+
+<Normal />

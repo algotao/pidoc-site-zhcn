@@ -1,0 +1,45 @@
+---
+sidebar_position: 33
+draft: false
+description: 晶体振荡器（XOSC）API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK xosc]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+晶体振荡器（XOSC）API。
+
+### 函数
+
+- `void xosc_init (void)`: 初始化晶体振荡器系统。
+- `void xosc_disable (void)`: 禁用晶体振荡器。
+- `void xosc_dormant (void)`: 将晶体振荡器系统设置为休眠状态。
+
+### 函数文档
+
+#### xosc_disable
+
+`void xosc_disable (void)`
+
+禁用晶体振荡器。
+
+关闭晶体振荡器源，并等待其变得不稳定。
+
+#### xosc_dormant
+
+`void xosc_dormant (void)`
+
+将晶体振荡器系统设置为休眠状态。
+
+关闭晶体振荡器，直到被中断唤醒。此函数会阻塞，因此整个系统都将停止，直到中断将其唤醒。函数在振荡器被唤醒后稳定之前会持续阻塞。
+
+#### xosc_init
+
+`void xosc_init (void)`
+
+初始化晶体振荡器系统。
+
+此函数会阻塞，直到晶体振荡器稳定为止。
+
+<Normal />

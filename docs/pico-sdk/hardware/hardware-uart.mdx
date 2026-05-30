@@ -1,0 +1,549 @@
+---
+sidebar_position: 29
+draft: false
+description: RP 系列微控制器具有 2 个相同的 UART 外设实例，基于 ARM PL011。每个 UART 可连接到 GPIO 复用中定义的多个 GPIO 引脚。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK uart, UART, GPIO]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件 UART API。
+
+### 详细描述
+
+RP 系列微控制器具有 2 个相同的 UART 外设实例，基于 ARM PL011。每个 UART 可连接到 GPIO 复用中定义的多个 GPIO 引脚。
+
+仅连接了 TX、RX、RTS 和 CTS 信号，这意味着 PL011 的调制解调器模式和 IrDA 模式不受支持。
+
+**示例**
+
+```c
+ int main() {
+
+    // Set the GPIO pin mux to the UART - pin 0 is TX, 1 is RX; note use of UART_FUNCSEL_NUM for the general
+    // case where the func sel used for UART depends on the pin number
+    // Do this before calling uart_init to avoid losing data
+    gpio_set_function(0, UART_FUNCSEL_NUM(uart0, 0));
+    gpio_set_function(1, UART_FUNCSEL_NUM(uart0, 1));
+
+    // Initialise UART 0
+    uart_init(uart0, 115200);
+
+    uart_puts(uart0, "Hello world!");
+}
+```
+
+### 宏
+
+* `#define [UART_NUM](uart)`
+* `#define [UART_INSTANCE](num)`
+* `#define [UART_DREQ_NUM](uart, is_tx)`
+* `#define [UART_CLOCK_NUM](uart)`
+* `#define [UART_FUNCSEL_NUM](uart, gpio)`
+* `#define [UART_IRQ_NUM](uart)`
+* `#define [UART_RESET_NUM](uart)`
+
+### 枚举
+
+- `enum uart_parity_t { UART_PARITY_NONE, UART_PARITY_EVEN, UART_PARITY_ODD }`: UART 奇偶校验枚举。
+
+### 函数
+
+`static uint uart_get_index (uart_inst_t *uart)`<br/>&emsp;将 UART 实例转换为硬件实例编号。
+
+`static uart_inst_t * uart_get_instance (uint num)`<br/>&emsp;通过实例编号获取 UART 实例。
+
+`static uart_hw_t ** uart_get_hw (uart_inst_t **uart)`<br/>&emsp;从 UART 实例获取真实的硬件 UART 实例。
+
+`uint uart_init (uart_inst_t *uart, uint baudrate)`<br/>&emsp;初始化 UART。
+
+`void uart_deinit (uart_inst_t *uart)`<br/>&emsp;反初始化 UART。
+
+`uint uart_set_baudrate (uart_inst_t *uart, uint baudrate)`<br/>&emsp;设置 UART 波特率。
+
+`static void uart_set_hw_flow (uart_inst_t *uart, bool cts, bool rts)`<br/>&emsp;设置 UART 流控 CTS/RTS。
+
+`void uart_set_format (uart_inst_t *uart, uint data_bits, uint stop_bits, uart_parity_t parity)`<br/>&emsp;设置 UART 数据格式。
+
+`static void uart_set_irqs_enabled (uart_inst_t *uart, bool rx_has_data, bool tx_needs_data)`<br/>&emsp;启用/禁用 UART 中断输出。
+
+`static bool uart_is_enabled (uart_inst_t *uart)`<br/>&emsp;测试指定 UART 是否已启用。
+
+`void uart_set_fifo_enabled (uart_inst_t *uart, bool enabled)`<br/>&emsp;启用/禁用指定 UART 的 FIFO。
+
+`static bool uart_is_writable (uart_inst_t *uart)`<br/>&emsp;判断 TX FIFO 中是否有可用空间。
+
+`static void uart_tx_wait_blocking (uart_inst_t *uart)`<br/>&emsp;等待 UART TX FIFO 排空。
+
+`static bool uart_is_readable (uart_inst_t *uart)`<br/>&emsp;判断 RX FIFO 中是否有数据等待读取。
+
+`static void uart_write_blocking (uart_inst_t **uart, const uint8_t **src, size_t len)`<br/>&emsp;向 UART 写入数据以进行发送。
+
+`static void uart_read_blocking (uart_inst_t **uart, uint8_t **dst, size_t len)`<br/>&emsp;从 UART 读取数据。
+
+`static void uart_putc_raw (uart_inst_t *uart, char c)`<br/>&emsp;向 UART 写入单个字符以进行发送。
+
+`static void uart_putc (uart_inst_t *uart, char c)`<br/>&emsp;向 UART 写入单个字符以进行发送（可选 CR/LF 转换）。
+
+`static void uart_puts (uart_inst_t **uart, const char **s)`<br/>&emsp;向 UART 写入字符串以进行发送（执行 CR/LF 转换）。
+
+`static char uart_getc (uart_inst_t *uart)`<br/>&emsp;从 UART 读取单个字符。
+
+`void uart_set_break (uart_inst_t *uart, bool en)`<br/>&emsp;在 UART 发送上施加 break 条件。
+
+`void uart_set_translate_crlf (uart_inst_t *uart, bool translate)`<br/>&emsp;设置 UART 的 CR/LF 转换。
+- `static void uart_default_tx_wait_blocking (void)`: 等待默认 UART 的 TX FIFO 排空。
+`bool uart_is_readable_within_us (uart_inst_t *uart, uint32_t us)`<br/>&emsp;等待最多指定微秒数，直到 RX FIFO 非空。
+
+`static uint uart_get_dreq_num (uart_inst_t *uart, bool is_tx)<br/>&emsp;返回用于特定 UART 实例传输节拍的 dreq_num_t`。
+
+`static uint uart_get_reset_num (uart_inst_t *uart)<br/>&emsp;返回用于复位特定 UART 实例的 reset_num_t`。
+
+#### uart0
+
+`#define uart0 ((uart_inst_t *)uart0_hw)`
+
+UART 实例 0 的标识符。
+
+用于 UART 函数的 UART 标识符。
+
+例如：uart_init(uart1, 48000)
+#### uart1
+
+`#define uart1 ((uart_inst_t *)uart1_hw)`
+
+UART 实例 1 的标识符。
+
+### 宏定义文档
+
+#### UART_NUM
+
+`#define UART_NUM(uart)`
+
+返回 UART 实例的 UART 编号。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### UART_INSTANCE
+
+`#define UART_INSTANCE(num)`
+
+返回具有给定 UART 编号的 UART 实例。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### UART_DREQ_NUM
+
+`#define UART_DREQ_NUM(uart, is_tx)`
+
+返回用于此 UART 实例 DMA 传输节拍的 `dreq_num_t`。如果 is_tx 为 true，则用于向 UART 传输，否则用于从 UART 接收。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### UART_CLOCK_NUM
+
+`#define UART_CLOCK_NUM(uart)`
+
+返回给定 UART 实例时钟的 `clock_num_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### UART_FUNCSEL_NUM
+
+`#define UART_FUNCSEL_NUM(uart, gpio)`
+
+返回在指定 GPIO 编号上为给定 UART 实例选择 UART 功能所需的 `gpio_function_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### UART_IRQ_NUM
+
+`#define UART_IRQ_NUM(uart)`
+
+返回来自给定 UART 实例的处理器中断的 `irq_num_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### UART_RESET_NUM
+
+`#define UART_RESET_NUM(uart)`
+
+返回用于复位给定 UART 实例的 `reset_num_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+
+### 枚举类型文档
+
+#### uart_parity_t
+
+`enum uart_parity_t`
+
+UART 奇偶校验枚举。
+
+### 函数文档
+
+#### uart_default_tx_wait_blocking
+
+`static void uart_default_tx_wait_blocking (void) [inline], [static]`
+
+等待默认 UART 的 TX FIFO 排空。
+
+#### uart_deinit
+
+`void uart_deinit (uart_inst_t * uart)`
+
+反初始化 UART。
+
+如果 UART 不再使用，则禁用它。再次使用前必须重新初始化。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+
+#### uart_get_dreq_num
+
+`static uint uart_get_dreq_num (uart_inst_t * uart, bool is_tx) [inline], [static]`
+
+返回用于特定 UART 实例传输节拍的 `dreq_num_t`。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `is_tx`: true 表示向 UART 实例发送数据，false 表示从 UART 实例接收数据
+
+#### uart_get_hw
+
+`static uart_hw_t **` uart_get_hw (uart_inst_t ** uart) [inline], [static]`
+
+从 UART 实例获取真实的硬件 UART 实例。
+
+增加这个抽象层是为了便于将来添加 PIO UART。目前它不做任何事情，也没有额外开销。
+
+**参数**
+
+- `uart`: UART 实例
+
+**返回值**
+
+指向 UART 实例寄存器的 `uart_hw_t` 指针
+
+#### uart_get_index
+
+`static uint uart_get_index (uart_inst_t * uart) [inline], [static]`
+
+将 UART 实例转换为硬件实例编号。
+
+**参数**
+
+- `uart`: UART 实例
+
+**返回值**
+
+UART 编号，0 或 1
+
+#### uart_get_instance
+
+`static uart_inst_t * uart_get_instance (uint num) [inline], [static]`
+
+通过实例编号获取 UART 实例。
+
+**参数**
+
+- `num`: UART 编号，0 或 1
+
+**返回值**
+
+UART 实例
+
+#### uart_get_reset_num
+
+`static uint uart_get_reset_num (uart_inst_t * uart) [inline], [static]`
+
+返回用于复位特定 UART 实例的 `reset_num_t`。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+
+#### uart_getc
+
+`static char uart_getc (uart_inst_t * uart) [inline], [static]`
+
+从 UART 读取单个字符。
+
+此函数将阻塞，直到读取到字符为止。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+
+**返回值**
+
+读取到的字符。
+
+#### uart_init
+
+`uint uart_init (uart_inst_t * uart, uint baudrate)`
+
+初始化 UART。
+
+将 UART 置于已知状态并启用它。必须在调用其他函数之前调用此函数。
+
+此函数始终启用 FIFO，并将 UART 配置为以下默认线路格式：
+
+* 8 位数据位
+
+* 无奇偶校验位
+
+* 1 个停止位
+
+不保证能实现请求的波特率，将选择最接近的值，此函数将返回实际配置的波特率。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `baudrate`: UART 波特率（Hz）
+
+**返回值**
+
+实际设置的波特率
+
+#### uart_is_enabled
+
+`static bool uart_is_enabled (uart_inst_t * uart) [inline], [static]`
+
+测试指定 UART 是否已启用。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+
+**返回值**
+
+如果 UART 已启用则返回 true。
+
+#### uart_is_readable
+
+`static bool uart_is_readable (uart_inst_t * uart) [inline], [static]`
+
+判断 RX FIFO 中是否有数据等待读取。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+
+**返回值**
+
+如果 RX FIFO 非空则返回 true，否则返回 false。
+
+#### uart_is_readable_within_us
+
+`bool uart_is_readable_within_us (uart_inst_t * uart, uint32_t us)`
+
+等待最多指定微秒数，直到 RX FIFO 非空。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `us`: 最长等待的微秒数（可为 0 表示即时检查）
+
+**返回值**
+
+如果 RX FIFO 在超时前变为非空则返回 true，否则返回 false。
+
+#### uart_is_writable
+
+`static bool uart_is_writable (uart_inst_t * uart) [inline], [static]`
+
+判断 TX FIFO 中是否有可用空间。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+
+**返回值**
+
+如果无可用空间则返回 false，否则返回 true。
+
+#### uart_putc
+
+`static void uart_putc (uart_inst_t * uart, char c) [inline], [static]`
+
+向 UART 写入单个字符以进行发送（可选 CR/LF 转换）。
+
+此函数将阻塞，直到字符已发送到 UART 发送缓冲区。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `c`: 要发送的字符
+
+#### uart_putc_raw
+
+`static void uart_putc_raw (uart_inst_t * uart, char c) [inline], [static]`
+
+向 UART 写入单个字符以进行发送。
+
+此函数将阻塞，直到整个字符已发送到 UART 发送缓冲区。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `c`: 要发送的字符
+
+#### uart_puts
+
+`static void uart_puts (uart_inst_t ** uart, const char ** s) [inline], [static]`
+
+向 UART 写入字符串以进行发送（执行 CR/LF 转换）。
+
+此函数将阻塞，直到整个字符串已发送到 UART 发送缓冲区。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `s`: 要发送的以 null 结尾的字符串
+
+#### uart_read_blocking
+
+`static void uart_read_blocking (uart_inst_t ** uart, uint8_t ** dst, size_t len) [inline], [static]`
+
+从 UART 读取数据。
+
+此函数阻塞，直到从 UART 读取了 len 个字符。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `dst`: 接收数据的缓冲区
+- `len`: 要接收的字节数
+
+#### uart_set_baudrate
+
+`uint uart_set_baudrate (uart_inst_t * uart, uint baudrate)`
+
+设置 UART 波特率。
+
+尽可能接近请求的值设置波特率，并返回实际选定的速率。
+
+UART 在更改设置时会暂停约两个字符周期。此期间接收的数据可能会被 UART 丢弃。
+
+发送缓冲区中的所有字符将使用新更新的波特率发送。可以在调用此函数之前调用 `uart_tx_wait_blocking()`，以确保旧波特率下的所有字符在速率更改之前已发送完毕。
+
+此函数不应在中断上下文中调用，调用此函数前应禁用 UART 中断。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `baudrate`: 波特率（Hz）
+
+**返回值**
+
+实际设置的波特率
+
+#### uart_set_break
+
+`void uart_set_break (uart_inst_t * uart, bool en)`
+
+在 UART 发送上施加 break 条件。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `en`: 如果为 true 则施加 break 条件（TX 保持低电平）。如果为 false 则清除 break 条件。
+
+#### uart_set_fifo_enabled
+
+`void uart_set_fifo_enabled (uart_inst_t * uart, bool enabled)`
+
+启用/禁用指定 UART 的 FIFO。
+
+UART 在更改设置时会暂停约两个字符周期。此期间接收的数据可能会被 UART 丢弃。
+
+如果禁用 FIFO，发送 FIFO 中剩余的任何字符将丢失。可以在调用此函数之前调用 `uart_tx_wait_blocking()` 来避免这种情况。
+
+此函数不应在中断上下文中调用，调用此函数时应禁用 UART 中断。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `enabled`: true 表示启用 FIFO（默认），false 表示禁用
+
+#### uart_set_format
+
+`void uart_set_format (uart_inst_t * uart, uint data_bits, uint stop_bits, uart_parity_t parity)`
+
+设置 UART 数据格式。
+
+配置 UART 的数据格式（位数等）。
+
+UART 在更改设置时会暂停约两个字符周期。此期间接收的数据可能会被 UART 丢弃。
+
+发送缓冲区中的所有字符将使用新更新的数据格式发送。可以在调用此函数之前调用 `uart_tx_wait_blocking()`，以确保需要旧格式的所有字符在格式更改之前已发送完毕。
+
+此函数不应在中断上下文中调用，调用此函数前应禁用 UART 中断。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `data_bits`: 数据位数，5..8
+- `stop_bits`: 停止位数，1..2
+- `parity`: 奇偶校验选项
+
+#### uart_set_hw_flow
+
+`static void uart_set_hw_flow (uart_inst_t * uart, bool cts, bool rts) [inline], [static]`
+
+设置 UART 流控 CTS/RTS。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `cts`: 如果为 true，则通过 clear-to-send 输入对 TX 进行流控
+- `rts`: 如果为 true，则通过 RX 流控使能 request-to-send 输出
+
+#### uart_set_irqs_enabled
+
+`static void uart_set_irqs_enabled (uart_inst_t * uart, bool rx_has_data, bool tx_needs_data) [inline], [static]`
+
+启用/禁用 UART 中断输出。
+
+启用/禁用 UART 的中断输出。调用此函数之前应先安装中断处理程序。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `rx_has_data`: 如果为 true，则当 RX FIFO 中有数据时触发中断
+- `tx_needs_data`: 如果为 true，则当 TX FIFO 需要数据时触发中断
+
+#### uart_set_translate_crlf
+
+`void uart_set_translate_crlf (uart_inst_t * uart, bool translate)`
+
+设置 UART 的 CR/LF 转换。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `translate`: 如果为 true，则在发送时将换行符转换为回车符
+
+#### uart_tx_wait_blocking
+
+`static void uart_tx_wait_blocking (uart_inst_t * uart) [inline], [static]`
+
+等待 UART TX FIFO 排空。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+
+#### uart_write_blocking
+
+`static void uart_write_blocking (uart_inst_t ** uart, const uint8_t ** src, size_t len) [inline], [static]`
+
+向 UART 写入数据以进行发送。
+
+此函数将阻塞，直到所有数据已发送到 UART 发送缓冲区硬件。注意：串行数据传输将持续到 Tx FIFO 和发送移位寄存器（程序员不可直接访问）均为空为止。要确保 UART FIFO 已排空，可以使用 `uart_tx_wait_blocking()`。
+
+**参数**
+
+- `uart`: UART 实例。[uart0] 或 uart1
+- `src`: 要发送的字节数据
+- `len`: 要发送的字节数
+
+<Normal />

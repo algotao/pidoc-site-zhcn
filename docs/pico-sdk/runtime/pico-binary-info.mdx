@@ -1,0 +1,43 @@
+---
+sidebar_position: 4
+draft: false
+description: 二进制信息用于将机器可读信息嵌入到 FLASH 中的二进制文件中。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK binary info]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+二进制信息用于将机器可读信息嵌入到 FLASH 中的二进制文件中。
+
+### 详细描述
+
+示例用途包括：
+
+* 程序标识/信息
+
+* 引脚布局
+
+* 已包含的功能
+
+* 标识用作块设备/存储的 flash 区域
+
+### 宏
+
+* `#define bi_decl(_decl) __bi_mark_enclosure` _decl; __bi_decl(`__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.keep.", __used);`<br/>&emsp;* `#define bi_decl_if_func_used(_decl) ({__bi_mark_enclosure` _decl; __bi_decl(`__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.", ); `**`(const volatile uint8_t *)&__bi_ptr_lineno_var_name;});`
+
+### 宏定义文档
+
+#### bi_decl
+
+`#define bi_decl(_decl) __bi_mark_enclosure _decl; __bi_decl`(__bi_ptr_lineno_var_name, &`__bi_lineno_var_name.core, ".binary_info.keep.", __used);`
+
+声明一些二进制信息，只要包含该源文件/行的代码被编译进二进制文件，这些信息就会被包含。
+
+#### bi_decl_if_func_used
+
+`#define bi_decl_if_func_used(_decl) ({__bi_mark_enclosure _decl; __bi_decl`(__bi_ptr_lineno_var_name, &`__bi_lineno_var_name.core, ".binary_info.", ); **(const volatile uint8_t `**`)&__bi_ptr_lineno_var_name;});`
+
+声明一些二进制信息，只有当包含该声明的函数被链接进二进制文件时，这些信息才会被包含。SDK 使用 --gc-sections，因此从未被调用的函数将被链接器移除，以这种方式声明的任何相关二进制信息也会被删除。
+
+<Normal />

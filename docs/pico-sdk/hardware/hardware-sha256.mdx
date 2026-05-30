@@ -1,0 +1,203 @@
+---
+sidebar_position: 24
+draft: false
+description: 硬件 SHA-256 加速器 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK sha256]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件 SHA-256 加速器 API。
+
+### 详细描述
+
+RP2350 内置了 SHA-256 哈希算法的硬件实现。使用前应先调用 `sha256_set_dma_size 和 sha256_set_bswap 函数对硬件进行配置。开始生成新哈希时，需先调用 `sha256_start 初始化硬件。当 sha256_is_ready` 返回 true 时，硬件已准备好接收数据，此时可将待哈希数据写入 sha256_get_write_addr 返回的地址。硬件要求一次性写入 64 字节，否则 sha256_err_not_ready` 将指示错误，需重新开始哈希过程。当有效的校验和结果可用时，`sha256_is_sum_valid 返回 true，此时可调用 sha256_get_result` 获取结果。
+
+### 宏
+
+* `#define [SHA256_RESULT_BYTES] 32`
+
+### 枚举
+
+- `enum sha256_endianness { [SHA256_LITTLE_ENDIAN], [SHA256_BIG_ENDIAN] }`: API 中使用的 SHA-256 字节序定义。
+
+### 函数
+
+- `static void sha256_set_dma_size (uint size_in_bytes)`: 配置正确的 DMA 数据大小。
+- `static void sha256_set_bswap (bool swap)`: 启用或禁用 32 位值的字节交换。
+- `static void sha256_start (void)`: 为新的校验和计算准备硬件。
+- `static bool sha256_is_sum_valid (void)`: 检查是否已计算出有效的校验和。
+- `static bool sha256_is_ready (void)`: 检查硬件是否准备好接收更多数据。
+- `static void sha256_wait_valid_blocking (void)`: 等待直到校验和有效。
+- `static void sha256_wait_ready_blocking (void)`: 等待直到硬件准备好接收更多数据。
+`void sha256_get_result (sha256_result_t *out, enum sha256_endianness endianness)`<br/>&emsp;获取校验和结果。
+- `static bool sha256_err_not_ready (void)`: 检查是否在硬件未就绪时写入了数据。
+- `static void sha256_err_not_ready_clear (void)`: 清除"未就绪"错误状态。
+`static volatile void * sha256_get_write_addr (void)`<br/>&emsp;获取写入待哈希数据的地址。
+- `static void sha256_put_word (uint32_t word)`: 向 SHA-256 硬件写入一个 32 位字。
+- `static void sha256_put_byte (uint8_t b)`: 向 SHA-256 硬件写入一个字节。
+
+### 宏定义文档
+
+#### SHA256_RESULT_BYTES
+
+`#define SHA256_RESULT_BYTES 32`
+
+SHA-256 结果的字节大小。
+
+### 枚举类型文档
+
+#### sha256_endianness
+
+`enum sha256_endianness`
+
+API 中使用的 SHA-256 字节序定义。
+
+.枚举值
+| SHA256_LITTLE_ENDIAN | 小端序。 |
+| SHA256_BIG_ENDIAN | 大端序。 |
+
+### 函数文档
+
+#### sha256_err_not_ready
+
+`static bool sha256_err_not_ready (void) [inline], [static]`
+
+检查是否在硬件未就绪时写入了数据。
+
+指示是否因在硬件未就绪时写入数据而发生了错误。
+
+**返回值**
+
+若在硬件未就绪时写入了数据则返回 True
+
+#### sha256_err_not_ready_clear
+
+`static void sha256_err_not_ready_clear (void) [inline], [static]`
+
+清除"未就绪"错误状态。
+
+若检测到"未就绪"错误状态，则重置硬件。
+
+#### sha256_get_result
+
+`void sha256_get_result (sha256_result_t *` out, enum sha256_endianness endianness)`
+
+获取校验和结果。
+
+读取硬件计算出的 32 字节结果。仅在 `sha256_is_sum_valid` 为 True 时有效。
+
+**参数**
+
+- `out`: 校验和结果
+
+Copyright (c) 2024 Raspberry Pi (Trading) Ltd.
+
+SPDX-License-Identifier: BSD-3-Clause
+
+#### sha256_get_write_addr
+
+`static volatile void * sha256_get_write_addr (void) [inline], [static]`
+
+获取写入待哈希数据的地址。
+
+返回待哈希数据应写入的硬件地址。
+
+**返回值**
+
+写入待哈希数据的地址
+
+#### sha256_is_ready
+
+`static bool sha256_is_ready (void) [inline], [static]`
+
+检查硬件是否准备好接收更多数据。
+
+向硬件写入 64 字节数据后，硬件将暂时无法接收更多数据。调用此函数检查硬件是否已准备好接收更多数据。参见 `sha256_err_not_ready`。
+
+**返回值**
+
+若硬件已准备好接收更多数据则返回 True
+
+#### sha256_is_sum_valid
+
+`static bool sha256_is_sum_valid (void) [inline], [static]`
+
+检查是否已计算出有效的校验和。
+
+首次向硬件写入数据时，校验和结果无效；写入 64 字节数据后，完成当前块的摘要计算可能需要一些时间。可使用此函数判断校验和何时有效。
+
+**返回值**
+
+若 `sha256_get_result` 将返回有效结果则为 True
+
+#### sha256_put_byte
+
+`static void sha256_put_byte (uint8_t b) [inline], [static]`
+
+向 SHA-256 硬件写入一个字节。
+
+**参数**
+
+- `b`: 要写入的数据
+
+#### sha256_put_word
+
+`static void sha256_put_word (uint32_t word) [inline], [static]`
+
+向 SHA-256 硬件写入一个 32 位字。
+
+**参数**
+
+- `word`: 要写入的数据
+
+#### sha256_set_bswap
+
+`static void sha256_set_bswap (bool swap) [inline], [static]`
+
+启用或禁用 32 位值的字节交换。
+
+SHA256 算法期望数据以大端序排列，但系统总线处理的是小端序数据，因此提供了将小端序总线数据转换为大端序内部数据的控制选项。默认为 true。
+
+**参数**
+
+- `swap`: false 表示禁用字节交换
+
+#### sha256_set_dma_size
+
+`static void sha256_set_dma_size (uint size_in_bytes) [inline], [static]`
+
+配置正确的 DMA 数据大小。
+
+在触发 DMA 通道之前必须进行此配置，以确保每个块请求正确的传输次数。
+
+**参数**
+
+- `size_in_bytes`: DMA 传输大小，仅支持 1、2 或 4 字节。
+
+#### sha256_start
+
+`static void sha256_start (void) [inline], [static]`
+
+为新的校验和计算准备硬件。
+
+在开始校验和计算之前调用以初始化硬件。
+
+#### sha256_wait_ready_blocking
+
+`static void sha256_wait_ready_blocking (void) [inline], [static]`
+
+等待直到硬件准备好接收更多数据。
+
+向硬件写入数据之前，需确认硬件已准备好接收更多数据。此函数将一直等待直到硬件就绪。
+
+#### sha256_wait_valid_blocking
+
+`static void sha256_wait_valid_blocking (void) [inline], [static]`
+
+等待直到校验和有效。
+
+当写入硬件的数据达到 64 字节的整数倍时，校验和将在当前块摘要完成后变为有效。此函数将一直等待直到校验和结果有效。
+
+<Normal />

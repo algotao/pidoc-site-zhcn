@@ -1,0 +1,711 @@
+---
+sidebar_position: 4
+draft: false
+description: 时钟管理 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK clocks]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+时钟管理 API。
+
+### 详细描述
+
+此 API 为时钟功能提供了高级接口。
+
+时钟模块为片上和外部组件提供独立的时钟信号。它从多种时钟源获取输入，允许用户在性能与成本、电路板面积和功耗之间进行权衡。通过这些时钟源，使用多个时钟发生器提供所需的时钟信号。该架构使用户可以灵活地独立启停时钟，并在保持其他时钟最优频率的同时改变某些时钟频率。
+
+有关 RP 系列时钟的更多详情，请参阅相应的数据手册。
+
+时钟源取决于您要配置的时钟。下面第一张表显示主时钟源。如果您不是在设置参考时钟或系统时钟，或者您指定这两者之一将使用辅助时钟源，则需要使用后续表格中的条目。
+
+* RP2040 的时钟源如下：
+
+**主时钟源**
+
+| 来源 | 参考时钟 | 系统时钟 |
+| --- | --- | --- |
+| ROSC | CLOCKS_CLK_REF_CTRL_SRC_VALUE_ROSC_CLKSRC_PH |  |
+| 辅助 | CLOCKS_CLK_REF_CTRL_SRC_VALUE_CLKSRC_CLK_REF_AUX | CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX |
+| XOSC | CLOCKS_CLK_REF_CTRL_SRC_VALUE_XOSC_CLKSRC |  |
+| 参考 |  | CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLK_REF |
+
+**辅助时钟源**
+
+configure 函数中可用的辅助时钟源取决于正在配置的时钟。下表描述了可用的值。注意对于 clk_gpout[x]，x 可以是 0-3。
+
+| 辅助来源 | clk_gpout[x] | clk_ref | clk_sys |
+| --- | --- | --- | --- |
+| 系统 PLL | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS |  | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS |
+| GPIO 输入 0 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 | CLOCKS_CLK_REF_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 |
+| GPIO 输入 1 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 | CLOCKS_CLK_REF_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 |
+| USB PLL | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_REF_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB |
+| ROSC | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_ROSC_CLKSRC |  | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_ROSC_CLKSRC |
+| XOSC | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_XOSC_CLKSRC |  | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_XOSC_CLKSRC |
+| 系统时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_SYS |  |  |
+| USB 时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_USB |  |  |
+| ADC 时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_ADC |  |  |
+| RTC 时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_RTC |  |  |
+| 参考时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_REF |  |  |
+
+| 辅助来源 | clk_peri | clk_usb | clk_adc |
+| --- | --- | --- | --- |
+| 系统 PLL | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS |
+| GPIO 输入 0 | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 |
+| GPIO 输入 1 | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 |
+| USB PLL | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB |
+| ROSC | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH |
+| XOSC | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_XOSC_CLKSRC | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_XOSC_CLKSRC | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_XOSC_CLKSRC |
+| 系统时钟 | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS |  |  |
+
+| 辅助来源 | clk_rtc |
+| --- | --- |
+| 系统 PLL | CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS |
+| GPIO 输入 0 | CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 |
+| GPIO 输入 1 | CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 |
+| USB PLL | CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB |
+| ROSC | CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH |
+| XOSC | CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_XOSC_CLKSRC |
+
+RP2350 的时钟源如下：
+
+* **主时钟源**
+
+| 来源 | 参考时钟 | 系统时钟 |
+| --- | --- | --- |
+| ROSC | CLOCKS_CLK_REF_CTRL_SRC_VALUE_ROSC_CLKSRC_PH |  |
+| 辅助 | CLOCKS_CLK_REF_CTRL_SRC_VALUE_CLKSRC_CLK_REF_AUX | CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX |
+| XOSC | CLOCKS_CLK_REF_CTRL_SRC_VALUE_XOSC_CLKSRC |  |
+| LPOSC | CLOCKS_CLK_REF_CTRL_SRC_VALUE_LPOSC_CLKSRC |  |
+| 参考 |  | CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLK_REF |
+
+**辅助时钟源**
+
+configure 函数中可用的辅助时钟源取决于正在配置的时钟。下表描述了可用的值。注意对于 clk_gpout[x]，x 可以是 0-3。
+
+| 辅助来源 | clk_gpout[x] | clk_ref | clk_sys |
+| --- | --- | --- | --- |
+| 系统 PLL | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS |  | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS |
+| GPIO 输入 0 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 | CLOCKS_CLK_REF_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 |
+| GPIO 输入 1 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 | CLOCKS_CLK_REF_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 |
+| USB PLL | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_REF_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB |
+| ROSC | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_ROSC_CLKSRC |  | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_ROSC_CLKSRC |
+| XOSC | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_XOSC_CLKSRC |  | CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_XOSC_CLKSRC |
+| LPOSC | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_LPOSC_CLKSRC |  |  |
+| 系统时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_SYS |  |  |
+| USB 时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_USB |  |  |
+| ADC 时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_ADC |  |  |
+| REF 时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_REF |  |  |
+| PERI 时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_PERI |  |  |
+| HSTX 时钟 | CLOCKS_CLK_GPOUTx_CTRL_AUXSRC_VALUE_CLK_PERI |  |  |
+
+| 辅助来源 | clk_peri | clk_hstx | clk_usb | clk_adc |
+| --- | --- | --- | --- | --- |
+| 系统 PLL | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS | CLOCKS_CLK_HSTX_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS |
+| GPIO 输入 0 | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 |  | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0 |
+| GPIO 输入 1 | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 |  | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_GPIN1 |
+| USB PLL | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_HSTX_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB |
+| ROSC | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH |  | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH |
+| XOSC | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_XOSC_CLKSRC |  | CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_XOSC_CLKSRC | CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_XOSC_CLKSRC |
+| 系统时钟 | CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS | CLOCKS_CLK_HSTX_CTRL_AUXSRC_VALUE_CLK_SYS |  |  |
+
+#### 示例
+
+```c title="hello_48MHz.c"
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "hardware/pll.h"
+#include "hardware/clocks.h"
+#include "hardware/structs/pll.h"
+#include "hardware/structs/clocks.h"
+
+void measure_freqs(void) {
+    uint f_pll_sys = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_SYS_CLKSRC_PRIMARY);
+    uint f_pll_usb = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_USB_CLKSRC_PRIMARY);
+    uint f_rosc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_ROSC_CLKSRC);
+    uint f_clk_sys = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
+    uint f_clk_peri = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_PERI);
+    uint f_clk_usb = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_USB);
+    uint f_clk_adc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_ADC);
+#ifdef CLOCKS_FC0_SRC_VALUE_CLK_RTC
+    uint f_clk_rtc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_RTC);
+#endif
+
+    printf("pll_sys  = %dkHz\n", f_pll_sys);
+    printf("pll_usb  = %dkHz\n", f_pll_usb);
+    printf("rosc     = %dkHz\n", f_rosc);
+    printf("clk_sys  = %dkHz\n", f_clk_sys);
+    printf("clk_peri = %dkHz\n", f_clk_peri);
+    printf("clk_usb  = %dkHz\n", f_clk_usb);
+    printf("clk_adc  = %dkHz\n", f_clk_adc);
+#ifdef CLOCKS_FC0_SRC_VALUE_CLK_RTC
+    printf("clk_rtc  = %dkHz\n", f_clk_rtc);
+#endif
+
+    // Can't measure clk_ref / xosc as it is the ref
+}
+
+int main() {
+    stdio_init_all();
+
+    printf("Hello, world!\n");
+
+    measure_freqs();
+
+    // Change clk_sys to be 48MHz. The simplest way is to take this from PLL_USB
+    // which has a source frequency of 48MHz
+    clock_configure(clk_sys,
+                    CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX,
+                    CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,
+                    48 * MHZ,
+                    48 * MHZ);
+
+    // Turn off PLL sys for good measure
+    pll_deinit(pll_sys);
+
+    // CLK peri is clocked from clk_sys so need to change clk_peri's freq
+    clock_configure(clk_peri,
+                    0,
+                    CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS,
+                    48 * MHZ,
+                    48 * MHZ);
+
+    // Re init uart now that clk_peri has changed
+    stdio_init_all();
+
+    measure_freqs();
+    printf("Hello, 48MHz");
+
+    return 0;
+}
+```
+
+### 宏
+
+* `#define [GPIO_TO_GPOUT_CLOCK_HANDLE]`
+
+### 类型定义
+
+`typedef enum clock_num_rp2040 clock_num_t` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上的时钟编号（用作 typedef clock_num_t）
+
+`typedef enum clock_dest_num_rp2040 clock_dest_num_t` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上的时钟目标编号（用作 typedef clock_dest_num_t）
+
+`typedef enum clock_num_rp2350 clock_num_t` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上的时钟编号（用作 typedef clock_num_t）
+
+`typedef enum clock_dest_num_rp2350 clock_dest_num_t` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上的时钟目标编号（用作 typedef clock_dest_num_t）
+
+`typedef void(* resus_callback_t)(void)`<br/>&emsp;Resus 回调函数类型。
+
+### 枚举
+
+`enum clock_num_rp2040 { clk_gpout0 = 0, clk_gpout1 = 1, clk_gpout2 = 2, clk_gpout3 = 3, clk_ref = 4, clk_sys = 5, clk_peri = 6, clk_usb = 7, clk_adc = 8, clk_rtc = 9, CLK_COUNT }` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上的时钟编号（用作 typedef clock_num_t）
+
+`enum clock_dest_num_rp2040 { [CLK_DEST_SYS_CLOCKS] = 0, [CLK_DEST_ADC_ADC] = 1, [CLK_DEST_SYS_ADC] = 2, [CLK_DEST_SYS_BUSCTRL] = 3, [CLK_DEST_SYS_BUSFABRIC] = 4, [CLK_DEST_SYS_DMA] = 5, [CLK_DEST_SYS_I2C0] = 6, [CLK_DEST_SYS_I2C1] = 7, [CLK_DEST_SYS_IO] = 8, [CLK_DEST_SYS_JTAG] = 9, [CLK_DEST_SYS_VREG_AND_CHIP_RESET] = 10, [CLK_DEST_SYS_PADS] = 11, [CLK_DEST_SYS_PIO0] = 12, [CLK_DEST_SYS_PIO1] = 13, [CLK_DEST_SYS_PLL_SYS] = 14, [CLK_DEST_SYS_PLL_USB] = 15, [CLK_DEST_SYS_PSM] = 16, [CLK_DEST_SYS_PWM] = 17, [CLK_DEST_SYS_RESETS] = 18, [CLK_DEST_SYS_ROM] = 19, [CLK_DEST_SYS_ROSC] = 20, [CLK_DEST_RTC_RTC] = 21, [CLK_DEST_SYS_RTC] = 22, [CLK_DEST_SYS_SIO] = 23, [CLK_DEST_PERI_SPI0] = 24, [CLK_DEST_SYS_SPI0] = 25, [CLK_DEST_PERI_SPI1] = 26, [CLK_DEST_SYS_SPI1] = 27, [CLK_DEST_SYS_SRAM0] = 28, [CLK_DEST_SYS_SRAM1] = 29, [CLK_DEST_SYS_SRAM2] = 30, [CLK_DEST_SYS_SRAM3] = 31, [CLK_DEST_SYS_SRAM4] = 32, [CLK_DEST_SYS_SRAM5] = 33, [CLK_DEST_SYS_SYSCFG] = 34, [CLK_DEST_SYS_SYSINFO] = 35, [CLK_DEST_SYS_TBMAN] = 36, [CLK_DEST_SYS_TIMER] = 37, [CLK_DEST_PERI_UART0] = 38, [CLK_DEST_SYS_UART0] = 39, [CLK_DEST_PERI_UART1] = 40, [CLK_DEST_SYS_UART1] = 41, [CLK_DEST_SYS_USBCTRL] = 42, [CLK_DEST_USB_USBCTRL] = 43, [CLK_DEST_SYS_WATCHDOG] = 44, [CLK_DEST_SYS_XIP] = 45, [CLK_DEST_SYS_XOSC] = 46, NUM_CLOCK_DESTINATIONS }` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上的时钟目标编号（用作 typedef clock_dest_num_t）
+
+`enum clock_num_rp2350 { clk_gpout0 = 0, clk_gpout1 = 1, clk_gpout2 = 2, clk_gpout3 = 3, clk_ref = 4, clk_sys = 5, clk_peri = 6, clk_hstx = 7, clk_usb = 8, clk_adc = 9, CLK_COUNT }` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上的时钟编号（用作 typedef clock_num_t）
+
+`enum clock_dest_num_rp2350 { [CLK_DEST_SYS_CLOCKS] = 0, [CLK_DEST_SYS_ACCESSCTRL] = 1, [CLK_DEST_ADC] = 2, [CLK_DEST_SYS_ADC] = 3, [CLK_DEST_SYS_BOOTRAM] = 4, [CLK_DEST_SYS_BUSCTRL] = 5, [CLK_DEST_SYS_BUSFABRIC] = 6, [CLK_DEST_SYS_DMA] = 7, [CLK_DEST_SYS_GLITCH_DETECTOR] = 8, [CLK_DEST_HSTX] = 9, [CLK_DEST_SYS_HSTX] = 10, [CLK_DEST_SYS_I2C0] = 11, [CLK_DEST_SYS_I2C1] = 12, [CLK_DEST_SYS_IO] = 13, [CLK_DEST_SYS_JTAG] = 14, [CLK_DEST_REF_OTP] = 15, [CLK_DEST_SYS_OTP] = 16, [CLK_DEST_SYS_PADS] = 17, [CLK_DEST_SYS_PIO0] = 18, [CLK_DEST_SYS_PIO1] = 19, [CLK_DEST_SYS_PIO2] = 20, [CLK_DEST_SYS_PLL_SYS] = 21, [CLK_DEST_SYS_PLL_USB] = 22, [CLK_DEST_REF_POWMAN] = 23, [CLK_DEST_SYS_POWMAN] = 24, [CLK_DEST_SYS_PWM] = 25, [CLK_DEST_SYS_RESETS] = 26, [CLK_DEST_SYS_ROM] = 27, [CLK_DEST_SYS_ROSC] = 28, [CLK_DEST_SYS_PSM] = 29, [CLK_DEST_SYS_SHA256] = 30, [CLK_DEST_SYS_SIO] = 31, [CLK_DEST_PERI_SPI0] = 32, [CLK_DEST_SYS_SPI0] = 33, [CLK_DEST_PERI_SPI1] = 34, [CLK_DEST_SYS_SPI1] = 35, [CLK_DEST_SYS_SRAM0] = 36, [CLK_DEST_SYS_SRAM1] = 37, [CLK_DEST_SYS_SRAM2] = 38, [CLK_DEST_SYS_SRAM3] = 39, [CLK_DEST_SYS_SRAM4] = 40, [CLK_DEST_SYS_SRAM5] = 41, [CLK_DEST_SYS_SRAM6] = 42, [CLK_DEST_SYS_SRAM7] = 43, [CLK_DEST_SYS_SRAM8] = 44, [CLK_DEST_SYS_SRAM9] = 45, [CLK_DEST_SYS_SYSCFG] = 46, [CLK_DEST_SYS_SYSINFO] = 47, [CLK_DEST_SYS_TBMAN] = 48, [CLK_DEST_REF_TICKS] = 49, [CLK_DEST_SYS_TICKS] = 50, [CLK_DEST_SYS_TIMER0] = 51, [CLK_DEST_SYS_TIMER1] = 52, [CLK_DEST_SYS_TRNG] = 53, [CLK_DEST_PERI_UART0] = 54, [CLK_DEST_SYS_UART0] = 55, [CLK_DEST_PERI_UART1] = 56, [CLK_DEST_SYS_UART1] = 57, [CLK_DEST_SYS_USBCTRL] = 58, [CLK_DEST_USB] = 59, [CLK_DEST_SYS_WATCHDOG] = 60, [CLK_DEST_SYS_XIP] = 61, [CLK_DEST_SYS_XOSC] = 62, NUM_CLOCK_DESTINATIONS }` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上的时钟目标编号（用作 typedef clock_dest_num_t）
+
+### 函数
+
+- `bool clock_configure (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq, uint32_t freq)`: 使用自动时钟分频配置指定时钟。
+- `void clock_configure_undivided (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq)`: 将指定时钟配置为使用不分频的输入源。
+- `void clock_configure_int_divider (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq, uint32_t int_divider)`: 将指定时钟配置为使用不分频的输入源。
+- `void clock_stop (clock_handle_t clock)`: 停止指定时钟。
+- `uint32_t clock_get_hz (clock_handle_t clock)`: 获取指定时钟的当前频率。
+- `uint32_t frequency_count_khz (uint src)`: 使用频率计数器测量时钟频率。
+- `void clock_set_reported_hz (clock_handle_t clock, uint hz)`: 设置 clock_get_hz 所报告的时钟"当前频率"，而不实际改变时钟。
+- `void clocks_enable_resus (resus_callback_t resus_callback)`: 启用 resus 功能。若 clk_sys 意外停止则自动重启。
+- `void clock_gpio_init_int_frac16 (uint gpio, uint src, uint32_t div_int, uint16_t div_frac16)`: 将可选分频后的时钟输出到指定 GPIO 引脚。
+- `static void clock_gpio_init_int_frac8 (uint gpio, uint src, uint32_t div_int, uint8_t div_frac8)`: 将可选分频后的时钟输出到指定 GPIO 引脚。
+- `static void clock_gpio_init (uint gpio, uint src, float div)`: 将可选分频后的时钟输出到指定 GPIO 引脚。
+- `bool clock_configure_gpin (clock_handle_t clock, uint gpio, uint32_t src_freq, uint32_t freq)`: 将时钟配置为来自 GPIO 输入。
+- `void set_sys_clock_48mhz (void)`: 将系统时钟初始化为 48MHz。
+- `void set_sys_clock_pll (uint32_t vco_freq, uint post_div1, uint post_div2)`: 初始化系统时钟。
+`bool check_sys_clock_hz (uint32_t freq_hz, uint **vco_freq_out, uint **post_div1_out, uint *post_div2_out)`<br/>&emsp;检查给定系统时钟频率是否有效/可达。
+
+`bool check_sys_clock_khz (uint32_t freq_khz, uint **vco_freq_out, uint **post_div1_out, uint *post_div2_out)`<br/>&emsp;检查给定系统时钟频率是否有效/可达。
+- `static bool set_sys_clock_hz (uint32_t freq_hz, bool required)`: 尝试以 Hz 为单位设置系统时钟频率。
+- `static bool set_sys_clock_khz (uint32_t freq_khz, bool required)`: 尝试以 kHz 为单位设置系统时钟频率。
+- `static clock_handle_t gpio_to_gpout_clock_handle (uint gpio, clock_handle_t default_clk_handle)`: 返回给定 GPIO 对应的 GPOUT 时钟（如有）。
+
+### 宏定义文档
+
+#### GPIO_TO_GPOUT_CLOCK_HANDLE
+
+`#define GPIO_TO_GPOUT_CLOCK_HANDLE`
+
+返回与特定 GPIO 关联的 GPOUT 时钟编号（如有），否则返回 default_clk_handle。
+
+注意此宏旨在在编译期求值，不做参数检查。
+
+### 类型定义文档
+
+#### clock_num_t <span className="chip-tag rp2040">RP2040</span>
+
+`typedef enum clock_num_rp2040 clock_num_t`
+
+RP2040 上的时钟编号（用作 typedef `clock_num_t）
+#### clock_dest_num_t <span className="chip-tag rp2040">RP2040</span>
+
+`typedef enum clock_dest_num_rp2040 clock_dest_num_t`
+
+RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t）
+#### clock_num_t <span className="chip-tag rp2350">RP2350</span>
+
+`typedef enum clock_num_rp2350 clock_num_t`
+
+RP2350 上的时钟编号（用作 typedef `clock_num_t）
+#### clock_dest_num_t <span className="chip-tag rp2350">RP2350</span>
+
+`typedef enum clock_dest_num_rp2350 clock_dest_num_t`
+
+RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
+#### resus_callback_t
+
+`typedef void(* resus_callback_t) (void)`
+
+Resus 回调函数类型。
+
+用户提供的 resus 事件回调（当程序员停止 clk_sys 后系统为其重新启动时触发）。
+
+### 枚举类型文档
+
+#### clock_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
+
+`enum clock_num_rp2040`
+
+RP2040 上的时钟编号（用作 typedef `clock_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| clk_gpout0 | 选择 CLK_GPOUT0 作为时钟源。 |
+| clk_gpout1 | 选择 CLK_GPOUT1 作为时钟源。 |
+| clk_gpout2 | 选择 CLK_GPOUT2 作为时钟源。 |
+| clk_gpout3 | 选择 CLK_GPOUT3 作为时钟源。 |
+| clk_ref | 选择 CLK_REF 作为时钟源。 |
+| clk_sys | 选择 CLK_SYS 作为时钟源。 |
+| clk_peri | 选择 CLK_PERI 作为时钟源。 |
+| clk_usb | 选择 CLK_USB 作为时钟源。 |
+| clk_adc | 选择 CLK_ADC 作为时钟源。 |
+| clk_rtc | 选择 CLK_RTC 作为时钟源。 |
+
+#### clock_dest_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
+
+`enum clock_dest_num_rp2040`
+
+RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| CLK_DEST_SYS_CLOCKS | 选择 SYS_CLOCKS 作为时钟目标。 |
+| CLK_DEST_ADC_ADC | 选择 ADC_ADC 作为时钟目标。 |
+| CLK_DEST_SYS_ADC | 选择 SYS_ADC 作为时钟目标。 |
+| CLK_DEST_SYS_BUSCTRL | 选择 SYS_BUSCTRL 作为时钟目标。 |
+| CLK_DEST_SYS_BUSFABRIC | 选择 SYS_BUSFABRIC 作为时钟目标。 |
+| CLK_DEST_SYS_DMA | 选择 SYS_DMA 作为时钟目标。 |
+| CLK_DEST_SYS_I2C0 | 选择 SYS_I2C0 作为时钟目标。 |
+| CLK_DEST_SYS_I2C1 | 选择 SYS_I2C1 作为时钟目标。 |
+| CLK_DEST_SYS_IO | 选择 SYS_IO 作为时钟目标。 |
+| CLK_DEST_SYS_JTAG | 选择 SYS_JTAG 作为时钟目标。 |
+| CLK_DEST_SYS_VREG_AND_CHIP_RESET | 选择 SYS_VREG_AND_CHIP_RESET 作为时钟目标。 |
+| CLK_DEST_SYS_PADS | 选择 SYS_PADS 作为时钟目标。 |
+| CLK_DEST_SYS_PIO0 | 选择 SYS_PIO0 作为时钟目标。 |
+| CLK_DEST_SYS_PIO1 | 选择 SYS_PIO1 作为时钟目标。 |
+| CLK_DEST_SYS_PLL_SYS | 选择 SYS_PLL_SYS 作为时钟目标。 |
+| CLK_DEST_SYS_PLL_USB | 选择 SYS_PLL_USB 作为时钟目标。 |
+| CLK_DEST_SYS_PSM | 选择 SYS_PSM 作为时钟目标。 |
+| CLK_DEST_SYS_PWM | 选择 SYS_PWM 作为时钟目标。 |
+| CLK_DEST_SYS_RESETS | 选择 SYS_RESETS 作为时钟目标。 |
+| CLK_DEST_SYS_ROM | 选择 SYS_ROM 作为时钟目标。 |
+| CLK_DEST_SYS_ROSC | 选择 SYS_ROSC 作为时钟目标。 |
+| CLK_DEST_RTC_RTC | 选择 RTC_RTC 作为时钟目标。 |
+| CLK_DEST_SYS_RTC | 选择 SYS_RTC 作为时钟目标。 |
+| CLK_DEST_SYS_SIO | 选择 SYS_SIO 作为时钟目标。 |
+| CLK_DEST_PERI_SPI0 | 选择 PERI_SPI0 作为时钟目标。 |
+| CLK_DEST_SYS_SPI0 | 选择 SYS_SPI0 作为时钟目标。 |
+| CLK_DEST_PERI_SPI1 | 选择 PERI_SPI1 作为时钟目标。 |
+| CLK_DEST_SYS_SPI1 | 选择 SYS_SPI1 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM0 | 选择 SYS_SRAM0 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM1 | 选择 SYS_SRAM1 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM2 | 选择 SYS_SRAM2 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM3 | 选择 SYS_SRAM3 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM4 | 选择 SYS_SRAM4 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM5 | 选择 SYS_SRAM5 作为时钟目标。 |
+| CLK_DEST_SYS_SYSCFG | 选择 SYS_SYSCFG 作为时钟目标。 |
+| CLK_DEST_SYS_SYSINFO | 选择 SYS_SYSINFO 作为时钟目标。 |
+| CLK_DEST_SYS_TBMAN | 选择 SYS_TBMAN 作为时钟目标。 |
+| CLK_DEST_SYS_TIMER | 选择 SYS_TIMER 作为时钟目标。 |
+| CLK_DEST_PERI_UART0 | 选择 PERI_UART0 作为时钟目标。 |
+| CLK_DEST_SYS_UART0 | 选择 SYS_UART0 作为时钟目标。 |
+| CLK_DEST_PERI_UART1 | 选择 PERI_UART1 作为时钟目标。 |
+| CLK_DEST_SYS_UART1 | 选择 SYS_UART1 作为时钟目标。 |
+| CLK_DEST_SYS_USBCTRL | 选择 SYS_USBCTRL 作为时钟目标。 |
+| CLK_DEST_USB_USBCTRL | 选择 USB_USBCTRL 作为时钟目标。 |
+| CLK_DEST_SYS_WATCHDOG | 选择 SYS_WATCHDOG 作为时钟目标。 |
+| CLK_DEST_SYS_XIP | 选择 SYS_XIP 作为时钟目标。 |
+| CLK_DEST_SYS_XOSC | 选择 SYS_XOSC 作为时钟目标。 |
+
+#### clock_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
+
+`enum clock_num_rp2350`
+
+RP2350 上的时钟编号（用作 typedef `clock_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| clk_gpout0 | 选择 CLK_GPOUT0 作为时钟源。 |
+| clk_gpout1 | 选择 CLK_GPOUT1 作为时钟源。 |
+| clk_gpout2 | 选择 CLK_GPOUT2 作为时钟源。 |
+| clk_gpout3 | 选择 CLK_GPOUT3 作为时钟源。 |
+| clk_ref | 选择 CLK_REF 作为时钟源。 |
+| clk_sys | 选择 CLK_SYS 作为时钟源。 |
+| clk_peri | 选择 CLK_PERI 作为时钟源。 |
+| clk_hstx | 选择 CLK_HSTX 作为时钟源。 |
+| clk_usb | 选择 CLK_USB 作为时钟源。 |
+| clk_adc | 选择 CLK_ADC 作为时钟源。 |
+
+#### clock_dest_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
+
+`enum clock_dest_num_rp2350`
+
+RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| CLK_DEST_SYS_CLOCKS | 选择 SYS_CLOCKS 作为时钟目标。 |
+| CLK_DEST_SYS_ACCESSCTRL | 选择 SYS_ACCESSCTRL 作为时钟目标。 |
+| CLK_DEST_ADC | 选择 ADC 作为时钟目标。 |
+| CLK_DEST_SYS_ADC | 选择 SYS_ADC 作为时钟目标。 |
+| CLK_DEST_SYS_BOOTRAM | 选择 SYS_BOOTRAM 作为时钟目标。 |
+| CLK_DEST_SYS_BUSCTRL | 选择 SYS_BUSCTRL 作为时钟目标。 |
+| CLK_DEST_SYS_BUSFABRIC | 选择 SYS_BUSFABRIC 作为时钟目标。 |
+| CLK_DEST_SYS_DMA | 选择 SYS_DMA 作为时钟目标。 |
+| CLK_DEST_SYS_GLITCH_DETECTOR | 选择 SYS_GLITCH_DETECTOR 作为时钟目标。 |
+| CLK_DEST_HSTX | 选择 HSTX 作为时钟目标。 |
+| CLK_DEST_SYS_HSTX | 选择 SYS_HSTX 作为时钟目标。 |
+| CLK_DEST_SYS_I2C0 | 选择 SYS_I2C0 作为时钟目标。 |
+| CLK_DEST_SYS_I2C1 | 选择 SYS_I2C1 作为时钟目标。 |
+| CLK_DEST_SYS_IO | 选择 SYS_IO 作为时钟目标。 |
+| CLK_DEST_SYS_JTAG | 选择 SYS_JTAG 作为时钟目标。 |
+| CLK_DEST_REF_OTP | 选择 REF_OTP 作为时钟目标。 |
+| CLK_DEST_SYS_OTP | 选择 SYS_OTP 作为时钟目标。 |
+| CLK_DEST_SYS_PADS | 选择 SYS_PADS 作为时钟目标。 |
+| CLK_DEST_SYS_PIO0 | 选择 SYS_PIO0 作为时钟目标。 |
+| CLK_DEST_SYS_PIO1 | 选择 SYS_PIO1 作为时钟目标。 |
+| CLK_DEST_SYS_PIO2 | 选择 SYS_PIO2 作为时钟目标。 |
+| CLK_DEST_SYS_PLL_SYS | 选择 SYS_PLL_SYS 作为时钟目标。 |
+| CLK_DEST_SYS_PLL_USB | 选择 SYS_PLL_USB 作为时钟目标。 |
+| CLK_DEST_REF_POWMAN | 选择 REF_POWMAN 作为时钟目标。 |
+| CLK_DEST_SYS_POWMAN | 选择 SYS_POWMAN 作为时钟目标。 |
+| CLK_DEST_SYS_PWM | 选择 SYS_PWM 作为时钟目标。 |
+| CLK_DEST_SYS_RESETS | 选择 SYS_RESETS 作为时钟目标。 |
+| CLK_DEST_SYS_ROM | 选择 SYS_ROM 作为时钟目标。 |
+| CLK_DEST_SYS_ROSC | 选择 SYS_ROSC 作为时钟目标。 |
+| CLK_DEST_SYS_PSM | 选择 SYS_PSM 作为时钟目标。 |
+| CLK_DEST_SYS_SHA256 | 选择 SYS_SHA256 作为时钟目标。 |
+| CLK_DEST_SYS_SIO | 选择 SYS_SIO 作为时钟目标。 |
+| CLK_DEST_PERI_SPI0 | 选择 PERI_SPI0 作为时钟目标。 |
+| CLK_DEST_SYS_SPI0 | 选择 SYS_SPI0 作为时钟目标。 |
+| CLK_DEST_PERI_SPI1 | 选择 PERI_SPI1 作为时钟目标。 |
+| CLK_DEST_SYS_SPI1 | 选择 SYS_SPI1 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM0 | 选择 SYS_SRAM0 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM1 | 选择 SYS_SRAM1 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM2 | 选择 SYS_SRAM2 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM3 | 选择 SYS_SRAM3 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM4 | 选择 SYS_SRAM4 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM5 | 选择 SYS_SRAM5 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM6 | 选择 SYS_SRAM6 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM7 | 选择 SYS_SRAM7 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM8 | 选择 SYS_SRAM8 作为时钟目标。 |
+| CLK_DEST_SYS_SRAM9 | 选择 SYS_SRAM9 作为时钟目标。 |
+| CLK_DEST_SYS_SYSCFG | 选择 SYS_SYSCFG 作为时钟目标。 |
+| CLK_DEST_SYS_SYSINFO | 选择 SYS_SYSINFO 作为时钟目标。 |
+| CLK_DEST_SYS_TBMAN | 选择 SYS_TBMAN 作为时钟目标。 |
+| CLK_DEST_REF_TICKS | 选择 REF_TICKS 作为时钟目标。 |
+| CLK_DEST_SYS_TICKS | 选择 SYS_TICKS 作为时钟目标。 |
+| CLK_DEST_SYS_TIMER0 | 选择 SYS_TIMER0 作为时钟目标。 |
+| CLK_DEST_SYS_TIMER1 | 选择 SYS_TIMER1 作为时钟目标。 |
+| CLK_DEST_SYS_TRNG | 选择 SYS_TRNG 作为时钟目标。 |
+| CLK_DEST_PERI_UART0 | 选择 PERI_UART0 作为时钟目标。 |
+| CLK_DEST_SYS_UART0 | 选择 SYS_UART0 作为时钟目标。 |
+| CLK_DEST_PERI_UART1 | 选择 PERI_UART1 作为时钟目标。 |
+| CLK_DEST_SYS_UART1 | 选择 SYS_UART1 作为时钟目标。 |
+| CLK_DEST_SYS_USBCTRL | 选择 SYS_USBCTRL 作为时钟目标。 |
+| CLK_DEST_USB | 选择 USB 作为时钟目标。 |
+| CLK_DEST_SYS_WATCHDOG | 选择 SYS_WATCHDOG 作为时钟目标。 |
+| CLK_DEST_SYS_XIP | 选择 SYS_XIP 作为时钟目标。 |
+| CLK_DEST_SYS_XOSC | 选择 SYS_XOSC 作为时钟目标。 |
+
+### 函数文档
+
+#### check_sys_clock_hz
+
+`bool check_sys_clock_hz (uint32_t freq_hz, uint ** vco_freq_out, uint **` post_div1_out, uint * post_div2_out)`
+
+检查给定系统时钟频率是否有效/可达。
+
+**参数**
+
+- `freq_hz`: 请求的频率
+- `vco_freq_out`: 成功时，SYS PLL 所使用的压控振荡器频率
+- `post_div1_out`: 成功时，SYS PLL 的第一后置分频器
+- `post_div2_out`: 成功时，SYS PLL 的第二后置分频器。
+
+**返回**
+
+若频率可达且输出参数已写入则返回 true。
+
+#### check_sys_clock_khz
+
+`bool check_sys_clock_khz (uint32_t freq_khz, uint ** vco_freq_out, uint **` post_div1_out, uint * post_div2_out)`
+
+检查给定系统时钟频率是否有效/可达。
+
+**参数**
+
+- `freq_khz`: 请求的频率
+- `vco_freq_out`: 成功时，SYS PLL 所使用的压控振荡器频率
+- `post_div1_out`: 成功时，SYS PLL 的第一后置分频器
+- `post_div2_out`: 成功时，SYS PLL 的第二后置分频器。
+
+**返回**
+
+若频率可达且输出参数已写入则返回 true。
+
+#### clock_configure
+
+`bool clock_configure (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq, uint32_t freq)`
+
+使用自动时钟分频配置指定时钟。
+
+此方法允许同时指定输入时钟源的 src_frequency 和期望频率，并设置时钟分频器以实现精确或更高的可达频率（最大为 src_freq）。
+
+注意：RP2350 时钟硬件支持 1.0\-&gt;65536.0 范围内步进为 1/65536 的分频器。
+
+注意：RP2040 时钟硬件仅支持精确为 1.0 或 2.0\-&gt;16777216.0 范围内步进为 1/256 的分频器。
+
+有关时钟源可能值的详细信息，请参阅描述中的表格。
+
+**参数**
+
+- `clock`: 要配置的时钟
+- `src`: 主时钟源，可以为 0
+- `auxsrc`: 辅助时钟源，取决于正在设置的时钟，可以为 0
+- `src_freq`: 输入时钟源的频率
+- `freq`: 请求的频率
+
+**返回**
+
+若时钟已更新则返回 true，若 freq > src_freq 则返回 false。
+
+#### clock_configure_gpin
+
+`bool clock_configure_gpin (clock_handle_t clock, uint gpio, uint32_t src_freq, uint32_t freq)`
+
+将时钟配置为来自 GPIO 输入。
+
+**参数**
+
+- `clock`: 要配置的时钟
+- `gpio`: 运行时钟的 GPIO 引脚。有效 GPIO 为：20 和 22。
+- `src_freq`: 输入时钟源的频率
+- `freq`: 请求的频率
+
+#### clock_configure_int_divider
+
+`void clock_configure_int_divider (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq, uint32_t int_divider)`
+
+将指定时钟配置为使用不分频的输入源。
+
+有关时钟源可能值的详细信息，请参阅描述中的表格。
+
+**参数**
+
+- `clock`: 要配置的时钟
+- `src`: 主时钟源，可以为 0
+- `auxsrc`: 辅助时钟源，取决于正在设置的时钟，可以为 0
+- `src_freq`: 输入时钟源的频率
+- `int_divider`: 整数分频器
+
+#### clock_configure_undivided
+
+`void clock_configure_undivided (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq)`
+
+将指定时钟配置为使用不分频的输入源。
+
+有关时钟源可能值的详细信息，请参阅描述中的表格。
+
+**参数**
+
+- `clock`: 要配置的时钟
+- `src`: 主时钟源，可以为 0
+- `auxsrc`: 辅助时钟源，取决于正在设置的时钟，可以为 0
+- `src_freq`: 输入时钟源的频率
+
+#### clock_get_hz
+
+`uint32_t clock_get_hz (clock_handle_t clock)`
+
+获取指定时钟的当前频率。
+
+**参数**
+
+- `clock`: 时钟
+
+**返回**
+
+时钟频率（Hz）。
+
+#### clock_gpio_init
+
+`static void clock_gpio_init (uint gpio, uint src, float div) [inline], [static]`
+
+将可选分频后的时钟输出到指定 GPIO 引脚。
+
+RP2040 上有效 GPIO 为 21、23、24、25，这些 GPIO 连接到 GPOUT0-3 时钟发生器。RP2350 上有效 GPIO 为 13、15、21、23、24、25。GPIO 13 和 21 连接到 GPOUT0 时钟发生器，GPIO 15 和 23 连接到 GPOUT1 时钟发生器，GPIO 24 和 25 连接到 GPOUT2-3 时钟发生器。
+
+**参数**
+
+- `gpio`: 输出时钟的 GPIO 引脚。
+- `src`: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
+- `div`: 源时钟的浮点分频量。用于避免过快的时钟压垮 GPIO 引脚。
+
+#### clock_gpio_init_int_frac16
+
+`void clock_gpio_init_int_frac16 (uint gpio, uint src, uint32_t div_int, uint16_t div_frac16)`
+
+将可选分频后的时钟输出到指定 GPIO 引脚。
+
+RP2040 上有效 GPIO 为 21、23、24、25，这些 GPIO 连接到 GPOUT0-3 时钟发生器。RP2350 上有效 GPIO 为 13、15、21、23、24、25。GPIO 13 和 21 连接到 GPOUT0 时钟发生器，GPIO 15 和 23 连接到 GPOUT1 时钟发生器，GPIO 24 和 25 连接到 GPOUT2-3 时钟发生器。
+
+**参数**
+
+- `gpio`: 输出时钟的 GPIO 引脚。
+- `src`: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
+- `div_int`: 源时钟分频值的整数部分。用于避免过快的时钟压垮 GPIO 引脚。RP2040 上范围为 1..2^24-1，RP2350 上为 1..2^16-1。
+- `div_frac16`: 源时钟分频值的小数部分，范围为 0..65535（/65536）。
+
+#### clock_gpio_init_int_frac8
+
+`static void clock_gpio_init_int_frac8 (uint gpio, uint src, uint32_t div_int, uint8_t div_frac8) [inline], [static]`
+
+将可选分频后的时钟输出到指定 GPIO 引脚。
+
+* RP2040 上有效 GPIO 为 21、23、24、25，这些 GPIO 连接到 GPOUT0-3 时钟发生器。RP2350 上有效 GPIO 为 13、15、21、23、24、25。GPIO 13 和 21 连接到 GPOUT0 时钟发生器，GPIO 15 和 23 连接到 GPOUT1 时钟发生器，GPIO 24 和 25 连接到 GPOUT2-3 时钟发生器。
+
+**参数**
+
+- `gpio`: 输出时钟的 GPIO 引脚。
+- `src`: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
+- `div_int`: 源时钟分频值的整数部分。RP2040 上范围为 1..2^24-1，RP2350 上为 1..2^16-1。
+- `div_frac8`: 源时钟分频值的小数部分，范围为 0..255（/256）。
+
+#### clock_set_reported_hz
+
+`void clock_set_reported_hz (clock_handle_t clock, uint hz)`
+
+设置 clock_get_hz 所报告的时钟"当前频率"，而不实际改变时钟。
+
+**参见**
+
+`clock_get_hz()`
+
+#### clock_stop
+
+`void clock_stop (clock_handle_t clock)`
+
+停止指定时钟。
+
+**参数**
+
+- `clock`: 要停止的时钟
+
+#### clocks_enable_resus
+
+`void clocks_enable_resus (resus_callback_t resus_callback)`
+
+启用 resus 功能。若 clk_sys 意外停止则自动重启。
+
+resuscitate 功能会在系统时钟速度降至某一阈值以下（或停止）时重启系统时钟。这种情况可能发生在系统时钟所使用的时钟源停止时，例如 PLL 停止。
+
+**参数**
+
+- `resus_callback`: 用户提供的函数指针，在发生 resus 事件时调用。
+
+#### frequency_count_khz
+
+`uint32_t frequency_count_khz (uint src)`
+
+使用频率计数器测量时钟频率。
+
+使用内置频率计数器测量指定时钟的频率。当前该函数精度为 ±1KHz。详见数据手册。
+
+#### gpio_to_gpout_clock_handle
+
+`static clock_handle_t gpio_to_gpout_clock_handle (uint gpio, clock_handle_t default_clk_handle) [inline], [static]`
+
+返回给定 GPIO 对应的 GPOUT 时钟（如有）。
+
+**返回**
+
+与特定 GPIO 关联的 GPOUT 时钟编号，若无则返回 default_clk_handle。
+
+#### set_sys_clock_48mhz
+
+`void set_sys_clock_48mhz (void)`
+
+将系统时钟初始化为 48MHz。
+
+将系统时钟设置为 48MHz，并将外设时钟设置为匹配。
+
+#### set_sys_clock_hz
+
+`static bool set_sys_clock_hz (uint32_t freq_hz, bool required) [inline], [static]`
+
+尝试以 Hz 为单位设置系统时钟频率。
+
+注意并非所有时钟频率都可达；建议使用 src/rp2_common/hardware_clocks/scripts/vcocalc.py 计算参数后与 set_sys_clock_pll 配合使用。
+
+**参数**
+
+- `freq_hz`: 请求的频率
+- `required`: 若为 true，则在频率不可达时此函数将断言失败。
+
+**返回**
+
+若时钟已配置则返回 true。
+
+#### set_sys_clock_khz
+
+`static bool set_sys_clock_khz (uint32_t freq_khz, bool required) [inline], [static]`
+
+尝试以 kHz 为单位设置系统时钟频率。
+
+注意并非所有时钟频率都可达；建议使用 src/rp2_common/hardware_clocks/scripts/vcocalc.py 计算参数后与 set_sys_clock_pll 配合使用。
+
+**参数**
+
+- `freq_khz`: 请求的频率
+- `required`: 若为 true，则在频率不可达时此函数将断言失败。
+
+**返回**
+
+若时钟已配置则返回 true。
+
+#### set_sys_clock_pll
+
+`void set_sys_clock_pll (uint32_t vco_freq, uint post_div1, uint post_div2)`
+
+初始化系统时钟。
+
+**参数**
+
+- `vco_freq`: SYS PLL 使用的压控振荡器频率
+- `post_div1`: SYS PLL 的第一后置分频器
+- `post_div2`: SYS PLL 的第二后置分频器。
+
+有关驱动 PLL 的详细信息，请参阅数据手册中的 PLL 文档。
+
+<Normal />

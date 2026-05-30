@@ -1,0 +1,297 @@
+---
+sidebar_position: 20
+draft: false
+description: 复位控制器允许通过软件控制 RP 系列微控制器中所有非启动处理器所必需的外设的复位。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK resets]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件复位 API。
+
+### 详细描述
+
+复位控制器允许通过软件控制 RP 系列微控制器中所有非启动处理器所必需的外设的复位。
+
+**reset_bitmask**
+
+使用位掩码引用多个块，格式如下：
+
+对于 RP2040：
+
+| 要复位的块 | 位 |
+| --- | --- |
+| USB | 24 |
+| UART 1 | 23 |
+| UART 0 | 22 |
+| Timer | 21 |
+| TB Manager | 20 |
+| SysInfo | 19 |
+| System Config | 18 |
+| SPI 1 | 17 |
+| SPI 0 | 16 |
+| RTC | 15 |
+| PWM | 14 |
+| PLL USB | 13 |
+| PLL System | 12 |
+| PIO 1 | 11 |
+| PIO 0 | 10 |
+| Pads - QSPI | 9 |
+| Pads - Bank 0 | 8 |
+| JTAG | 7 |
+| IO QSPI | 6 |
+| IO Bank 0 | 5 |
+| I2C 1 | 4 |
+| I2C 0 | 3 |
+| DMA | 2 |
+| Bus Control | 1 |
+| ADC 0 | 0 |
+
+对于 RP2350：
+
+| 要复位的块 | 位 |
+| --- | --- |
+| USB | 28 |
+| UART 1 | 27 |
+| UART 0 | 26 |
+| TRNG | 25 |
+| Timer 1 | 24 |
+| Timer 0 | 23 |
+| TB Manager | 22 |
+| SysInfo | 21 |
+| System Config | 20 |
+| SPI 1 | 19 |
+| SPI 0 | 18 |
+| SHA256 | 17 |
+| PWM | 16 |
+| PLL USB | 15 |
+| PLL System | 14 |
+| PIO 2 | 13 |
+| PIO 1 | 12 |
+| PIO 0 | 11 |
+| Pads - QSPI | 10 |
+| Pads - Bank 0 | 9 |
+| JTAG | 8 |
+| IO QSPI | 7 |
+| IO Bank 0 | 6 |
+| I2C 1 | 5 |
+| I2C 0 | 4 |
+| HSTX | 3 |
+| DMA | 2 |
+| Bus Control | 1 |
+| ADC 0 | 0 |
+
+**示例**
+
+// hello_reset.c
+```c
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "hardware/resets.h"
+
+int main() {
+    stdio_init_all();
+
+    printf("Hello, reset!\n");
+
+    // Put the PWM block into reset
+    reset_block_num(RESET_PWM);
+
+    // And bring it out
+    unreset_block_num_wait_blocking(RESET_PWM);
+
+    // Put the PWM and ADC block into reset
+    reset_block_mask((1u << RESET_PWM) | (1u << RESET_ADC));
+
+    // Wait for both to come out of reset
+    unreset_block_mask_wait_blocking((1u << RESET_PWM) | (1u << RESET_ADC));
+
+    return 0;
+}
+```
+
+### 类型定义
+
+`typedef enum reset_num_rp2040 reset_num_t` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上可复位的组件编号（用作 typedef reset_num_t）
+
+`typedef enum reset_num_rp2350 reset_num_t` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上可复位的组件编号（用作 typedef reset_num_t）
+
+### 枚举
+
+`enum reset_num_rp2040 { [RESET_ADC] = 0, [RESET_BUSCTRL] = 1, [RESET_DMA] = 2, [RESET_I2C0] = 3, [RESET_I2C1] = 4, [RESET_IO_BANK0] = 5, [RESET_IO_QSPI] = 6, [RESET_JTAG] = 7, [RESET_PADS_BANK0] = 8, [RESET_PADS_QSPI] = 9, [RESET_PIO0] = 10, [RESET_PIO1] = 11, [RESET_PLL_SYS] = 12, [RESET_PLL_USB] = 13, [RESET_PWM] = 14, [RESET_RTC] = 15, [RESET_SPI0] = 16, [RESET_SPI1] = 17, [RESET_SYSCFG] = 18, [RESET_SYSINFO] = 19, [RESET_TBMAN] = 20, [RESET_TIMER] = 21, [RESET_UART0] = 22, [RESET_UART1] = 23, [RESET_USBCTRL] = 24, RESET_COUNT }` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上可复位的组件编号（用作 typedef reset_num_t）
+
+`enum reset_num_rp2350 { [RESET_ADC] = 0, [RESET_BUSCTRL] = 1, [RESET_DMA] = 2, [RESET_HSTX] = 3, [RESET_I2C0] = 4, [RESET_I2C1] = 5, [RESET_IO_BANK0] = 6, [RESET_IO_QSPI] = 7, [RESET_JTAG] = 8, [RESET_PADS_BANK0] = 9, [RESET_PADS_QSPI] = 10, [RESET_PIO0] = 11, [RESET_PIO1] = 12, [RESET_PIO2] = 13, [RESET_PLL_SYS] = 14, [RESET_PLL_USB] = 15, [RESET_PWM] = 16, [RESET_SHA256] = 17, [RESET_SPI0] = 18, [RESET_SPI1] = 19, [RESET_SYSCFG] = 20, [RESET_SYSINFO] = 21, [RESET_TBMAN] = 22, [RESET_TIMER0] = 23, [RESET_TIMER1] = 24, [RESET_TRNG] = 25, [RESET_UART0] = 26, [RESET_UART1] = 27, [RESET_USBCTRL] = 28, RESET_COUNT }` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上可复位的组件编号（用作 typedef reset_num_t）
+
+### 函数
+
+`static __force_inline void reset_block_mask (uint32_t bits)`<br/>&emsp;复位指定的 HW 块。
+
+`static __force_inline void unreset_block_mask (uint32_t bits)`<br/>&emsp;将指定的 HW 块移出复位状态
+
+`static __force_inline void unreset_block_mask_wait_blocking (uint32_t bits)`<br/>&emsp;将指定的 HW 块移出复位状态并等待完成。
+- `static void reset_block_num (uint32_t block_num)`: 复位指定的 HW 块。
+- `static void unreset_block_num (uint block_num)`: 将指定的 HW 块移出复位状态
+- `static void unreset_block_num_wait_blocking (uint block_num)`: 将指定的 HW 块移出复位状态并等待完成。
+- `static void reset_unreset_block_num_wait_blocking (uint block_num)`: 复位指定的 HW 块，然后将其移出复位状态并等待完成。
+
+### 类型定义文档
+
+#### reset_num_t <span className="chip-tag rp2040">RP2040</span>
+
+`typedef enum reset_num_rp2040 reset_num_t`
+
+RP2040 上可复位的组件编号（用作 typedef `reset_num_t）
+#### reset_num_t <span className="chip-tag rp2350">RP2350</span>
+
+`typedef enum reset_num_rp2350 reset_num_t`
+
+RP2350 上可复位的组件编号（用作 typedef `reset_num_t）
+
+### 枚举类型文档
+
+#### reset_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
+
+`enum reset_num_rp2040`
+
+RP2040 上可复位的组件编号（用作 typedef `reset_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| RESET_ADC | 选择 ADC 进行复位。 |
+| RESET_BUSCTRL | 选择 BUSCTRL 进行复位。 |
+| RESET_DMA | 选择 DMA 进行复位。 |
+| RESET_I2C0 | 选择 I2C0 进行复位。 |
+| RESET_I2C1 | 选择 I2C1 进行复位。 |
+| RESET_IO_BANK0 | 选择 IO_BANK0 进行复位。 |
+| RESET_IO_QSPI | 选择 IO_QSPI 进行复位。 |
+| RESET_JTAG | 选择 JTAG 进行复位。 |
+| RESET_PADS_BANK0 | 选择 PADS_BANK0 进行复位。 |
+| RESET_PADS_QSPI | 选择 PADS_QSPI 进行复位。 |
+| RESET_PIO0 | 选择 PIO0 进行复位。 |
+| RESET_PIO1 | 选择 PIO1 进行复位。 |
+| RESET_PLL_SYS | 选择 PLL_SYS 进行复位。 |
+| RESET_PLL_USB | 选择 PLL_USB 进行复位。 |
+| RESET_PWM | 选择 PWM 进行复位。 |
+| RESET_RTC | 选择 RTC 进行复位。 |
+| RESET_SPI0 | 选择 SPI0 进行复位。 |
+| RESET_SPI1 | 选择 SPI1 进行复位。 |
+| RESET_SYSCFG | 选择 SYSCFG 进行复位。 |
+| RESET_SYSINFO | 选择 SYSINFO 进行复位。 |
+| RESET_TBMAN | 选择 TBMAN 进行复位。 |
+| RESET_TIMER | 选择 TIMER 进行复位。 |
+| RESET_UART0 | 选择 UART0 进行复位。 |
+| RESET_UART1 | 选择 UART1 进行复位。 |
+| RESET_USBCTRL | 选择 USBCTRL 进行复位。 |
+
+#### reset_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
+
+`enum reset_num_rp2350`
+
+RP2350 上可复位的组件编号（用作 typedef `reset_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| RESET_ADC | 选择 ADC 进行复位。 |
+| RESET_BUSCTRL | 选择 BUSCTRL 进行复位。 |
+| RESET_DMA | 选择 DMA 进行复位。 |
+| RESET_HSTX | 选择 HSTX 进行复位。 |
+| RESET_I2C0 | 选择 I2C0 进行复位。 |
+| RESET_I2C1 | 选择 I2C1 进行复位。 |
+| RESET_IO_BANK0 | 选择 IO_BANK0 进行复位。 |
+| RESET_IO_QSPI | 选择 IO_QSPI 进行复位。 |
+| RESET_JTAG | 选择 JTAG 进行复位。 |
+| RESET_PADS_BANK0 | 选择 PADS_BANK0 进行复位。 |
+| RESET_PADS_QSPI | 选择 PADS_QSPI 进行复位。 |
+| RESET_PIO0 | 选择 PIO0 进行复位。 |
+| RESET_PIO1 | 选择 PIO1 进行复位。 |
+| RESET_PIO2 | 选择 PIO2 进行复位。 |
+| RESET_PLL_SYS | 选择 PLL_SYS 进行复位。 |
+| RESET_PLL_USB | 选择 PLL_USB 进行复位。 |
+| RESET_PWM | 选择 PWM 进行复位。 |
+| RESET_SHA256 | 选择 SHA256 进行复位。 |
+| RESET_SPI0 | 选择 SPI0 进行复位。 |
+| RESET_SPI1 | 选择 SPI1 进行复位。 |
+| RESET_SYSCFG | 选择 SYSCFG 进行复位。 |
+| RESET_SYSINFO | 选择 SYSINFO 进行复位。 |
+| RESET_TBMAN | 选择 TBMAN 进行复位。 |
+| RESET_TIMER0 | 选择 TIMER0 进行复位。 |
+| RESET_TIMER1 | 选择 TIMER1 进行复位。 |
+| RESET_TRNG | 选择 TRNG 进行复位。 |
+| RESET_UART0 | 选择 UART0 进行复位。 |
+| RESET_UART1 | 选择 UART1 进行复位。 |
+| RESET_USBCTRL | 选择 USBCTRL 进行复位。 |
+
+### 函数文档
+
+#### reset_block_mask
+
+`static __force_inline void reset_block_mask (uint32_t bits) [static]`
+
+复位指定的 HW 块。
+
+**参数**
+
+- `bits: 指示要复位的块的位模式。参见 reset_bitmask`
+
+#### reset_block_num
+
+`static void reset_block_num (uint32_t block_num) [inline], [static]`
+
+复位指定的 HW 块。
+
+**参数**
+
+- `block_num`: 块编号
+
+#### reset_unreset_block_num_wait_blocking
+
+`static void reset_unreset_block_num_wait_blocking (uint block_num) [inline], [static]`
+
+复位指定的 HW 块，然后将其移出复位状态并等待完成。
+
+**参数**
+
+- `block_num`: 块编号
+
+#### unreset_block_mask
+
+`static __force_inline void unreset_block_mask (uint32_t bits) [static]`
+
+将指定的 HW 块移出复位状态
+
+**参数**
+
+- `bits: 指示要取消复位的块的位模式。参见 reset_bitmask`
+
+#### unreset_block_mask_wait_blocking
+
+`static __force_inline void unreset_block_mask_wait_blocking (uint32_t bits) [static]`
+
+将指定的 HW 块移出复位状态并等待完成。
+
+**参数**
+
+- `bits: 指示要取消复位的块的位模式。参见 reset_bitmask`
+
+#### unreset_block_num
+
+`static void unreset_block_num (uint block_num) [inline], [static]`
+
+将指定的 HW 块移出复位状态
+
+**参数**
+
+- `block_num`: 块编号
+
+#### unreset_block_num_wait_blocking
+
+`static void unreset_block_num_wait_blocking (uint block_num) [inline], [static]`
+
+将指定的 HW 块移出复位状态并等待完成。
+
+**参数**
+
+- `block_num`: 块编号
+
+<Normal />

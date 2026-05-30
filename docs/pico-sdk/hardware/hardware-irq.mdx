@@ -1,0 +1,627 @@
+---
+sidebar_position: 14
+draft: false
+description: 硬件中断处理 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK irq]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件中断处理 API。
+
+### 详细描述
+
+RP2040 使用标准的 ARM 嵌套向量中断控制器（NVIC）。
+
+中断由 0 到 31 的编号标识。
+
+在 RP2040 上，NVIC 上只连接了低 26 个 IRQ 信号；IRQ 26 到 31 被置零（永不触发）。
+
+每个核心有一个 NVIC，每个核心的 NVIC 连接相同的硬件中断线，但 IO 中断除外——每个 bank、每个核心各有一个 IO 中断。这些中断完全独立，例如，处理器 0 可以被 bank 0 中的 GPIO 0 中断，处理器 1 可以被同一 bank 中的 GPIO 1 中断。
+
+所有 IRQ API 仅影响正在执行的核心（即调用该函数的核心）。
+
+不应在两个核心上同时启用同一（共享）IRQ 编号，因为这会导致竞态条件或其中一个核心饥饿。此外，请记住，在一个核心上禁用中断不会禁用另一个核心上的中断。
+
+有三种不同的方式为 IRQ 设置处理程序：
+
+* 在运行时调用 `irq_add_shared_handler()` 为当前核心上的多路复用中断（例如 GPIO bank）添加处理程序。每个处理程序都应检查并清除相关的硬件中断源
+
+* 在运行时调用 `irq_set_exclusive_handler()` 为当前核心上的中断安装单一处理程序
+
+* 在应用程序中显式定义中断处理程序（例如，定义 void `isr_dma_0` 将使该函数成为核心 0 上 DMA_IRQ_0 的处理程序，并且无法在运行时使用上述 API 更改）。使用此方法可能在运行时导致链接冲突，且不提供运行时性能优势（即通常不应使用此方法）。
+
+如果启用了 IRQ 但触发时未安装处理程序，将命中断点，且 IRQ 编号将存在于寄存器 r0 中。
+
+#### 中断编号
+
+提供了一组定义（[intctrl.h]），使用这些名称可避免直接使用数字。
+
+RP2040 的中断编号如下：
+
+| IRQ | 中断源 |
+| --- | --- |
+| 0 | TIMER_IRQ_0 |
+| 1 | TIMER_IRQ_1 |
+| 2 | TIMER_IRQ_2 |
+| 3 | TIMER_IRQ_3 |
+| 4 | PWM_IRQ_WRAP |
+| 5 | USBCTRL_IRQ |
+| 6 | XIP_IRQ |
+| 7 | PIO0_IRQ_0 |
+| 8 | PIO0_IRQ_1 |
+| 9 | PIO1_IRQ_0 |
+| 10 | PIO1_IRQ_1 |
+| 11 | DMA_IRQ_0 |
+| 12 | DMA_IRQ_1 |
+| 13 | IO_IRQ_BANK0 |
+| 14 | IO_IRQ_QSPI |
+| 15 | SIO_IRQ_PROC0 |
+| 16 | SIO_IRQ_PROC1 |
+| 17 | CLOCKS_IRQ |
+| 18 | SPI0_IRQ |
+| 19 | SPI1_IRQ |
+| 20 | UART0_IRQ |
+| 21 | UART1_IRQ |
+| 22 | ADC0_IRQ_FIFO |
+| 23 | I2C0_IRQ |
+| 24 | I2C1_IRQ |
+| 25 | RTC_IRQ |
+
+RP2350 的中断编号如下：
+
+| IRQ | 中断源 |
+| --- | --- |
+| 0 | TIMER0_IRQ_0 |
+| 1 | TIMER0_IRQ_1 |
+| 2 | TIMER0_IRQ_2 |
+| 3 | TIMER0_IRQ_3 |
+| 4 | TIMER1_IRQ_0 |
+| 5 | TIMER1_IRQ_1 |
+| 6 | TIMER1_IRQ_2 |
+| 7 | TIMER1_IRQ_3 |
+| 8 | PWM_IRQ_WRAP_0 |
+| 9 | PWM_IRQ_WRAP_1 |
+| 10 | DMA_IRQ_0 |
+| 11 | DMA_IRQ_1 |
+| 12 | DMA_IRQ_2 |
+| 13 | DMA_IRQ_3 |
+| 14 | USBCTRL_IRQ |
+| 15 | PIO0_IRQ_0 |
+| 16 | PIO0_IRQ_1 |
+| 17 | PIO1_IRQ_0 |
+| 18 | PIO1_IRQ_1 |
+| 19 | PIO2_IRQ_0 |
+| 20 | PIO2_IRQ_1 |
+| 21 | IO_IRQ_BANK0 |
+| 22 | IO_IRQ_BANK0_NS |
+| 23 | IO_IRQ_QSPI |
+| 24 | IO_IRQ_QSPI_NS |
+| 25 | SIO_IRQ_FIFO |
+| 26 | SIO_IRQ_BELL |
+| 27 | SIO_IRQ_FIFO_NS |
+| 28 | SIO_IRQ_BELL_NS |
+| 29 | SIO_IRQ_MTIMECMP |
+| 30 | CLOCKS_IRQ |
+| 31 | SPI0_IRQ |
+| 32 | SPI1_IRQ |
+| 33 | UART0_IRQ |
+| 34 | UART1_IRQ |
+| 35 | ADC_IRQ_FIFO |
+| 36 | I2C0_IRQ |
+| 37 | I2C1_IRQ |
+| 38 | OTP_IRQ |
+| 39 | TRNG_IRQ |
+| 40 | PROC0_IRQ_CTI |
+| 41 | PROC1_IRQ_CTI |
+| 42 | PLL_SYS_IRQ |
+| 43 | PLL_USB_IRQ |
+| 44 | POWMAN_IRQ_POW |
+| 45 | POWMAN_IRQ_TIMER |
+| 46 | SPARE_IRQ_0 |
+| 47 | SPARE_IRQ_1 |
+| 48 | SPARE_IRQ_2 |
+| 49 | SPARE_IRQ_3 |
+| 50 | SPARE_IRQ_4 |
+| 51 | SPARE_IRQ_5 |
+
+### 类型定义
+
+`typedef enum irq_num_rp2350 irq_num_t` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上的中断编号（用作 typedef irq_num_t）
+
+`typedef enum irq_num_rp2040 irq_num_t` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上的中断编号（用作 typedef irq_num_t）
+
+`typedef void(* irq_handler_t)(void)`<br/>&emsp;中断处理程序函数类型。
+
+### 枚举
+
+`enum irq_num_rp2350 { [TIMER0_IRQ_0] = 0, [TIMER0_IRQ_1] = 1, [TIMER0_IRQ_2] = 2, [TIMER0_IRQ_3] = 3, [TIMER1_IRQ_0] = 4, [TIMER1_IRQ_1] = 5, [TIMER1_IRQ_2] = 6, [TIMER1_IRQ_3] = 7, [PWM_IRQ_WRAP_0] = 8, [PWM_IRQ_WRAP_1] = 9, [DMA_IRQ_0] = 10, [DMA_IRQ_1] = 11, [DMA_IRQ_2] = 12, [DMA_IRQ_3] = 13, [USBCTRL_IRQ] = 14, [PIO0_IRQ_0] = 15, [PIO0_IRQ_1] = 16, [PIO1_IRQ_0] = 17, [PIO1_IRQ_1] = 18, [PIO2_IRQ_0] = 19, [PIO2_IRQ_1] = 20, [IO_IRQ_BANK0] = 21, [IO_IRQ_BANK0_NS] = 22, [IO_IRQ_QSPI] = 23, [IO_IRQ_QSPI_NS] = 24, [SIO_IRQ_FIFO] = 25, [SIO_IRQ_BELL] = 26, [SIO_IRQ_FIFO_NS] = 27, [SIO_IRQ_BELL_NS] = 28, [SIO_IRQ_MTIMECMP] = 29, [CLOCKS_IRQ] = 30, [SPI0_IRQ] = 31, [SPI1_IRQ] = 32, [UART0_IRQ] = 33, [UART1_IRQ] = 34, [ADC_IRQ_FIFO] = 35, [I2C0_IRQ] = 36, [I2C1_IRQ] = 37, [OTP_IRQ] = 38, [TRNG_IRQ] = 39, [PROC0_IRQ_CTI] = 40, [PROC1_IRQ_CTI] = 41, [PLL_SYS_IRQ] = 42, [PLL_USB_IRQ] = 43, [POWMAN_IRQ_POW] = 44, [POWMAN_IRQ_TIMER] = 45, [SPARE_IRQ_0] = 46, [SPARE_IRQ_1] = 47, [SPARE_IRQ_2] = 48, [SPARE_IRQ_3] = 49, [SPARE_IRQ_4] = 50, [SPARE_IRQ_5] = 51, IRQ_COUNT }` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;RP2350 上的中断编号（用作 typedef irq_num_t）
+
+`enum irq_num_rp2040 { [TIMER_IRQ_0] = 0, [TIMER_IRQ_1] = 1, [TIMER_IRQ_2] = 2, [TIMER_IRQ_3] = 3, [PWM_IRQ_WRAP] = 4, [USBCTRL_IRQ] = 5, [XIP_IRQ] = 6, [PIO0_IRQ_0] = 7, [PIO0_IRQ_1] = 8, [PIO1_IRQ_0] = 9, [PIO1_IRQ_1] = 10, [DMA_IRQ_0] = 11, [DMA_IRQ_1] = 12, [IO_IRQ_BANK0] = 13, [IO_IRQ_QSPI] = 14, [SIO_IRQ_PROC0] = 15, [SIO_IRQ_PROC1] = 16, [CLOCKS_IRQ] = 17, [SPI0_IRQ] = 18, [SPI1_IRQ] = 19, [UART0_IRQ] = 20, [UART1_IRQ] = 21, [ADC_IRQ_FIFO] = 22, [I2C0_IRQ] = 23, [I2C1_IRQ] = 24, [RTC_IRQ] = 25, [SPARE_IRQ_0] = 26, [SPARE_IRQ_1] = 27, [SPARE_IRQ_2] = 28, [SPARE_IRQ_3] = 29, [SPARE_IRQ_4] = 30, [SPARE_IRQ_5] = 31, IRQ_COUNT }` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;RP2040 上的中断编号（用作 typedef irq_num_t）
+
+### 函数
+
+- `void irq_set_priority (uint num, uint8_t hardware_priority)`: 设置指定中断的优先级。
+- `uint irq_get_priority (uint num)`: 获取指定中断的优先级。
+- `void irq_set_enabled (uint num, bool enabled)`: 在执行核心上启用或禁用特定中断。
+- `bool irq_is_enabled (uint num)`: 判断特定中断是否在执行核心上已启用。
+- `void irq_set_mask_enabled (uint32_t mask, bool enabled)`: 在执行核心上启用/禁用多个中断。
+- `void irq_set_mask_n_enabled (uint n, uint32_t mask, bool enabled)`: 在执行核心上启用/禁用多个中断。
+- `void irq_set_exclusive_handler (uint num, irq_handler_t handler)`: 为执行核心上的中断设置独占中断处理程序。
+- `irq_handler_t irq_get_exclusive_handler (uint num)`: 获取执行核心上中断的独占中断处理程序。
+- `void irq_add_shared_handler (uint num, irq_handler_t handler, uint8_t order_priority)`: 为执行核心上的中断添加共享中断处理程序。
+- `void irq_remove_handler (uint num, irq_handler_t handler)`: 移除执行核心上给定 irq 编号的特定中断处理程序。
+- `bool irq_has_handler (uint num)`: 判断给定中断编号是否安装了 IRQ 处理程序。
+- `bool irq_has_shared_handler (uint num)`: 判断给定中断编号的当前 IRQ 处理程序是否为共享处理程序。
+- `irq_handler_t irq_get_vtable_handler (uint num)`: 从执行核心当前安装的硬件向量表（VTOR）中获取指定 IRQ 的当前 IRQ 处理程序。
+- `static void irq_clear (uint int_num)`: 清除执行核心上的特定中断。
+- `void irq_set_pending (uint num)`: 强制在执行核心上挂起一个中断。
+- `void user_irq_claim (uint irq_num)`: 在调用核心上声明用户 IRQ 的所有权。
+- `void user_irq_unclaim (uint irq_num)`: 将调用核心上的用户 IRQ 标记为不再使用。
+- `int user_irq_claim_unused (bool required)`: 在调用核心上声明一个空闲用户 IRQ 的所有权。
+
+### 类型定义文档
+
+#### irq_num_t <span className="chip-tag rp2350">RP2350</span>
+
+`typedef enum irq_num_rp2350 irq_num_t`
+
+RP2350 上的中断编号（用作 typedef `irq_num_t）
+#### irq_num_t <span className="chip-tag rp2040">RP2040</span>
+
+`typedef enum irq_num_rp2040 irq_num_t`
+
+RP2040 上的中断编号（用作 typedef `irq_num_t）
+#### irq_handler_t
+
+`typedef void(* irq_handler_t) (void)`
+
+中断处理程序函数类型。
+
+所有中断处理程序应为此类型，并遵循正常的 ARM EABI 寄存器保存约定。
+
+### 枚举类型文档
+
+#### irq_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
+
+`enum irq_num_rp2350`
+
+RP2350 上的中断编号（用作 typedef `irq_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| TIMER0_IRQ_0 | 选择 TIMER0 的 IRQ 0 输出。 |
+| TIMER0_IRQ_1 | 选择 TIMER0 的 IRQ 1 输出。 |
+| TIMER0_IRQ_2 | 选择 TIMER0 的 IRQ 2 输出。 |
+| TIMER0_IRQ_3 | 选择 TIMER0 的 IRQ 3 输出。 |
+| TIMER1_IRQ_0 | 选择 TIMER1 的 IRQ 0 输出。 |
+| TIMER1_IRQ_1 | 选择 TIMER1 的 IRQ 1 输出。 |
+| TIMER1_IRQ_2 | 选择 TIMER1 的 IRQ 2 输出。 |
+| TIMER1_IRQ_3 | 选择 TIMER1 的 IRQ 3 输出。 |
+| PWM_IRQ_WRAP_0 | 选择 PWM 的 WRAP_0 IRQ 输出。 |
+| PWM_IRQ_WRAP_1 | 选择 PWM 的 WRAP_1 IRQ 输出。 |
+| DMA_IRQ_0 | 选择 DMA 的 IRQ 0 输出。 |
+| DMA_IRQ_1 | 选择 DMA 的 IRQ 1 输出。 |
+| DMA_IRQ_2 | 选择 DMA 的 IRQ 2 输出。 |
+| DMA_IRQ_3 | 选择 DMA 的 IRQ 3 输出。 |
+| USBCTRL_IRQ | 选择 USBCTRL 的 IRQ 输出。 |
+| PIO0_IRQ_0 | 选择 PIO0 的 IRQ 0 输出。 |
+| PIO0_IRQ_1 | 选择 PIO0 的 IRQ 1 输出。 |
+| PIO1_IRQ_0 | 选择 PIO1 的 IRQ 0 输出。 |
+| PIO1_IRQ_1 | 选择 PIO1 的 IRQ 1 输出。 |
+| PIO2_IRQ_0 | 选择 PIO2 的 IRQ 0 输出。 |
+| PIO2_IRQ_1 | 选择 PIO2 的 IRQ 1 输出。 |
+| IO_IRQ_BANK0 | 选择 IO_BANK0 的 IRQ 输出。 |
+| IO_IRQ_BANK0_NS | 选择 IO_BANK0_NS 的 IRQ 输出。 |
+| IO_IRQ_QSPI | 选择 IO_QSPI 的 IRQ 输出。 |
+| IO_IRQ_QSPI_NS | 选择 IO_QSPI_NS 的 IRQ 输出。 |
+| SIO_IRQ_FIFO | 选择 SIO 的 FIFO IRQ 输出。 |
+| SIO_IRQ_BELL | 选择 SIO 的 BELL IRQ 输出。 |
+| SIO_IRQ_FIFO_NS | 选择 SIO_NS 的 FIFO IRQ 输出。 |
+| SIO_IRQ_BELL_NS | 选择 SIO_NS 的 BELL IRQ 输出。 |
+| SIO_IRQ_MTIMECMP | 选择 SIO 的 MTIMECMP IRQ 输出。 |
+| CLOCKS_IRQ | 选择 CLOCKS 的 IRQ 输出。 |
+| SPI0_IRQ | 选择 SPI0 的 IRQ 输出。 |
+| SPI1_IRQ | 选择 SPI1 的 IRQ 输出。 |
+| UART0_IRQ | 选择 UART0 的 IRQ 输出。 |
+| UART1_IRQ | 选择 UART1 的 IRQ 输出。 |
+| ADC_IRQ_FIFO | 选择 ADC 的 FIFO IRQ 输出。 |
+| I2C0_IRQ | 选择 I2C0 的 IRQ 输出。 |
+| I2C1_IRQ | 选择 I2C1 的 IRQ 输出。 |
+| OTP_IRQ | 选择 OTP 的 IRQ 输出。 |
+| TRNG_IRQ | 选择 TRNG 的 IRQ 输出。 |
+| PROC0_IRQ_CTI | 选择 PROC0 的 CTI IRQ 输出。 |
+| PROC1_IRQ_CTI | 选择 PROC1 的 CTI IRQ 输出。 |
+| PLL_SYS_IRQ | 选择 PLL_SYS 的 IRQ 输出。 |
+| PLL_USB_IRQ | 选择 PLL_USB 的 IRQ 输出。 |
+| POWMAN_IRQ_POW | 选择 POWMAN 的 POW IRQ 输出。 |
+| POWMAN_IRQ_TIMER | 选择 POWMAN 的 TIMER IRQ 输出。 |
+| SPARE_IRQ_0 | 选择备用 IRQ 0。 |
+| SPARE_IRQ_1 | 选择备用 IRQ 1。 |
+| SPARE_IRQ_2 | 选择备用 IRQ 2。 |
+| SPARE_IRQ_3 | 选择备用 IRQ 3。 |
+| SPARE_IRQ_4 | 选择备用 IRQ 4。 |
+| SPARE_IRQ_5 | 选择备用 IRQ 5。 |
+
+#### irq_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
+
+`enum irq_num_rp2040`
+
+RP2040 上的中断编号（用作 typedef `irq_num_t）
+
+| 枚举值 | 说明 |
+| --- | --- |
+| TIMER_IRQ_0 | 选择 TIMER 的 IRQ 0 输出。 |
+| TIMER_IRQ_1 | 选择 TIMER 的 IRQ 1 输出。 |
+| TIMER_IRQ_2 | 选择 TIMER 的 IRQ 2 输出。 |
+| TIMER_IRQ_3 | 选择 TIMER 的 IRQ 3 输出。 |
+| PWM_IRQ_WRAP | 选择 PWM 的 IRQ_WRAP 输出。 |
+| USBCTRL_IRQ | 选择 USBCTRL 的 IRQ 输出。 |
+| XIP_IRQ | 选择 XIP 的 IRQ 输出。 |
+| PIO0_IRQ_0 | 选择 PIO0 的 IRQ 0 输出。 |
+| PIO0_IRQ_1 | 选择 PIO0 的 IRQ 1 输出。 |
+| PIO1_IRQ_0 | 选择 PIO1 的 IRQ 0 输出。 |
+| PIO1_IRQ_1 | 选择 PIO1 的 IRQ 1 输出。 |
+| DMA_IRQ_0 | 选择 DMA 的 IRQ 0 输出。 |
+| DMA_IRQ_1 | 选择 DMA 的 IRQ 1 输出。 |
+| IO_IRQ_BANK0 | 选择 IO_BANK0 的 IRQ 输出。 |
+| IO_IRQ_QSPI | 选择 IO_QSPI 的 IRQ 输出。 |
+| SIO_IRQ_PROC0 | 选择 SIO_PROC0 的 IRQ 输出。 |
+| SIO_IRQ_PROC1 | 选择 SIO_PROC1 的 IRQ 输出。 |
+| CLOCKS_IRQ | 选择 CLOCKS 的 IRQ 输出。 |
+| SPI0_IRQ | 选择 SPI0 的 IRQ 输出。 |
+| SPI1_IRQ | 选择 SPI1 的 IRQ 输出。 |
+| UART0_IRQ | 选择 UART0 的 IRQ 输出。 |
+| UART1_IRQ | 选择 UART1 的 IRQ 输出。 |
+| ADC_IRQ_FIFO | 选择 ADC 的 IRQ_FIFO 输出。 |
+| I2C0_IRQ | 选择 I2C0 的 IRQ 输出。 |
+| I2C1_IRQ | 选择 I2C1 的 IRQ 输出。 |
+| RTC_IRQ | 选择 RTC 的 IRQ 输出。 |
+| SPARE_IRQ_0 | 选择备用 IRQ 0。 |
+| SPARE_IRQ_1 | 选择备用 IRQ 1。 |
+| SPARE_IRQ_2 | 选择备用 IRQ 2。 |
+| SPARE_IRQ_3 | 选择备用 IRQ 3。 |
+| SPARE_IRQ_4 | 选择备用 IRQ 4。 |
+| SPARE_IRQ_5 | 选择备用 IRQ 5。 |
+
+### 函数文档
+
+#### irq_add_shared_handler
+
+`void irq_add_shared_handler (uint num, irq_handler_t handler, uint8_t order_priority)`
+
+为执行核心上的中断添加共享中断处理程序。
+
+使用此方法可为多个不同硬件源之间共享的 irq 编号（例如 GPIO、DMA 或 PIO IRQ）添加处理程序。通过此方法添加的处理程序将按 order_priority 从高到低依次调用。如果您知道中断只会或只应有一个处理程序，则应改用 `irq_set_exclusive_handler()` 方法。
+
+如果此核心上已为此 irq 编号设置了独占中断处理程序，或者（所有 IRQ 在两个核心上的总量超过可配置的最大值 PICO_MAX_SHARED_IRQ_HANDLERS），此方法将触发 assert。
+
+::::note
+默认情况下，SDK 对两个核心使用单一共享向量表，当前安装的 IRQ 处理程序实际上是从特定 IRQ 编号的向量表条目开始的链表。因此，此方法（在两个核心使用相同向量表时）会为两个核心添加相同的中断处理程序。
+::::
+
+在 RP2040 上，这通常不会引起任何混淆，因为在两个核心上同时启用同一中断编号的 NVIC（参见 `irq_set_enabled()`）很少有意义，因为中断会在两个核心上触发，且中断处理程序会产生竞争。
+
+但是，当处理在两个核心上独立的中断时，*确实*存在这个问题。
+
+这包括：
+
+* 核心本地的"备用" IRQ
+
+* 在 RP2350 上，SIO FIFO IRQ 现在对两个核心使用相同的 irq 编号（而 RP2040 上使用两个不同的编号）
+
+在需要在两个核心上启用同一 IRQ、且两个核心共享同一向量表的情况下，应只安装一次 IRQ 处理程序——它将在两个核心上使用——并在每个核心上检查核心编号（通过 `get_core_num()`）。
+
+::::note
+从两个核心同时为同一向量表中的同一 irq 编号添加/移除/处理 IRQ 不是线程安全的。
+::::
+
+::::note
+SDK 有一个 PICO_VTABLE_PER_CORE 定义，指示两个向量表是否独立，但截至 2.1.1 版本，用户无法设置此值并期望向量表复制由其处理。此功能将在未来的 SDK 版本中添加。
+::::
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+- `handler: 要设置的处理程序。参见 irq_handler_t`
+- `order_priority`: 顺序优先级控制同一核心上相同 IRQ 编号的处理程序调用顺序。当 IRQ 触发时，所有共享处理程序都会被调用，但调用顺序基于 order_priority（优先级越高越先调用，相同优先级则以未定义的顺序调用）。如果不太在意顺序，建议使用 PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY，其默认值位于优先级范围的中间。
+
+order_priority 使用*较高*值表示更高优先级，这与传递给 `irq_set_priority()` 的 CPU 中断优先级*相反*（后者使用较低值表示更高优先级）。
+
+**参见**
+
+`irq_set_exclusive_handler()`
+
+#### irq_clear
+
+`static void irq_clear (uint int_num) [inline], [static]`
+
+清除执行核心上的特定中断。
+
+此方法仅对未连接到硬件的"软件" IRQ（例如 RP2040 上的 IRQ 26-31）有用，因为 NVIC 始终反映硬件 IRQ 的当前状态，清除硬件 IRQ 状态是通过硬件的寄存器来执行的。
+
+**参数**
+
+- `int_num`: 中断编号 [中断编号]
+
+#### irq_get_exclusive_handler
+
+`irq_handler_t irq_get_exclusive_handler (uint num)`
+
+获取执行核心上中断的独占中断处理程序。
+
+如果此核心上通过 irq_set_exclusive_handler 设置了独占 IRQ 处理程序，此方法将返回该处理程序。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+
+**参见**
+
+`irq_set_exclusive_handler()`
+
+**返回**
+
+若为该 IRQ 设置了独占处理程序则返回该处理程序，若未设置处理程序或安装了共享/可共享处理程序则返回 NULL。
+
+#### irq_get_priority
+
+`uint irq_get_priority (uint num)`
+
+获取指定中断的优先级。
+
+数值越低表示优先级越高。硬件优先级范围从 0（最高优先级）到 255（最低优先级）。为了更方便地指定高于或低于默认值的优先级，SDK 运行时在启动时将所有 IRQ 优先级初始化为 PICO_DEFAULT_IRQ_PRIORITY。PICO_DEFAULT_IRQ_PRIORITY 默认为 0x80。
+
+在 RP2040 的 ARM Cortex-M0+ 上只有最高 2 位有效。
+
+在 RP2350 的 ARM Cortex-M33 或 Hazard3（RISC-V）上只有最高 4 位有效。注意，此 API 在 RISC-V 上使用与 ARM 相同的（反转）排序。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+
+**返回**
+
+IRQ 优先级
+
+#### irq_get_vtable_handler
+
+`irq_handler_t irq_get_vtable_handler (uint num)`
+
+从执行核心当前安装的硬件向量表（VTOR）中获取指定 IRQ 的当前 IRQ 处理程序。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+
+**返回**
+
+存储在 VTABLE 中给定 irq 编号的地址
+
+#### irq_has_handler
+
+`bool irq_has_handler (uint num)`
+
+判断给定中断编号是否安装了 IRQ 处理程序。
+
+参见 `irq_set_exclusive_handler()` 中关于使用两个核心时处理程序范围的讨论。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+
+**返回**
+
+若指定 IRQ 有处理程序则返回 true
+
+#### irq_has_shared_handler
+
+`bool irq_has_shared_handler (uint num)`
+
+判断给定中断编号的当前 IRQ 处理程序是否为共享处理程序。
+
+参见 `irq_set_exclusive_handler()` 中关于使用两个核心时处理程序范围的讨论。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+
+**返回**
+
+若指定 IRQ 有共享处理程序则返回 true
+
+#### irq_is_enabled
+
+`bool irq_is_enabled (uint num)`
+
+判断特定中断是否在执行核心上已启用。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+
+**返回**
+
+若中断已启用则返回 true
+
+#### irq_remove_handler
+
+`void irq_remove_handler (uint num, irq_handler_t handler)`
+
+移除执行核心上给定 irq 编号的特定中断处理程序。
+
+此方法可用于移除通过 `irq_set_exclusive_handler() 或 irq_add_shared_handler()` 设置的 irq，若该处理程序当前未为给定 IRQ 编号安装，则会触发 assert。
+
+此方法*只能*从用户（非 IRQ 代码）或处理程序本身内部调用（即 IRQ 处理程序可以在处理 IRQ 时移除自身）。尝试从另一个 IRQ 调用将导致 assert。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+- `handler`: 要移除的处理程序。
+
+**参见**
+
+`irq_set_exclusive_handler()`
+
+`irq_add_shared_handler()`
+
+#### irq_set_enabled
+
+`void irq_set_enabled (uint num, bool enabled)`
+
+在执行核心上启用或禁用特定中断。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+- `enabled`: true 启用中断，false 禁用
+
+#### irq_set_exclusive_handler
+
+`void irq_set_exclusive_handler (uint num, irq_handler_t handler)`
+
+为执行核心上的中断设置独占中断处理程序。
+
+使用此方法为单 IRQ 源中断设置处理程序，或当您的代码、使用场景或性能要求规定中断不应有其他处理程序时使用。
+
+如果指定的 irq 编号上已安装任何类型的中断处理程序，此方法将触发 assert。
+
+::::note
+默认情况下，SDK 对两个核心使用单一共享向量表，当前安装的 IRQ 处理程序实际上是从特定 IRQ 编号的向量表条目开始的链表。因此，此方法（在两个核心使用相同向量表时）会为两个核心设置相同的中断处理程序。
+::::
+
+在 RP2040 上，这通常不会引起任何混淆，因为在两个核心上同时启用同一中断编号的 NVIC（参见 `irq_set_enabled()`）很少有意义，因为中断会在两个核心上触发，且中断处理程序会产生竞争。
+
+但是，当处理在两个核心上独立的中断时，*确实*存在这个问题。
+
+这包括：
+
+* 核心本地的"备用" IRQ
+
+* 在 RP2350 上，SIO FIFO IRQ 现在对两个核心使用相同的 irq 编号（而 RP2040 上使用两个不同的编号）
+
+在需要在两个核心上启用同一 IRQ、且两个核心共享同一向量表的情况下，应只安装一次 IRQ 处理程序——它将在两个核心上使用——并在每个核心上检查核心编号（通过 `get_core_num()`）。
+
+::::note
+从两个核心同时为同一向量表中的同一 irq 编号添加/移除/处理 IRQ 不是线程安全的。
+::::
+
+::::note
+SDK 有一个 PICO_VTABLE_PER_CORE 定义，指示两个向量表是否独立，但截至 2.1.1 版本，用户无法设置此值并期望向量表复制由其处理。此功能将在未来的 SDK 版本中添加。
+::::
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+- `handler: 要设置的处理程序。参见 irq_handler_t`
+
+**参见**
+
+`irq_add_shared_handler()`
+
+#### irq_set_mask_enabled
+
+`void irq_set_mask_enabled (uint32_t mask, bool enabled)`
+
+在执行核心上启用/禁用多个中断。
+
+**参数**
+
+- `mask`: 32 位掩码，其中置 1 的位对应要启用/禁用的中断 [中断编号]
+- `enabled`: true 启用中断，false 禁用。
+
+#### irq_set_mask_n_enabled
+
+`void irq_set_mask_n_enabled (uint n, uint32_t mask, bool enabled)`
+
+在执行核心上启用/禁用多个中断。
+
+**参数**
+
+- `n`: 要更新的掩码索引。n == 0 表示 0\-&gt;31，n == 1 表示 32\-&gt;63，以此类推。
+- `mask`: 32 位掩码，其中置 1 的位对应要启用/禁用的中断 [中断编号]
+- `enabled`: true 启用中断，false 禁用。
+
+#### irq_set_pending
+
+`void irq_set_pending (uint num)`
+
+强制在执行核心上挂起一个中断。
+
+通常不应将此用于连接到硬件的 IRQ。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+
+#### irq_set_priority
+
+`void irq_set_priority (uint num, uint8_t hardware_priority)`
+
+设置指定中断的优先级。
+
+**参数**
+
+- `num`: 中断编号 [中断编号]
+- `hardware_priority`: 要设置的优先级。数值越低表示优先级越高。硬件优先级范围从 0（最高优先级）到 255（最低优先级）。为了更方便地指定高于或低于默认值的优先级，SDK 运行时在启动时将所有 IRQ 优先级初始化为 PICO_DEFAULT_IRQ_PRIORITY。PICO_DEFAULT_IRQ_PRIORITY 默认为 0x80。
+
+在 RP2040 的 ARM Cortex-M0+ 上只有最高 2 位有效。
+
+在 RP2350 的 ARM Cortex-M33 或 Hazard3（RISC-V）上只有最高 4 位有效。注意，此 API 在 RISC-V 上使用与 ARM 相同的（反转）排序。
+
+#### user_irq_claim
+
+`void user_irq_claim (uint irq_num)`
+
+在调用核心上声明用户 IRQ 的所有权。
+
+从 FIRST_USER_IRQ 开始的用户 IRQ 不连接到任何硬件，但可以通过 `irq_set_pending` 触发。
+
+用户 IRQ 是核心本地功能；它们不能用于核心间通信。因此，所有处理用户 IRQ 的函数仅影响调用核心。
+
+此方法显式声明用户 IRQ 的所有权，以便其他代码知道它正在被使用。
+
+**参数**
+
+- `irq_num`: 要声明的用户 IRQ
+
+#### user_irq_claim_unused
+
+`int user_irq_claim_unused (bool required)`
+
+在调用核心上声明一个空闲用户 IRQ 的所有权。
+
+从 FIRST_USER_IRQ 开始的用户 IRQ 不连接到任何硬件，但可以通过 `irq_set_pending` 触发。
+
+用户 IRQ 是核心本地功能；它们不能用于核心间通信。因此，所有处理用户 IRQ 的函数仅影响调用核心。
+
+此方法显式声明一个未使用的用户 IRQ 的所有权（如果有的话），以便其他代码知道它正在被使用。
+
+**参数**
+
+- `required`: 若为 true，则在没有可用 IRQ 时函数将 panic
+
+**返回**
+
+用户 IRQ 编号；若 required 为 false 且没有空闲 IRQ 则返回 -1
+
+#### user_irq_unclaim
+
+`void user_irq_unclaim (uint irq_num)`
+
+将调用核心上的用户 IRQ 标记为不再使用。
+
+从 FIRST_USER_IRQ 开始的用户 IRQ 不连接到任何硬件，但可以通过 `irq_set_pending` 触发。
+
+用户 IRQ 是核心本地功能；它们不能用于核心间通信。因此，所有处理用户 IRQ 的函数仅影响调用核心。
+
+此方法显式释放用户 IRQ 的所有权，以便其他代码知道它可以自由使用。
+
+建议在调用此方法之前已禁用 irq 并移除处理程序。
+
+**参数**
+
+- `irq_num`: 要释放的 irq_num
+
+<Normal />

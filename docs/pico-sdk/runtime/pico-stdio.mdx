@@ -1,0 +1,488 @@
+---
+sidebar_position: 22
+draft: false
+description: 支持从 UART、USB、半主机等进行输入和输出的自定义 stdio 支持。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK stdio, stdio, UART, USB]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+支持从 UART、USB、半主机等进行输入和输出的自定义 stdio 支持。
+
+### 详细描述
+
+注意：添加额外输入输出设备的 API 尚未被认为是稳定的。
+
+### 模块
+
+`pico_stdio_semihosting`<br/>&emsp;使用 RAM 半主机进行 stdout 的实验性支持。
+
+`pico_stdio_uart`<br/>&emsp;使用 UART 进行 stdin/stdout 的支持。
+
+`pico_stdio_rtt`<br/>&emsp;使用 SEGGER RTT 进行 stdin/stdout 的支持。
+
+`pico_stdio_usb`<br/>&emsp;通过 USB 串行（CDC）进行 stdin/stdout 的支持。
+
+### 函数
+
+- `bool stdio_init_all (void)`: 初始化链接到二进制文件中的所有标准 stdio 类型。
+- `bool stdio_deinit_all (void)`: 反初始化链接到二进制文件中的所有标准 stdio 类型。
+- `void stdio_flush (void)`: 刷新所有缓冲输出。
+- `int stdio_getchar_timeout_us (uint32_t timeout_us)`: 在超时时间内从 stdin 返回一个可用字符。
+- `static int getchar_timeout_us (uint32_t timeout_us): `stdio_getchar_timeout_us` 的别名，用于向后兼容。
+`void stdio_set_driver_enabled (stdio_driver_t *driver, bool enabled)`<br/>&emsp;向活动驱动程序列表中添加或移除驱动程序。
+
+`void stdio_filter_driver (stdio_driver_t *driver)`<br/>&emsp;控制将输出限制到单个驱动程序。
+
+`void stdio_set_translate_crlf (stdio_driver_t *driver, bool translate)`<br/>&emsp;控制传输时换行符到回车符的转换。
+- `int stdio_putchar_raw (int c)`: 如果启用了 CR/LF 转换，则跳过转换的 putchar 变体。
+- `static int putchar_raw (int c): `stdio_putchar_raw` 的别名，用于向后兼容。
+`int stdio_puts_raw (const char *s)`<br/>&emsp;如果启用了 CR/LF 转换，则跳过转换的 puts 变体。
+
+`static int puts_raw (const char *s)<br/>&emsp;stdio_puts_raw` 的别名，用于向后兼容。
+
+`void stdio_set_chars_available_callback (void(**fn)(void **), void *param)`<br/>&emsp;当有可用输入字符时获得通知。
+
+`int stdio_get_until (char *buf, int len, absolute_time_t until)`<br/>&emsp;等待超时时间以将至少一个字符读入缓冲区。
+
+`int stdio_put_string (const char *s, int len, bool newline, bool cr_translation)`<br/>&emsp;将缓冲区打印到 stdout，可选择添加换行符和回车符。
+- `int stdio_getchar (void)`: getchar 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+- `int stdio_putchar (int)`: putchar 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+`int stdio_puts (const char *s)`<br/>&emsp;puts 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+
+`int stdio_vprintf (const char *format, va_list va)`<br/>&emsp;vprintf 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+
+`int __printflike (1, 0) stdio_printf(const char *format`<br/>&emsp;printf 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+
+### 函数文档
+
+#### `__printflike`
+
+`int __printflike (1, 0)`
+
+printf 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+
+#### getchar_timeout_us
+
+`static int getchar_timeout_us (uint32_t timeout_us) [inline], [static]`
+
+`stdio_getchar_timeout_us` 的别名，用于向后兼容。
+
+#### putchar_raw
+
+`static int putchar_raw (int c) [inline], [static]`
+
+`stdio_putchar_raw` 的别名，用于向后兼容。
+
+#### puts_raw
+
+`static int puts_raw (const char * s) [inline], [static]`
+
+`stdio_puts_raw` 的别名，用于向后兼容。
+
+#### stdio_deinit_all
+
+`bool stdio_deinit_all (void)`
+
+反初始化链接到二进制文件中的所有标准 stdio 类型。
+
+此方法目前仅支持 stdio_uart 和 stdio_semihosting。
+
+**返回**
+
+若所有输出均成功反初始化则返回 true，否则返回 false。
+
+**参见**
+
+stdio_uart, stdio_usb, stdio_semihosting, stdio_rtt
+
+#### stdio_filter_driver
+
+`void stdio_filter_driver (stdio_driver_t * driver)`
+
+控制将输出限制到单个驱动程序。
+
+此方法应始终在已初始化的驱动程序上调用。
+
+**参数**
+
+- `driver`: 若非 null，则仅使用该驱动程序进行输入/输出（假设它在已启用驱动程序列表中）；若为 NULL 则使用所有已启用的驱动程序。
+
+#### stdio_flush
+
+`void stdio_flush (void)`
+
+刷新所有缓冲输出。
+
+#### stdio_get_until
+
+`int stdio_get_until (char * buf, int len, absolute_time_t until)`
+
+等待超时时间以将至少一个字符读入缓冲区。
+
+此方法在输入可用时立即返回，但可能返回多个字符，直至缓冲区末尾。
+
+**参数**
+
+- `buf`: 要读入的缓冲区
+- `len`: 缓冲区长度
+
+**返回**
+
+读取的字符数，或 PICO_ERROR_TIMEOUT。
+
+**参数**
+
+- `until`: 若在此时间之后仍无可用字符则返回 PICO_ERROR_TIMEOUT。
+
+#### stdio_getchar
+
+`int stdio_getchar (void)`
+
+getchar 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+
+#### stdio_getchar_timeout_us
+
+`int stdio_getchar_timeout_us (uint32_t timeout_us)`
+
+在超时时间内从 stdin 返回一个可用字符。
+
+**参数**
+
+- `timeout_us`: 超时时间（微秒），或 0 表示若无可用字符则不等待。
+
+**返回**
+
+0-255 之间的字符，或超时时返回 PICO_ERROR_TIMEOUT。
+
+#### stdio_init_all
+
+`bool stdio_init_all (void)`
+
+初始化链接到二进制文件中的所有标准 stdio 类型。
+
+在设置好时钟后调用此方法，以根据二进制文件中各自库的存在情况启用 UART、USB、半主机和 RTT 的 stdio 支持。
+
+当配置了 stdio_usb 时，此方法可选择性地阻塞等待连接，通过 `stdio_usb_init` 中指定的变量（即 PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS）控制。
+
+**返回**
+
+若至少一个输出成功初始化则返回 true，否则返回 false。
+
+**参见**
+
+stdio_uart, stdio_usb, stdio_semihosting, stdio_rtt
+
+#### stdio_put_string
+
+`int stdio_put_string (const char * s, int len, bool newline, bool cr_translation)`
+
+将缓冲区打印到 stdout，可选择添加换行符和回车符。
+
+此方法在输入可用时立即返回，但可能返回多个字符，直至缓冲区末尾。
+
+**参数**
+
+- `s`: 要打印的字符
+- `len`: s 的长度
+- `newline`: 若为 true 则在字符串后添加换行符
+- `cr_translation`: 若为 true 则执行换行符到回车符的转换
+
+**返回**
+
+写入的字符数。
+
+#### stdio_putchar
+
+`int stdio_putchar (int c)`
+
+putchar 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+
+#### stdio_putchar_raw
+
+`int stdio_putchar_raw (int c)`
+
+如果启用了 CR/LF 转换，则跳过转换的 putchar 变体。
+
+#### stdio_puts
+
+`int stdio_puts (const char * s)`
+
+puts 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+
+#### stdio_puts_raw
+
+`int stdio_puts_raw (const char * s)`
+
+如果启用了 CR/LF 转换，则跳过转换的 puts 变体。
+
+#### stdio_set_chars_available_callback
+
+`void stdio_set_chars_available_callback (void(**)(void **`) fn, void * param)`
+
+当有可用输入字符时获得通知。
+
+**参数**
+
+- `fn`: 当有可用字符时调用的回调函数。传入 NULL 以取消任何现有回调。
+- `param`: 传递给回调的指针。
+
+#### stdio_set_driver_enabled
+
+`void stdio_set_driver_enabled (stdio_driver_t * driver, bool enabled)`
+
+向活动驱动程序列表中添加或移除用于输入/输出的驱动程序。
+
+此方法应始终在已初始化的驱动程序上调用，且不可重入。
+
+**参数**
+
+- `driver`: 驱动程序
+- `enabled`: true 表示添加，false 表示移除。
+
+#### stdio_set_translate_crlf
+
+`void stdio_set_translate_crlf (stdio_driver_t * driver, bool translate)`
+
+控制传输时换行符到回车符的转换。
+
+此方法应始终在已初始化的驱动程序上调用。
+
+**参数**
+
+- `driver`: 驱动程序
+- `translate`: 若为 true，则在传输时将换行符转换为回车符。
+
+#### stdio_vprintf
+
+`int stdio_vprintf (const char * format, va_list va)`
+
+vprintf 的别名，即使在 PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0 时也肯定不会经过标准 C 库的实现。
+
+### pico_stdio_semihosting
+
+使用 RAM 半主机进行 stdout 的实验性支持。
+
+#### 详细描述
+
+链接此库或在 CMake 中调用 `pico_enable_stdio_semihosting(TARGET ENABLED)`（效果相同）将把半主机添加到标准输出的驱动程序中。
+
+#### 函数
+
+- `void stdio_semihosting_init (void)`: 显式初始化通过半主机的 stdout 并将其添加到当前 stdout 目标集合中。
+- `void stdio_semihosting_deinit (void)`: 显式反初始化通过半主机的 stdout 并将其从当前 stdout 目标集合中移除。
+
+#### 函数文档
+
+**stdio_semihosting_deinit**
+
+`void stdio_semihosting_deinit (void)`
+
+显式反初始化通过半主机的 stdout 并将其从当前 stdout 目标集合中移除。
+
+若构建中包含 `pico_stdio_semihosting，此方法将由 stdio_deinit_all()` 自动调用。
+
+**stdio_semihosting_init**
+
+`void stdio_semihosting_init (void)`
+
+显式初始化通过半主机的 stdout 并将其添加到当前 stdout 目标集合中。
+
+若构建中包含 `pico_stdio_semihosting，此方法将由 stdio_init_all()` 自动调用。
+
+### pico_stdio_uart
+
+使用 UART 进行 stdin/stdout 的支持。
+
+#### 详细描述
+
+链接此库或在 CMake 中调用 `pico_enable_stdio_uart(TARGET ENABLED)`（效果相同）将把 UART 添加到标准输入/输出的驱动程序中。
+
+#### 函数
+
+- `void stdio_uart_init (void)`: 显式初始化通过 UART 的 stdin/stdout 并将其添加到当前 stdin/stdout 驱动程序集合中。
+- `void stdout_uart_init (void)`: 显式仅初始化通过 UART 的 stdout（不含 stdin）并将其添加到当前 stdout 驱动程序集合中。
+- `void stdin_uart_init (void)`: 显式仅初始化通过 UART 的 stdin（不含 stdout）并将其添加到当前 stdin 驱动程序集合中。
+`void stdio_uart_init_full (uart_inst_t *uart, uint baud_rate, int tx_pin, int rx_pin)`<br/>&emsp;执行自定义初始化以通过 UART 配置 stdin/stdout 并将其添加到当前 stdin/stdout 驱动程序集合中。
+- `void stdio_uart_deinit (void)`: 显式反初始化通过 UART 的 stdin/stdout 并将其从当前 stdin/stdout 驱动程序集合中移除。
+- `void stdout_uart_deinit (void)`: 显式仅反初始化通过 UART 的 stdout（不含 stdin）并将其从当前 stdout 驱动程序集合中移除。
+- `void stdin_uart_deinit (void)`: 显式仅反初始化通过 UART 的 stdin（不含 stdout）并将其从当前 stdin 驱动程序集合中移除。
+`void stdio_uart_deinit_full (uart_inst_t *uart, int tx_pin, int rx_pin)`<br/>&emsp;执行自定义反初始化以反初始化通过 UART 的 stdin/stdout 并将其从当前 stdin/stdout 驱动程序集合中移除。
+
+#### 函数文档
+
+**stdin_uart_deinit**
+
+`void stdin_uart_deinit (void)`
+
+显式仅反初始化通过 UART 的 stdin（不含 stdout）并将其从当前 stdin 驱动程序集合中移除。
+
+此方法禁用 PICO_DEFAULT_UART_RX_PIN 的 UART 输入（如果已定义），并使引脚处于隔离状态。
+
+**stdin_uart_init**
+
+`void stdin_uart_init (void)`
+
+显式仅初始化通过 UART 的 stdin（不含 stdout）并将其添加到当前 stdin 驱动程序集合中。
+
+此方法设置 PICO_DEFAULT_UART_RX_PIN 的 UART 输入（如果已定义），并将波特率配置为 PICO_DEFAULT_UART_BAUD_RATE。
+
+**stdio_uart_deinit**
+
+`void stdio_uart_deinit (void)`
+
+显式反初始化通过 UART 的 stdin/stdout 并将其从当前 stdin/stdout 驱动程序集合中移除。
+
+此方法禁用 PICO_DEFAULT_UART_TX_PIN 的 UART 输出（如果已定义）、PICO_DEFAULT_UART_RX_PIN 的输入（如果已定义），并使引脚处于隔离状态。
+
+若构建中包含 `pico_stdio_uart，此方法将由 stdio_deinit_all()` 自动调用。
+
+**stdio_uart_deinit_full**
+
+`void stdio_uart_deinit_full (uart_inst_t * uart, int tx_pin, int rx_pin)`
+
+执行自定义反初始化以反初始化通过 UART 的 stdin/stdout 并将其从当前 stdin/stdout 驱动程序集合中移除。
+
+**参数**
+
+- `uart`: 要使用的 uart 实例，[uart0] 或 uart1
+- `tx_pin`: 用于 stdout 的 UART 引脚（或 -1 表示无 stdout）
+- `rx_pin`: 用于 stdin 的 UART 引脚（或 -1 表示无 stdin）
+
+**stdio_uart_init**
+
+`void stdio_uart_init (void)`
+
+显式初始化通过 UART 的 stdin/stdout 并将其添加到当前 stdin/stdout 驱动程序集合中。
+
+此方法设置 PICO_DEFAULT_UART_TX_PIN 的 UART 输出（如果已定义）、PICO_DEFAULT_UART_RX_PIN 的输入（如果已定义），并将波特率配置为 PICO_DEFAULT_UART_BAUD_RATE。
+
+若构建中包含 `pico_stdio_uart，此方法将由 stdio_init_all()` 自动调用。
+
+**stdio_uart_init_full**
+
+`void stdio_uart_init_full (uart_inst_t * uart, uint baud_rate, int tx_pin, int rx_pin)`
+
+执行自定义初始化以通过 UART 配置 stdin/stdout 并将其添加到当前 stdin/stdout 驱动程序集合中。
+
+**参数**
+
+- `uart`: 要使用的 uart 实例，[uart0] 或 uart1
+- `baud_rate`: 波特率（Hz）
+- `tx_pin`: 用于 stdout 的 UART 引脚（或 -1 表示无 stdout）
+- `rx_pin`: 用于 stdin 的 UART 引脚（或 -1 表示无 stdin）
+
+**stdout_uart_deinit**
+
+`void stdout_uart_deinit (void)`
+
+显式仅反初始化通过 UART 的 stdout（不含 stdin）并将其从当前 stdout 驱动程序集合中移除。
+
+此方法禁用 PICO_DEFAULT_UART_TX_PIN 的 UART 输出（如果已定义），并使引脚处于隔离状态。
+
+**stdout_uart_init**
+
+`void stdout_uart_init (void)`
+
+显式仅初始化通过 UART 的 stdout（不含 stdin）并将其添加到当前 stdout 驱动程序集合中。
+
+此方法设置 PICO_DEFAULT_UART_TX_PIN 的 UART 输出（如果已定义），并将波特率配置为 PICO_DEFAULT_UART_BAUD_RATE。
+
+### pico_stdio_rtt
+
+使用 SEGGER RTT 进行 stdin/stdout 的支持。
+
+#### 详细描述
+
+链接此库或在 CMake 中调用 `pico_enable_stdio_rtt(TARGET)`（效果相同）将把 RTT 添加到标准输出的驱动程序中。
+
+#### 函数
+
+- `void stdio_rtt_init (void)`: 显式初始化通过 RTT 的 stdin/stdout 并将其添加到当前 stdin/stdout 驱动程序集合中。
+- `void stdio_rtt_deinit (void)`: 显式反初始化通过 RTT 的 stdin/stdout 并将其从当前 stdin/stdout 驱动程序集合中移除。
+
+#### 函数文档
+
+**stdio_rtt_deinit**
+
+`void stdio_rtt_deinit (void)`
+
+显式反初始化通过 RTT 的 stdin/stdout 并将其从当前 stdin/stdout 驱动程序集合中移除。
+
+若构建中包含 `pico_stdio_rtt，此方法将由 stdio_deinit_all()` 自动调用。
+
+**stdio_rtt_init**
+
+`void stdio_rtt_init (void)`
+
+显式初始化通过 RTT 的 stdin/stdout 并将其添加到当前 stdin/stdout 驱动程序集合中。
+
+若构建中包含 `pico_stdio_rtt，此方法将由 stdio_init_all()` 自动调用。
+
+### pico_stdio_usb
+
+通过 USB 串行（CDC）进行 stdin/stdout 的支持。
+
+#### 详细描述
+
+链接此库或在 CMake 中调用 `pico_enable_stdio_usb(TARGET ENABLED)`（效果相同）将把 USB CDC 添加到标准输入/输出的驱动程序中。
+
+注意，此库是面向开发者的便利库，并非适用于所有情况；其中一个原因是它完全接管了 USB 设备，排除了您以设备或主机模式使用 USB 的可能性。因此，若您尝试与 `tinyusb_device 或 tinyusb_host` 同时使用，此库将自动停用。它还控制较底层的 IRQ 并设置周期性后台任务。
+
+此库默认还包含允许通过 USB 接口重置 RP-series 微控制器的功能。
+
+#### 函数
+
+- `bool stdio_usb_init (void)`: 显式初始化 USB stdio 并将其添加到当前 stdin 驱动程序集合中。
+- `bool stdio_usb_deinit (void)`: 显式反初始化 USB stdio 并将其从当前 stdin 驱动程序集合中移除。
+- `bool stdio_usb_connected (void)`: 检查是否有活动的 stdio CDC 连接到主机。
+- `void stdio_usb_call_chars_available_callback (void)`: 显式调用已注册的 USB stdio chars_available_callback。
+
+#### 函数文档
+
+**stdio_usb_call_chars_available_callback**
+
+`void stdio_usb_call_chars_available_callback (void)`
+
+显式调用已注册的 USB stdio chars_available_callback。
+
+此方法通常由内部 USB stdio 后台线程在有新的 USB CDC 数据可读时调用。但是，若内部后台线程被禁用（例如当用户直接链接 tinyUSB 时），用户需要实现自己的后台线程并直接调用此方法。
+
+**stdio_usb_connected**
+
+`bool stdio_usb_connected (void)`
+
+检查是否有活动的 stdio CDC 连接到主机。
+
+**返回**
+
+若 stdio 通过 CDC 连接则返回 true。
+
+**stdio_usb_deinit**
+
+`bool stdio_usb_deinit (void)`
+
+显式反初始化 USB stdio 并将其从当前 stdin 驱动程序集合中移除。
+
+**返回**
+
+若 USB CDC 成功反初始化则返回 true，发生错误则返回 false。
+
+**stdio_usb_init**
+
+`bool stdio_usb_init (void)`
+
+显式初始化 USB stdio 并将其添加到当前 stdin 驱动程序集合中。
+
+可以设置 PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS，使此方法在返回前等待主机的 CDC 连接，这在您不希望在连接建立之前丢失任何初始 stdout 输出时很有用。
+
+**返回**
+
+若 USB CDC 成功初始化则返回 true，发生错误则返回 false。
+
+Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+
+SPDX-License-Identifier: BSD-3-Clause
+
+<Normal />

@@ -1,0 +1,49 @@
+---
+sidebar_position: 30
+draft: false
+description: 电压调节 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK vreg]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+电压调节 API。
+
+### 函数
+
+- `void vreg_set_voltage (enum vreg_voltage voltage)`: 设置电压。
+- `enum vreg_voltage vreg_get_voltage` (void)`: 获取电压。
+- `void vreg_disable_voltage_limit (void)`: 启用超出安全运行范围的电压使用。
+
+### 函数文档
+
+#### vreg_disable_voltage_limit
+
+`void vreg_disable_voltage_limit (void)`
+
+启用超出安全运行范围的电压使用。
+
+此函数允许使用超过 VREG_VOLTAGE_MAX 的电压（在支持的平台上，如 RP2350）。若未先调用此函数而尝试设置更高电压，则实际电压将被限制为 VREG_VOLTAGE_MAX。
+
+#### vreg_get_voltage
+
+`enum vreg_voltage vreg_get_voltage (void)`
+
+获取电压。
+
+**返回值**
+
+电压调节器的当前电压（来自枚举 `vreg_voltage）。
+
+#### vreg_set_voltage
+
+`void vreg_set_voltage (enum vreg_voltage voltage)`
+
+设置电压。
+
+**参数**
+
+- `voltage: 要施加到电压调节器的电压值（来自枚举 vreg_voltage）
+
+<Normal />

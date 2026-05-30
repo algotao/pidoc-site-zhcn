@@ -1,0 +1,772 @@
+---
+sidebar_position: 28
+draft: false
+description: 底层硬件定时器 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK timer]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+底层硬件定时器 API。
+
+### 详细描述
+
+此 API 提供对定时器硬件的中级访问。另请参阅 `pico_time`，它使用硬件定时器提供更高级别的功能。
+
+RP 系列微控制器上的定时器外设支持以下功能：
+
+* RP2040 单个 64 位计数器，每微秒递增一次
+
+* RP2350 两个 64 位计数器，tick 由 tick 模块生成
+
+* 锁存两阶段读取计数器，可在 32 位总线上无竞争地读取
+
+* 四路报警：在计数器低 32 位匹配时触发，匹配时产生 IRQ。
+
+在 RP2040 上，定时器默认使用由看门狗（参见 RP2040 数据手册第 4.8.2 节）生成的 1 微秒参考时钟，该时钟由 clk_ref 导出。
+
+在 RP2350 上，定时器默认使用由 tick 模块（参见 RP2350 数据手册第 8.5 节）生成的 1 微秒参考时钟。
+
+定时器有 4 路报警，每路报警可输出独立的中断。报警基于 64 位计数器的低 32 位进行匹配，这意味着最多可在未来 2^32 微秒后触发。这等价于：
+
+* 2^32 ÷ 10^6：约 4295 秒
+
+* 4295 ÷ 60：约 72 分钟
+
+定时器适用于短暂休眠，若需要更长时间的报警，请参阅 `hardware_rtc` 函数。
+
+**示例**
+
+// hello_timer.c
+```c
+#include <stdio.h>
+#include "pico/stdlib.h"
+
+volatile bool timer_fired = false;
+
+int64_t alarm_callback(alarm_id_t id, __unused void *user_data) {
+    printf("Timer %d fired!\n", (int) id);
+    timer_fired = true;
+    // Can return a value here in us to fire in the future
+    return 0;
+}
+
+bool repeating_timer_callback(__unused struct repeating_timer *t) {
+    printf("Repeat at %lld\n", time_us_64());
+    return true;
+}
+
+int main() {
+    stdio_init_all();
+    printf("Hello Timer!\n");
+
+    // Call alarm_callback in 2 seconds
+    add_alarm_in_ms(2000, alarm_callback, NULL, false);
+
+    // Wait for alarm callback to set timer_fired
+    while (!timer_fired) {
+        tight_loop_contents();
+    }
+
+    // Create a repeating timer that calls repeating_timer_callback.
+    // If the delay is > 0 then this is the delay between the previous callback ending and the next starting.
+    // If the delay is negative (see below) then the next call to the callback will be exactly 500ms after the
+    // start of the call to the last callback
+    struct repeating_timer timer;
+    add_repeating_timer_ms(500, repeating_timer_callback, NULL, &timer);
+    sleep_ms(3000);
+    bool cancelled = cancel_repeating_timer(&timer);
+    printf("cancelled... %d\n", cancelled);
+    sleep_ms(2000);
+
+    // Negative delay so means we will call repeating_timer_callback, and call it again
+    // 500ms later regardless of how long the callback took to execute
+    add_repeating_timer_ms(-500, repeating_timer_callback, NULL, &timer);
+    sleep_ms(3000);
+    cancelled = cancel_repeating_timer(&timer);
+    printf("cancelled... %d\n", cancelled);
+    sleep_ms(2000);
+    printf("Done\n");
+    return 0;
+}
+```
+
+**另请参阅**
+
+
+### 宏
+
+* `#define [TIMER_ALARM_IRQ_NUM](timer, alarm_num)`
+* `#define [TIMER_ALARM_NUM_FROM_IRQ](irq_num)`
+* `#define [TIMER_NUM_FROM_IRQ](irq_num)`
+* `#define [PICO_DEFAULT_TIMER] 0`
+* `#define [PICO_DEFAULT_TIMER_INSTANCE]()`
+
+### 类型定义
+
+`typedef void(* hardware_alarm_callback_t)(uint alarm_num)`
+
+### 函数
+
+`static uint32_t timer_time_us_32 (timer_hw_t *timer)`<br/>&emsp;返回给定定时器实例的 32 位微秒时间戳值。
+- `static uint32_t time_us_32 (void)`: 返回默认定时器实例的 32 位微秒时间戳值。
+`uint64_t timer_time_us_64 (timer_hw_t *timer)`<br/>&emsp;返回给定定时器实例的当前 64 位微秒时间戳值。
+- `uint64_t time_us_64 (void)`: 返回默认定时器实例的当前 64 位微秒时间戳值。
+`void timer_busy_wait_us_32 (timer_hw_t *timer, uint32_t delay_us)`<br/>&emsp;使用给定定时器实例忙等待指定（32 位）微秒数。
+- `void busy_wait_us_32 (uint32_t delay_us)`: 使用默认定时器实例忙等待指定（32 位）微秒数。
+`void timer_busy_wait_us (timer_hw_t *timer, uint64_t delay_us)`<br/>&emsp;使用给定定时器实例忙等待指定（64 位）微秒数。
+- `void busy_wait_us (uint64_t delay_us)`: 使用默认定时器实例忙等待指定（64 位）微秒数。
+`void timer_busy_wait_ms (timer_hw_t *timer, uint32_t delay_ms)`<br/>&emsp;使用给定定时器实例忙等待指定毫秒数。
+- `void busy_wait_ms (uint32_t delay_ms)`: 使用默认定时器实例忙等待指定毫秒数。
+`void timer_busy_wait_until (timer_hw_t *timer, absolute_time_t t)`<br/>&emsp;使用给定定时器实例忙等待直到指定时间戳之后。
+- `void busy_wait_until (absolute_time_t t)`: 使用默认定时器实例忙等待直到指定时间戳之后。
+`static bool timer_time_reached (timer_hw_t *timer, absolute_time_t t)`<br/>&emsp;检查给定定时器实例上指定时间戳是否已到达。
+- `static bool time_reached (absolute_time_t t)`: 检查默认定时器实例上指定时间戳是否已到达。
+`void timer_hardware_alarm_claim (timer_hw_t *timer, uint alarm_num)`<br/>&emsp;协作式申请给定定时器实例上指定硬件报警的使用权。
+- `void hardware_alarm_claim (uint alarm_num)`: 协作式申请默认定时器实例上指定硬件报警的使用权。
+`int timer_hardware_alarm_claim_unused (timer_hw_t *timer, bool required)`<br/>&emsp;协作式申请给定定时器实例上某个硬件报警的使用权。
+- `int hardware_alarm_claim_unused (bool required)`: 协作式申请默认定时器实例上某个硬件报警的使用权。
+`void timer_hardware_alarm_unclaim (timer_hw_t *timer, uint alarm_num)`<br/>&emsp;协作式释放给定定时器实例上指定硬件报警的使用权。
+- `void hardware_alarm_unclaim (uint alarm_num)`: 协作式释放默认定时器实例上指定硬件报警的使用权。
+`bool timer_hardware_alarm_is_claimed (timer_hw_t *timer, uint alarm_num)`<br/>&emsp;判断给定定时器实例上的硬件报警是否已被申请。
+- `bool hardware_alarm_is_claimed (uint alarm_num)`: 判断默认定时器实例上的硬件报警是否已被申请。
+`void timer_hardware_alarm_set_callback (timer_hw_t *timer, uint alarm_num, hardware_alarm_callback_t callback)`<br/>&emsp;为给定定时器实例上的硬件报警启用/禁用回调（在当前核心上）。
+- `void hardware_alarm_set_callback (uint alarm_num, hardware_alarm_callback_t callback)`: 为默认定时器实例上的硬件报警启用/禁用回调（在当前核心上）。
+`bool timer_hardware_alarm_set_target (timer_hw_t *timer, uint alarm_num, absolute_time_t t)`<br/>&emsp;设置给定定时器实例上指定硬件报警的目标时间。
+- `bool hardware_alarm_set_target (uint alarm_num, absolute_time_t t)`: 设置默认定时器实例上指定硬件报警的目标时间。
+`void timer_hardware_alarm_cancel (timer_hw_t *timer, uint alarm_num)`<br/>&emsp;取消给定定时器实例上指定 hardware_alarm 的现有目标（如有）。
+- `void hardware_alarm_cancel (uint alarm_num)`: 取消默认定时器实例上指定 hardware_alarm 的现有目标（如有）。
+`void timer_hardware_alarm_force_irq (timer_hw_t *timer, uint alarm_num)`<br/>&emsp;强制触发给定定时器实例上指定硬件报警的 IRQ。
+- `void hardware_alarm_force_irq (uint alarm_num)`: 强制触发默认定时器实例上指定硬件报警的 IRQ。
+`static uint timer_hardware_alarm_get_irq_num (timer_hw_t *timer, uint alarm_num)<br/>&emsp;返回给定定时器实例上指定报警的报警中断 irq_num_t`。
+- `static uint hardware_alarm_get_irq_num (uint alarm_num): 返回默认定时器实例上指定报警的报警中断 `irq_num_t`。
+`static uint timer_get_index (timer_hw_t *timer)`<br/>&emsp;返回定时器实例的定时器编号。
+
+`static timer_hw_t * timer_get_instance (uint timer_num)`<br/>&emsp;返回具有给定定时器编号的定时器实例。
+
+### 宏定义文档
+
+#### TIMER_ALARM_IRQ_NUM
+
+`#define TIMER_ALARM_IRQ_NUM(timer, alarm_num)`
+
+返回给定定时器实例上指定报警的报警中断 `irq_num_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### TIMER_ALARM_NUM_FROM_IRQ
+
+`#define TIMER_ALARM_NUM_FROM_IRQ(irq_num)`
+
+从 `irq_num_t` 返回报警编号。使用 TIMER_INSTANCE_NUM_FROM_IRQ 可获取定时器实例编号。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### TIMER_NUM_FROM_IRQ
+
+`#define TIMER_NUM_FROM_IRQ(irq_num)`
+
+从 `irq_num_t` 返回报警编号。使用 TIMER_INSTANCE_NUM_FROM_IRQ 可获取报警编号。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### PICO_DEFAULT_TIMER
+
+`#define PICO_DEFAULT_TIMER 0`
+
+用于不接受显式定时器实例参数的 API 的默认定时器实例编号。在 RP2040 上，由于只有一个定时器实例，必须为 0；在 RP2040 上，可设置为 0 或 1。
+#### PICO_DEFAULT_TIMER_INSTANCE
+
+`#define PICO_DEFAULT_TIMER_INSTANCE()`
+
+根据 PICO_DEFAULT_TIMER 的设置，返回平台上的默认定时器实例。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+
+### 类型定义文档
+
+#### hardware_alarm_callback_t
+
+`typedef void(* hardware_alarm_callback_t) (uint alarm_num)`
+
+硬件报警的回调函数类型。
+
+**参数**
+
+- `alarm_num`: 硬件报警编号
+
+**另请参阅**
+
+`hardware_alarm_set_callback()`
+
+### 函数文档
+
+#### busy_wait_ms
+
+`void busy_wait_ms (uint32_t delay_ms)`
+
+使用默认定时器实例忙等待指定毫秒数。
+
+**参数**
+
+- `delay_ms`: 延迟时间（毫秒）
+
+**另请参阅**
+
+
+#### busy_wait_until
+
+`void busy_wait_until (absolute_time_t t)`
+
+使用默认定时器实例忙等待直到指定时间戳之后。
+
+**参数**
+
+- `t`: 等待直到该绝对时间
+
+**另请参阅**
+
+
+#### busy_wait_us
+
+`void busy_wait_us (uint64_t delay_us)`
+
+使用默认定时器实例忙等待指定（64 位）微秒数。
+
+**参数**
+
+- `delay_us`: 延迟时间（微秒）
+
+**另请参阅**
+
+
+#### busy_wait_us_32
+
+`void busy_wait_us_32 (uint32_t delay_us)`
+
+使用默认定时器实例忙等待指定（32 位）微秒数。
+
+**参数**
+
+- `delay_us`: 延迟时间（微秒）
+
+**另请参阅**
+
+`timer_busy_wait_us_32`
+
+#### hardware_alarm_cancel
+
+`void hardware_alarm_cancel (uint alarm_num)`
+
+取消默认定时器实例上指定 hardware_alarm 的现有目标（如有）。
+
+**参数**
+
+- `alarm_num`: 硬件报警编号
+
+**另请参阅**
+
+
+#### hardware_alarm_claim
+
+`void hardware_alarm_claim (uint alarm_num)`
+
+协作式申请默认定时器实例上指定硬件报警的使用权。
+
+如果硬件报警已被申请，此方法会触发硬断言。
+
+**参数**
+
+- `alarm_num`: 要申请的硬件报警
+
+**另请参阅**
+
+
+
+#### hardware_alarm_claim_unused
+
+`int hardware_alarm_claim_unused (bool required)`
+
+协作式申请默认定时器实例上某个硬件报警的使用权。
+
+此方法尝试申请一个未使用的硬件报警。
+
+**参数**
+
+- `required`: 如果为 true，则在没有可用报警时触发 panic
+
+**返回值**
+
+alarm_num 已申请的硬件报警编号，如果 required 为 false 且无可用报警则返回 -1。
+
+**另请参阅**
+
+
+
+#### hardware_alarm_force_irq
+
+`void hardware_alarm_force_irq (uint alarm_num)`
+
+强制触发默认定时器实例上指定硬件报警的 IRQ。
+
+此方法将强制确保硬件报警的当前报警回调（若存在）在此调用之后从 IRQ 上下文中被调用。如果实际回调恰好同时到期，则该回调可能只被调用一次。
+
+调用此方法不会干扰正常的回调操作。
+
+**参数**
+
+- `alarm_num`: 硬件报警编号
+
+**另请参阅**
+
+
+#### hardware_alarm_get_irq_num
+
+`static uint hardware_alarm_get_irq_num (uint alarm_num) [inline], [static]`
+
+返回默认定时器实例上指定报警的报警中断 `irq_num_t`。
+
+**参数**
+
+- `alarm_num`: 报警编号
+
+#### hardware_alarm_is_claimed
+
+`bool hardware_alarm_is_claimed (uint alarm_num)`
+
+判断默认定时器实例上的硬件报警是否已被申请。
+
+**参数**
+
+- `alarm_num`: 硬件报警编号
+
+**返回值**
+
+如果已被申请则返回 true，否则返回 false。
+
+**另请参阅**
+
+
+
+#### hardware_alarm_set_callback
+
+`void hardware_alarm_set_callback (uint alarm_num, hardware_alarm_callback_t callback)`
+
+为默认定时器实例上的硬件报警启用/禁用回调（在当前核心上）。
+
+此方法为指定硬件报警启用/禁用调用核心上的报警 IRQ，并将指定回调与该报警关联。
+
+此回调将用于通过 hardware_alarm_set_target 设置的超时。
+
+如果 IRQ 处理程序尚未设置，此函数将在当前核心上安装该处理程序。因此，用户有机会从其选择的核心调用此函数。
+
+**参数**
+
+- `alarm_num`: 硬件报警编号
+- `callback`: 要安装的回调，或传 NULL 以取消设置
+
+**另请参阅**
+
+
+`hardware_alarm_set_target()`
+
+#### hardware_alarm_set_target
+
+`bool hardware_alarm_set_target (uint alarm_num, absolute_time_t t)`
+
+设置默认定时器实例上指定硬件报警的目标时间。
+
+这将替换任何现有目标。
+
+**参数**
+
+- `alarm_num`: 硬件报警编号
+- `t`: 目标时间戳
+
+**返回值**
+
+如果目标"已错过"（即目标时间在过去，或在能够设置未来硬件超时之前已发生），则返回 true。
+
+**另请参阅**
+
+
+#### hardware_alarm_unclaim
+
+`void hardware_alarm_unclaim (uint alarm_num)`
+
+协作式释放默认定时器实例上指定硬件报警的使用权。
+
+**参数**
+
+- `alarm_num`: 要释放的硬件报警
+
+**另请参阅**
+
+
+
+#### time_reached
+
+`static bool time_reached (absolute_time_t t) [inline], [static]`
+
+检查默认定时器实例上指定时间戳是否已到达。
+
+**参数**
+
+- `t`: 与当前时间比较的绝对时间
+
+**返回值**
+
+如果当前时间已超过指定时间戳，则返回 true。
+
+**另请参阅**
+
+
+#### time_us_32
+
+`static uint32_t time_us_32 (void) [inline], [static]`
+
+返回默认定时器实例的 32 位微秒时间戳值。
+
+返回硬件定时器的低 32 位。
+
+该值大约每 1 小时 11 分 35 秒回绕一次。
+
+**返回值**
+
+32 位时间戳
+
+**另请参阅**
+
+`timer_time_us_32`
+
+#### time_us_64
+
+`uint64_t time_us_64 (void)`
+
+返回默认定时器实例的当前 64 位微秒时间戳值。
+
+返回硬件定时器的完整 64 位值。`pico_time` 及其他函数依赖于该值从上电起单调递增的特性。因此，该值预期只会向上计数，永不回绕（我们为引入一个潜在的 5851444 年 bug 致歉）。
+
+**返回值**
+
+64 位时间戳
+
+**另请参阅**
+
+`timer_time_us_64`
+
+#### timer_busy_wait_ms
+
+`void timer_busy_wait_ms (timer_hw_t * timer, uint32_t delay_ms)`
+
+使用给定定时器实例忙等待指定毫秒数。
+
+**参数**
+
+- `timer`: 定时器实例
+- `delay_ms`: 延迟时间（毫秒）
+
+**另请参阅**
+
+
+#### timer_busy_wait_until
+
+`void timer_busy_wait_until (timer_hw_t *` timer, absolute_time_t t)`
+
+使用给定定时器实例忙等待直到指定时间戳之后。
+
+**参数**
+
+- `timer`: 定时器实例
+- `t`: 等待直到该绝对时间
+
+**另请参阅**
+
+
+#### timer_busy_wait_us
+
+`void timer_busy_wait_us (timer_hw_t * timer, uint64_t delay_us)`
+
+使用给定定时器实例忙等待指定（64 位）微秒数。
+
+**参数**
+
+- `timer`: 定时器实例
+- `delay_us`: 延迟时间（微秒）
+
+**另请参阅**
+
+
+#### timer_busy_wait_us_32
+
+`void timer_busy_wait_us_32 (timer_hw_t * timer, uint32_t delay_us)`
+
+使用给定定时器实例忙等待指定（32 位）微秒数。
+
+**参数**
+
+- `timer`: 定时器实例
+- `delay_us`: 延迟时间（微秒）
+
+**另请参阅**
+
+`busy_wait_us_32`
+
+使用给定定时器实例忙等待指定（32 位）微秒数。
+
+#### timer_get_index
+
+`static uint timer_get_index (timer_hw_t * timer) [inline], [static]`
+
+返回定时器实例的定时器编号。
+
+**参数**
+
+- `timer`: 定时器实例
+
+**返回值**
+
+定时器编号
+
+**另请参阅**
+
+TIMER_NUM
+
+#### timer_get_instance
+
+`static timer_hw_t * timer_get_instance (uint timer_num) [inline], [static]`
+
+返回具有给定定时器编号的定时器实例。
+
+**参数**
+
+- `timer_num`: 定时器编号
+
+**返回值**
+
+定时器实例
+
+#### timer_hardware_alarm_cancel
+
+`void timer_hardware_alarm_cancel (timer_hw_t * timer, uint alarm_num)`
+
+取消给定定时器实例上指定 hardware_alarm 的现有目标（如有）。
+
+**参数**
+
+- `timer`: 定时器实例
+- `alarm_num`: 硬件报警编号
+
+**另请参阅**
+
+
+#### timer_hardware_alarm_claim
+
+`void timer_hardware_alarm_claim (timer_hw_t * timer, uint alarm_num)`
+
+协作式申请给定定时器实例上指定硬件报警的使用权。
+
+如果硬件报警已被申请，此方法会触发硬断言。
+
+**参数**
+
+- `timer`: 定时器实例
+- `alarm_num`: 要申请的硬件报警
+
+**另请参阅**
+
+
+
+#### timer_hardware_alarm_claim_unused
+
+`int timer_hardware_alarm_claim_unused (timer_hw_t * timer, bool required)`
+
+协作式申请给定定时器实例上某个硬件报警的使用权。
+
+此方法尝试申请一个未使用的硬件报警。
+
+**参数**
+
+- `timer`: 定时器实例
+- `required`: 如果为 true，则在没有可用报警时触发 panic
+
+**返回值**
+
+alarm_num 已申请的硬件报警编号，如果 required 为 false 且无可用报警则返回 -1。
+
+**另请参阅**
+
+
+
+#### timer_hardware_alarm_force_irq
+
+`void timer_hardware_alarm_force_irq (timer_hw_t * timer, uint alarm_num)`
+
+强制触发给定定时器实例上指定硬件报警的 IRQ。
+
+此方法将强制确保硬件报警的当前报警回调（若存在）在此调用之后从 IRQ 上下文中被调用。如果实际回调恰好同时到期，则该回调可能只被调用一次。
+
+调用此方法不会干扰正常的回调操作。
+
+**参数**
+
+- `timer`: 定时器实例
+- `alarm_num`: 硬件报警编号
+
+**另请参阅**
+
+
+#### timer_hardware_alarm_get_irq_num
+
+`static uint timer_hardware_alarm_get_irq_num (timer_hw_t * timer, uint alarm_num) [inline], [static]`
+
+返回给定定时器实例上指定报警的报警中断 `irq_num_t`。
+
+**参数**
+
+- `timer`: 定时器实例
+- `alarm_num`: 报警编号
+
+**另请参阅**
+
+[TIMER_ALARM_IRQ_NUM]
+
+#### timer_hardware_alarm_is_claimed
+
+`bool timer_hardware_alarm_is_claimed (timer_hw_t * timer, uint alarm_num)`
+
+判断给定定时器实例上的硬件报警是否已被申请。
+
+**参数**
+
+- `timer`: 定时器实例
+- `alarm_num`: 硬件报警编号
+
+**返回值**
+
+如果已被申请则返回 true，否则返回 false。
+
+**另请参阅**
+
+
+
+#### timer_hardware_alarm_set_callback
+
+`void timer_hardware_alarm_set_callback (timer_hw_t *` timer, uint alarm_num, hardware_alarm_callback_t callback)`
+
+为给定定时器实例上的硬件报警启用/禁用回调（在当前核心上）。
+
+此方法为指定硬件报警启用/禁用调用核心上的报警 IRQ，并将指定回调与该报警关联。
+
+此回调将用于通过 hardware_alarm_set_target 设置的超时。
+
+如果 IRQ 处理程序尚未设置，此函数将在当前核心上安装该处理程序。因此，用户有机会从其选择的核心调用此函数。
+
+**参数**
+
+- `timer`: 定时器实例
+- `alarm_num`: 硬件报警编号
+- `callback`: 要安装的回调，或传 NULL 以取消设置
+
+**另请参阅**
+
+
+`timer_hardware_alarm_set_target()`
+
+#### timer_hardware_alarm_set_target
+
+`bool timer_hardware_alarm_set_target (timer_hw_t *` timer, uint alarm_num, absolute_time_t t)`
+
+设置给定定时器实例上指定硬件报警的目标时间。
+
+这将替换任何现有目标。
+
+**参数**
+
+- `timer`: 定时器实例
+- `alarm_num`: 硬件报警编号
+- `t`: 目标时间戳
+
+**返回值**
+
+如果目标"已错过"（即目标时间在过去，或在能够设置未来硬件超时之前已发生），则返回 true。
+
+**另请参阅**
+
+
+#### timer_hardware_alarm_unclaim
+
+`void timer_hardware_alarm_unclaim (timer_hw_t * timer, uint alarm_num)`
+
+协作式释放给定定时器实例上指定硬件报警的使用权。
+
+**参数**
+
+- `timer`: 定时器实例
+- `alarm_num`: 要释放的硬件报警
+
+**另请参阅**
+
+
+
+#### timer_time_reached
+
+`static bool timer_time_reached (timer_hw_t *` timer, absolute_time_t t) [inline], [static]`
+
+检查给定定时器实例上指定时间戳是否已到达。
+
+**参数**
+
+- `timer`: 定时器实例
+- `t`: 与当前时间比较的绝对时间
+
+**返回值**
+
+如果当前时间已超过指定时间戳，则返回 true。
+
+**另请参阅**
+
+
+#### timer_time_us_32
+
+`static uint32_t timer_time_us_32 (timer_hw_t * timer) [inline], [static]`
+
+返回给定定时器实例的 32 位微秒时间戳值。
+
+返回硬件定时器的低 32 位。
+
+该值大约每 1 小时 11 分 35 秒回绕一次。
+
+**参数**
+
+- `timer`: 定时器实例
+
+**返回值**
+
+32 位时间戳
+
+**另请参阅**
+
+`time_us_32`
+
+#### timer_time_us_64
+
+`uint64_t timer_time_us_64 (timer_hw_t * timer)`
+
+返回给定定时器实例的当前 64 位微秒时间戳值。
+
+返回硬件定时器的完整 64 位值。`pico_time` 及其他函数依赖于该值从上电起单调递增的特性。因此，该值预期只会向上计数，永不回绕（我们为引入一个潜在的 5851444 年 bug 致歉）。
+
+**参数**
+
+- `timer`: 定时器实例
+
+**返回值**
+
+64 位时间戳
+
+**另请参阅**
+
+`time_us_64`
+
+返回给定定时器实例的当前 64 位微秒时间戳值。
+
+<Normal />

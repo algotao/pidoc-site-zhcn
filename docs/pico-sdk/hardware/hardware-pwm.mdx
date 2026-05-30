@@ -1,0 +1,685 @@
+---
+sidebar_position: 18
+draft: false
+description: 硬件脉冲宽度调制（PWM）API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK pwm, PWM]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件脉冲宽度调制（PWM）API。
+
+### 详细描述
+
+RP2040 的 PWM 块有 8 个相同的片，RP2350 有 12 个。每个片可以驱动两个 PWM 输出信号，或测量输入信号的频率或占空比。这总共提供了多达 16/24 个可控的 PWM 输出。所有 30 个 GPIO 均可由 PWM 块驱动。
+
+PWM 硬件的工作原理是将输入值与一个自由运行的计数器持续比较。这会产生一个切换输出，其中处于高电平的时间比例与输入值成正比。信号处于高电平的时间分数称为信号的占空比。
+
+PWM 片的默认行为是向上计数直到达到回绕值（`pwm_config_set_wrap），然后立即回绕到 0。PWM 片还提供相位校正模式，在此模式下，计数器达到 TOP 后开始向下计数，直到再次达到 0。
+
+**示例**
+
+// hello_pwm.c
+```c
+// Output PWM signals on pins 0 and 1
+
+#include "pico/stdlib.h"
+#include "hardware/pwm.h"
+
+int main() {
+
+    // Tell GPIO 0 and 1 they are allocated to the PWM
+    gpio_set_function(0, GPIO_FUNC_PWM);
+    gpio_set_function(1, GPIO_FUNC_PWM);
+
+    // Find out which PWM slice is connected to GPIO 0 (it's slice 0)
+    uint slice_num = pwm_gpio_to_slice_num(0);
+
+    // Set period of 4 cycles (0 to 3 inclusive)
+    pwm_set_wrap(slice_num, 3);
+    // Set channel A output high for one cycle before dropping
+    pwm_set_chan_level(slice_num, PWM_CHAN_A, 1);
+    // Set initial B output high for three cycles before dropping
+    pwm_set_chan_level(slice_num, PWM_CHAN_B, 3);
+    // Set the PWM running
+    pwm_set_enabled(slice_num, true);
+
+    // Note we could also use pwm_set_gpio_level(gpio, x) which looks up the
+    // correct slice and channel for a given GPIO.
+}
+```
+
+### 宏
+
+* `#define [PWM_DREQ_NUM](slice_num)`
+* `#define [PWM_GPIO_SLICE_NUM](gpio)`
+* `#define [PWM_DEFAULT_IRQ_NUM]()`
+
+### 枚举
+
+- `enum pwm_clkdiv_mode { [PWM_DIV_FREE_RUNNING] = 0, [PWM_DIV_B_HIGH] = 1, [PWM_DIV_B_RISING] = 2, [PWM_DIV_B_FALLING] = 3 }`: PWM 分频器模式设置。
+
+### 函数
+
+- `static uint pwm_gpio_to_slice_num (uint gpio)`: 确定连接到指定 GPIO 的 PWM 片。
+- `static uint pwm_gpio_to_channel (uint gpio)`: 确定连接到指定 GPIO 的 PWM 通道。
+`static void pwm_config_set_phase_correct (pwm_config *c, bool phase_correct)`<br/>&emsp;在 PWM 配置中设置相位校正。
+
+`static void pwm_config_set_clkdiv (pwm_config *c, float div)`<br/>&emsp;在 PWM 配置中设置 PWM 时钟分频器。
+
+`static void pwm_config_set_clkdiv_int_frac4 (pwm_config *c, uint32_t div_int, uint8_t div_frac4)`<br/>&emsp;使用 8:4 分数值在 PWM 配置中设置 PWM 时钟分频器。
+
+`static void pwm_config_set_clkdiv_int (pwm_config *c, uint32_t div_int)`<br/>&emsp;在 PWM 配置中设置 PWM 时钟分频器。
+
+`static void pwm_config_set_clkdiv_mode (pwm_config *c, enum pwm_clkdiv_mode mode)`<br/>&emsp;在 PWM 配置中设置 PWM 计数模式。
+
+`static void pwm_config_set_output_polarity (pwm_config *c, bool a, bool b)`<br/>&emsp;在 PWM 配置中设置输出极性。
+
+`static void pwm_config_set_wrap (pwm_config *c, uint16_t wrap)`<br/>&emsp;在 PWM 配置中设置 PWM 计数器回绕值。
+
+`static void pwm_init (uint slice_num, pwm_config *c, bool start)`<br/>&emsp;使用配置对象中的设置初始化 PWM。
+- `static pwm_config pwm_get_default_config` (void)`: 获取一组 PWM 配置默认值。
+- `static void pwm_set_wrap (uint slice_num, uint16_t wrap)`: 设置当前 PWM 计数器回绕值。
+- `static void pwm_set_chan_level (uint slice_num, uint chan, uint16_t level)`: 设置一个通道的当前 PWM 计数器比较值。
+- `static void pwm_set_both_levels (uint slice_num, uint16_t level_a, uint16_t level_b)`: 设置 PWM 计数器比较值。
+- `static void pwm_set_gpio_level (uint gpio, uint16_t level)`: 辅助函数，用于设置与 GPIO 关联的片和通道的 PWM 电平。
+- `static uint16_t pwm_get_counter (uint slice_num)`: 获取 PWM 计数器。
+- `static void pwm_set_counter (uint slice_num, uint16_t c)`: 设置 PWM 计数器。
+- `static void pwm_advance_count (uint slice_num)`: 推进 PWM 计数。
+- `static void pwm_retard_count (uint slice_num)`: 延迟 PWM 计数。
+- `static void pwm_set_clkdiv_int_frac4 (uint slice_num, uint8_t div_int, uint8_t div_frac4)`: 使用 8:4 分数值设置 PWM 时钟分频器。
+- `static void pwm_set_clkdiv (uint slice_num, float divider)`: 设置 PWM 时钟分频器。
+- `static void pwm_set_output_polarity (uint slice_num, bool a, bool b)`: 设置 PWM 输出极性。
+- `static void pwm_set_clkdiv_mode (uint slice_num, enum pwm_clkdiv_mode mode)`: 设置 PWM 分频器模式。
+- `static void pwm_set_phase_correct (uint slice_num, bool phase_correct)`: 开启/关闭 PWM 相位校正。
+- `static void pwm_set_enabled (uint slice_num, bool enabled)`: 启用/禁用 PWM。
+- `static void pwm_set_mask_enabled (uint32_t mask)`: 同时启用/禁用多个 PWM 片。
+- `static void pwm_set_irq_enabled (uint slice_num, bool enabled)`: 通过默认 PWM IRQ（RP2350 上为 PWM_IRQ_WRAP_0）启用 PWM 实例中断
+- `static void pwm_set_irq0_enabled (uint slice_num, bool enabled)`: 通过 PWM_IRQ_WRAP_0 启用 PWM 实例中断。
+- `static void pwm_irqn_set_slice_enabled (uint irq_index, uint slice_num, bool enabled)`: 通过 PWM_IRQ_WRAP_0 或 PWM_IRQ_WRAP_1 启用 PWM 实例中断。
+- `static void pwm_set_irq_mask_enabled (uint32_t slice_mask, bool enabled)`: 通过默认 PWM IRQ（RP2350 上为 PWM_IRQ_WRAP_0）启用多个 PWM 实例中断
+- `static void pwm_set_irq0_mask_enabled (uint32_t slice_mask, bool enabled)`: 通过 PWM_IRQ_WRAP_0 启用多个 PWM 实例中断。
+- `static void pwm_irqn_set_slice_mask_enabled (uint irq_index, uint slice_mask, bool enabled)`: 通过 PWM_IRQ_WRAP_0 或 PWM_IRQ_WRAP_1 启用 PWM 实例中断。
+- `static void pwm_clear_irq (uint slice_num)`: 清除单个 PWM 通道中断。
+- `static uint32_t pwm_get_irq_status_mask (void)`: 获取 PWM 中断状态，默认 PWM IRQ（RP2350 上为 PWM_IRQ_WRAP_0）的原始状态
+- `static uint32_t pwm_get_irq0_status_mask (void)`: 获取 PWM_IRQ_WRAP_0 的 PWM 中断原始状态。
+- `static uint32_t pwm_irqn_get_status_mask (uint irq_index)`: 获取 PWM_IRQ_WRAP_0 或 PWM_IRQ_WRAP_1 的 PWM 中断原始状态。
+- `static void pwm_force_irq (uint slice_num)`: 强制触发默认 PWM IRQ（RP2350 上为 PWM_IRQ_WRAP_0）的 PWM 中断
+- `static void pwm_force_irq0 (uint slice_num)`: 通过 PWM_IRQ_WRAP_0 强制触发 PWM 中断。
+- `static void pwm_irqn_force (uint irq_index, uint slice_num)`: 通过 PWM_IRQ_WRAP_0 或 PWM_IRQ_WRAP_1 强制触发 PWM 中断。
+- `static uint pwm_get_dreq (uint slice_num)`: 返回用于调节特定 PWM 片传输速率的 DREQ。
+
+### 宏定义文档
+
+#### PWM_DREQ_NUM
+
+`#define PWM_DREQ_NUM(slice_num)`
+
+返回用于调节给定 PWM 片 DMA 传输速率的 `dreq_num_t`。
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+#### PWM_GPIO_SLICE_NUM
+
+`#define PWM_GPIO_SLICE_NUM(gpio)`
+
+返回给定 GPIO 编号的 PWM 片编号。
+#### PWM_DEFAULT_IRQ_NUM
+
+`#define PWM_DEFAULT_IRQ_NUM()`
+
+返回默认 PWM IRQ 的 `irq_num_t`。
+
+在 RP2040 上，只有一个 PWM irq：PWM_IRQ_WRAP
+
+在 RP2350 上，此宏返回 PWM_IRQ_WRAP0
+
+注意：此宏旨在在编译时解析，不进行参数检查。
+
+### 枚举类型文档
+
+#### pwm_clkdiv_mode
+
+`enum pwm_clkdiv_mode`
+
+PWM 分频器模式设置。
+
+| 枚举值 | 说明 |
+| --- | --- |
+| PWM_DIV_FREE_RUNNING | 以分数分频器规定的速率自由运行计数。 |
+| PWM_DIV_B_HIGH | 分数分频器由 PWM B 引脚控制（高电平门控）。 |
+| PWM_DIV_B_RISING | 分数分频器在 PWM B 引脚每个上升沿推进一次。 |
+| PWM_DIV_B_FALLING | 分数分频器在 PWM B 引脚每个下降沿推进一次。 |
+
+### 函数文档
+
+#### pwm_advance_count
+
+`static void pwm_advance_count (uint slice_num) [inline], [static]`
+
+推进 PWM 计数。
+
+将正在运行的计数器的相位推进 1 个计数。
+
+此函数将在增量完成后返回。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+
+#### pwm_clear_irq
+
+`static void pwm_clear_irq (uint slice_num) [inline], [static]`
+
+清除单个 PWM 通道中断。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+
+#### pwm_config_set_clkdiv
+
+`static void pwm_config_set_clkdiv (pwm_config * c, float div) [inline], [static]`
+
+在 PWM 配置中设置 PWM 时钟分频器。
+
+**参数**
+
+- `c`: 要修改的 PWM 配置结构体
+- `div`: 计数速率除以的值。必须大于或等于 1。
+
+若分频模式为自由运行，PWM 计数器以 clk_sys / div 的速率运行。否则，分频器在将事件传递给 PWM 计数器之前，降低 B 引脚输入上看到的事件速率（电平或边沿）。
+
+#### pwm_config_set_clkdiv_int
+
+`static void pwm_config_set_clkdiv_int (pwm_config * c, uint32_t div_int) [inline], [static]`
+
+在 PWM 配置中设置 PWM 时钟分频器。
+
+**参数**
+
+- `c`: 要修改的 PWM 配置结构体
+- `div_int`: 整数值，用于降低计数速率。必须大于或等于 1 且小于 256。
+
+若分频模式为自由运行，PWM 计数器以 clk_sys / div 的速率运行。否则，分频器在将事件传递给 PWM 计数器之前，降低 B 引脚输入上看到的事件速率（电平或边沿）。
+
+#### pwm_config_set_clkdiv_int_frac4
+
+`static void pwm_config_set_clkdiv_int_frac4 (pwm_config * c, uint32_t div_int, uint8_t div_frac4) [inline], [static]`
+
+使用 8:4 分数值在 PWM 配置中设置 PWM 时钟分频器。
+
+**参数**
+
+- `c`: 要修改的 PWM 配置结构体
+- `div_int`: 时钟分频器的 8 位整数部分。必须大于或等于 1。
+- `div_frac4`: 时钟分频器的 4 位小数部分
+
+若分频模式为自由运行，PWM 计数器以 clk_sys / div 的速率运行。否则，分频器在将事件传递给 PWM 计数器之前，降低 B 引脚输入上看到的事件速率（电平或边沿）。
+
+#### pwm_config_set_clkdiv_mode
+
+`static void pwm_config_set_clkdiv_mode (pwm_config *` c, enum pwm_clkdiv_mode mode) [inline], [static]`
+
+在 PWM 配置中设置 PWM 计数模式。
+
+**参数**
+
+- `c`: 要修改的 PWM 配置结构体
+- `mode`: PWM 分频/计数模式
+
+配置哪个事件触发分数分频器的操作。默认为始终开启（自由运行 PWM）。也可配置为在 B 引脚输入的高电平、上升沿或下降沿时计数。
+
+#### pwm_config_set_output_polarity
+
+`static void pwm_config_set_output_polarity (pwm_config * c, bool a, bool b) [inline], [static]`
+
+在 PWM 配置中设置输出极性。
+
+**参数**
+
+- `c`: 要修改的 PWM 配置结构体
+- `a`: true 反转输出 A
+- `b`: true 反转输出 B
+
+#### pwm_config_set_phase_correct
+
+`static void pwm_config_set_phase_correct (pwm_config * c, bool phase_correct) [inline], [static]`
+
+在 PWM 配置中设置相位校正。
+
+**参数**
+
+- `c`: 要修改的 PWM 配置结构体
+- `phase_correct`: true 设置相位校正调制，false 设置后沿
+
+将相位控制设置为 true 意味着当达到回绕点时，PWM 不会回绕到零，而是开始向下计数。启用相位校正模式时，输出频率减半。
+
+#### pwm_config_set_wrap
+
+`static void pwm_config_set_wrap (pwm_config * c, uint16_t wrap) [inline], [static]`
+
+在 PWM 配置中设置 PWM 计数器回绕值。
+
+设置计数器在返回到 0 之前将达到的最高值。也称为 TOP。
+
+**参数**
+
+- `c`: 要修改的 PWM 配置结构体
+- `wrap`: 要设置的回绕值
+
+#### pwm_force_irq
+
+`static void pwm_force_irq (uint slice_num) [inline], [static]`
+
+强制触发默认 PWM IRQ（RP2350 上为 PWM_IRQ_WRAP_0）的 PWM 中断
+
+**参数**
+
+- `slice_num`: PWM 片编号
+
+#### pwm_force_irq0
+
+`static void pwm_force_irq0 (uint slice_num) [inline], [static]`
+
+通过 PWM_IRQ_WRAP_0 强制触发 PWM 中断。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+
+#### pwm_get_counter
+
+`static uint16_t pwm_get_counter (uint slice_num) [inline], [static]`
+
+获取 PWM 计数器。
+
+获取 PWM 计数器的当前值。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+
+**返回**
+
+PWM 计数器的当前值
+
+#### pwm_get_default_config
+
+`static pwm_config pwm_get_default_config (void) [inline], [static]`
+
+获取一组 PWM 配置默认值。
+
+PWM 配置为以系统时钟速度自由运行，无相位校正，在 0xffff 处回绕，通道 A 和 B 的标准极性。
+
+**返回**
+
+一组默认值。
+
+#### pwm_get_dreq
+
+`static uint pwm_get_dreq (uint slice_num) [inline], [static]`
+
+返回用于调节特定 PWM 片传输速率的 DREQ。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+
+#### pwm_get_irq0_status_mask
+
+`static uint32_t pwm_get_irq0_status_mask (void) [inline], [static]`
+
+获取 PWM_IRQ_WRAP_0 的 PWM 中断原始状态。
+
+**返回**
+
+当前设置的所有 PWM 中断的位掩码
+
+#### pwm_get_irq_status_mask
+
+`static uint32_t pwm_get_irq_status_mask (void) [inline], [static]`
+
+获取 PWM 中断状态，默认 PWM IRQ（RP2350 上为 PWM_IRQ_WRAP_0）的原始状态
+
+**返回**
+
+当前设置的所有 PWM 中断的位掩码
+
+#### pwm_gpio_to_channel
+
+`static uint pwm_gpio_to_channel (uint gpio) [inline], [static]`
+
+确定连接到指定 GPIO 的 PWM 通道。
+
+每个片 0 到 7 有两个通道，A 和 B。
+
+**返回**
+
+控制指定 GPIO 的 PWM 通道。
+
+#### pwm_gpio_to_slice_num
+
+`static uint pwm_gpio_to_slice_num (uint gpio) [inline], [static]`
+
+确定连接到指定 GPIO 的 PWM 片。
+
+**返回**
+
+控制指定 GPIO 的 PWM 片编号。
+
+#### pwm_init
+
+`static void pwm_init (uint slice_num, pwm_config * c, bool start) [inline], [static]`
+
+使用配置对象中的设置初始化 PWM。
+
+使用 `pwm_get_default_config() 函数初始化配置结构体，根据需要使用 pwm_config_*` 函数进行更改，然后调用此函数设置 PWM。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `c`: 要使用的配置
+- `start: 若为 true，配置完成后 PWM 将立即开始运行。若为 false，则需要使用 pwm_set_enabled() 或 `pwm_set_mask_enabled()` 手动启动
+
+#### pwm_irqn_force
+
+`static void pwm_irqn_force (uint irq_index, uint slice_num) [inline], [static]`
+
+通过 PWM_IRQ_WRAP_0 或 PWM_IRQ_WRAP_1 强制触发 PWM 中断。
+
+**参数**
+
+- `irq_index`: IRQ 索引；0 对应 PWM_IRQ_WRAP_0，1 对应 PWM_IRQ_WRAP_1
+- `slice_num`: PWM 片编号
+
+#### pwm_irqn_get_status_mask
+
+`static uint32_t pwm_irqn_get_status_mask (uint irq_index) [inline], [static]`
+
+获取 PWM_IRQ_WRAP_0 或 PWM_IRQ_WRAP_1 的 PWM 中断原始状态。
+
+**参数**
+
+- `irq_index`: IRQ 索引；0 对应 PWM_IRQ_WRAP_0，1 对应 PWM_IRQ_WRAP_1
+
+**返回**
+
+当前设置的所有 PWM 中断的位掩码
+
+#### pwm_irqn_set_slice_enabled
+
+`static void pwm_irqn_set_slice_enabled (uint irq_index, uint slice_num, bool enabled) [inline], [static]`
+
+通过 PWM_IRQ_WRAP_0 或 PWM_IRQ_WRAP_1 启用 PWM 实例中断。
+
+用于启用单个 PWM 实例中断。
+
+注意：RP2040 上只有一个 PWM_IRQ_WRAP。
+
+**参数**
+
+- `irq_index`: IRQ 索引；0 对应 PWM_IRQ_WRAP_0，1 对应 PWM_IRQ_WRAP_1
+- `slice_num`: 要启用/禁用的 PWM 块
+- `enabled`: true 启用，false 禁用
+
+#### pwm_irqn_set_slice_mask_enabled
+
+`static void pwm_irqn_set_slice_mask_enabled (uint irq_index, uint slice_mask, bool enabled) [inline], [static]`
+
+通过 PWM_IRQ_WRAP_0 或 PWM_IRQ_WRAP_1 启用 PWM 实例中断。
+
+用于启用单个 PWM 实例中断。
+
+注意：RP2040 上只有一个 PWM_IRQ_WRAP。
+
+**参数**
+
+- `irq_index`: IRQ 索引；0 对应 PWM_IRQ_WRAP_0，1 对应 PWM_IRQ_WRAP_1
+- `slice_mask`: 要启用/禁用的所有块的位掩码。通道 0 = 位 0，通道 1 = 位 1，以此类推。
+- `enabled`: true 启用，false 禁用
+
+#### pwm_retard_count
+
+`static void pwm_retard_count (uint slice_num) [inline], [static]`
+
+延迟 PWM 计数。
+
+将正在运行的计数器的相位延迟 1 个计数。
+
+此函数将在延迟完成后返回。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+
+#### pwm_set_both_levels
+
+`static void pwm_set_both_levels (uint slice_num, uint16_t level_a, uint16_t level_b) [inline], [static]`
+
+设置 PWM 计数器比较值。
+
+设置 PWM 计数器比较值 A 和 B。
+
+计数器比较寄存器在硬件中是双缓冲的。这意味着，当 PWM 运行时，对计数器比较值的写入不会立即生效，而是在下次 PWM 片回绕时（或在相位校正模式下，下次片达到 0 时）生效。如果 PWM 未运行，写入会立即锁存。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `level_a`: 要设置的比较 A 值。当计数器达到此值时，A 输出取消断言
+- `level_b`: 要设置的比较 B 值。当计数器达到此值时，B 输出取消断言
+
+#### pwm_set_chan_level
+
+`static void pwm_set_chan_level (uint slice_num, uint chan, uint16_t level) [inline], [static]`
+
+设置一个通道的当前 PWM 计数器比较值。
+
+设置通道 A 或通道 B 的 PWM 计数器比较值。
+
+计数器比较寄存器在硬件中是双缓冲的。这意味着，当 PWM 运行时，对计数器比较值的写入不会立即生效，而是在下次 PWM 片回绕时（或在相位校正模式下，下次片达到 0 时）生效。如果 PWM 未运行，写入会立即锁存。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `chan`: 要更新的通道。0 为 A，1 为 B。
+- `level`: 所选输出的新电平
+
+#### pwm_set_clkdiv
+
+`static void pwm_set_clkdiv (uint slice_num, float divider) [inline], [static]`
+
+设置 PWM 时钟分频器。
+
+设置时钟分频器。计数器增量将在系统时钟除以此值时发生，同时考虑门控。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `divider`: 浮点时钟分频器，1.f &lt;= 值 &lt; 256.f
+
+#### pwm_set_clkdiv_int_frac4
+
+`static void pwm_set_clkdiv_int_frac4 (uint slice_num, uint8_t div_int, uint8_t div_frac4) [inline], [static]`
+
+使用 8:4 分数值设置 PWM 时钟分频器。
+
+设置时钟分频器。计数器增量将在系统时钟除以此值时发生，同时考虑门控。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `div_int`: 时钟分频器的 8 位整数部分
+- `div_frac4`: 时钟分频器的 4 位小数部分
+
+#### pwm_set_clkdiv_mode
+
+`static void pwm_set_clkdiv_mode (uint slice_num, enum pwm_clkdiv_mode mode) [inline], [static]`
+
+设置 PWM 分频器模式。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `mode`: 所需的分频器模式
+
+#### pwm_set_counter
+
+`static void pwm_set_counter (uint slice_num, uint16_t c) [inline], [static]`
+
+设置 PWM 计数器。
+
+设置 PWM 计数器的值。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `c`: 要设置的 PWM 计数器值
+
+#### pwm_set_enabled
+
+`static void pwm_set_enabled (uint slice_num, bool enabled) [inline], [static]`
+
+启用/禁用 PWM。
+
+当 PWM 被禁用时，其计数器停止，输出引脚保持在计数器停止时的高或低状态。重新启用后，PWM 立即从停止处恢复。
+
+若需要 PWM 的输出引脚在停止时为低电平：
+
+* 可在 PWM 启用时将计数器比较设置为零，然后在两个引脚均为低电平时禁用 PWM
+
+* 可使用 GPIO 输出覆盖强制实际引脚为低电平
+
+* 可以使用 TOP 为 0、计数为 0 且计数器比较为 0 运行 PWM 一个周期（即启用后立即禁用），以在 PWM 已停止时强制引脚为低电平。也可使用计数器比较值为 1 的相同方法强制引脚为高电平。
+
+注意，禁用时，仍可通过脉冲其 CSR 中的 PH_ADV 位每次推进 PWM 一个计数。输出引脚的转变就好像 PWM 被启用一样。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `enabled`: true 启用指定的 PWM，false 禁用。
+
+#### pwm_set_gpio_level
+
+`static void pwm_set_gpio_level (uint gpio, uint16_t level) [inline], [static]`
+
+辅助函数，用于设置与 GPIO 关联的片和通道的 PWM 电平。
+
+查找给定 GPIO 的正确片（0 到 7）和通道（A 或 B），并更新相应的计数器比较字段。
+
+此 PWM 片应已配置并运行。还需注意多个 GPIO 映射到同一片和通道的情况（如果 GPIO 相差 16）。
+
+计数器比较寄存器在硬件中是双缓冲的。这意味着，当 PWM 运行时，对计数器比较值的写入不会立即生效，而是在下次 PWM 片回绕时（或在相位校正模式下，下次片达到 0 时）生效。如果 PWM 未运行，写入会立即锁存。
+
+**参数**
+
+- `gpio`: 要设置电平的 GPIO
+- `level`: 此 GPIO 的 PWM 电平
+
+#### pwm_set_irq0_enabled
+
+`static void pwm_set_irq0_enabled (uint slice_num, bool enabled) [inline], [static]`
+
+通过 PWM_IRQ_WRAP_0 启用 PWM 实例中断。
+
+用于启用单个 PWM 实例中断。
+
+**参数**
+
+- `slice_num`: 要启用/禁用的 PWM 块
+- `enabled`: true 启用，false 禁用
+
+#### pwm_set_irq0_mask_enabled
+
+`static void pwm_set_irq0_mask_enabled (uint32_t slice_mask, bool enabled) [inline], [static]`
+
+通过 PWM_IRQ_WRAP_0 启用多个 PWM 实例中断。
+
+使用此方法可同时启用多个 PWM 中断。
+
+**参数**
+
+- `slice_mask`: 要启用/禁用的所有块的位掩码。通道 0 = 位 0，通道 1 = 位 1，以此类推。
+- `enabled`: true 启用，false 禁用
+
+#### pwm_set_irq_enabled
+
+`static void pwm_set_irq_enabled (uint slice_num, bool enabled) [inline], [static]`
+
+通过默认 PWM IRQ（RP2350 上为 PWM_IRQ_WRAP_0）启用 PWM 实例中断
+
+用于启用单个 PWM 实例中断。
+
+注意：RP2040 上只有一个 PWM_IRQ_WRAP。
+
+**参数**
+
+- `slice_num`: 要启用/禁用的 PWM 块
+- `enabled`: true 启用，false 禁用
+
+#### pwm_set_irq_mask_enabled
+
+`static void pwm_set_irq_mask_enabled (uint32_t slice_mask, bool enabled) [inline], [static]`
+
+通过默认 PWM IRQ（RP2350 上为 PWM_IRQ_WRAP_0）启用多个 PWM 实例中断
+
+使用此方法可同时启用多个 PWM 中断。
+
+注意：RP2040 上只有一个 PWM_IRQ_WRAP。
+
+**参数**
+
+- `slice_mask`: 要启用/禁用的所有块的位掩码。通道 0 = 位 0，通道 1 = 位 1，以此类推。
+- `enabled`: true 启用，false 禁用
+
+#### pwm_set_mask_enabled
+
+`static void pwm_set_mask_enabled (uint32_t mask) [inline], [static]`
+
+同时启用/禁用多个 PWM 片。
+
+**参数**
+
+- `mask`: 要启用/禁用的 PWM 的位图。位 0 到 7 分别启用片 0-7。
+
+#### pwm_set_output_polarity
+
+`static void pwm_set_output_polarity (uint slice_num, bool a, bool b) [inline], [static]`
+
+设置 PWM 输出极性。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `a`: true 反转输出 A
+- `b`: true 反转输出 B
+
+#### pwm_set_phase_correct
+
+`static void pwm_set_phase_correct (uint slice_num, bool phase_correct) [inline], [static]`
+
+开启/关闭 PWM 相位校正。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `phase_correct`: true 设置相位校正调制，false 设置后沿
+
+将相位控制设置为 true 意味着当达到回绕点时，PWM 不会回绕到零，而是开始向下计数。启用相位校正模式时，输出频率减半。
+
+#### pwm_set_wrap
+
+`static void pwm_set_wrap (uint slice_num, uint16_t wrap) [inline], [static]`
+
+设置当前 PWM 计数器回绕值。
+
+设置计数器在返回到 0 之前将达到的最高值。也称为 TOP。
+
+计数器回绕值在硬件中是双缓冲的。这意味着，当 PWM 运行时，对计数器回绕值的写入不会立即生效，而是在下次 PWM 片回绕之后（或在相位校正模式下，下次片达到 0 时）生效。如果 PWM 未运行，写入会立即锁存。
+
+**参数**
+
+- `slice_num`: PWM 片编号
+- `wrap`: 要设置的回绕值
+
+<Normal />

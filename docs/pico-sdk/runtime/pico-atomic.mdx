@@ -1,0 +1,19 @@
+---
+sidebar_position: 2
+draft: false
+description: C11 原子操作的辅助实现。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK atomic]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+C11 原子操作的辅助实现。
+
+### 详细描述
+
+在 RP2040 上，由于没有 C 库支持，所有原子操作均使用自旋锁进行保护。
+
+在 RP2350 上，C 库为所有 1 字节、2 字节和 4 字节原子操作提供了使用处理器独占指令的实现。此库为任意大小的原子操作（包括 64 位）提供了自旋锁保护版本。
+
+<Normal />

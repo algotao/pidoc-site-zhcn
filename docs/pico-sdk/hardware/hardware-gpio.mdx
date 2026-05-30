@@ -1,0 +1,68 @@
+---
+sidebar_position: 10
+draft: false
+description: 通用输入/输出（GPIO）API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK gpio, GPIO]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+通用输入/输出（GPIO）API。
+
+### 详细描述
+
+RP 系列微控制器有两组通用输入/输出（GPIO）引脚，分配如下：
+
+RP2040 在 bank 0 中有 30 个用户 GPIO 引脚，在 QSPI bank 1 中有 6 个 QSPI 引脚（QSPI_SS、QSPI_SCLK 和 QSPI_SD0 至 QSPI_SD3）。QSPI 引脚用于从外部 flash 设备执行代码，因此用户 bank（GPIO0 到 GPIO29）供程序员使用。
+
+可用 GPIO 引脚的数量取决于封装。QFN-60 封装（RP2350A）的 bank 0 中有 30 个用户 GPIO，QFN-80 封装中有 48 个用户 GPIO。Bank 1 包含 6 个 QSPI 引脚和 USB DP/DM 引脚。
+
+所有 GPIO 都支持数字输入和输出，但其中部分还可用作芯片模数转换器（ADC）的输入。GPIO 引脚到 ADC 的分配取决于封装。
+
+RP2040 和 RP2350 QFN-60 的 GPIO ADC 引脚为 26-29。RP2350 QFN-80 的 ADC 引脚为 40-47。
+
+每个 GPIO 可由运行在处理器上的软件直接控制，也可由多个其他功能块控制。
+
+分配给每个 GPIO 的功能通过调用 `gpio_set_function` 函数来选择。
+
+并非所有功能都在所有引脚上可用。
+
+每个 GPIO 一次只能选择一个功能。同样，每个外设输入（例如 UART0 RX）一次只应在一个 *GPIO* 上选择。如果同一外设输入连接到多个 GPIO，外设将看到这些 GPIO 输入的逻辑 OR 值。有关 GPIO 功能选择的更多信息，请参阅数据手册。
+
+**功能选择表**
+
+在 RP2040 上，功能选择为：
+
+| GPIO | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | SPI0 RX | UART0 TX | I2C0 SDA | PWM0 A | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
+| 1 | SPI0 CSn | UART0 RX | I2C0 SCL | PWM0 B | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 2 | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM1 A | SIO | PIO0 | PIO1 | USB VBUS EN |  |
+| 3 | SPI0 TX | UART0 RTS | I2C1 SCL | PWM1 B | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
+| 4 | SPI0 RX | UART1 TX | I2C0 SDA | PWM2 A | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 5 | SPI0 CSn | UART1 RX | I2C0 SCL | PWM2 B | SIO | PIO0 | PIO1 | USB VBUS EN |  |
+| 6 | SPI0 SCK | UART1 CTS | I2C1 SDA | PWM3 A | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
+| 7 | SPI0 TX | UART1 RTS | I2C1 SCL | PWM3 B | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 8 | SPI1 RX | UART1 TX | I2C0 SDA | PWM4 A | SIO | PIO0 | PIO1 | USB VBUS EN |  |
+| 9 | SPI1 CSn | UART1 RX | I2C0 SCL | PWM4 B | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
+| 10 | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM5 A | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 11 | SPI1 TX | UART1 RTS | I2C1 SCL | PWM5 B | SIO | PIO0 | PIO1 | USB VBUS EN |  |
+| 12 | SPI1 RX | UART0 TX | I2C0 SDA | PWM6 A | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
+| 13 | SPI1 CSn | UART0 RX | I2C0 SCL | PWM6 B | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 14 | SPI1 SCK | UART0 CTS | I2C1 SDA | PWM7 A | SIO | PIO0 | PIO1 | USB VBUS EN |  |
+| 15 | SPI1 TX | UART0 RTS | I2C1 SCL | PWM7 B | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
+| 16 | SPI0 RX | UART0 TX | I2C0 SDA | PWM0 A | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 17 | SPI0 CSn | UART0 RX | I2C0 SCL | PWM0 B | SIO | PIO0 | PIO1 | USB VBUS EN |  |
+| 18 | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM1 A | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
+| 19 | SPI0 TX | UART0 RTS | I2C1 SCL | PWM1 B | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 20 | SPI0 RX | UART1 TX | I2C0 SDA | PWM2 A | SIO | PIO0 | PIO1 | CLOCK GPIN0 | USB VBUS EN |
+| 21 | SPI0 CSn | UART1 RX | I2C0 SCL | PWM2 B | SIO | PIO0 | PIO1 | CLOCK GPOUT0 | USB OVCUR DET |
+| 22 | SPI0 SCK | UART1 CTS | I2C1 SDA | PWM3 A | SIO | PIO0 | PIO1 | CLOCK GPIN1 | USB VBUS DET |
+| 23 | SPI0 TX | UART1 RTS | I2C1 SCL | PWM3 B | SIO | PIO0 | PIO1 | CLOCK GPOUT1 | USB VBUS EN |
+| 24 | SPI1 RX | UART1 TX | I2C0 SDA | PWM4 A | SIO | PIO0 | PIO1 | CLOCK GPOUT2 | USB OVCUR DET |
+| 25 | SPI1 CSn | UART1 RX | I2C0 SCL | PWM4 B | SIO | PIO0 | PIO1 | CLOCK GPOUT3 | USB VBUS DET |
+| 26 | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM5 A | SIO | PIO0 | PIO1 | USB VBUS EN |  |
+| 27 | SPI1 TX | UART1 RTS | I2C1 SCL | PWM5 B | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
+| 28 | SPI1 RX | UART0 TX | I2C0 SDA | PWM6 A | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 29 | SPI1 CSn | UART0 RX | I2C0 SCL | PWM6 B | SIO | PIO0 | PIO1 | USB VBUS EN |  |

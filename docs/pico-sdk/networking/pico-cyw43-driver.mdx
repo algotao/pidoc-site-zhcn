@@ -1,0 +1,71 @@
+---
+sidebar_position: 3
+draft: false
+description: "底层 cyw43_driver 的封装库，通过 `pico_async_context` 集成以处理后台工作。"
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK cyw43 driver]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+底层 cyw43_driver 的封装库，通过 `pico_async_context` 集成以处理后台工作。
+
+### 模块
+
+`pico_btstack_cyw43`<br/>&emsp;底层蓝牙 HCI 支持。
+
+### 函数
+
+`const hci_transport_t * hci_transport_cyw43_instance (void)`<br/>&emsp;获取 cyw43 的蓝牙 HCI 传输实例。
+
+`bool cyw43_driver_init (struct async_context *context)<br/>&emsp;初始化底层 cyw43_driver 并将其与提供的 async_context` 集成。
+
+`void cyw43_driver_deinit (struct async_context *context)<br/>&emsp;反初始化底层 cyw43_driver 并将其从 async_context` 中解钩。
+
+### 函数文档
+
+#### cyw43_driver_deinit
+
+`void cyw43_driver_deinit (struct async_context * context)`
+
+反初始化底层 cyw43_driver 并将其从 `async_context` 中解钩。
+
+**参数**
+
+- `context: 通过 cyw43_driver_init 添加了 cyw43_driver 支持的 async_context`
+
+#### cyw43_driver_init
+
+`bool cyw43_driver_init (struct async_context * context)`
+
+初始化底层 cyw43_driver 并将其与提供的 `async_context` 集成。
+
+如果初始化成功，可调用 `lwip_nosys_deinit()` 来关闭 lwIP 支持。
+
+**参数**
+
+- `context: 提供异步工作处理抽象的 async_context` 实例。
+
+**返回值**
+
+初始化成功则返回 true
+
+#### hci_transport_cyw43_instance
+
+`const hci_transport_t * hci_transport_cyw43_instance (void)`
+
+获取 cyw43 的蓝牙 HCI 传输实例。
+
+**返回值**
+
+针对 cyw43 芯片组的 hci_transport_t 接口实例
+
+### pico_btstack_cyw43
+
+底层蓝牙 HCI 支持。
+
+#### 详细描述
+
+此库提供用于初始化和反初始化 CYW43 BTstack 的实用函数。
+
+<Normal />

@@ -1,0 +1,127 @@
+---
+sidebar_position: 32
+draft: false
+description: XIP 缓存的底层缓存维护操作。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK xip cache]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+XIP 缓存的底层缓存维护操作。
+
+### 详细描述
+
+这些函数对整个缓存内容或下游地址空间内的某个偏移量范围执行维护操作。偏移量从 0 开始（表示 flash 的第一个字节），因此指针在传入这些函数之前需要减去 XIP_BASE。
+
+RP2040 上唯一有效的缓存维护操作是"无效化"，即告诉缓存忘记它已知的某个地址的所有内容。这在编程操作之后是必要的，因为缓存不会自动感知对外部 flash 设备执行的串行编程操作，可能会返回陈旧数据。
+
+在 RP2350 上，三种操作类型为：
+
+* 无效化（Invalidate）：告诉缓存忘记它已知的某个地址的所有内容。下次访问该地址时将从下游内存中取数据。
+
+* 清理（Clean）：如果所寻址的缓存行包含尚未写入外部内存的数据，则立即将该数据写出，并将该行标记为"干净"（即不包含未提交的写入数据）。
+
+* 固定（Pin）：将某个地址标记为始终驻留在缓存中。这将持续有效，直到该行被无效化，可用于将部分缓存分配用作 cache-as-SRAM。
+
+当同时使用外部 flash 和外部 RAM（如 PSRAM）时，维护 flash 编程操作一致性的简单方法是：
+
+. 
+清理整个缓存（例如使用 `xip_cache_clean_all()`）
+
+. 
+使用串行 SPI 命令擦除并编程 flash
+
+. 
+无效化（"刷新"）整个缓存（例如使用 `xip_cache_invalidate_all()`）
+
+无效化操作确保后续读取能看到编程结果。清理操作确保无效化不会丢弃任何已缓存的 PSRAM 写入数据。
+
+### 函数
+
+- `void xip_cache_invalidate_all (void)`: 对整个 XIP 地址空间执行缓存无效化。
+- `void xip_cache_invalidate_range (uintptr_t start_offset, uintptr_t size_bytes)`: 对 XIP 地址空间中的某个偏移量范围执行缓存无效化。
+`void xip_cache_clean_all (void)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;对整个 XIP 地址空间执行缓存清理。
+
+`void xip_cache_clean_range (uintptr_t start_offset, uintptr_t size_bytes)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;对 XIP 地址空间中的某个偏移量范围执行缓存清理。
+
+`void xip_cache_pin_range (uintptr_t start_offset, uintptr_t size_bytes)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;固定 XIP 地址空间中的某个偏移量范围。
+
+### 函数文档
+
+#### xip_cache_clean_all <span className="chip-tag rp2350">RP2350</span>
+
+`void xip_cache_clean_all (void)`
+
+对整个 XIP 地址空间执行缓存清理。
+
+这将使缓存将所有待写入的数据写出到下游内存。例如，在将系统挂起并保留状态到外部 PSRAM 时，此操作可确保所有数据在断电前已写入外部 PSRAM。
+
+此函数比对整个地址空间调用 `xip_cache_clean_range()` 更快，因为它遍历缓存行而非地址。
+
+在 RP2040 上，此函数是空操作，因为 XIP 缓存是只读的。这由 XIP_CACHE_IS_READ_ONLY 宏指示。
+
+在 RP2350 上，由于针对 RP2350-E11 的变通方案，此函数在清理所有缓存行后还会有效地使其全部无效化。后续对每行的访问都将发生缓存未命中。可通过调用 `xip_cache_clean_range()` 来避免此问题，该函数不受此影响。
+
+#### xip_cache_clean_range <span className="chip-tag rp2350">RP2350</span>
+
+`void xip_cache_clean_range (uintptr_t start_offset, uintptr_t size_bytes)`
+
+对 XIP 地址空间中的某个偏移量范围执行缓存清理。
+
+这将使缓存将这些偏移量处的待写入数据写出到下游内存。
+
+在 RP2040 上，此函数是空操作，因为 XIP 缓存是只读的。这由 XIP_CACHE_IS_READ_ONLY 宏指示。
+
+**参数**
+
+- `start_offset`: 要无效化的起始偏移量。偏移量 0 表示 XIP 内存（如 flash）的第一个字节。指针必须减去 XIP_BASE 后才能传入此函数。必须对齐到缓存行起始位置（XIP_CACHE_LINE_SIZE）。
+- `size_bytes`: 要清理的字节数。必须是 XIP_CACHE_LINE_SIZE 的整数倍。
+
+#### xip_cache_invalidate_all
+
+`void xip_cache_invalidate_all (void)`
+
+对整个 XIP 地址空间执行缓存无效化。
+
+无效化确保后续读取将从下游内存中取数据，而非使用（可能已过时的）缓存数据。
+
+此函数比对整个地址空间调用 `xip_cache_invalidate_range()` 更快，因为它遍历缓存行而非地址。
+
+缓存中保存的所有待写入数据将丢失：可通过先调用 `xip_cache_clean_all()` 强制缓存提交这些写入。
+
+与 flash_flush_cache() 不同，此函数仅影响缓存行状态。flash_flush_cache() 调用 ROM API，在某些平台上可能有其他效果，例如在 RP2040 上清理 bootrom 的 QSPI GPIO 设置。对于常规缓存维护，推荐使用此函数；在 ROM flash API 调用序列中，推荐使用 flash_flush_cache。
+
+#### xip_cache_invalidate_range
+
+`void xip_cache_invalidate_range (uintptr_t start_offset, uintptr_t size_bytes)`
+
+对 XIP 地址空间中的某个偏移量范围执行缓存无效化。
+
+**参数**
+
+- `start_offset`: 要无效化的起始偏移量。偏移量 0 表示 XIP 内存（如 flash）的第一个字节。指针必须减去 XIP_BASE 后才能传入此函数。在 RP2040 上必须 4 字节对齐。在其他平台上必须对齐到缓存行起始位置（XIP_CACHE_LINE_SIZE）。
+- `size_bytes`: 要无效化的字节数。在 RP2040 上必须是 4 字节的整数倍。在其他平台上必须是 XIP_CACHE_LINE_SIZE 的整数倍。
+
+无效化确保后续读取将从下游内存中取数据，而非使用（可能已过时的）缓存数据。
+
+缓存中保存的所有待写入数据将丢失：可通过先以相同参数调用 `xip_cache_clean_range()` 来强制缓存提交这些写入。通常这不是必要的，因为无效化用于 flash（通过编程进行写透），而清理用于 PSRAM（通过缓存写透）。
+
+#### xip_cache_pin_range <span className="chip-tag rp2350">RP2350</span>
+
+`void xip_cache_pin_range (uintptr_t start_offset, uintptr_t size_bytes)`
+
+固定 XIP 地址空间中的某个偏移量范围。
+
+在某个地址处固定一行，会将该行专门分配给该地址使用。这意味着所有后续对该地址的访问都将命中缓存，而不会访问下游内存。此状态将一直持续，直到发生以下两种情况之一：
+
+* 该行被无效化，例如通过 `xip_cache_invalidate_all()`
+
+* 同一行在另一个地址处被固定（注意：行是按地址对 XIP_CACHE_SIZE 取模来选择的）
+
+**参数**
+
+- `start_offset`: 要固定的起始偏移量。偏移量 0 表示 XIP 内存（如 flash）的第一个字节。指针必须减去 XIP_BASE 后才能传入此函数。必须对齐到缓存行起始位置（XIP_CACHE_LINE_SIZE）。
+- `size_bytes`: 要固定的字节数。必须是 XIP_CACHE_LINE_SIZE 的整数倍。
+
+<Normal />

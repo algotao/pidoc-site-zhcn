@@ -1,0 +1,48 @@
+---
+sidebar_position: 19
+draft: false
+description: 为运行其他库提供的 pre-main 初始化器提供基本的运行时支持。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK runtime]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+为运行其他库提供的 pre-main 初始化器提供基本的运行时支持。
+
+### 详细描述
+
+此库聚合了以下其他库（如果可用）：
+
+* * * * * `pico_int64_ops`
+
+* * * * * * * * * * `pico_crt0`
+
+* * ### 函数
+
+- `void runtime_init (void)`: 运行通常由 crt0.S 在进入 main 之前调用的所有初始化。
+`void __weak hard_assertion_failure (void)`<br/>&emsp;处理 hard_assert 条件失败。
+
+### 函数文档
+
+#### hard_assertion_failure
+
+`void __weak hard_assertion_failure (void)`
+
+处理 hard_assert 条件失败。
+
+此弱函数提供默认实现（调用 panic 并传入"Hard assert"），用于非调试构建中 hard_assert 条件失败的情况。您可以提供自己的强实现来替换默认行为。
+
+**参见**
+
+hard_assert
+
+#### runtime_init
+
+`void runtime_init (void)`
+
+运行通常由 crt0.S 在进入 main 之前调用的所有初始化。
+
+此方法可用于在通过暂存向量执行 watchdog 或 powman 重启后设置运行时环境。
+
+<Normal />

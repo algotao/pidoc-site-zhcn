@@ -1,0 +1,32 @@
+---
+sidebar_position: 5
+draft: false
+description: Raspberry Pi Pico SDK 完整 API 参考文档。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK index]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../_normal.mdx";
+
+# Pico SDK API 参考
+
+Raspberry Pi Pico 软件开发套件（SDK）提供了在 C、C++ 或汇编语言中为 RP 系列微控制器设备（如 Raspberry Pi Pico）编写程序所需的头文件、库和构建系统。SDK 旨在提供一套对非嵌入式和嵌入式 C 开发者都熟悉的 API 和编程环境。
+
+单个程序在设备上运行，包含常规的 `main()` 方法，支持标准 C 和 C++ 库，以及用于访问微控制器硬件（包括 DMA、IRQ 和各种固定功能外设和 PIO）的 API。
+
+此外，SDK 还提供用于定时器、USB、同步和多核编程的高级库，以及基于 PIO 构建的高级功能（如音频）。
+
+本文档由 Doxygen 从 SDK 源代码树生成，提供每个库所用 API 的基本信息。更多技术信息和使用指南请参阅 Raspberry Pi 数据手册。
+
+## 章节导航
+
+- [**Hardware APIs**](./hardware/) — GPIO、UART、SPI、I2C、PIO、DMA、PWM、ADC 等硬件外设
+- [**High-level APIs**](./high-level/) — 多核、时间、标准库、同步原语等高级库
+- [**Runtime**](./runtime/) — 运行时基础设施（stdio、启动 ROM、浮点运算、内存管理等）
+- [**Networking**](./networking/) — 网络协议栈（lwIP、btstack、cyw43 驱动）
+- [**Third-party**](./third-party/) — 第三方库（TinyUSB、mbedTLS）
+- [**Miscellaneous**](./misc/) — 引导头文件及其他杂项
+
+更多信息请参阅 [C SDK 入门](../microcontrollers/c-sdk.mdx)。
+
+<Normal />

@@ -1,0 +1,21 @@
+---
+sidebar_position: 1
+draft: false
+description: "pico-sdk 对 [mbedtls](https://github.com/Mbed-TLS/mbedtls.git) 的封装库，其文档位于[此处](https://mbed-tls.readthedocs.io/en/latest/)。"
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK mbedtls]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+pico-sdk 对 [mbedtls](https://github.com/Mbed-TLS/mbedtls.git) 的封装库，其文档位于[此处](https://mbed-tls.readthedocs.io/en/latest/)。
+
+### 详细描述
+
+为 pico-sdk 构建 mbedtls，并实现利用硬件支持的函数（若在 mbedtls_config.h 中启用）：
+
+* `**MBEDTLS_ENTROPY_HARDWARE_ALT**：使用 get_rand_64` 的硬件熵收集器实现。
+
+* `**MBEDTLS_SHA256_ALT**`：使用 SHA256 硬件加速。仅在定义了 LIB_PICO_SHA256 时有效（即不适用于 rp2040）。
+
+<Normal />

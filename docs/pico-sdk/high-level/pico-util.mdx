@@ -1,0 +1,535 @@
+---
+sidebar_position: 15
+draft: false
+description: 实用数据结构与工具函数。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK util]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+实用数据结构与工具函数。
+
+### 模块
+
+`datetime`<br/>&emsp;日期/时间格式化。
+
+`pheap`<br/>&emsp;配对堆实现。
+
+`queue`<br/>&emsp;多核与 IRQ 安全的队列实现。
+
+### datetime
+
+日期/时间格式化。
+
+#### 函数
+
+`struct tm ** pico_localtime_r (const time_t **time, struct tm *tm)`<br/>&emsp;供 pico_util datetime 函数使用的 localtime_r 实现。
+
+`time_t pico_mktime (struct tm *tm)`<br/>&emsp;供 pico_util datetime 函数使用的 mktime 实现。
+
+#### 函数文档
+
+**pico_localtime_r**
+
+`struct tm ** pico_localtime_r (const time_t **` time, struct tm * tm)`
+
+供 pico_util datetime 函数使用的 localtime_r 实现。
+
+此方法默认调用 C 库中的 localtime_r，但声明为弱实现以允许用户代码覆盖它。
+
+**pico_mktime**
+
+`time_t pico_mktime (struct tm * tm)`
+
+供 pico_util datetime 函数使用的 mktime 实现。
+
+此方法默认调用 C 库中的 mktime，但声明为弱实现以允许用户代码覆盖它。
+
+### pheap
+
+配对堆实现。
+
+#### 详细描述
+
+pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由用户负责提供堆条目的存储和比较函数。
+
+::::note
+此类不支持并发使用，需要外部保护。此外，如果并发使用，调用者需要在使用返回的 id 时进行保护。例如，ph_remove_and_free_head 返回一个不再在堆中的元素 id。用户仍可用它查看伴随数组中的数据，但显然对堆的进一步操作可能会覆盖那些数据，因为该 id 可能在后续操作中被重用。
+::::
+
+#### 宏
+
+* `#define [PHEAP_DEFINE_STATIC](name, _max_nodes)`
+
+#### 类型定义
+
+`typedef bool(** pheap_comparator)(void **user_data, pheap_node_id_t a, pheap_node_id_t b)`<br/>&emsp;配对堆节点的用户比较函数。
+
+#### 函数
+
+`pheap_t ** ph_create (uint max_nodes, pheap_comparator comparator, void **user_data)`<br/>&emsp;创建一个配对堆，有效地维护节点的高效排序。堆本身不存储每个节点的用户状态，用户需要维护一个伴随数组。必须提供比较函数，以便堆实现能够确定节点的相对顺序。
+
+`void ph_clear (pheap_t *heap)`<br/>&emsp;从配对堆中移除所有节点。
+
+`void ph_destroy (pheap_t *heap)`<br/>&emsp;释放配对堆。
+
+`static pheap_node_id_t ph_new_node (pheap_t *heap)`<br/>&emsp;从堆的未用空间中分配一个新节点。
+
+`static pheap_node_id_t ph_insert_node (pheap_t *heap, pheap_node_id_t id)`<br/>&emsp;将节点插入堆中。
+
+`static pheap_node_id_t ph_peek_head (pheap_t *heap)`<br/>&emsp;返回堆中的头节点（即比较结果最靠前的节点），但不将其从堆中移除。
+
+`pheap_node_id_t ph_remove_head (pheap_t *heap, bool free)`<br/>&emsp;从配对堆中移除头节点。头节点是比较器提供的逻辑顺序中排在最前面的节点。
+
+`static pheap_node_id_t ph_remove_and_free_head (pheap_t *heap)`<br/>&emsp;从配对堆中移除头节点。头节点是比较器提供的逻辑顺序中排在最前面的节点。
+
+`bool ph_remove_and_free_node (pheap_t *heap, pheap_node_id_t id)<br/>&emsp;从配对堆中移除并释放任意节点。此操作比通过 ph_remove_and_free_head()` 移除头节点代价更高。
+
+`static bool ph_contains_node (pheap_t *heap, pheap_node_id_t id)`<br/>&emsp;判断堆是否包含给定节点。注意包含是指节点是否已被插入（ph_insert_node()）而非已分配（`ph_new_node()`）。
+
+`static void ph_free_node (pheap_t *heap, pheap_node_id_t id)`<br/>&emsp;释放一个当前不在堆中但已分配的节点。
+
+`void ph_dump (pheap_t **heap, void(**dump_key)(pheap_node_id_t id, void **user_data), void **user_data)`<br/>&emsp;打印堆的调试表示。
+
+`void ph_post_alloc_init (pheap_t **heap, uint max_nodes, pheap_comparator comparator, void **user_data)`<br/>&emsp;初始化静态分配的堆（通过 C 堆使用 ph_create()）。堆的 `nodes` 成员必须已分配大小为 max_nodes。
+
+#### 宏定义文档
+
+**PHEAP_DEFINE_STATIC**
+
+```c
+#define PHEAP_DEFINE_STATIC(name, _max_nodes) static_assert(_max_nodes && _max_nodes < (1u << (8 * sizeof(pheap_node_id_t))), ""); \
+    static pheap_node_t name ## _nodes[_max_nodes]; \
+    static pheap_t name = { \
+            .nodes = name ## _nodes, \
+            .max_nodes = _max_nodes \
+    };
+```
+
+定义静态分配的配对堆。必须通过 ph_post_alloc_init 进行初始化。
+
+#### 类型定义文档
+
+**pheap_comparator**
+
+`typedef bool(** pheap_comparator) (void **user_data, pheap_node_id_t a, pheap_node_id_t b)`
+
+配对堆节点的用户比较函数。
+
+**返回**
+
+若按自然顺序 a &lt; b 则返回 true。注意，此相对顺序必须在每次调用间保持稳定。
+
+#### 函数文档
+
+**ph_clear**
+
+`void ph_clear (pheap_t * heap)`
+
+从配对堆中移除所有节点。
+
+**参数**
+
+- `heap`: 堆
+
+**ph_contains_node**
+
+`static bool ph_contains_node (pheap_t * heap, pheap_node_id_t id) [inline], [static]`
+
+判断堆是否包含给定节点。注意包含是指节点是否已被插入（`ph_insert_node()）而非已分配（ph_new_node()`）。
+
+**参数**
+
+- `heap`: 堆
+- `id`: 节点的 id
+
+**返回**
+
+若堆包含给定 id 的节点返回 true，否则返回 false。
+
+**ph_create**
+
+`pheap_t ** ph_create (uint max_nodes, pheap_comparator` comparator, void ** user_data)`
+
+创建一个配对堆，有效地维护节点的高效排序。堆本身不存储每个节点的用户状态，用户需要维护一个伴随数组。必须提供比较函数，以便堆实现能够确定节点的相对顺序。
+
+**参数**
+
+- `max_nodes`: 堆中可能存在的最大节点数（受限于 PICO_PHEAP_MAX_ENTRIES，默认为 255，以便在单字节中存储索引）。
+- `comparator`: 节点比较函数
+- `user_data`: 与堆关联的用户数据指针，在回调中提供
+
+**返回**
+
+新分配并初始化的堆。
+
+**ph_destroy**
+
+`void ph_destroy (pheap_t * heap)`
+
+释放配对堆。
+
+注意，此方法只能用于通过 `ph_create()` 创建的堆。
+
+**参数**
+
+- `heap`: 堆
+
+**ph_dump**
+
+`void ph_dump (pheap_t **` heap, void(**)(pheap_node_id_t id, void `**user_data) dump_key, void ** user_data)`
+
+打印堆的调试表示。
+
+**参数**
+
+- `heap`: 堆
+- `dump_key`: 用于打印节点值的方法
+- `user_data`: 要传递给 dump_key 方法的用户数据
+
+**ph_free_node**
+
+`static void ph_free_node (pheap_t * heap, pheap_node_id_t id) [inline], [static]`
+
+释放一个当前不在堆中但已分配的节点。
+
+**参数**
+
+- `heap`: 堆
+- `id`: 节点的 id
+
+**ph_insert_node**
+
+`static pheap_node_id_t ph_insert_node (pheap_t * heap, pheap_node_id_t id) [inline], [static]`
+
+将节点插入堆中。
+
+此方法将一个（之前通过 `ph_new_node()` 分配的）节点插入堆中，通过调用堆的比较函数确定正确的顺序。
+
+**参数**
+
+- `heap`: 堆
+- `id`: 要插入的节点的 id
+
+**返回**
+
+配对堆新头节点的 id（即比较结果最靠前的节点）。
+
+**ph_new_node**
+
+`static pheap_node_id_t ph_new_node (pheap_t * heap) [inline], [static]`
+
+从堆的未用空间中分配一个新节点。
+
+**参数**
+
+- `heap`: 堆
+
+**返回**
+
+节点的标识符；若堆已满返回 0。
+
+**ph_peek_head**
+
+`static pheap_node_id_t ph_peek_head (pheap_t * heap) [inline], [static]`
+
+返回堆中的头节点（即比较结果最靠前的节点），但不将其从堆中移除。
+
+**参数**
+
+- `heap`: 堆
+
+**返回**
+
+当前头节点的 id。
+
+**ph_post_alloc_init**
+
+`void ph_post_alloc_init (pheap_t **` heap, uint max_nodes, pheap_comparator comparator, void ** user_data)`
+
+初始化静态分配的堆（通过 C 堆使用 `ph_create()）。堆的 nodes` 成员必须已分配大小为 max_nodes。
+
+**参数**
+
+- `heap`: 堆
+- `max_nodes`: 堆中的最大节点数（匹配堆的 nodes 数组大小）
+- `comparator`: 堆的比较函数
+- `user_data`: 堆的用户数据
+
+**ph_remove_and_free_head**
+
+`static pheap_node_id_t ph_remove_and_free_head (pheap_t * heap) [inline], [static]`
+
+从配对堆中移除头节点。头节点是比较器提供的逻辑顺序中排在最前面的节点。
+
+注意，返回的 id 将被释放，因此可能被未来的节点分配重用，所以调用者应在进一步修改堆之前从伴随数组中获取每个节点的状态。
+
+**参数**
+
+- `heap`: 堆
+
+**返回**
+
+旧的头节点 id。
+
+**ph_remove_and_free_node**
+
+`bool ph_remove_and_free_node (pheap_t * heap, pheap_node_id_t id)`
+
+从配对堆中移除并释放任意节点。此操作比通过 `ph_remove_and_free_head()` 移除头节点代价更高。
+
+**参数**
+
+- `heap`: 堆
+- `id`: 要释放的节点 id
+
+**返回**
+
+若该节点在堆中返回 true，否则返回 false。
+
+**ph_remove_head**
+
+`pheap_node_id_t ph_remove_head (pheap_t * heap, bool free)`
+
+从配对堆中移除头节点。头节点是比较器提供的逻辑顺序中排在最前面的节点。
+
+注意，在 free == true 的情况下，返回的 id 不再被分配，可能被未来的节点分配重用，所以调用者应在进一步修改堆之前从伴随数组中获取每个节点的状态。
+
+**参数**
+
+- `heap`: 堆
+- `free`: 若为 true，则同时释放该 id；若为 false 则不释放——适用于调用者可能希望以相同 id 重新插入条目的情况
+
+**返回**
+
+旧的头节点 id。
+
+### queue
+
+多核与 IRQ 安全的队列实现。
+
+#### 详细描述
+
+注意，此队列存储指定大小的值，推送的值会被复制进队列中。
+
+#### 函数
+
+`void queue_init_with_spinlock (queue_t *q, uint element_size, uint element_count, uint spinlock_num)`<br/>&emsp;使用特定自旋锁初始化队列以进行并发保护。
+
+`static void queue_init (queue_t *q, uint element_size, uint element_count)`<br/>&emsp;初始化队列，分配一个（可能共享的）自旋锁。
+
+`void queue_free (queue_t *q)`<br/>&emsp;销毁指定队列。
+
+`static uint queue_get_level_unsafe (queue_t *q)`<br/>&emsp;非安全地检查指定队列的级别。
+
+`static uint queue_get_level (queue_t *q)`<br/>&emsp;检查指定队列的级别。
+
+`static bool queue_is_empty (queue_t *q)`<br/>&emsp;检查队列是否为空。
+
+`static bool queue_is_full (queue_t *q)`<br/>&emsp;检查队列是否已满。
+
+`bool queue_try_add (queue_t **q, const void **data)`<br/>&emsp;若队列未满则非阻塞地向队列添加值。
+
+`bool queue_try_remove (queue_t **q, void **data)`<br/>&emsp;若队列非空则非阻塞地从队列移除条目。
+
+`bool queue_try_peek (queue_t **q, void **data)`<br/>&emsp;非阻塞地查看队列中下一个待移除的条目。
+
+`void queue_add_blocking (queue_t **q, const void **data)`<br/>&emsp;阻塞地向队列添加值。
+
+`void queue_remove_blocking (queue_t **q, void **data)`<br/>&emsp;阻塞地从队列移除条目。
+
+`void queue_peek_blocking (queue_t **q, void **data)`<br/>&emsp;阻塞地查看队列中下一个待移除的值。
+
+#### 函数文档
+
+**queue_add_blocking**
+
+`void queue_add_blocking (queue_t **` q, const void ** data)`
+
+阻塞地向队列添加值。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+- `data`: 指向要复制到队列中的值的指针
+
+若队列已满，此函数将阻塞，直到队列上发生一次移除操作。
+
+**queue_free**
+
+`void queue_free (queue_t * q)`
+
+销毁指定队列。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+
+不会释放 `queue_t` 结构本身。
+
+**queue_get_level**
+
+`static uint queue_get_level (queue_t * q) [inline], [static]`
+
+检查指定队列的级别。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+
+**返回**
+
+队列中的条目数量。
+
+**queue_get_level_unsafe**
+
+`static uint queue_get_level_unsafe (queue_t * q) [inline], [static]`
+
+非安全地检查指定队列的级别。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+
+**返回**
+
+队列中的条目数量。
+
+若未从外部锁定自旋锁，此操作不使用自旋锁，可能返回不正确的结果。
+
+**queue_init**
+
+`static void queue_init (queue_t * q, uint element_size, uint element_count) [inline], [static]`
+
+初始化队列，分配一个（可能共享的）自旋锁。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+- `element_size`: 队列中每个值的大小
+- `element_count`: 队列中的最大条目数
+
+**queue_init_with_spinlock**
+
+`void queue_init_with_spinlock (queue_t * q, uint element_size, uint element_count, uint spinlock_num)`
+
+使用特定自旋锁初始化队列以进行并发保护。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+- `element_size`: 队列中每个值的大小
+- `element_count`: 队列中的最大条目数
+- `spinlock_num`: 用于保护队列的自旋锁 ID
+
+**queue_is_empty**
+
+`static bool queue_is_empty (queue_t * q) [inline], [static]`
+
+检查队列是否为空。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+
+**返回**
+
+若队列为空返回 true，否则返回 false。
+
+此函数是中断和多核安全的。
+
+**queue_is_full**
+
+`static bool queue_is_full (queue_t * q) [inline], [static]`
+
+检查队列是否已满。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+
+**返回**
+
+若队列已满返回 true，否则返回 false。
+
+此函数是中断和多核安全的。
+
+**queue_peek_blocking**
+
+`void queue_peek_blocking (queue_t **` q, void ** data)`
+
+阻塞地查看队列中下一个待移除的值。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+- `data`: 指向接收查看值的位置的指针，若不需要数据可为 NULL
+
+若队列为空，函数将阻塞直到有值被添加。
+
+**queue_remove_blocking**
+
+`void queue_remove_blocking (queue_t **` q, void ** data)`
+
+阻塞地从队列移除条目。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+- `data`: 指向接收被移除值的位置的指针，若不需要数据可为 NULL
+
+若队列为空，此函数将阻塞直到有值被添加。
+
+**queue_try_add**
+
+`bool queue_try_add (queue_t **` q, const void ** data)`
+
+若队列未满则非阻塞地向队列添加值。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+- `data`: 指向要复制到队列中的值的指针
+
+**返回**
+
+若值已添加返回 true。
+
+若队列已满，此函数将立即返回 false；否则数据将被复制到队列中新增的值里，函数返回 true。
+
+**queue_try_peek**
+
+`bool queue_try_peek (queue_t **` q, void ** data)`
+
+非阻塞地查看队列中下一个待移除的条目。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+- `data`: 指向接收查看值的位置的指针，若不需要数据可为 NULL
+
+**返回**
+
+若有值可查看返回 true。
+
+若队列非空，此函数将立即返回 true，并将查看到的条目复制到 data 参数指定的位置；否则函数返回 false。
+
+**queue_try_remove**
+
+`bool queue_try_remove (queue_t **` q, void ** data)`
+
+若队列非空则非阻塞地从队列移除条目。
+
+**参数**
+
+- `q: 指向 queue_t` 结构的指针，用作句柄
+- `data`: 指向接收被移除值的位置的指针，若不需要数据可为 NULL
+
+**返回**
+
+若有值被移除返回 true。
+
+若队列非空，函数将把被移除的值复制到提供的位置并立即返回 true；否则函数立即返回 false。
+
+<Normal />

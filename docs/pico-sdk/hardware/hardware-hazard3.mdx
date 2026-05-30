@@ -1,0 +1,21 @@
+---
+sidebar_position: 11
+draft: false
+description: Hazard3 特定 RISC-V CSR 的访问器，以及 Hazard3 自定义指令的内联函数。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK hazard3]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+Hazard3 特定 RISC-V CSR 的访问器，以及 Hazard3 自定义指令的内联函数。
+
+### 详细说明
+
+Hazard3 自定义指令的内联函数与汇编宏。
+
+根据 PICO_PLATFORM 宏，为所支持的 Hazard3 自定义扩展（特性）设置相应的宏。
+
+这些内联函数的实现依赖于 [hardware/hazard3/features.h] 中定义的特性宏。当相关特性不存在时，若可能，内联函数将回退到等效的 RV32I 实现。
+
+<Normal />

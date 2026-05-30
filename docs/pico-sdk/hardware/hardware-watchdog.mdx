@@ -1,0 +1,179 @@
+---
+sidebar_position: 31
+draft: false
+description: 硬件看门狗定时器 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK watchdog]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+硬件看门狗定时器 API。
+
+### 详细描述
+
+Pico 硬件看门狗定时器的支持函数。
+
+RP 系列微控制器内置了硬件看门狗定时器，这是一个倒计时定时器，如果计数到零，可以重启芯片的部分功能。例如，当运行于其上的软件陷入无限循环或类似情况时，可以用它来重启处理器。程序员需要定期向看门狗写入值，以防止其计数到零。
+
+**示例**
+
+// hello_watchdog.c
+```c
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "hardware/watchdog.h"
+
+int main() {
+    stdio_init_all();
+
+    if (watchdog_enable_caused_reboot()) {
+        printf("Rebooted by Watchdog!\n");
+        return 0;
+    } else {
+        printf("Clean boot\n");
+    }
+
+    // Enable the watchdog, requiring the watchdog to be updated every 100ms or the chip will reboot
+    // second arg is pause on debug which means the watchdog will pause when stepping through code
+    watchdog_enable(100, 1);
+
+    for (uint i = 0; i < 5; i++) {
+        printf("Updating watchdog %d\n", i);
+        watchdog_update();
+    }
+
+    // Wait in an infinite loop and don't update the watchdog so it reboots us
+    printf("Waiting to be rebooted by watchdog\n");
+    while(1);
+}
+```
+
+### 函数
+
+- `void watchdog_reboot (uint32_t pc, uint32_t sp, uint32_t delay_ms)`: 定义看门狗超时时执行的动作。
+- `void watchdog_start_tick (uint cycles)`: 启动看门狗 tick。
+- `void watchdog_update (void)`: 使用 watchdog_enable 中设置的时间量重新加载看门狗计数器。
+- `void watchdog_enable (uint32_t delay_ms, bool pause_on_debug)`: 启用看门狗。
+- `void watchdog_disable (void)`: 禁用看门狗。
+- `bool watchdog_caused_reboot (void)`: 上次重启是否由看门狗引起？
+- `bool watchdog_enable_caused_reboot (void)`: 上次重启是否由 watchdog_enable 引起？
+- `uint32_t watchdog_get_time_remaining_us (void)`: 返回看门狗重启芯片前的剩余微秒数。
+- `uint32_t watchdog_get_time_remaining_ms (void)`: 返回看门狗重启芯片前的剩余毫秒数。
+
+### 函数文档
+
+#### watchdog_caused_reboot
+
+`bool watchdog_caused_reboot (void)`
+
+上次重启是否由看门狗引起？
+
+**返回值**
+
+如果看门狗定时器或看门狗强制引起了上次重启，则返回 true。
+
+**返回值**
+
+如果自上次上电复位以来没有发生过看门狗重启，则返回 false。上电复位通常由掉电或拨动运行引脚（复位按钮）引起。
+
+#### watchdog_disable
+
+`void watchdog_disable (void)`
+
+禁用看门狗。
+
+#### watchdog_enable
+
+`void watchdog_enable (uint32_t delay_ms, bool pause_on_debug)`
+
+启用看门狗。
+
+如果 `watchdog_start_tick 的值不能向看门狗系统提供 1MHz 时钟，则 delay_ms` 参数将不以毫秒为单位。详情参见数据手册。
+
+在 RP2040 上，最大延迟为 8388 毫秒，约 8.3 秒（由于 RP2040-E1）。在 RP2350 上，最大延迟为 16777 毫秒，约 16.7 秒。
+
+SDK 默认假设 12MHz XOSC，并相应设置 `watchdog_start_tick`。
+
+此方法在看门狗暂存寄存器 4 中设置一个标记，供 `watchdog_enable_caused_reboot 检查。如果设备随后通过调用 watchdog_reboot 复位（例如拖拽 UF2 到 RPI-RP2），则该值将被清除，watchdog_enable_caused_reboot` 将返回 false。
+
+**参数**
+
+- `delay_ms`: 在未调用 watchdog_update 的情况下，看门狗重启之前的毫秒数
+- `pause_on_debug`: 调试器单步调试代码时是否暂停看门狗
+
+#### watchdog_enable_caused_reboot
+
+`bool watchdog_enable_caused_reboot (void)`
+
+上次重启是否由 watchdog_enable 引起？
+
+在 `watchdog_caused_reboot 的基础上进行额外检查，以确定由 watchdog_enable` 发起的看门狗超时是否导致了上次重启。
+
+此方法检查看门狗暂存寄存器 4 中由 `watchdog_enable 放置的特殊值。如果看门狗复位是由 watchdog_reboot` 或 RP 系列微控制器 bootrom 发起的（例如拖拽 UF2 到 RPI-RP2 驱动器），则该特殊值不会存在。
+
+**返回值**
+
+如果看门狗定时器或看门狗强制引起（参见 `watchdog_caused_reboot）了上次重启，且看门狗重启发生在调用 watchdog_enable` 之后，则返回 true。
+
+**返回值**
+
+如果自上次上电复位以来没有发生过看门狗重启，或者看门狗重启不是由调用 `watchdog_enable` 之后的看门狗超时引起的，则返回 false。上电复位通常由掉电或拨动运行引脚（复位按钮）引起。
+
+#### watchdog_get_time_remaining_ms
+
+`uint32_t watchdog_get_time_remaining_ms (void)`
+
+返回看门狗重启芯片前的剩余毫秒数。
+
+由于硬件 bug，在 RP2040 上此方法返回最后设置的值而非剩余时间。
+
+**返回值**
+
+看门狗重启芯片前的剩余毫秒数。
+
+#### watchdog_get_time_remaining_us
+
+`uint32_t watchdog_get_time_remaining_us (void)`
+
+返回看门狗重启芯片前的剩余微秒数。
+
+由于硬件 bug，在 RP2040 上此方法返回最后设置的值而非剩余时间。
+
+**返回值**
+
+看门狗重启芯片前的剩余微秒数。
+
+#### watchdog_reboot
+
+`void watchdog_reboot (uint32_t pc, uint32_t sp, uint32_t delay_ms)`
+
+定义看门狗超时时执行的动作。
+
+如果 `watchdog_start_tick 的值不能向看门狗系统提供 1MHz 时钟，则 delay_ms` 参数将不以毫秒为单位。详情参见数据手册。
+
+SDK 默认假设 12MHz XOSC，并相应设置 `watchdog_start_tick`。
+
+**参数**
+
+- `pc`: 如果为零，则执行标准启动；如果非零，则为复位后跳转的程序计数器地址。
+- `sp: 如果 pc` 非零，则为所使用的栈指针。
+- `delay_ms`: 初始加载值。最大值 8388，约 8.3 秒。
+
+#### watchdog_start_tick
+
+`void watchdog_start_tick (uint cycles)`
+
+启动看门狗 tick。
+
+**参数**
+
+- `cycles`: 该值需要是一个分频系数，当应用于 XOSC 输入时，能产生 1MHz 时钟。因此如果 XOSC 为 12MHz，此值应为 12。
+
+#### watchdog_update
+
+`void watchdog_update (void)`
+
+使用 watchdog_enable 中设置的时间量重新加载看门狗计数器。
+
+<Normal />

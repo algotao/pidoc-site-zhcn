@@ -262,3 +262,34 @@ pre {
 [data-theme='dark'] .navbar__link.nav-free-link:hover {
   color: #ff4757 !important;
 }
+
+/* ===============================================
+   Pico SDK 芯片专属标签 (RP2040 / RP2350)
+   =============================================== */
+.chip-tag {
+  display: inline-block;
+  font-size: 0.75em;
+  line-height: 1em;
+  font-weight: bold;
+  border-radius: 3px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  vertical-align: middle;
+  color: #fff;
+}
+
+.chip-tag.rp2040 {
+  background-color: #2ecc71;
+}
+
+.chip-tag.rp2350 {
+  background-color: #e67e22;
+}
+
+[data-theme='dark'] .chip-tag.rp2040 {
+  background-color: #27ae60;
+}
+
+[data-theme='dark'] .chip-tag.rp2350 {
+  background-color: #d35400;
+}
