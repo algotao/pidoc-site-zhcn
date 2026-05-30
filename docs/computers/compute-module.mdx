@@ -511,7 +511,7 @@ rpiboot -d mass-storage-gadget64
 
 </Tabs>
 
-### 烧录 eMMC
+### 烧录 eMMC {#flash-compute-module-emmc}
 
 你可以使用 [Raspberry Pi Imager](./getting-started.mdx#使用-imager-安装) 将操作系统映像烧录到计算模块。
 
@@ -578,7 +578,7 @@ $ sudo cp -r <files>/* <mountpoint>
 
 烧录引导加载程序 EEPROM：
 
-1. 像 [flash the eMMC](#烧录-emmc)时那样设置硬件，但要确保 `EEPROM_nWP` _not_ 被拉低。
+1. 像 [flash the eMMC](#flash-compute-module-emmc)时那样设置硬件，但要确保 `EEPROM_nWP` _not_ 被拉低。
 2. 运行以下命令将 `recovery/pieeprom.bin` 写入引导加载器 EEPROM：
 ```sh
 ./rpiboot -d recovery
