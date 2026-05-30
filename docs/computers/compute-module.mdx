@@ -5,7 +5,7 @@ title_meta: 在树莓派计算模块(CM)进行烧录、连接与启用外设
 description: 深入探索树莓派计算模块（CM）硬件系列，从CM1到最新的CM5，了解各型号的技术规格、内存配置、eMMC存储选项及专用IO板设计。本文详细介绍了CM5、CM4、CM4S、CM3+、CM1和CM0等计算模块的特点，以及与之配套的IO板、外壳、天线和散热器等配件，为工业和商业应用提供全面的硬件解决方案。
 keywords: [树莓派计算模块, CM5, CM4, CM4S, CM3+, CM1, CM0, eMMC存储, IO板, 外设连接, 树莓派硬件, 工业应用]
 last_update: 
-  date: 2026-03-15
+  date: 2026-05-30
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -587,9 +587,9 @@ $ sudo cp -r <files>/* <mountpoint>
 
 ### SD 卡以外的烧录设备
 
-基于 Linux 的 [`mass-storage-gadget`](https://github.com/raspberrypi/usbboot/blob/master/mass-storage-gadget/README.md) 支持烧录 NVMe、eMMC 和 USB 块设备。与基于固件的 `rpiboot` 机制相比，`mass-storage-gadget` 写入设备的速度更快，还为设备提供了一个 UART 控制台用于调试。
+基于 Linux 的 [`mass-storage-gadget`](https://github.com/raspberrypi/usbboot/blob/master/mass-storage-gadget64/README.md) 支持烧录 NVMe、eMMC 和 USB 块设备。与基于固件的 `rpiboot` 机制相比，`mass-storage-gadget` 写入设备的速度更快，还为设备提供了一个 UART 控制台用于调试。
 
-`usbboot` 还包括一些 [扩展](https://github.com/raspberrypi/usbboot/blob/master/Readme.md#compute-module-4-extensions)，使你能够与计算模块上的 EEPROM 引导加载程序进行交互。
+`usbboot` 还包括一些 [扩展](https://github.com/raspberrypi/usbboot/tree/master#provisioning-extensions)，允许您配置安全启动或启动自定义 Linux initramfs 镜像。
 
 ### 更新计算模块引导加载程序
 
@@ -1046,75 +1046,6 @@ CM1、CM3、CM3+ 和 CM4S I/O 板没有为 `cam1_reg` 和 `cam0_reg` 提供 GPIO
 例如，要将引脚 42 用作 CAM1 的稳压器，请在 `/boot/firmware/config.txt` 中添加指令 `dtparam=cam1_reg_gpio=42`。
 
 这些指令仅适用于直接连接到 SoC 的 GPIO 引脚，不适用于 GPIO 扩展引脚。
-
-## 安装触摸屏LCD面板
-
-开始操作前，请将系统软件和固件更新至最新版本。计算模块大多采用相同的操作流程，但某些型号因物理结构差异可能需要调整操作步骤。
-
-### 将显示器连接到DISP1/DSI1
-
-:::tip
-树莓派零摄像头线缆不能替代RPI-DISPLAY适配器使用，两者接线方式存在差异。
-:::
-
-将显示器连接至`DISP1/DSI1`接口：.
-
-1. 断开计算模块电源。
-2. 通过22W转15W显示器适配器将显示器连接至计算模块IO板的`DISP1/DSI1`端口。
-3. 完成相应跳线连接：
-    - 对于*CM1*、*CM3*、*CM3+*和*CM4S*，使用跳线连接以下GPIO引脚：
-      * `0` 至 `CD1_SDA`
-      * `1` 至 `CD1_SCL`
-    - 对于 **CM5**，在计算模块5的IO板上，按丝印标识在J6处添加相应跳线。
-4. 重新连接计算模块电源。
-5. 在 [`/boot/firmware/config.txt`](./config-txt.mdx#什么是configtxt) 中添加 `dtoverlay=vc4-kms-dsi-7inch`。
-6. 使用 `sudo reboot` 命令重启计算模块。您的设备应能检测到模块并开始向显示器输出内容。
-
-### 将显示器连接到DISP0/DSI0
-
-要在 CM1、CM3 和 CM4 IO 板上将显示器连接至 `DISP0/DSI0`：.
-
-1. 通过 22W 至 15W 显示器适配器将显示器连接至计算模块 IO 板上的 `DISP0/DSI0` 端口。
-2. 完成相应跳线连接：
-    - 对于*CM1*、*CM3*、*CM3+*和*CM4S*，使用跳线连接以下GPIO引脚：
-      * `28` 至 `CD0_SDA`
-      * `29` 至 `CD0_SCL`
-    - 对于*CM4*，在计算模块4的IO板上，按丝印标识将相应跳线添加至J6。
-3. 重新连接计算模块电源。
-4. 在`/boot/firmware/config.txt`文件中添加`dtoverlay=vc4-kms-dsi-7inch,dsi0`。
-5. 通过`sudo reboot`重启计算模块。您的设备应能检测到模块并开始向显示器输出内容。
-
-### 禁用触摸屏
-
-触摸屏无需额外配置。将其连接至计算模块后，当成功检测到触摸屏元件和显示屏时，两者即可正常工作。
-
-要禁用触摸屏元件，但仍使用显示屏，请在 `/boot/firmware/config.txt` 中添加以下一行：
-
-```ini
-disable_touchscreen=1
-```
-
-### 禁用显示屏
-要在连接时完全忽略显示屏，请在 `/boot/firmware/config.txt` 中添加以下一行：
-```ini
-ignore_lcd=1
-```
-
-## 安装触摸显示屏2 LCD 面板
-
-触摸屏2是一款专为树莓派设备设计的液晶显示屏（详见https://www.raspberrypi.com/products/touch-display-2/ ）。提供两种尺寸：5英寸或7英寸（对角线测量）。有关这些选项的更多信息，请参阅 [Touch Display 2](../accessories/touch-display-2.mdx) 中的**规格**部分。
-
-无论使用何种尺寸，Touch Display 2 的连接方式均与初代触摸屏相同，但计算模块上的软件配置略有差异，因其采用不同的显示驱动程序。连接详情请参阅 [Touch Display 2](../accessories/touch-display-2.mdx) 中的**连接器**章节。
-
-要在`DISP1/DSI1`启用触摸屏2，请编辑`/boot/firmware/config.txt`文件添加以下内容。同时必须按丝印标识在J6插座添加跳线。
-
-- 5英寸显示屏：`dtoverlay=vc4-kms-dsi-ili9881-5inch`
-- 7英寸显示屏：`dtoverlay=vc4-kms-dsi-ili9881-7inch`
-
-若需使用`DISP0/DSI0`接口，请在覆盖层名称后添加`,dsi0`。
-
-- 对于*5英寸*显示屏：`dtoverlay=vc4-kms-dsi-ili9881-5inch,dsi0`
-- 对于*7英寸*显示屏：`dtoverlay=vc4-kms-dsi-ili9881-7inch,dsi0`
 
 ## 规格 {#规格}
 

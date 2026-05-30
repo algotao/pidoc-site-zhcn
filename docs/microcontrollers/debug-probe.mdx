@@ -4,7 +4,7 @@ draft: false
 description: 树莓派官方调试探针（Debug-Probe）是一款即插即用的USB调试工具，支持ARM SWD（串行线调试）和UART串口功能，兼容CMSIS-DAP标准，适用于Windows/macOS/Linux平台。它无需焊接即可调试树莓派Pico等RP2040芯片设备，提供3.3V I/O电压、5个状态LED（含电源和活动指示灯），并配备多种转接线缆（如JST-SH转0.1英寸接头）。通过OpenOCD和GDB可实现二进制文件上传、断点调试及串口通信（如UART0数据转发至CDC UART）。支持固件升级（UF2文件），并提供开源原理图与机械图纸。配套VS Code扩展简化开发流程，适用于嵌入式开发与故障排查。
 keywords: [树莓派调试探针, Raspberry Pi Debug Probe, SWD调试, UART串口, CMSIS-DAP, OpenOCD, GDB, RP2040, Pico调试, ARM调试, USB调试工具, 嵌入式开发, 固件升级, VS Code扩展, JST-SH线缆, 串口通信, CDC UART, 开源硬件]
 last_update: 
-  date: 2026-04-11
+  date: 2026-05-30
 ---
 import Normal from "../_normal.mdx";
 
@@ -52,7 +52,7 @@ import Normal from "../_normal.mdx";
 当目标设备由独立电源或计算机供电时，连接信号线前务必建立公共参考电位。请先切断目标设备电源，或在目标设备与树莓派调试探针间连接GND接地线；接地完成后方可连接RX、TX、SC和SD信号线。两系统间的电压差可能导致探针损坏。
 :::
 
-调试探针有五个 LED 灯，其中一个红色 LED 灯指示电源，另外四个指示活动的 LED 灯分别是
+调试探针有五个 LED 灯，其中一个红色 LED 灯指示电源，另外四个指示活动的 LED 灯分别是：
 
 <img src="/img/microcontrollers/debug-probe/debug-leds.png" alt="调试LED" width="70%" />
 
@@ -282,14 +282,14 @@ nc localhost 60000
 ## 更新调试探针的固件
 调试探针的固件是由 Raspberry Pi 发布的 UF2 文件。
 
-调试探头固件的最新版本是 2.3.0。如果您运行的是旧版本，或者不小心覆盖了调试探针上的固件，您可以在 [the debugprobe GitHub repository](https://github.com/raspberrypi/debugprobe/releases/latest) 中找到最新版本的固件。
+调试探针固件的最新版本是 2.3.0。如果您运行的是旧版本，或者不小心覆盖了调试探针上的固件，您可以在 [debugprobe GitHub 仓库](https://github.com/raspberrypi/debugprobe/releases/latest) 中找到最新版本的固件。
 
 要检查调试探针的固件版本，请运行：
 ```sh
 lsusb -v -d 2e8a:000c | grep bcdDevice
 ```
 
-对于固件版本 2.3.0 的调试探针，将显示 `bcdDevice 2.23`。
+对于固件版本 2.3.0 的调试探针，将显示 `bcdDevice 2.30`。
 
 :::tip
 `openocd` 报告的 `Info : CMSIS-DAP: FW Version = 2.0.0` 仅指 CMSIS-DAP 协议版本（与调试探针固件版本不同）。
@@ -299,14 +299,14 @@ lsusb -v -d 2e8a:000c | grep bcdDevice
 
 1. 从最新版本中下载 `debugprobe.uf2`。
 1. 捏住并取下调试探针外壳的顶部。
-1. 将调试探针插入计算机时按住 BOOTSEL 按钮，挂载名为 "RPI-RP2 "的卷。
-1. 将 `debugprobe.uf2` 复制到 "RPI-RP2" 卷上。文件复制到设备后，卷将自动卸载。
-1. 调试探头将重新启动，并运行更新版的调试探头固件。现在可以进行调试了。
+1. 将调试探针插入计算机时按住 BOOTSEL 按钮，挂载名为 RPI-RP2（Pico）或 RP2350（Pico 2）的卷。
+1. 将 `debugprobe.uf2` 复制到已挂载的存储卷上。文件复制到设备后，卷将自动卸载。
+1. 调试探针将重新启动，并运行更新版的调试探针固件。现在可以进行调试了。
 
 ## 示意图
 提供调试探针的原理图和机械图纸：
 - [原理图](https://datasheets.raspberrypi.com/debug/raspberry-pi-debug-probe-schematics.pdf) (PDF)
-- 机械图(https://datasheets.raspberrypi.com/debug/raspberry-pi-debug-probe-mechanical-drawing.pdf) (PDF)
+- [机械图](https://datasheets.raspberrypi.com/debug/raspberry-pi-debug-probe-mechanical-drawing.pdf) (PDF)
 
 原理图上显示的测试点 (TP) 位置如下图所示。
 

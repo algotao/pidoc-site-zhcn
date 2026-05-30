@@ -4,18 +4,25 @@ draft: false
 description: 本文详细介绍了如何在树莓派操作系统（Raspberry Pi OS）上安装和使用C/C++ SDK，为Raspberry Pi Pico系列微控制器（包括Pico和Pico W）进行开发。内容涵盖SDK的快速安装方法、开发环境配置、基础示例程序（如LED闪烁和“Hello World”串口输出）、以及如何快速启动自己的项目，包括CMake和GCC交叉编译器的安装与配置。此外，还提供了详细的操作步骤和代码示例，帮助开发者轻松上手，进行Raspberry Pi Pico系列的C/C++开发。
 keywords: [Raspberry Pi Pico, C/C++ SDK, 树莓派OS, 开发环境配置, SDK安装, LED闪烁, Hello World, CMake, GCC交叉编译器, Pico W, 微控制器开发, UF2文件, Raspberry Pi Pico SDK, 树莓派Pico入门, 开发教程, 嵌入式开发, Raspberry Pi Pico C/C++开发]
 last_update: 
-  date: 2026-03-15
+  date: 2026-05-30
 ---
 import Normal from "../_normal.mdx";
 
 # C/C++ SDK
 
 ## SDK安装
-要全面了解如何使用 C/C++ SDK，请阅读我们的 ["Raspberry Pi Pico 系列入门"](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) 文档。不过，如果您打算在[树莓派OS](../computers/os.mdx)上为 Pico 进行开发，可以通过命令行运行我们的[安装脚本](https://raw.githubusercontent.com/raspberrypi/pico-setup/master/pico_setup.sh)来快速设置 C/C++ 工具链。
+要开始使用 C/C++ SDK，请阅读我们的入门文档，其中介绍了如何使用 Raspberry Pi Pico 扩展设置 VS Code 并创建简单项目。支持的操作系统请查看扩展的 README。
 
-:::note[注意]
-在运行设置脚本之前，应确保树莓派上的操作系统是[最新的](../computers/os.mdx#升级软件)。
-:::
+但是，如果您打算在 32 位 Raspberry Pi OS 或 Raspberry Pi OS Lite 上开发 Pico，我们的 VS Code 扩展不支持这些操作系统。您可以改为从命令行运行设置脚本来快速设置 C/C++ 工具链。
+
+1. 在运行设置脚本之前，请确保 Raspberry Pi 上的 Raspberry Pi OS 已更新到最新版本。
+2. 通过运行以下命令下载并运行设置脚本：
+   ```sh
+   wget https://raw.githubusercontent.com/raspberrypi/pico-setup/master/pico_setup.sh
+   chmod +x pico_setup.sh
+   ./pico_setup.sh
+   ```
+3. 有关更多信息和测试设置的说明，请参阅 pico-setup 的 README。
 
 ### 树莓派Pico C/C++ SDK
 
@@ -33,7 +40,7 @@ import Normal from "../_normal.mdx";
 &emsp;&emsp;用于在 Raspberry Pi 微控制器上进行 C/C++ 开发的库和工具
 
 [API文档](https://www.raspberrypi.com/documentation/pico-sdk/index_doxygen.html)<br />
-&emsp;&emsp;树莓派co C/C++ SDK 文档
+&emsp;&emsp;树莓派 Pico C/C++ SDK API 文档
 
 [Pico示例代码库](https://github.com/raspberrypi/pico-examples)<br />
 &emsp;&emsp;示例项目
@@ -52,29 +59,29 @@ SDK 源代码是开放源代码，可通过 [pico-sdk Github 代码库](https://
 ## 你的第一个二进制文件
 
 ### LED闪烁
-任何人在使用新微控制器时编写的第一个程序都是打开或关闭 LED。树莓派Pico 板载了一个 LED。Pico 的 LED 连接到树莓派 RP2040 板上的 `GP25`，而 Pico W 的 LED 则连接到英飞凌 43439 无线芯片上的 `WL_GPIO0`。
+任何人在使用新微控制器时编写的第一个程序都是打开或关闭 LED。Raspberry Pi Pico 板载了一个 LED。LED 连接至主板微控制器的 `GP25`（适用于 Pico 和 Pico 2），以及 Infineon 43439 无线芯片的 `WL_GPIO0`（适用于 Pico W 和 Pico 2 W）。
 
 <video controls src="/img/microcontrollers/c-sdk/Blink-an-LED.webm" alt="LED闪烁" width="80%" />
 
-您可以通过以下方式打开或关闭闪烁、
-1. 下载适用于[树莓派Pico](https://datasheets.raspberrypi.com/soft/blink.uf2)或[Pico W](https://datasheets.raspberrypi.com/soft/blink_picow.uf2)的 Blink UF2。
+您可以通过以下方式打开或关闭闪烁：
+1. 下载 [Blink UF2](https://datasheets.raspberrypi.com/soft/blink.uf2)。此文件支持所有 Pico 变体。
 2. 按住 BOOTSEL 按钮，将 Pico 插入树莓派或其他电脑的 USB 端口。
-3. 它将挂载为名为 RPI-RP2 的大容量存储设备。
-4. 将 Blink UF2 二进制文件拖放到 RPI-RP2 卷上。Pico 将重新启动。
+3. 它将挂载为名为 RPI-RP2（Pico）或 RP2350（Pico 2）的大容量存储设备。
+4. 将 Blink UF2 二进制文件拖放到已挂载的存储卷上。Pico 将重新启动。
 
-你会看到板载 LED 指示灯闪烁。
+如果成功，板载 LED 将闪烁。
 
-您可以在 Github 上查看 [树莓派 Pico](https://github.com/raspberrypi/pico-examples/blob/master/blink/blink.c) 和 [Pico W](https://github.com/raspberrypi/pico-examples/blob/master/pico_w/wifi/blink/picow_blink.c) 版本的代码。
+您可以在 Github 上查看[编写自己的闪烁程序](https://github.com/raspberrypi/pico-examples/blob/master/blink/blink.c)的代码。
 
 ### 说 "Hello World"
 任何人编写的下一个程序都是通过 USB 串行连接说 "Hello World"。
 
 <video controls src="/img/microcontrollers/c-sdk/Hello-World.webm" alt="Hello World" width="80%" />
 
-1. 载 ["Hello World" UF2](https://datasheets.raspberrypi.com/soft/hello_world.uf2)。
+1. 下载 ["Hello World" UF2](https://datasheets.raspberrypi.com/soft/hello_world.uf2)。
 2. 按住 BOOTSEL 按钮，将 Pico 插入树莓派或其他计算机的 USB 端口。
-3. 它将挂载为名为 RPI-RP2 的大容量存储设备。
-4. 将 "Hello World" UF2 二进制文件拖放到 RPI-RP2 卷上。Pico 将重新启动。
+3. 它将挂载为名为 RPI-RP2（Pico）或 RP2350（Pico 2）的大容量存储设备。
+4. 将 "Hello World" UF2 二进制文件拖放到已挂载的存储卷上。Pico 将重新启动。
 5. 打开终端窗口并键入
 ```sh
 sudo apt install minicom
@@ -82,7 +89,7 @@ minicom -b 115200 -o -D /dev/ttyACM0
 ```
 你应该会看到 "Hello, world!"打印到终端。
 
-您可以在 [Github](https://github.com/raspberrypi/pico-examples/blob/master/hello_world/usb/hello_usb.c) 上查看代码
+您可以在 Github 上查看[编写自己的 hello_world 程序的代码](https://github.com/raspberrypi/pico-examples/blob/master/hello_world/usb/hello_usb.c)
 
 ## 快速启动自己的项目
 :::note[注意]
@@ -120,13 +127,14 @@ pico_sdk_init()
 
 最简单的方法是编写一个源文件（例如 `hello_world.c`）
 ```c
-#include <stdio.h> #include "pico/stdio.h
+#include <stdio.h>
+#include "pico/stdio.h"
 #include "pico/stdlib.h"
 
 int main() {
-    setup_default_uart()；
-    printf("Hello, world!\n")；
-    return 0；
+    setup_default_uart();
+    printf("Hello, world!\n");
+    return 0;
 }
 ```
 并在 CMakeLists.txt 中添加以下内容：

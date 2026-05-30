@@ -4,7 +4,7 @@ draft: false
 description: MicroPython 是 Python 3 的精简高效实现，专为像树莓派 Pico 这样的嵌入式硬件设计，支持通过 USB 进行交互式编程（REPL），并内置文件系统。本文介绍了如何通过简单的拖放 UF2 文件方式在树莓派 Pico 或 Pico W 上安装 MicroPython，以及如何利用其访问底层硬件、连接 Wi-Fi 和蓝牙等功能。同时提供了丰富的官方文档链接与资源，帮助开发者快速上手，适用于 RP2040 和 RP2350 等芯片平台。
 keywords: [MicroPython, 树莓派 Pico, 树莓派 Pico W, RP2040, 嵌入式编程, UF2 文件, REPL, 交互式编程, Wi-Fi, 蓝牙, Python, 硬件编程, Thonny IDE, 树莓派官方文档, MicroPython 固件, sys模块, network模块, 嵌入式硬件, C/C++]
 last_update: 
-  date: 2026-03-15
+  date: 2026-05-30
 ---
 import Normal from "../_normal.mdx";
 
@@ -37,8 +37,8 @@ MicroPython 是 Python 3 编程语言的完整实现，可直接在树莓派Pico
 
 要对设备进行编程，请按照以下步骤操作：
 
-1. 用 USB 电缆将 Pico 与电脑连接时，按住 BOOTSEL 按钮。当 Pico 显示为名为 RPI-RP2 的大容量存储设备时，松开 BOOTSEL 按钮。
-2. 将 MicroPython UF2 文件拖放到 RPI-RP2 卷上。Pico 将重新启动。现在您正在运行 MicroPython。
+1. 用 USB 电缆将 Pico 与电脑连接时，按住 BOOTSEL 按钮。当 Pico 显示为名为 RPI-RP2（Pico）或 RP2350（Pico 2）的大容量存储设备时，松开 BOOTSEL 按钮。
+2. 将 MicroPython UF2 文件拖放到已挂载的存储卷上。Pico 将重新启动。现在您正在运行 MicroPython。
 3. 通过 USB 串口访问 REPL。
 
 [《树莓派 Pico 系列 Python SDK》](https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-python-sdk.pdf) 一书包含连接 Pico 并使用命令行和 [Thonny](https://thonny.org/) IDE 在 MicroPython 中编程的分步说明。
@@ -60,14 +60,14 @@ MicroPython 是 Python 3 编程语言的完整实现，可直接在树莓派Pico
 
 ## 我在哪个硬件上运行？
 
-对于用 MicroPython 编写的软件，没有直接的方法可以通过查看硬件来确定它是运行在树莓派 Pico还是Pico W上。不过，您可以通过查看特定 MicroPython 固件中是否包含网络功能来间接判断：
+对于用 MicroPython 编写的软件，没有直接的方法可以通过查看硬件来确定它是运行在树莓派 Pico 还是 Pico W 上。不过，您可以通过查看特定 MicroPython 固件中是否包含网络功能来间接判断：
 
 ```py
 import network
 if hasattr(network, "WLAN"):
    # 电路板具有 WLAN 功能
 ```
-另外，您也可以使用 `sys` 模块检查 MicroPython 固件版本，以查看它是针对树莓派Pico还是Pico W编译的。
+另外，您也可以使用 `sys` 模块检查 MicroPython 固件版本，以查看它是针对树莓派 Pico 还是 Pico W编译的。
 ```py
 >>> import sys
 >>> sys.implementation
