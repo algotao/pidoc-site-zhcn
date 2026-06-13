@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update: 
-  date: 2026-05-30
+  date: 2026-06-13
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -3353,7 +3353,7 @@ Raspberry Pi 5 在+5V（25W）电压下可提供 5A 电流时，可为下游 USB
 vcgencmd get_config usb_max_current_enable
 ```
 
-下表描述了不同型号的 Raspberry Pi 在各种工作负载下消耗的功率（单位为安培）：
+下表描述了不同型号的树莓派在各种工作负载下消耗的电流（单位为安培）：
 
 |  |  | 树莓派1B+ | 树莓派2B | 树莓派3B | 树莓派Zero | 树莓派4B |
 | -- | -- | -- | -- | -- | -- | -- |
@@ -3853,7 +3853,7 @@ NOQuuuWuFMMMCCCCPPPPTTTTTTTTTRRRR
 |  |  | 4: 4GB |
 |  |  | 5: 8GB |
 |  |  | 6: 16GB |
-|  |  | 7: 其它 |
+|  |  | 7: 其它^other |
 | CCCC（位 16-19） | 制造商 | 0: Sony UK |
 |  |  | 1: Egoman |
 |  |  | 2: Embest |
@@ -3895,6 +3895,7 @@ NOQuuuWuFMMMCCCCPPPPTTTTTTTTTRRRR
 
 [^optbits]:有关 [OPT位编程](#otp寄存器和位定义)的信息。
 [^warranty]:Raspberry Pi 4 上从未设置过保修位。
+[^other]:对于内存大小为"其它"的情况，实际内存容量可通过 `rpi-sdram-size-gbit` [固件参数](./configuration.mdx#固件参数)确定。
 
 ### 使用中的新式修订编码
 

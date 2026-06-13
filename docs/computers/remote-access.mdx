@@ -5,7 +5,7 @@ title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等
 description: 本文详细介绍了如何在不连接显示器、键盘和鼠标的情况下远程访问和控制树莓派。涵盖了通过本地网络和互联网进行远程控制的方法，包括SSH、VNC、Raspberry Pi Connect等工具的使用。还提供了查找树莓派IP地址的多种方法，以及通过SCP、rsync、NFS、Samba等协议共享文件和文件夹的详细步骤。此外，文章还介绍了如何设置网络文件系统、Apache网络服务器以及通过网络启动树莓派的方法。
 keywords: [远程访问, 树莓派, SSH, VNC, Raspberry Pi Connect, IP地址, 文件共享, SCP, rsync, NFS, Samba, 网络文件系统, Apache, 网络启动, IPv6, 本地网络, 互联网]
 last_update: 
-  date: 2026-03-15
+  date: 2026-06-13
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -898,12 +898,12 @@ ls windowshare/
 
 #### "Host is down"错误
 
-当 SMB 协议版本不匹配，Linux Samba 客户端返回误导性错误信息时，就会发生此错误。默认情况下，Raspberry Pi OS 使用 2.1 及以上版本，与 Windows 7 及更高版本兼容。包括某些 NAS 在内的旧设备可能需要 1.0 版本。要修复此错误，请在挂载命令中添加一个版本条目（如 `,vers=1.0` ）：
+当 SMB 协议版本不匹配时，Linux Samba 客户端会返回误导性错误信息。默认情况下，Raspberry Pi OS 使用 2.1 及以上版本，与 Windows 7 及更高版本兼容。包括某些 NAS 设备在内的旧设备可能需要 1.0 版本。要修复此错误，请在挂载命令中添加一个版本条目（例如 `,vers=1.0`）：
 
 ```sh
 sudo mount.cifs //IP/share /mnt/point -o user=<uname>,vers=1.0
 ```
-您可能需要尝试不同的版本，以便与服务器版本相匹配。可能的值有
+您可能需要尝试不同的版本来匹配服务器版本。可能的值有：
 | 版本 | 描述 |
 | -- | -- |
 | 1.0 | 经典 CIFS/SMBv1 协议 |

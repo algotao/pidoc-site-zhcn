@@ -1,0 +1,1327 @@
+---
+sidebar_position: 3
+draft: false
+description: Connect for Organisations 是树莓派官方提供的企业级远程设备管理解决方案。支持多用户共享设备访问、屏幕共享、远程 Shell、设备转移、设备标记、双因素认证、审计日志、管理API、设备身份、远程更新等功能。
+keywords: [Raspberry Pi Connect, Connect for Organisations, 远程管理, 设备管理, 企业版, 组织版, 团队协作, 双因素认证, 审计日志, 管理API, 设备身份, 批量配置]
+last_update: 
+  date: 2026-06-13
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Normal from "../_normal.mdx";
+
+# 组织版 Connect
+
+## 介绍
+
+**组织版 Connect** 支持多名用户共享设备访问权限。使用 [Raspberry Pi Connect](./connect.mdx) 实现。
+
+组织中的设备支持 Connect 的所有功能，包括[屏幕共享](./connect.mdx#屏幕共享)、[远程 Shell](./connect.mdx#远程shell) 访问和[远程更新](./connect.mdx#远程更新你的树莓派设备)。
+
+创建首个组织即可自动开始为期四周的免费试用。
+
+## 创建组织
+
+创建新组织时，请先登录您的 Raspberry Pi Connect 账户，然后点击导航菜单右上角的账户切换图标。
+
+<img src="/img/services/connect/account-switcher.png" alt="Raspberry Pi Connect 界面，显示账户切换下拉菜单。账户切换器让您在个人账户和组织 Connect 账户之间切换。" width="100%" />
+
+选择**新建组织**并输入名称。如果您是首次创建组织，将显示**开始免费试用**；如果您之前已创建过组织，则显示**创建组织**。点击显示的按钮继续。
+
+组织创建完成后，您的 Connect 账户会自动加入该组织并成为管理员。
+
+如果您的个人账户中已有关联的设备，可以将它们全部转移到刚创建的组织。
+
+要转移设备：
+
+1. 在提示中选择*将它们全部转移到此组织？*链接。
+   
+   随即显示*转移个人设备*页面。
+   
+   <img src="/img/services/connect/transfer-personal-devices-link.png" alt="Raspberry Pi Connect 界面，显示将树莓派设备从个人 Connect 账户导入到组织 Connect 账户的链接。" width="100%" />
+   
+   如果您有可转移到新组织的个人设备，系统会在转移前要求您确认：
+   
+   <img src="/img/services/connect/transfer-devices.png" alt="Raspberry Pi Connect 界面，确认是否要将设备导入到组织 Connect 账户。" width="100%" />
+
+2. 选择*个人设备链接*查看个人设备，或选择*转移 x 台设备*（其中"x"为设备数量）确认将计费设备添加到组织账户。
+   
+   如果暂不添加设备，可以稍后操作。请参阅[转移设备](#转移设备)。
+
+## 管理用户 {#manage-users}
+
+您必须是管理员才能邀请用户加入、从组织中移除用户或更改用户在组织中的角色。
+
+邀请用户的步骤：
+
+1. 登录您的 Raspberry Pi Connect 账户。
+
+2. 点击导航菜单右上角的**账户切换图标**（两个相对的箭头），然后从列表中选择您的组织。
+
+3. 选择页面顶部的**用户**选项卡，然后点击**邀请他人**。
+
+    <img src="/img/services/connect/users.png" alt="Raspberry Pi Connect 界面，显示与组织 Connect 账户关联的用户。" width="100%" />
+
+4. 从下拉菜单中选择**角色**。
+
+    组织成员可选两种角色：
+
+    * **成员**：可远程访问组织内所有设备，但无法对组织进行任何修改。
+    * **管理员**：可远程访问组织内所有设备并修改组织设置。该角色还将接收涉及敏感操作的全局通知邮件，例如新增设备或新的管理 API 访问令牌。
+
+5. 输入您要发送邀请的邮箱地址。
+
+6. 选择**发送邀请**。
+
+    <img src="/img/services/connect/invite-user.png" alt="Connect 界面，显示邀请用户页面，包含角色下拉菜单、邮箱地址和发送邀请按钮。" width="100%" />
+
+    邀请邮件会发送至您在第 5 步提供的邮箱地址。用户可通过邮件中的邀请链接加入，并可使用该邮箱或任何有效的 Raspberry Pi ID 登录。
+
+移除用户的步骤：
+
+1. 登录您的 Raspberry Pi Connect 账户。
+
+2. 点击导航菜单右上角的**账户切换图标**（两个相对的箭头），然后从列表中选择您的组织。
+
+3. 选择页面顶部的**用户**选项卡。
+
+    此处会显示组织的所有成员。
+
+4. 在要移除的用户旁边，点击**更多选项图标**（三个垂直排列的点），然后选择**移除...**。
+
+    弹出确认窗口。
+
+5. 如果您确认要移除该用户，请选择**移除用户**。
+
+    该用户会立即从组织中移除，其与贵组织的 shell 与屏幕共享会话会在几分钟内终止。
+
+更改用户角色的步骤：
+
+1. 登录您的 Raspberry Pi Connect 账户。
+
+2. 点击导航菜单右上角的**账户切换图标**（两个相对的箭头），然后从列表中选择您的组织。
+
+3. 选择页面顶部的**用户**选项卡。
+
+    此处会显示组织的所有成员。
+
+4. 在要更改角色的用户旁边，点击**更多选项图标**（三个垂直排列的点），然后选择**更改角色...**。
+
+5. 从下拉菜单中为该用户选择要分配的角色，然后选择**更改角色**。
+
+    用户角色已更改，并显示确认页面。
+
+## 将树莓派设备关联至组织
+
+仅管理员可将设备关联至组织。操作步骤：
+
+* 若设备未关联Connect账户，请参阅 [将树莓派设备关联至Connect账户](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)。
+
+* 若设备已关联Connect账户，请参阅 [转移设备](#转移设备)。
+
+## 转移设备
+
+您必须是管理员才能在账户间转移设备。操作步骤如下：
+
+1. 点击导航菜单右上角的账户切换图标。
+
+    <img src="/img/services/connect/account-switcher-with-organisation.png" alt="更换组织" width="70%" />
+
+2. 切换至当前拥有该设备的账户（个人账户或组织账户）。
+
+3. 选择需要转移的设备。
+
+4. 在设备页面上选择**设置**。
+
+5. 在**危险区域**下，选择**转移设备…**
+
+    <img src="/img/services/connect/transfer.png" alt="转移" width="70%" />
+
+6. 选择目标接收账户。
+
+7. 点击**转移**。
+
+## 标记设备 {#tag-devices}
+
+标签帮助您对组织中的设备进行分类和查找。例如，您可以按位置（`london`、`leeds`）、环境（`production`、`staging`）或功能（`point-of-sale`、`kiosk`）对设备打标签。
+
+标签会显示在设备页面和设备列表中设备名称下方。
+
+您必须是管理员才能添加或移除标签。
+
+要为设备添加或移除标签：
+
+1. 从设备列表中选择设备。
+
+2. 在设备页面上选择**设置**。
+
+    <img src="/img/services/connect/tagging.png" alt="编辑标签对话框，显示已应用的标签以及带有建议的自动补全下拉菜单。" width="100%" />
+
+3. 在**常规**部分的**标签**字段中：
+
+    * 要添加标签，请在文本框中输入。您可以从下拉菜单中选择已有标签，或输入新标签名称并选择 **创建** 选项。
+    * 要移除标签，请选择标签旁的 **x**。
+
+4. 选择**更新设备**保存更改。
+
+每台设备最多支持 10 个标签。标签名称不得超过 30 个字符，且只能包含小写字母、数字、连字符和下划线。
+
+## 搜索和筛选设备 {#search-filter-devices}
+
+设备列表顶部的搜索栏让您可以结合自由文本搜索和结构化筛选查找设备。
+
+要按设备名称或序列号搜索，在搜索栏中输入任意文本。结果会随输入自动更新。
+
+要按特定属性筛选，输入限定符后跟冒号和值。可用的限定符有：
+
+| 限定符 | 说明 |
+|--------|------|
+| `model:` | 按树莓派型号筛选（例如 `model:5`、`model:4b`） |
+| `memory:` | 按 RAM 大小筛选（例如 `memory:4gb`、`memory:512mb`） |
+| `os:` | 按操作系统筛选（例如 `os:raspios-13`） |
+| `tag:` | 按标签筛选（例如 `tag:kiosk`、`tag:production`） |
+
+:::note
+`model:`、`memory:` 和 `os:` 限定符仅能查找运行 Connect 客户端 2.9.0 及更高版本的设备。要更新设备上的 Connect，请参阅 [更新](./connect.mdx#更新)。
+:::
+
+您可以在一次查询中组合多个筛选和自由文本。例如，`model:5 tag:production dashboard` 可查找名称中带有 "dashboard"、标签为 `production` 的树莓派 5 设备。
+
+<img src="/img/services/connect/filters.png" alt="设备列表，搜索栏中已应用 model 和 tag 筛选。" width="100%" />
+
+当您开始在搜索栏中输入时，下拉菜单会建议可用的限定符和值。从下拉菜单中选择一个限定符可查看其可用值，然后选择一个值将其作为筛选添加。已应用的筛选会显示在搜索栏中。
+
+要移除筛选，选择它旁边的 **x** 或按 **Backspace**。
+
+多次使用 `tag:` 限定符可查找同时具有 **所有** 指定标签的设备。例如，`tag:production tag:kiosk` 仅返回同时具有 `production` 和 `kiosk` 标签的设备。
+
+:::tip
+在列表中任何设备上选择标签可快速将其添加为筛选。
+:::
+
+## 设置订阅服务
+
+组织版Connect订阅将在四周试用期结束后自动生效，此后按月延后计费。
+
+仅管理员可设置订阅。操作步骤：
+
+1. 点击页面顶部标签栏下方试用横幅中的**设置计费**.
+2. 输入用于接收账单通知（如发票）的邮箱地址.
+3. 填写支付方式信息并提交
+    * 若试用期未结束，按钮显示为**开始试用** 试用期将延续，之后按月计费。
+    * 若试用期已结束，按钮显示为**支付并订阅**。此操作将启动月度订阅。
+
+免费试用结束后，若未设置订阅，您将无法远程访问组织内的设备。
+
+    <img src="/img/services/connect/billing.png" alt="付款" width="70%" />
+
+## 查看审计日志
+
+审计日志按时间顺序显示过去90天内的所有活动，最新事件优先显示。事件包括设备变更、组织成员变更、API访问令牌变更以及远程访问会话等。超过90天的事件将自动删除。
+
+仅管理员可查看组织过去90天的活动记录。要查看审计日志，请打开页面顶部的**审计日志**选项卡。
+
+<img src="/img/services/connect/audit-log.png" alt="审计日志" width="70%" />
+
+列表中的每个事件包含以下信息：
+
+* **时间戳**： 事件发生的时间。
+* **来源**：事件发生于仪表板还是通过API触发。
+* **操作**：具体操作（例如**API访问令牌创建**）及相关细节。
+* **对象**：操作涉及的对象，如特定设备、组织或访问令牌。
+* **执行者**：执行事件的用户，包含事件发生所在国家/地区。
+
+您可按操作类型（如**远程shell会话启动**）筛选事件。筛选列表时，请点击列表左上角**筛选器**旁的**操作**下拉菜单。
+
+点击列表右上角的**下载CSV**即可下载事件列表的CSV格式文件。
+
+## 修改组织设置
+
+组织管理员可在页面顶部的**设置**选项卡中配置以下内容。
+
+<img src="/img/services/connect/organisation-settings.png" alt="组织设置" width="70%" />
+
+### 重命名组织
+
+若需更改组织名称，请在**常规**部分输入新名称。此操作不会影响您的设备或组织成员。
+
+### 要求双因素认证 {#require-2fa}
+
+您可以要求组织的所有成员在其 Raspberry Pi ID 上启用双因素认证（2FA）。这能为贵组织设备的访问增加一层保护，防止成员账户被泄露后被用于访问组织设备。
+
+启用 2FA 要求的步骤：
+
+1. 登录 Raspberry Pi Connect。
+2. 在右上角的**账户切换**图标中选择您的组织账户。
+3. 选择**设置**选项卡，然后选择**要求双因素认证**。
+
+   页面会显示通知，确认组织设置已成功更新。
+
+<img src="/img/services/connect/organisation-authentication.png" alt="Connect 组织设置的认证部分，显示 要求双因素认证 按钮。" width="100%" />
+
+这会启动 14 天的宽限期。在宽限期内，我们会向尚未启用 2FA 的组织成员显示横幅。
+
+宽限期结束后，仍未启用 2FA 的成员将被阻止访问贵组织。在他们启用 Raspberry Pi ID 的 2FA 之前，他们将无法访问组织的设备或其他资源。
+
+<img src="/img/services/connect/organisation-2fa-required.png" alt="在宽限期结束后，面向未启用 2FA 的成员显示的双因素认证要求页面，并包含启用 Raspberry Pi ID 2FA 的链接。" width="100%" />
+
+禁用 2FA 要求的步骤：
+
+1. 登录 Raspberry Pi Connect。
+2. 在右上角的**账户切换**图标中选择您的组织账户。
+3. 选择**设置**选项卡，然后选择**停止要求双因素认证**。
+
+   页面会显示通知，确认组织设置已成功更新。
+
+:::note
+禁用后再重新启用 2FA 要求会重置 14 天宽限期。
+:::
+
+### 创建授权密钥
+
+若需通过 [Connect 自动关联设备](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)（无需网页界面）进行操作，请创建授权密钥。在**授权密钥**区域选择**新建**，填写描述及有效期（1至90天）。
+
+新授权密钥将显示。点击其旁的剪贴板图标即可复制。请立即复制此密钥，后续将无法再次查看。
+
+重要提示：授权密钥仅显示一次。请立即复制，后续将无法再次查看。
+
+### 创建管理API访问令牌
+
+若需自动生成授权密钥（无需网页界面）以 [连接设备至Connect](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)，可创建 [Connect for Organisations管理API](#管理api) 的API访问令牌。在**API访问令牌**区域选择**新建**，并输入令牌描述。
+
+:::warning[警告]
+管理 API 访问令牌相当于您组织的管理员用户名和密码。它可以管理组织中的每台设备、每个授权密钥和每个设备身份。请将其保存在调用管理 API 的机器上（如部署配置工作站或 CI 系统）；切勿将其嵌入树莓派操作系统镜像或复制到任何设备上。要对设备本身进行身份验证，请使用[设备身份](#device-identities)或[授权密钥](#创建授权密钥)为每台设备生成凭证并分发。
+:::
+
+新访问令牌将显示。点击其旁的剪贴板图标进行复制。请立即复制此令牌，后续将无法再次查看。
+
+重要提示：访问令牌仅显示一次。请立即复制，后续将无法再次查看。
+
+## 管理API
+
+管理API支持您无需Connect网页界面即可自动管理组织。向管理API发送请求时，必须使用有效的管理API访问令牌进行身份验证。基础URL为 https://api.connect.raspberrypi.com。
+
+### 创建设备身份 {#device-identities}
+
+设备身份（Device identities）让您无需交互式登录即可预先将树莓派设备认证到组织。与授权密钥不同，设备身份可多次使用，并依赖存储在设备一次性可编程内存中的私钥。
+
+创建设备身份是免费的。您仅在设备首次通过认证连接到组织的 Connect 账户时开始计费，这使得设备身份非常适合在部署前预配置 Connect 的组织场景。
+
+请求必须包含 `X-Connect-Identity-Signature` 标头。要生成该标头，请构造一个以换行分隔的有效载荷，按顺序包含：
+
+* HTTP 请求方法（例如 `POST`）
+* 完整的请求 URL
+* `Authorization: <值>`
+* `Content-Type: <值>`
+* `Accept: <值>`（如果您的 HTTP 客户端会发送此标头）
+* HTTP 请求正文的 SHA256 十六进制摘要（下面 `POST` 所示的 JSON 请求正文）
+
+使用设备的私钥，以 ECDSA with SHA256 对此有效载荷进行签名，然后进行 Base64 编码。
+
+例如，一个注册设备身份的请求会产生以下有效载荷：
+
+```
+POST
+https://api.connect.raspberrypi.com/organisation/device-identities
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+Accept: */*
+<HTTP 请求正文的 SHA256 十六进制摘要>
+```
+
+在设备上，使用 [rpi-fw-crypto](https://github.com/raspberrypi/utils/tree/master/rpifwcrypto) 对有效载荷进行签名。例如，将有效载荷写入 `payload.txt` 后：
+
+```sh
+rpi-fw-crypto sign --in payload.txt --key-id 1 --alg ec | base64 -w 0
+```
+
+输出即为 `X-Connect-Identity-Signature` 标头的值。
+
+要为您的组织创建设备身份，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换以下代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `signaturehere`：此请求的 `X-Connect-Identity-Signature` 值。
+* `-----BEGIN PUBLIC KEY-----...`：设备的 PEM 编码公钥。
+* `my-device-identity`：设备身份的描述，可在组织审计日志中看到。
+* `pi5-001`：交换身份时分配给设备的名称（可选，默认为设备的主机名）。
+
+```http
+POST /organisation/device-identities HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+X-Connect-Identity-Signature: signaturehere
+
+{
+    "public_key": "-----BEGIN PUBLIC KEY-----...",
+    "description": "my-device-identity",
+    "device_name": "pi5-001"
+}
+```
+
+curl 示例：
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' --header 'X-Connect-Identity-Signature: signaturehere' --header 'Content-Type: application/json' --data '{"public_key":"-----BEGIN PUBLIC KEY-----...","description":"my-device-identity","device_name":"pi5-001"}' https://api.connect.raspberrypi.com/organisation/device-identities
+```
+
+若成功，您会收到 **201 Created** 响应，其中包含 JSON 格式的设备身份。例如：
+
+```http
+HTTP/2 201
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "096ce472-2cbd-412a-8295-6c03a1a07ba4",
+    "description": "my-device-identity",
+    "device_name": "pi5-001",
+    "created_at": "2026-02-25T16:09:52Z",
+    "public_key": "-----BEGIN PUBLIC KEY-----..."
+}
+```
+
+响应包含以下字段：
+
+* **id**：设备身份的唯一标识符。
+* **description**：用于创建设备身份的描述。
+* **device_name**：交换身份时分配给设备的名称。
+* **created_at**：创建设备身份的日期和时间（ISO 8601 格式）。
+* **public_key**：设备身份对应的 PEM 编码公钥。
+
+如果您的管理 API 访问令牌无效，会返回 **401 Unauthorized**。
+
+如果设备身份无法创建，会返回 **422 Unprocessable Content** 响应：
+
+```http
+HTTP/2 422
+Content-Type: application/json; charset=utf-8
+
+{"message":"Validation failed: Public key is invalid"}
+```
+
+### 列出设备身份
+
+如需列出组织中的所有设备身份，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/device-identities HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/device-identities
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含最多 100 个按描述字母顺序排列的组织设备身份，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "device_identities": [
+        {
+            "id": "096ce472-2cbd-412a-8295-6c03a1a07ba4",
+            "description": "my-device-identity",
+            "device_name": "pi5-001",
+            "tags": [],
+            "created_at": "2026-02-25T16:09:52Z",
+            "public_key": "-----BEGIN PUBLIC KEY-----..."
+        }
+    ],
+    "meta": {
+        "page": 1,
+        "per_page": 100,
+        "total_count": 1,
+        "total_pages": 1
+    }
+}
+```
+
+响应包含以下字段：
+
+**device_identities**：组织中的设备身份列表（每页最多 100 个）。
+**meta**：分页详情。
+
+`device_identities` 列表中的每个项目包含以下字段：
+
+**id**：设备身份的唯一标识符。
+**description**：创建设备身份时使用的描述。
+**device_name**：交换身份时将分配给设备的名称。
+**tags**：交换身份时将应用到设备的标签。
+**created_at**：创建设备身份的日期和时间（ISO 8601 格式）。
+**public_key**：设备身份对应的 PEM 编码公钥。
+
+`meta` 对象包含以下字段：
+
+**page**：响应的当前页码。
+**per_page**：每页的设备身份数量（最多 100）。
+**total_count**：组织中的设备身份总数。
+**total_pages**：组织设备身份的总页数。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+`page` 和 `per_page` 查询参数的用法与[列出设备](#列出设备)相同。
+
+### 显示设备身份
+
+如需显示组织中的单个设备身份，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `device-identity-id`：设备身份的唯一标识符。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/device-identities/device-identity-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/device-identities/device-identity-id
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含设备身份的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "096ce472-2cbd-412a-8295-6c03a1a07ba4",
+    "description": "my-device-identity",
+    "device_name": "pi5-001",
+    "tags": [],
+    "created_at": "2026-02-25T16:09:52Z",
+    "public_key": "-----BEGIN PUBLIC KEY-----..."
+}
+```
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到该设备身份，将返回 **404 Not Found** 响应。
+
+### 更新设备身份
+
+如需更新组织中的现有设备身份，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `device-identity-id`：设备身份的唯一标识符。
+* `my-renamed-device-identity`：设备身份的新描述。
+* `pi5-001`：交换身份时将分配给设备的新名称（可选）。
+* `production`、`kiosk`：交换身份时应用到设备的标签（可选）。
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```http
+PATCH /organisation/device-identities/device-identity-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+
+{
+    "description": "my-renamed-device-identity",
+    "device_name": "pi5-001",
+    "tags": ["production", "kiosk"]
+}
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --request PATCH --header 'Authorization: Bearer rporg_accesstokenhere' --header 'Content-Type: application/json' --data '{"description":"my-renamed-device-identity","device_name":"pi5-001","tags":["production","kiosk"]}' https://api.connect.raspberrypi.com/organisation/device-identities/device-identity-id
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含更新后的设备身份，采用 JSON 格式：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "096ce472-2cbd-412a-8295-6c03a1a07ba4",
+    "description": "my-renamed-device-identity",
+    "device_name": "pi5-001",
+    "tags": ["production", "kiosk"],
+    "created_at": "2026-02-25T16:09:52Z",
+    "public_key": "-----BEGIN PUBLIC KEY-----..."
+}
+```
+
+:::note
+设备身份一旦被交换为设备后，只能更新 `description` 字段。请求正文中的任何 `device_name` 或 `tags` 值将被忽略，因为这些字段仅在身份首次交换时应用。
+:::
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到该设备身份，将返回 **404 Not Found** 响应。
+
+若设备身份无法更新，将返回 **422 Unprocessable Content** 响应，其中包含无法更新的原因：
+
+```http
+HTTP/2 422
+Content-Type: application/json; charset=utf-8
+
+{"message":"Validation failed: Description can't be blank"}
+```
+
+### 删除设备身份
+
+如需删除组织中的设备身份，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `device-identity-id`：设备身份的唯一标识符。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+DELETE /organisation/device-identities/device-identity-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --request DELETE --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/device-identities/device-identity-id
+```
+
+</TabItem>
+
+</Tabs>
+
+如果设备身份已被交换为设备，关联的设备也将被删除并从 Raspberry Pi Connect 中退出。
+
+若成功，将返回 **204 No Content** 响应，响应体为空。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到该设备身份，将返回 **404 Not Found** 响应。
+
+### 列出构件
+
+如需列出组织中的所有远程更新构件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/artefacts HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/artefacts
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含最多 100 个按名称字母顺序排列的组织构件，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "artefacts": [
+        {
+            "id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
+            "name": "kiosk-v1.0",
+            "uri": "https://example.com/kiosk-v1.0.tar.zst",
+            "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6"
+        }
+    ],
+    "meta": {
+        "page": 1,
+        "per_page": 100,
+        "total_count": 1,
+        "total_pages": 1
+    }
+}
+```
+
+`page` 和 `per_page` 查询参数的用法与[列出设备](#列出设备)相同。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+### 创建构件
+
+如需为组织创建远程更新构件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `kiosk-v1.0`：构件在组织中的唯一名称。
+* `https://example.com/kiosk-v1.0.tar.zst`：设备下载构件的 URI。
+* `d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6`：构件的十六进制 SHA-256 校验和。
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```http
+POST /organisation/artefacts HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+
+{
+    "name": "kiosk-v1.0",
+    "uri": "https://example.com/kiosk-v1.0.tar.zst",
+    "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6"
+}
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' --data-urlencode 'name=kiosk-v1.0' --data-urlencode 'uri=https://example.com/kiosk-v1.0.tar.zst' --data-urlencode 'checksum=d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6' https://api.connect.raspberrypi.com/organisation/artefacts
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **201 Created** 响应，其中包含构件的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 201
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
+    "name": "kiosk-v1.0",
+    "uri": "https://example.com/kiosk-v1.0.tar.zst",
+    "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6"
+}
+```
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若构件无法创建，将返回 **422 Unprocessable Content** 响应，其中包含无法创建的原因：
+
+```http
+HTTP/2 422
+Content-Type: application/json; charset=utf-8
+
+{"message":"Validation failed: Name can't be blank"}
+```
+
+### 删除构件
+
+如需删除组织中的构件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `artefact-id`：构件的 `id`（由[创建构件](#创建构件)返回）。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+DELETE /organisation/artefacts/artefact-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --request DELETE --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/artefacts/artefact-id
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **204 No Content** 响应，响应体为空。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到给定的构件 ID，将返回 **404 Not Found** 响应。
+
+若该构件已被部署到设备，将返回 **422 Unprocessable Content** 响应，其中包含无法删除的原因：
+
+```http
+HTTP/2 422
+Content-Type: application/json; charset=utf-8
+
+{"message":"Cannot delete artefacts that have been deployed"}
+```
+
+### 列出部署
+
+如需列出组织中某设备的远程更新部署记录，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `device-id`：设备的唯一标识符。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/devices/device-id/deployments HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/devices/device-id/deployments
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含最多 100 个设备的部署记录，按最新优先排序，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "deployments": [
+        {
+            "id": "fdf45c44-2c0e-4f12-9b04-3a6a1c0d3b8d",
+            "state": "failed",
+            "state_reason": "Checksum mismatch",
+            "device_id": "69739b44-ebb2-468e-9e24-08126dec4925",
+            "artefact_id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
+            "created_at": "2026-02-25T16:09:52Z",
+            "updated_at": "2026-02-25T16:10:30Z"
+        }
+    ],
+    "meta": {
+        "page": 1,
+        "per_page": 100,
+        "total_count": 1,
+        "total_pages": 1
+    }
+}
+```
+
+每个部署的 `state` 为 `pending`、`in_progress`、`succeeded`、`failed` 或 `cancelled` 之一。对于 `failed` 的部署，`state_reason` 包含部署失败原因的可读说明（例如校验和不匹配或被更新的部署取代）；对于其他状态，该值为 `null`。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到给定的设备 ID，将返回 **404 Not Found** 响应。
+
+### 显示部署
+
+如需显示组织中的单个部署，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `deployment-id`：部署的唯一标识符。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/deployments/deployment-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/deployments/deployment-id
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含部署的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "fdf45c44-2c0e-4f12-9b04-3a6a1c0d3b8d",
+    "state": "succeeded",
+    "state_reason": null,
+    "device_id": "69739b44-ebb2-468e-9e24-08126dec4925",
+    "artefact_id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
+    "created_at": "2026-02-25T16:09:52Z",
+    "updated_at": "2026-02-25T16:10:30Z"
+}
+```
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到该部署，将返回 **404 Not Found** 响应。
+
+### 创建部署
+
+如需将构件部署到设备，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。新部署将取代该设备上已排队的任何待处理部署。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `device-id`：目标设备的唯一标识符。
+* `artefact-id`：构件的 `id`（由[创建构件](#创建构件)返回）。
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```http
+POST /organisation/devices/device-id/deployments HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+
+{
+    "artefact_id": "artefact-id"
+}
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' --data-urlencode 'artefact_id=artefact-id' https://api.connect.raspberrypi.com/organisation/devices/device-id/deployments
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **201 Created** 响应，其中包含部署的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 201
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "fdf45c44-2c0e-4f12-9b04-3a6a1c0d3b8d",
+    "state": "pending",
+    "state_reason": null,
+    "device_id": "69739b44-ebb2-468e-9e24-08126dec4925",
+    "artefact_id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
+    "created_at": "2026-02-25T16:09:52Z",
+    "updated_at": "2026-02-25T16:09:52Z"
+}
+```
+
+若缺少 `artefact_id`，将返回 **400 Bad Request** 响应。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到该设备或构件，将返回 **404 Not Found** 响应。
+
+若组织的免费试用已结束且尚未设置计费，将返回 **403 Forbidden** 响应：
+
+```http
+HTTP/2 403
+Content-Type: application/json; charset=utf-8
+
+{"message":"Deployments are blocked until billing has been set up"}
+```
+
+### 取消部署
+
+如需取消待处理的部署，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `deployment-id`：部署的唯一标识符。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+PUT /organisation/deployments/deployment-id/cancel HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --request PUT --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/deployments/deployment-id/cancel
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含更新后的部署详细信息，采用 JSON 格式：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "fdf45c44-2c0e-4f12-9b04-3a6a1c0d3b8d",
+    "state": "cancelled",
+    "state_reason": null,
+    "device_id": "69739b44-ebb2-468e-9e24-08126dec4925",
+    "artefact_id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
+    "created_at": "2026-02-25T16:09:52Z",
+    "updated_at": "2026-02-25T16:10:30Z"
+}
+```
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到该部署，将返回 **404 Not Found** 响应。
+
+若部署无法取消（因为已被取消、已成功或已失败），将返回 **422 Unprocessable Content** 响应，其中包含无法取消的原因：
+
+```http
+HTTP/2 422
+Content-Type: application/json; charset=utf-8
+
+{"message":"Cannot cancel deployment in state \"succeeded\""}
+```
+
+### 创建授权密钥
+
+若需自动生成 [通过Connect连接设备](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来) 的授权密钥，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理API访问令牌。
+* `my-auth-key`：授权密钥描述。
+* `1`：授权密钥有效期天数，范围 1 到 90（可选，默认1天）。
+* `pi5-001`：使用此密钥添加设备时使用的名称（可选，默认为设备的主机名）。
+* `production`、`kiosk`：交换授权密钥时应用到设备的标签（可选）。每个标签只能包含小写字母、数字、连字符和下划线，最多 30 个字符。每个授权密钥最多可应用 10 个标签。
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```http
+POST /organisation/auth-keys HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+
+{
+    "description": "my-auth-key",
+    "ttl_days": 1,
+    "device_name": "pi5-001",
+    "tags": ["production", "kiosk"]
+}
+```
+
+</TabItem>
+<TabItem value="http" label="HTTP">
+
+HTTP请求：
+
+```http
+POST /organisation/auth-keys HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/x-www-form-urlencoded
+
+description=my-auth-key&ttl_days=1&device_name=pi5-001&tags[]=production&tags[]=kiosk
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' --data-urlencode 'description=my-auth-key' --data-urlencode 'ttl_days=1' --data-urlencode 'device_name=pi5-001' --data-urlencode 'tags[]=production' --data-urlencode 'tags[]=kiosk' https://api.connect.raspberrypi.com/organisation/auth-keys
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回**201 Created**响应，其中包含JSON格式的授权密钥。例如：
+
+```http
+HTTP/2 201
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "12345",
+    "description": "my-auth-key",
+    "device_name": "pi5-001",
+    "tags": ["production", "kiosk"],
+    "secret": "rpoak_123456",
+    "expires_at": "2025-01-01T00:00:30Z"
+}
+```
+
+响应包含以下字段：
+
+* **id**：授权密钥的唯一标识符。
+* **description**：创建授权密钥时使用的描述信息。
+* **device_name**：交换授权密钥时分配给设备的名称。
+* **tags**：交换授权密钥时应用到设备的标签。
+* **secret**：以 `rpoak_` 为前缀的随机令牌。
+* **expires_at**：密钥过期日期与时间（ISO 8601格式）。
+
+在过期前可使用 `secret` 进行 [设备与Connect的关联](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若授权密钥创建失败，将返回 **422 Unprocessable Content** 响应。
+
+```http
+HTTP/2 422
+Content-Type: application/json; charset=utf-8
+
+{"message":"验证失败：描述字段不能为空"}
+```
+
+:::tip
+您也可手动在组织的**设置**页面[创建授权密钥](#创建授权密钥)。
+:::
+
+### 列出设备
+
+若需列出组织中的所有设备，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理API访问令牌。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/devices HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/devices
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回**200 OK**响应，其中包含最多100个按名称字母顺序排列的组织设备，采用JSON格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "devices": [
+        {
+            "id": "69739b44-ebb2-468e-9e24-08126dec4925",
+            "name": "raspberrypi5",
+            "serial_number": "ea636879c4d47a37",
+            "tags": ["production", "kiosk"]
+        }
+    ],
+    "meta": {
+        "page": 1,
+        "per_page": 100,
+        "total_count": 1,
+        "total_pages": 1
+    }
+}
+```
+
+响应包含以下字段：
+
+**devices**：组织中的设备列表（每页最多100个）。
+**meta**：分页详情。
+
+`devices` 列表中的每个项目包含以下字段：
+
+**id**：设备的唯一标识符。
+**name**：设备名称。
+**serial_number**：设备序列号。
+**tags**：应用于该设备的标签。
+
+`meta` 对象包含以下字段：
+
+**page**：响应的当前页码。
+**per_page**：每页的设备数量（最多100）。
+**total_count**：组织中的设备总数。
+**total_pages**：组织设备的总页数。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+要获取后续页面的设备，请在查询字符串中使用 `page` 参数：
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/devices?page=2 HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' 'https://api.connect.raspberrypi.com/organisation/devices?page=2'
+```
+
+</TabItem>
+</Tabs>
+
+要更改每页返回的设备数量，请在查询字符串中使用 `per_page` 参数（最多100）：
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/devices?per_page=10 HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' 'https://api.connect.raspberrypi.com/organisation/devices?per_page=10'
+```
+
+</TabItem>
+</Tabs>
+
+### 删除设备
+
+若需删除组织中的设备并将其从Raspberry Pi Connect注销，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理API访问令牌。
+* `device-id`：设备的唯一标识符。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+DELETE /organisation/devices/device-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --request DELETE --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/devices/device-id
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **204 No Content** 响应，响应体为空。
+
+若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+若在组织中未找到给定的设备 ID，将返回 **404 Not Found** 响应。
+
+## 批量配置
+
+您可以利用 [管理 API](#管理api) 编写脚本生成授权密钥，从而无需人工干预即可配置多台设备。此方法结合了管理 API 与 [将设备与 Connect 关联](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来) 中所述的方法。
+
+以下示例为每台设备创建一个授权密钥，并将密钥保存到文件中。请将 `rporg_accesstokenhere` 替换为您自己的 [管理 API 访问令牌](#创建管理api访问令牌)。
+
+:::warning[警告]
+请在受信任的部署配置机上运行此脚本，而非在树莓派设备本身上运行。管理 API 访问令牌必须保留在部署配置机上——仅需将生成的每台设备授权密钥文件（`.key` 文件）复制到对应设备。
+:::
+
+:::tip
+如果可以在部署前对设备进行编程，建议考虑使用[设备身份](#device-identities)。私钥存储在树莓派的一次性可编程内存中，因此无需将任何密钥复制到设备上。
+:::
+
+```sh
+for DEVICE in pi5-001 pi5-002 pi5-003; do
+  SECRET=$(curl --silent --fail \
+    --header 'Authorization: Bearer rporg_accesstokenhere' \
+    --data-urlencode "description=${DEVICE}" \
+    --data-urlencode "device_name=${DEVICE}" \
+    https://api.connect.raspberrypi.com/organisation/auth-keys \
+    | jq -r '.secret')
+  if [ -z "${SECRET}" ]; then
+    echo "Failed to create auth key for ${DEVICE}" >&2
+    continue
+  fi
+  echo "${SECRET}" > "${DEVICE}.key"
+  echo "Created auth key for ${DEVICE}: ${DEVICE}.key"
+done
+```
+
+每个 `.key` 文件包含一个授权密钥（前缀为 `rpoak_`）。组织授权密钥默认在一天后过期，因此请在设备首次开机前不久生成密钥。要配置设备：
+
+1. 在设备上，以您指定的用户身份运行 `loginctl enable-linger` 和 `rpi-connect on` 以启用 Connect。
+2. 将对应的 `.key` 文件内容复制到 `~/.config/com.raspberrypi.connect/auth.key`。
+3. 从配置机器上删除 `.key` 文件。这些文件包含敏感密钥。
+
+当检测到该文件时，Connect 会自动为设备完成登录，随后删除该文件。如需更多信息，请参阅 [将 Raspberry Pi 设备与 Connect 账户关联](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)。
+
+<Normal />
