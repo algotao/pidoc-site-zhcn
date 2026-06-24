@@ -1,10 +1,10 @@
 ---
 draft: false
 title: 在树莓派安装Docker
-description: 快速在树莓派上部署Docker！本文提供详细指南，涵盖系统要求（Raspberry Pi OS Trixie 13/Bookworm 12/Bullseye 11）、国内镜像源配置（推荐阿里云/腾讯云替代Docker官方源）、Docker Engine及相关工具（docker-ce、docker-compose-plugin等）的安装步骤、验证方法（通过hello-world镜像）、普通用户权限配置（免sudo操作），以及卸载方法和镜像拉取加速解决方案（国内镜像源配置）。助您高效搭建树莓派容器化开发环境！
-keywords: [树莓派Docker, Raspberry Pi Docker, Docker Engine安装, 树莓派操作系统, Docker国内镜像源, Docker加速, Docker CE, docker-compose-plugin, 容器化部署, 树莓派容器, 免sudo Docker, 镜像拉取问题]
+description: 快速在树莓派上部署Docker！本文提供详细指南，涵盖系统要求（Raspberry Pi OS Trixie 13/Bookworm 12/Bullseye 11）、APT源配置（DEB822 .sources 格式与旧 .list 格式）、国内镜像源配置（推荐阿里云/腾讯云替代Docker官方源）、Docker Engine及相关工具（docker-ce、docker-compose-plugin等）的安装步骤、验证方法（通过hello-world镜像）、普通用户权限配置（免sudo操作），以及卸载方法和镜像拉取加速解决方案（国内镜像源配置）。助您高效搭建树莓派容器化开发环境！
+keywords: [树莓派Docker, Raspberry Pi Docker, Docker Engine安装, 树莓派操作系统, Docker国内镜像源, Docker加速, Docker CE, docker-compose-plugin, 容器化部署, 树莓派容器, 免sudo Docker, 镜像拉取问题, DEB822, Trixie]
 last_update: 
-  date: 2025-10-07
+  date: 2026-06-24
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -23,13 +23,110 @@ import TabItem from '@theme/TabItem';
 
 ### 1. 设置 Docker 的 apt 存贮库
 
-:::tip
+::::tip
 由于国内访问 download.docker.com 存在着被屏蔽或访问速度慢等问题，推荐使用 [**阿里云**](https://mirrors.aliyun.com/) 或 [**腾讯云**](https://mirrors.tencent.com/) 作为 Docker apt 源。尽量避免直接使用 [Docker官方](https://download.docker.com/) 的 Docker apt 源。
-:::
+::::
 
+<Tabs groupId="osversion">
+
+<TabItem value="trixie" label="Trixie (13)">
+
+:::note
+Trixie 使用 **DEB822 格式** 的 `.sources` 文件，内容为多行键值对结构。
+:::
 
 <Tabs>
 <TabItem value="阿里云" label="阿里云">
+
+```sh
+# 卸载旧版本（如果有）:
+for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+
+# 添加 Docker 官方 GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# 添加仓库到 Apt 源 (DEB822 .sources 格式):
+sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
+Types: deb
+URIs: http://mirrors.aliyun.com/docker-ce/linux/debian
+Suites: trixie
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt-get update
+```
+
+</TabItem>
+<TabItem value="腾讯云" label="腾讯云">
+
+```sh
+# 卸载旧版本（如果有）:
+for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+
+# 添加 Docker 官方 GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL http://mirrors.tencent.com/docker-ce/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# 添加仓库到 Apt 源 (DEB822 .sources 格式):
+sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
+Types: deb
+URIs: http://mirrors.tencent.com/docker-ce/linux/debian
+Suites: trixie
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt-get update
+```
+
+</TabItem>
+<TabItem value="Docker官方" label="Docker官方">
+
+```sh
+# 卸载旧版本（如果有）:
+for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+
+# 添加 Docker 官方 GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# 添加仓库到 Apt 源 (DEB822 .sources 格式):
+sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/raspbian
+Suites: trixie
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt-get update
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+
+<TabItem value="bookworm" label="Bookworm / Bullseye (12 / 11)">
+
+:::note
+Bookworm 和 Bullseye 使用传统的 **one-line 格式** 的 `.list` 文件。
+:::
+
+<Tabs>
+<TabItem value="阿里云" label="阿里云">
+
 ```sh
 # 卸载旧版本（如果有）:
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
@@ -48,9 +145,10 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker_aliyun.list > /dev/null
 sudo apt-get update
 ```
-</TabItem>
 
+</TabItem>
 <TabItem value="腾讯云" label="腾讯云">
+
 ```sh
 # 卸载旧版本（如果有）:
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
@@ -69,9 +167,10 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker_tencentyun.list > /dev/null
 sudo apt-get update
 ```
-</TabItem>
 
+</TabItem>
 <TabItem value="Docker官方" label="Docker官方">
+
 ```sh
 # 卸载旧版本（如果有）:
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
@@ -90,9 +189,12 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt-get update
 ```
+
 </TabItem>
 </Tabs>
 
+</TabItem>
+</Tabs>
 
 ### 2. 安装 Docker 软件包
 
@@ -136,11 +238,11 @@ sudo rm -rf /var/lib/containerd
 
 ## 国内加速镜像 pull 失败问题 
 
-:::warning
+::::warning
 自 24.06 月初开始，docker 官方 registry 被封禁，国内的 Docker Hub 镜像加速器相继停止服务。如果您已经尝试各种办法但仍未找到可用的加速镜像源，那么可使用本站的源 **将就一下**。
 
 为防止本站流量耗尽，该镜像源限制为 **linux系统** + **arm/arm64** 架构的终端可访问，可支持 **树莓派** 及 各种arm架构的派。*M1-4架构的Mac也可以*
-:::
+::::
 
 
 创建或修改 `/etc/docker/daemon.json` 文件，并重启 `docker` 服务。
