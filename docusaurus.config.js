@@ -8,6 +8,11 @@ import { themes as prismThemes } from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
+  future: {
+    faster: {
+      swcJsMinimizer: true,
+    },
+  },
   title: 'Raspberry Pi 树莓派 (官网26年06月更新)',
   tagline: '中文版文档',
   favicon: 'favicon.ico',
@@ -151,7 +156,7 @@ const config = {
       prism: {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
-        additionalLanguages: ['protobuf', 'http', 'bash', 'cmake', 'ini', 'php', 'python', 'csharp', 'cpp', 'json', 'kotlin', 'powershell'],
+        additionalLanguages: ['http', 'bash', 'cmake', 'ini', 'php', 'python', 'csharp', 'cpp', 'json', 'kotlin', 'powershell'],
       },
       metadata: [
         { name: 'shenma-site-verification', content: '124a8035166290a4e81d78c346cfff1e_1712642854' },
