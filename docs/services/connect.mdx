@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update: 
-  date: 2026-06-13
+  date: 2026-07-05
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -416,7 +416,7 @@ Raspberry Pi Connect 具备远程推送更新至树莓派设备的能力。
 
 如果你是管理设备团队的用户，Connect for Organisations 的管理员还可以使用[管理 API](#组织版-connect) 自动管理更新构件和部署。
 
-### A/B 启动更新
+### A/B 启动更新 {#a-b-启动更新}
 
 A/B 启动更新可防止失败或错误的更新导致设备停止工作。
 
@@ -654,7 +654,7 @@ ${EDITOR:-vi} ./examples/ota/config/ota.yaml
 ./rpi-image-gen build -S ./examples/ota/ -c ota.yaml
 ```
 
-#### 第三阶段：托管更新构件
+#### 第三阶段：托管更新构件 {#托管更新工件}
 
 现在你已创建了要通过 Raspberry Pi Connect 部署的更新构件，可以将其托管在 FTP/SFTP 服务器上、使用 `file://` URI 本地保存、放在公共 Web 服务器、S3 存储桶或接收设备可通过 HTTP 下载的任何其他网站上。
 
@@ -725,7 +725,7 @@ hostname -I
 
 <img src="/img/services/connect/create-deployment-artefact.png" alt="创建部署构件界面，显示必填字段：名称、URI 和 SHA-256 校验和。" width="100%" />
 
-#### 第四阶段：远程更新
+#### 第四阶段：远程更新 {#远程更新}
 
 使用 Raspberry Pi Connect 将更新构件部署到接收的树莓派设备。
 
@@ -777,9 +777,136 @@ Generated using rpi-image-gen e3828f885c860f15991468883d3b8484b0eaf9d8 on 2025-1
 Artefact version: 1.1.0
 ```
 
-## Otamaker
+### 脚本工件
 
-待编写。
+脚本工件打包了一个 shell 脚本，Raspberry Pi Connect 会在接收设备上以 root 权限运行它。脚本工件适用于维护任务，例如升级软件包、更改配置或安装软件。
+
+与 [A/B 启动更新](#a-b-启动更新)不同，脚本工件不需要特殊的分区布局，因此您可以将其部署到任何运行标准 Raspberry Pi OS 安装的设备上。但是，如果脚本失败，不会自动恢复，因此在部署到远程设备之前，请仔细测试您的脚本。
+
+使用 [otamaker](https://github.com/raspberrypi/utils/tree/master/otamaker) 来创建脚本工件。
+
+#### 前置条件
+
+创建和部署脚本工件需要满足以下条件：
+
+##### 对于接收更新工件的设备：
+
+一台树莓派设备，需要满足以下条件：
+
+* 已连接到互联网。
+* 已注册并登录您的 Raspberry Pi Connect 账户。
+* 运行最新版本的 Raspberry Pi Connect 或 Connect Lite，并安装了 `rpi-connect-ota` 软件包：
++
+```sh
+sudo apt update
+sudo apt install rpi-connect rpi-connect-ota
+```
++
+如果使用 Connect Lite，请安装 `rpi-connect-lite` 而不是 `rpi-connect`。
+* 已选择加入远程更新，由 `rpi-connect` 通过其 `ota`（over-the-air）子命令进行管理：
++
+```sh
+rpi-connect ota on
+```
+
+##### 对于使用 otamaker 创建更新工件：
+
+* `otamaker` 工具，包含在 `rpi-connect-ota` 软件包中。
++
+:::tip
+要在树莓派以外的计算机上构建工件，请从 GitHub 上的 [utils 仓库](https://github.com/raspberrypi/utils)下载 `otamaker`。
+:::
+
+##### 对于托管工件以供远程部署到接收设备：
+
+* 一个接收设备可访问的 Web 服务器。
++
+远程更新支持 HTTP、HTTPS、FTP、SFTP 和 File URI。
++
+该位置不必对互联网开放，但必须从接收方树莓派设备可以访问。
+
+#### 第 1 步：创建脚本
+
+编写要在接收设备上运行的 shell 脚本。脚本以 root 身份运行，因此具有对设备文件系统的完全访问权限。
+
+使用脚本的退出代码向 Raspberry Pi Connect 报告更新结果：
+
+* `0`：更新成功。
+* `1`：更新失败。
+* `2`：更新成功，设备必须重新启动才能完成应用。
+
+例如，以下脚本（保存为 `aptupgradescript`）会升级接收设备上安装的所有软件包，并在有升级的软件包需要重启时重启设备：
+
+```shell
+#!/bin/sh
+export DEBIAN_FRONTEND=noninteractive
+if ! apt update; then
+    echo Package index update failed
+    exit 1 # EXIT_FAILURE
+fi
+if apt -y -o DPKG::Options::="--force-confnew" upgrade > output.txt 2>&1; then
+    if [ -r /var/run/reboot-required ]; then
+        echo Rebooting to finish the upgrade
+        exit 2 # EXIT_REBOOT
+    fi
+else
+    echo Upgrade failed:
+    echo
+    cat output.txt
+    exit 1 # EXIT_FAILURE
+fi
+echo Upgrade complete
+exit 0 # EXIT_SUCCESS
+```
+
+脚本打印到标准输出或标准错误的任何内容都会记录在接收设备的 `systemd` 日志中，您可以在部署后查看以验证更新或诊断故障。示例脚本将 `apt` 的输出捕获到文件中，并仅在升级失败时打印，因此成功运行时只记录 `Upgrade complete`。
+
+#### 第 2 步：创建清单
+
+接下来，创建一个描述工件及其包含的负载的 YAML 清单。
+
+以下清单（保存为 `aptupgrade.yaml`）打包了第 1 步中的脚本：
+
+```yaml
+# Run apt upgrade on a remote device
+artefact:
+  name: aptupgrade
+  version: 1.0
+  device_type: rpi
+
+payloads:
+- name: aptupgradescript
+  type: script
+```
+
+`artefact` 部分为工件命名并设置版本。`payloads` 部分列出要打包的文件：每个负载的 `name` 是运行 `otamaker` 时所在目录中的文件名，`type` 为 `script` 表示接收设备应执行该文件。要打包其他目录中的文件，请在负载名称后添加路径作为注释，例如 `- name: aptupgradescript # scripts/aptupgradescript`。
+
+#### 第 3 步：构建工件
+
+通过将清单传递给 `otamaker` 来构建工件：
+
+```sh
+otamaker aptupgrade.yaml
+```
+
+这会创建一个 Zstandard 压缩的更新工件（`.tar.zst` 文件），其中包含清单和脚本，并输出工件的 SHA-256 校验和。
+
+记下校验和：在 Raspberry Pi Connect 网站上注册工件时需要用到。
+
+#### 第 4 步：托管、注册和部署工件
+
+部署脚本工件的方式与 A/B 启动更新工件相同：
+
+. 将 `.tar.zst` 文件托管在接收设备可以下载的位置，然后在 Raspberry Pi Connect 网站上注册其 URI 和 SHA-256 校验和，如[托管更新工件](#托管更新工件)中所述。您可以跳过计算校验和的步骤：`otamaker` 在构建工件时已经输出了校验和。
+. 选择接收设备并将工件部署到该设备，如[远程更新](#远程更新)中所述。跳过最后的验证步骤，该步骤仅适用于 A/B 启动更新：按照下方第 5 步所述验证脚本工件。
+
+#### 第 5 步：验证更新
+
+当部署显示为 **Succeeded** 时，使用 Raspberry Pi Connect 连接到接收设备，并在 `systemd` 日志中查看脚本输出：
+
+```sh
+journalctl -t rpi-ota-connector
+```
 
 ## 组织版 Connect
 

@@ -5,7 +5,7 @@ title_meta: 树莓派新手上路，硬件装配、镜像烧录、系统安装�
 description: 快速上手树莓派！本文提供详细入门指南，涵盖硬件连接（电源、显示器、键盘鼠标）、存储设备（microSD卡/U盘/网络存储）、操作系统安装（推荐Raspberry Pi Imager工具）、网络配置（WiFi/蓝牙）、首次启动设置（用户/语言/时区/软件更新）及推荐软件与教程资源，助您轻松启动并最大化利用树莓派功能。
 keywords: [树莓派入门, Raspberry Pi设置, 操作系统安装、树莓派Imager, 首次启动配置, 树莓派硬件连接, 树莓派WiFi设置, 树莓派推荐软件, 树莓派教程, 树莓派电源要求]
 last_update: 
-  date: 2026-06-13
+  date: 2026-07-05
 ---
 import Normal from "../_normal.mdx";
 
@@ -64,9 +64,9 @@ import Normal from "../_normal.mdx";
 
 以下建议基于您选择的操作系统足以满足入门需求，但我们建议选择更大的存储空间以留出扩展余地：
 
-* **Raspberry Pi OS**（带基础软件的桌面版）：至少 32 GB 存储空间的 SD 卡。
-* **Raspberry Pi OS Full**（带基础软件和推荐应用程序的桌面版）：至少 32 GB 存储空间的 SD 卡。
-* **Raspberry Pi OS Lite**（仅限命令行、适用于无显示器设置的版本）：至少 8 GB 存储空间的 SD 卡。
+* 对于 **Raspberry Pi OS**（带基础软件的桌面版），我们建议使用至少 32 GB 存储空间的 SD 卡。
+* 对于 **Raspberry Pi OS Full**（带基础软件和推荐应用程序的桌面版），我们建议使用至少 32 GB 存储空间的 SD 卡。
+* 对于 **Raspberry Pi OS Lite**（仅限命令行、适用于无显示器设置的版本），我们建议使用至少 8 GB 存储空间的 SD 卡。
 
 其他操作系统可能有不同的存储要求，因此请务必查阅您计划安装的操作系统文档。
 
@@ -292,12 +292,10 @@ Raspberry Pi 在连接电源后会立即启动。除非您已 [修改了 EEPROM 
 
 ### 无显示器（远程）设置 {#无显示器设置}
 
-无显示器的树莓派无需显示器、键盘或鼠标即可运行。
+无显示器的树莓派无需显示器、键盘或鼠标即可运行。您可通过网络进行远程控制。为此，您必须具备：
 
-您可通过网络进行远程控制。为此，您必须具备：
-
-* 网络连接（以太网或 Wi-Fi）。
-* 设备首次启动时，使用 SSH 或 [Raspberry Pi Connect](../services/connect.mdx) 进行远程访问。后续启动时，您可以使用 [VNC](./remote-access.mdx#使用-vnc-共享屏幕)。请注意，VNC 不兼容 Raspberry Pi OS 的 Lite 版本。
+* 网络连接（Wi-Fi 或以太网）。部分无线网卡和部分树莓派型号不支持 5 GHz 网络；请查阅您的无线模块文档，以确保其与您首选的网络兼容。有关哪些树莓派型号支持无线网络的信息，请参阅 [网络连接](#网络连接)。
+* 设备首次启动时，使用 SSH 或 [Raspberry Pi Connect](../services/connect.mdx) 进行远程访问。首次启动后，您还可以使用 [VNC](./remote-access.mdx#使用-vnc-共享屏幕) 进行远程桌面访问。
 
 我们建议您使用 **Raspberry Pi Imager** 来设置无显示器设备。这允许您在 **Raspberry Pi OS** 和 **Raspberry Pi OS Lite** 之间进行选择，并配置网络、远程访问以及用户凭据（用户名和密码）。
 
@@ -317,37 +315,35 @@ Raspberry Pi 在连接电源后会立即启动。除非您已 [修改了 EEPROM 
 
 1. 请按照 [使用 *Raspberry Pi Imager* 安装操作系统到启动介质](./getting-started.mdx#将操作系统安装到启动介质上) 中的说明进行操作。
 
-首次启动时，唯一的远程访问选项是 SSH 或 Raspberry Pi Connect。请确保在使用 Imager 自定义操作系统时配置了其中一种方案。如果您选择不通过 Raspberry Pi Imager 自定义镜像，则可以改为 [手动设置 SSH](#步骤-4-访问树莓派)。
+首次启动时，唯一的远程访问选项是 SSH 或 Raspberry Pi Connect。请确保在使用 Imager 自定义操作系统时配置了其中一种方案。如果您选择不通过 Raspberry Pi Imager 自定义镜像，则可以改为 [手动设置 SSH](#手动设置-ssh)。
 
 2. 将操作系统安装到启动介质后，将其插入树莓派，或通过兼容的连接器将其连接到树莓派。
 
-#### 步骤 2（可选）。连接有线网络
-接下来，设置网络连接，以便无显示器设备能与您的计算机通信。
+#### 步骤 2（可选）。连接到有线网络
 
-如果您已在步骤 1 中使用 Imager 设置了 SSID 和无线网络详细信息，则可以跳过此步骤，直接进入步骤 3。
-
-如果您在步骤 1 中未设置无线网络连接，请现在将无显示器设备连接到有线网络：
+如果您已在步骤 1 中使用 Imager 设置了 SSID 和无线网络详细信息，则可以跳过此步骤，直接进入步骤 4。
 
 1. 将以太网线插入树莓派设备的以太网端口，直到听到咔嗒声。如果您的树莓派型号未配备以太网端口，请使用 USB 以太网适配器。
-
 2. 将网线的另一端连接到路由器的端口。树莓派操作系统会自动连接到网络。
 
 <img src="/img/computers/getting-started/peripherals/cable-net.png" alt="将以太网线插入树莓派。" width="80%" />
 *将以太网线插入树莓派*
 
-#### 步骤 3. 连接电源
-
-继续操作前，请确认您的电源适配器符合树莓派型号的电压和电流要求。更多信息请参阅 [电源](#电源)。
-
-1. 将电源适配器插入树莓派的 USB-C 接口（旧款机型为 micro USB）电源端口。
-
-当树莓派通电时，状态指示灯会亮起。此过程可能需要几分钟。
-
 #### 步骤 4. 访问树莓派
 
-如果您在步骤 1 中未使用 Raspberry Pi Imager 自定义镜像，请手动设置远程访问。
+在首次启动时，无显示器树莓派仅支持以下远程访问方式：
 
-在启动介质的 `bootfs` 分区上：
+* SSH
+* Raspberry Pi Connect
+
+* 有关从另一台计算机使用 SSH 的信息，请参阅 [连接到 SSH 服务器](./remote-access.mdx#连接到-ssh-服务器)。
+* 有关使用 Raspberry Pi Connect 的信息，请参阅 [Raspberry Pi Connect](../services/connect.mdx) 文档。
+
+如果您安装的 Raspberry Pi OS 版本包含桌面环境（即 **Raspberry Pi OS** 或 **Raspberry Pi OS Full**），则可以启用 VNC 以供后续连接使用。具体说明请参阅 [远程访问](./configuration.mdx#远程访问)。
+
+#### 手动设置 SSH
+
+如果您在步骤 1 中未使用 Raspberry Pi Imager 为远程访问自定义镜像，则可以改为手动设置 SSH。在启动介质的 `bootfs` 分区上：
 
 1. 创建一个名为 `ssh` 的空文件。
 2. 创建一个名为 `userconf.txt` 的文件，内容仅包含一行文本：`<username>:<enrcypted-password>`。

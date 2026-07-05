@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update: 
-  date: 2026-06-13
+  date: 2026-07-05
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -751,7 +751,7 @@ Raspberry Pi 5 风扇连接器是一个 1 毫米间距的 JST-SH 插座，包含
 
 * 自 Raspberry Pi 4B 起的旗舰机型
 * 从 CM4 开始的计算模块型号（包括 CM4S）
-* 自 Pi 400 起的键盘型号
+* 自 Raspberry Pi 400 起的键盘型号
 
 所有其他型号的 Raspberry Pi 计算机都使用位于启动文件系统中的 `bootcode.bin` 文件。
 
@@ -944,11 +944,49 @@ sudo rpi-eeprom-update -d -f pieeprom.bin
 rpi-eeprom-update -h
 ```
 
+#### A/B bootloader 更新
+
+A/B EEPROM bootloader 更新可防止树莓派设备在更新中断后无法启动——即使设备在更新过程中断电，也能保护设备。
+
+支持 A/B 的固件将 EEPROM 分为两个分区：A 和 B。在任何时候，其中一个分区是"已提交"的，是设备默认启动的分区。更新会写入另一个分区，在新映像完整写入并校验完毕之前，已提交的分区保持不变。
+
+此功能仅适用于树莓派 5、树莓派 Compute Module 5 和树莓派 5 键盘电脑设备。
+
+支持 A/B 的固件还支持 `tryboot` 回滚机制，可在提交前测试新分区。更多信息请参阅 [`rpi-eeprom-ab` README](https://github.com/raspberrypi/utils/tree/master/rpieepromab)。
+
+有关 *Raspberry Pi OS* 的 A/B 更新信息，请参阅 [A/B 启动更新](../services/connect.mdx#a-b-启动更新)。
+
+##### 启用 A/B bootloader 更新
+
+注意：启用 A/B 固件更新后，直接写入 EEPROM 的工具（如 `flashrom`）将不再可用。
+
+要使用 `raspi-config` 启用或禁用 A/B 固件更新：
+
+. 在命令行中，运行以下命令将 Raspberry Pi 软件更新到最新版本：
++
+```sh
+sudo apt update && sudo apt full-upgrade
+```
++
+. 在命令行中，运行以下命令打开 `raspi-config`：
++
+```sh
+sudo raspi-config
+```
++
+. 导航到 **`6 Advanced Options > A14 AB Firmware`** 并选择 `Enable` 或 `Disable`。
+. 选择 **`Finish`** 并在提示时重启。
+. 在命令行中，运行以下命令执行 A/B 更新。
++
+```sh
+rpi-eeprom-update
+```
+
 ### bootloader 发布状态
 
 固件发布状态对应于bootloader固件映像的特定子目录(`/lib/firmware/raspberrypi/bootloader/...`)，并且可以更改以选择不同的发布流。
-- `default` - 更新了新硬件支持、关键错误修复以及已通过`latest`版本测试的新功能的定期更新。
-- `latest` - 当新功能可用时进行更新。
+- `default` – 更新了新硬件支持、关键错误修复以及已通过`latest`版本测试的新功能的定期更新。
+- `latest` – 当新功能可用时进行更新。
 
 由于发布状态字符串只是一个子目录名称，因此可以创建您自己的发布流，例如固定发布或自定义网络启动配置。
 
@@ -976,12 +1014,12 @@ rpi-eeprom-config --config boot.conf --out new.bin pieeprom.bin
 | -- | -- |
 | recovery.bin | bootloader 恢复可执行文件 |
 | pieeprom.upd | bootloader EEPROM 映像 |
-| pieeprom.bin | bootloader EEPROM 映像 - 与 `pieeprom.upd` 相同，但更改了 `recovery.bin` 行为，使其不会重命名为 `RECOVERY.000` 。 |
+| pieeprom.bin | bootloader EEPROM 映像 – 与 `pieeprom.upd` 相同，但更改了 `recovery.bin` 行为，使其不会重命名为 `RECOVERY.000` 。 |
 | pieeprom.sig | 引导加载程序映像（`pieeprom.upd`/`pieeprom.bin`）的sha256校验和（及可选时间戳） |
-| vl805.bin | VLI805 USB固件 EEPROM 映像 - 仅限树莓派4B Rev1.3及更早版本 |
+| vl805.bin | VLI805 USB固件 EEPROM 映像 – 仅限树莓派4B Rev1.3及更早版本 |
 | vl805.sig | vl805.bin的sha256校验和 |
 
-- 如果bootloader更新映像名为 `pieeprom.upd`，那么更新完成后，`recovery.bin` 将重命名为 `recovery.000`，然后重新启动系统。由于 `recovery.bin` 已不存在，ROM会从EEPROM中加载新更新的bootloader，操作系统会正常启动。
+- 如果bootloader更新映像名为 `pieeprom.upd`，那么更新完成后，`recovery.bin` 将重命名为 `recovery.000`，然后重新启动系统。由于 `recovery.bin` 已不存在，ROM会从SPI闪存中加载新更新的bootloader，操作系统会正常启动。
 - 如果bootloader更新映像名为 `pieeprom.bin`，那么 `recovery.bin` 将在更新完成后停止。更新成功后，HDMI输出将变为绿色，绿色活动LED快速闪烁。如果更新失败，HDMI输出将变为红色，活动LED将显示[错误代码](./configuration.mdx#led警告闪烁代码)。
 - `.sig`文件的第一行包含对应映像文件的十六进制sha256校验和，可选地在下一行跟随映像的时间戳（`ts: unixtime`）；未来可能添加更多字段。
 - BCM2711和BCM2712上的ROM不支持从USB大容量存储器或TFTP加载 `recovery.bin` 。相反，较新版本的bootloader支持自更新机制，bootloader可自行重新刷新EEPROM。请参阅[bootloader配置](#树莓派bootloader配置)页面上的 `ENABLE_SELF_UPDATE`。
@@ -1807,16 +1845,16 @@ sudo -E rpi-eeprom-config --edit
 #### WAKE_ON_GPIO
 如果为`1`，则`sudo halt`将以低功耗模式运行，直到GPIO3或GLOBAL_EN短路接地。
 
-此设置与 Raspberry Pi 5 之后的旗舰机型、CM5 之后的计算模块以及 Pi 500 之后的键盘机型无关，因为 [专用电源按钮](#电源按钮) 始终可用于从 `HALT` 或 `STANDBY` 唤醒。
+此设置不适用于树莓派 5 及更高版本、树莓派 Compute Module 5 及更高版本以及树莓派 500 及更高版本，因为 [专用电源按钮](#电源按钮) 始终可用于从 `HALT` 或 `STANDBY` 唤醒。
 
 默认值：`1`
 
 #### POWER_OFF_ON_HALT
 如果为`1`且`WAKE_ON_GPIO=0`则`sudo halt`将关闭所有PMIC输出。这是停止时可能的最低功率状态，但可能会对某些HAT造成问题，因为5V电压仍处于开启状态。`GLOBAL_EN`必须与地短路才能启动。
 
-即使关闭处理器，Pi 400 上的专用电源按钮也会工作。默认情况下启用此行为，但可以设置 `WAKE_ON_GPIO=2` 以使用外部 GPIO 电源按钮代替专用电源按钮。
+即使关闭处理器，树莓派 400 上的专用电源按钮也会工作。默认情况下启用此行为，但可以设置 `WAKE_ON_GPIO=2` 以使用外部 GPIO 电源按钮代替专用电源按钮。
 
-在 Raspberry Pi 5 之后的旗舰型号和 Pi 500 之后的键盘型号上，这会将 PMIC 置于 `STANDBY`（待机）模式，关闭所有输出。无需设置 `WAKE_ON_GPIO`，按下 [专用电源按钮](#电源按钮) 即可启动设备。
+在树莓派 5 及更高版本和树莓派 500 及更高版本上，这会将 PMIC 置于 `STANDBY`（待机）模式，关闭所有输出。无需设置 `WAKE_ON_GPIO`，按下 [专用电源按钮](#电源按钮) 即可启动设备。
 
 默认值：自 CM5 起，计算模块和键盘型号为 `1`；否则为 `0`。
 
@@ -2251,7 +2289,7 @@ PARTITION=2
 
 当 Pi 重新启动电源时，硬件会关闭 USB 电源。较短的断电时间可能会导致某些 USB 设备出现问题，因此可以使用此参数强制较长时间的断电，就像电缆被物理移除一样。
 
-在 RaspberryPi 4 1.3 及更旧版本上，可配置/长时间断电要求启用 XHCI 控制器，因此实际上是先短时间断电，然后再长时间配置断电。通过将该参数设置为零，可以跳过较长的可配置断电时间。
+在树莓派 4 1.3 版及更旧版本上，可配置/长时间断电要求启用 XHCI 控制器，因此实际上是先短时间断电，然后再长时间配置断电。可以通过将该参数设置为零来跳过较长的可配置断电时间。
 
 在较新的版本中，硬件会确保 USB 电源在重启后关闭，引导加载程序仅在超时后才会启用电源。这是在内存初始化确保 USB 电源关闭至少两秒后发生的。因此，该参数通常对较新的硬件版本没有影响。
 
@@ -2284,7 +2322,7 @@ PARTITION=2
 | -- | -- |
 | 0x1 | USB描述符 |
 | 0x2 | 大容量存储模式状态机 |
-| 0x4 | 大容量存储模式状态机 - 详细 |
+| 0x4 | 大容量存储模式状态机 – 详细 |
 | 0x8 | 所有 USB 请求 |
 | 0x10 | 设备和集线器状态机 |
 | 0x20 | 所有 xHCI TRB（非常详细） |
@@ -2303,7 +2341,7 @@ XHCI_DEBUG=0x3
 SDRAM_BANKLOW 控制系统地址空间内 SDRAM Bank 的排列方式。Bank 数量可选择映射至地址的高位（MSB），或位于行地址位与列地址位之间。
 此设置将显著影响SDRAM性能。
 
-未设置时，引导程序将选择默认选项。当前树莓派4系列默认值为3，树莓派5系列默认值为1。
+未设置时，引导程序将选择默认选项。当前树莓派 4 系列默认值为 3，树莓派 5 系列默认值为 1。
 
 | BANKLOW | 地址位映射 |
 | -- | -- |
@@ -3076,13 +3114,13 @@ vcgencmd otp_dump
 ### 非BCM2712设备上的OTP寄存器
 
 此列表包含寄存器的公开信息。如果此处未定义寄存器或位，则该寄存器或位不公开。
-- `16` - OTP 控制寄存器 - BCM2711
+- `16` – OTP 控制寄存器 – BCM2711
   - 第 26 位：禁用 VC JTAG
   - 第 27 位：禁用 VC JTAG
 - `17` - 启动模式寄存器
   - 第 1 位：将振荡器频率设置为 19.2MHz
   - 第 3 位：启用 SDIO 引脚的上拉功能
-  - 第 15 位：禁用 ROM RSA 密钥 0 -（如果已设置，则启用安全启动）（BCM2711）
+  - 第 15 位：禁用 ROM RSA 密钥 0 –（如果已设置，则启用安全启动）（BCM2711）
   - 第 19 位：启用 GPIO 启动模式
   - 第 20 位：设置检查 GPIO 启动模式的存储体
   - 第 21 位：启用从 SD 卡启动
@@ -3098,15 +3136,15 @@ vcgencmd otp_dump
 - `28` - 序列号
 - `29` - ~（序列号）
 - `30` - [修订代码](#树莓派修订码) <sup>1</sup>
-- `33` - 扩展的电路板修订代码 - 含义取决于电路板型号。<br />
+- `33` – 扩展的电路板修订代码 – 含义取决于电路板型号。<br />
 可通过 `/proc/device-tree/chosen/rpi-boardrev-ext` 中的 `device-tree` 获取，出于测试目的，可通过在 `config.txt` 中设置 `board_rev_ext` 来临时覆盖此 OTP 值。
   - CM 4
     - 第 30 位：计算模块是否安装了 WiFi 模块
-      - 0 - WiFi
-      - 1 - 无 WiFi
+      - 0 – WiFi
+      - 1 – 无 WiFi
     - 第 31 位：计算模块是否安装了 EMMC 模块
-      - 0 - EMMC
-      - 1 - 无 EMMC（精简版）
+      - 0 – EMMC
+      - 1 – 无 EMMC（精简版）
   - 树莓派400
     - 第 0-7 位：[piwiz](https://github.com/raspberrypi-ui/piwiz) 使用的默认键盘国家代码
 - `35` - 64 位序列号的高 32 位
@@ -3124,8 +3162,8 @@ vcgencmd otp_dump
     - 第 15 位：启用 LAN_RUN 输出
     - 第 24 位：扩展 USB HUB 超时参数
     - 第 25 位：ETH_CLK 频率：
-      - 0 - 25MHz
-      - 1 - 24MHz
+      - 0 – 25MHz
+      - 1 – 24MHz
 
 <sup>1</sup> 还包含禁用过压、OTP 编程和 OTP 读取的位。
 
@@ -3143,7 +3181,7 @@ vcgencmd otp_dump
   - 第 8-15 位：用于 RPIBOOT 的 GPIO
 - `31` - 序列号的低 32 位
 - `32` - [修订代码](#树莓派修订码)
-- `33` - 电路板属性 - 含义取决于电路板型号。<br />
+- `33` – 电路板属性 – 含义取决于电路板型号。<br />
 可通过 `/proc/device-tree/chosen/rpi-boardrev-ext` 中的设备树查看。
 - `35` - 序列号的上 32 位<br />
 完整的 64 位序列号在 `/proc/device-tree/serial-number` 中提供
@@ -3154,7 +3192,7 @@ vcgencmd otp_dump
 - `54-55` - 蓝牙 MAC 地址
 在设备树中传递给操作系统，例如 /proc/device-tree/soc/serial@7d50c000/bluetooth/local-bd-address。
 - `77-84` - [客户 OTP 值](#树莓派的工业用途)
-- `86` - 板国家 - [piwiz](https://github.com/raspberrypi-ui/piwiz) 使用的默认键盘国家代码<br />
+- `86` – 板国家 – [piwiz](https://github.com/raspberrypi-ui/piwiz) 使用的默认键盘国家代码<br />
 如果已设置，可通过 /proc/device-tree/chosen/rpi-country-code 中的设备树查看
 - `87-88` - [客户以太网 MAC 地址](#树莓派的工业用途)<br />
 如果已设置，则覆盖 OTP 第 50-51 行

@@ -5,7 +5,7 @@ title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解
 description: 深入了解树莓派config.txt配置文件，它是树莓派启动过程中的关键组件，负责在GPU读取后初始化Arm CPU和Linux系统。本文详细介绍了config.txt的文件格式、高级功能、常用选项、属性配置、GPIO控制、超频选项以及监控和维护树莓派设备的方法，是树莓派用户优化和定制系统设置的必备指南。
 keywords: [树莓派, config.txt, GPU, Arm CPU, Linux, 启动过程, 文件格式, 高级功能, 常用选项, 属性配置, GPIO控制, 超频选项, 监控, 维护]
 last_update: 
-  date: 2026-05-03
+  date: 2026-07-05
 ---
 import Normal from "../_normal.mdx";
 
@@ -245,10 +245,10 @@ dtoverlay=vc4-kms-v3d,noaudio
 
 `start_file` 指定要使用的 VideoCore 固件文件。`fixup_file` 指定用于修复 `start_file` 中使用的内存位置的文件，使其与 GPU 内存分割相匹配。
 
-`start_file` 和 `fixup_file` 是一对匹配的文件，使用不匹配的文件将导致电路板无法启动。这是一个高级选项，因此我们建议您使用 `start_x` 和 `start_debug`，而不是此选项。
+`start_file` 和 `fixup_file` 是一对匹配的文件 – 使用不匹配的文件将导致电路板无法启动。这是一个高级选项，因此我们建议您使用 `start_x` 和 `start_debug`，而不是此选项。
 
 :::note[注意]
-不能以这种方式选择降频固件（`start*cd.elf` 和 `fixup*cd.dat`），否则系统将无法启动。启用降频固件的唯一方法是指定 `gpu_mem=16`。降频固件删除了对编解码器、3D和调试日志 的支持，并将初始启动帧缓存限制为 1080p @16bpp - 尽管 KMS 可以在稍后阶段用最多 32bpp 的 4K 帧缓存替换它，就像使用任何固件一样。
+不能以这种方式选择降频固件（`start*cd.elf` 和 `fixup*cd.dat`）– 否则系统将无法启动。启用降频固件的唯一方法是指定 `gpu_mem=16`。降频固件删除了对编解码器、3D和调试日志的支持，并将初始启动帧缓存限制为 1080p @16bpp – 尽管 KMS 可以在稍后阶段用最多 32bpp 的 4K 帧缓存替换它，就像使用任何固件一样。
 :::
 
 :::note[注意]
@@ -469,7 +469,7 @@ sudo reboot
 
 #### `kernel_watchdog_partition`
 
-若内核看门狗触发（即操作系统未能在超时内重置看门狗），此属性将指定重置后启动的分区编号。此功能可实现自动故障转移至恢复分区或备用分区。
+若内核看门狗触发（具体来说，即操作系统未能在超时内重置看门狗），此属性将指定重置后启动的分区编号。此功能可实现自动故障转移至恢复分区或备用分区。
 
 可结合 [表达式过滤器](./config-txt.mdx#表达式过滤器) 使用，在看门狗触发特定分区重启时应用不同设置或选择不同启动流程。
 
@@ -506,7 +506,7 @@ sudo reboot
 默认值：`1`
 
 #### bootloader_update
-在树莓派5上，固件会自动检查兼容的设备树文件，然后再尝试从当前分区启动。否则，不兼容的旧内核将被加载，然后挂起。要禁用这种检查（例如用于裸机开发），请在 config.txt 中设置 `os_check=0`
+可以将此选项设置为 0 来阻止自更新，而无需更新 EEPROM 配置。这在通过网络启动更新多台树莓派时非常有用，因为此选项可以按每台树莓派进行控制（例如，通过 `config.txt` 中的序列号过滤器）。
 
 默认值：`1`
 
@@ -522,7 +522,7 @@ sudo reboot
 有关启用`安全启动`的更多信息，请参阅 [USBBOOT](https://github.com/raspberrypi/usbboot) 软件仓库中的[安全启动自述](https://github.com/raspberrypi/usbboot/blob/master/Readme.md#secure-boot)和[安全启动教程](https://github.com/raspberrypi/usbboot/blob/master/secure-boot-example/README.md)。
 
 #### program_pubkey
-如果该属性设置为 `1`，那么 `recovery.bin` 将把 EEPROM 映像中公钥的哈希值写入 OTP。设置后，引导加载程序将拒绝使用不同 RSA 密钥签名的 EEPROM 映像或未签名的映像。
+如果该属性设置为 `1`，那么 `recovery.bin` 将把 EEPROM 映像中公钥的哈希值写入 OTP。设置后，引导加载程序会拒绝使用不同 RSA 密钥签名的 EEPROM 映像或未签名的映像。
 
 默认值：`0`
 
