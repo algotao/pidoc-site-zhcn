@@ -572,14 +572,14 @@ $ sudo cp -r <files>/* <mountpoint>
 
 * 选择特定的引导加载程序版本。确认使用的每个计算模块都有该版本。`usbboot` repo 中的版本始终是最近的稳定版本。
 * 通过 [设置 `BOOT_ORDER`](./raspberry-pi.mdx#boot_order) 配置引导设备。
-* 在引导加载器 EEPROM 上启用硬件写保护，以确保引导加载器无法在无法访问的产品（如远程或嵌入式设备）上被修改。
+* 在引导加载程序 EEPROM 上启用硬件写保护，以确保引导加载程序无法在无法访问的产品（如远程或嵌入式设备）上被修改。
 
 ### 烧录计算模块引导加载程序 EEPROM
 
 烧录引导加载程序 EEPROM：
 
 1. 像 [flash the eMMC](#flash-compute-module-emmc)时那样设置硬件，但要确保 `EEPROM_nWP` _not_ 被拉低。
-2. 运行以下命令将 `recovery/pieeprom.bin` 写入引导加载器 EEPROM：
+2. 运行以下命令将 `recovery/pieeprom.bin` 写入引导加载程序 EEPROM：
 ```sh
 ./rpiboot -d recovery
 ```
@@ -607,7 +607,7 @@ $ sudo cp -r <files>/* <mountpoint>
 
 1. 导航至 `usbboot/recovery` 目录。
 2. 如果需要特定的引导加载程序版本，请将 `pieeprom.original.bin` 替换为引导加载程序版本中的相应内容。
-3. 编辑默认的 `boot.conf` 引导加载器配置文件以定义 BOOT_ORDER[`BOOT_ORDER`](./raspberry-pi.mdx#boot_order)：
+3. 编辑默认的 `boot.conf` 引导加载程序配置文件以定义 BOOT_ORDER[`BOOT_ORDER`](./raspberry-pi.mdx#boot_order)：
    * 对于网络启动，使用 `BOOT_ORDER=0xf2`。
    * 对于 SD/eMMC 启动，使用 `BOOT_ORDER=0xf1`。
    * 对于 USB 启动失败转到 eMMC，使用 `BOOT_ORDER=0xf15`。
@@ -654,8 +654,8 @@ BCM283x 设备有一个 VideoCore GPU 和 Arm CPU 内核。GPU 由 DSP 处理器
 
 Raspberry Pi BCM283x 设备的启动过程分为三个阶段：
 
-* GPU DSP 复位后执行小型内部启动 ROM 中的代码。该代码通过外部接口加载第二阶段启动加载程序。该代码首先在引导分区上名为 `bootcode.bin` 的引导设备上寻找第二阶段引导加载器。如果没有找到引导设备或找不到 `bootcode.bin`，引导 ROM 将在 USB 启动模式下等待主机提供第二阶段引导加载器（`usbbootcode.bin`）。
-* 第二阶段引导加载器负责设置 LPDDR2 SDRAM 接口和其他关键系统功能。设置完成后，第二阶段启动加载器将加载并执行主 GPU 固件（`start.elf`）。
+* GPU DSP 复位后执行小型内部启动 ROM 中的代码。该代码通过外部接口加载第二阶段引导加载程序。该代码首先在引导分区上名为 `bootcode.bin` 的引导设备上寻找第二阶段引导加载程序。如果没有找到引导设备或找不到 `bootcode.bin`，引导 ROM 将在 USB 启动模式下等待主机提供第二阶段引导加载程序（`usbbootcode.bin`）。
+* 第二阶段引导加载程序负责设置 LPDDR2 SDRAM 接口和其他关键系统功能。设置完成后，第二阶段引导加载程序将加载并执行主 GPU 固件（`start.elf`）。
 * `start.elf` 处理额外的系统设置并启动 Arm 处理器子系统。它包含 GPU 固件。GPU 固件首先会读取 `dt-blob.bin`，以确定 GPIO 引脚的初始状态以及 GPU 专用接口和时钟，然后解析 `config.txt`。然后加载特定型号的 Arm 设备树文件和 `config.txt` 中指定的任何设备树覆盖，然后启动 Arm 子系统并将设备树数据传递给启动的 Linux 内核。
 
 ### 设备树

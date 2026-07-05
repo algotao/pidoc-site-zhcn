@@ -1549,7 +1549,7 @@ NET_INSTALL_ENABLED=0
 
 ### 要求
 
-要使用 HTTP 启动，[更新](#更新-bootloader) 到 2022 年 3 月 10 日或以后发布的启动加载程序。HTTP 启动需要有线以太网连接。
+要使用 HTTP 启动，[更新](#更新-bootloader) 到 2022 年 3 月 10 日或以后发布的引导加载程序。HTTP 启动需要有线以太网连接。
 
 要使用自定义 CA 证书，请 [update](#更新-bootloader) 至 2024 年 4 月 5 日或更高版本发布的引导加载程序。只有运行 BCM2712 CPU 的设备才支持自定义 CA 证书。
 
@@ -2074,7 +2074,7 @@ MAC_ADDRESS_OTP=0,1
 默认值：`0`
 
 #### HDMI_DELAY
-跳过 HDMI 诊断显示，最多 N 秒（默认 5 秒），除非发生致命错误。默认行为旨在避免在正常的 SD/USB 启动过程中短暂出现启动加载器诊断屏幕。
+跳过 HDMI 诊断显示，最多 N 秒（默认 5 秒），除非发生致命错误。默认行为旨在避免在正常的 SD/USB 启动过程中短暂出现引导加载程序诊断屏幕。
 
 默认值：`5`
 
@@ -2085,7 +2085,7 @@ MAC_ADDRESS_OTP=0,1
 
 注意事项：
 - 2021 年之前的引导加载程序版本不支持`自更新`。
-- 在 2022 年之前，SD 启动不启用自更新。在树莓派4上，ROM 已经可以从 SD 卡加载 recovery.bin。在 CM4 上，自更新和 recovery.bin 都不起作用，需要 USB 启动（参见 [CM4 启动加载器文档](./compute-module.mdx#计算模块-eeprom-bootloader)）。
+- 在 2022 年之前，SD 启动不启用自更新。在树莓派4上，ROM 已经可以从 SD 卡加载 recovery.bin。在 CM4 上，自更新和 recovery.bin 都不起作用，需要 USB 启动（参见 [CM4 引导加载程序文档](./compute-module.mdx#计算模块-eeprom-bootloader)）。
 - 从 2022 年（[测试版](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2711/release-notes.md#2022-02-04---network-install---beta)和[稳定版](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2711/release-notes.md#2022-03-10---promote-the-2022-03-10-beta-release-to-lateststable)）开始，SD 卡的自更新功能已启用。
 - 对于网络启动，请确保 TFTP `boot`目录可以通过 NFS 挂载，且 `rpi-eeprom-update` 可以写入该目录。
 
@@ -2366,7 +2366,7 @@ SDRAM_BANKLOW 控制系统地址空间内 SDRAM Bank 的排列方式。Bank 数�
 
 
 #### config.txt段
-读取 `config.txt` 文件后，GPU 固件 `start4.elf` 会读取引导加载器 EEPROM 配置，并检查是否存在名为 `[config.txt]` 的配置段。如果`[config.txt]`段存在，那么从该部分开始到文件结束的内容都会被添加到内存中，与从引导分区读取的 `config.txt` 文件内容相同。这可用于将设置自动应用到每个操作系统，例如 dtoverlays。
+读取 `config.txt` 文件后，GPU 固件 `start4.elf` 会读取引导加载程序 EEPROM 配置，并检查是否存在名为 `[config.txt]` 的配置段。如果`[config.txt]`段存在，那么从该部分开始到文件结束的内容都会被添加到内存中，与从引导分区读取的 `config.txt` 文件内容相同。这可用于将设置自动应用到每个操作系统，例如 dtoverlays。
 
 :::warning[警告]
 如果使用无效配置配置引导加载程序，导致引导失败，则必须重新刷新引导加载程序 EEPROM，使用有效配置引导。
@@ -2652,7 +2652,7 @@ SDRAM_BANKLOW 控制系统地址空间内 SDRAM Bank 的排列方式。Bank 数�
 </table>
 
 ### 禁用其他GPIO外设
-必须禁用使用与 GPIO 引脚冲突的所有其他外设覆盖(*释注：求推荐overlays的更权威译法*)。在 `config.txt` 中，小心地注释掉或反转任何启用 I2C 或 SPI 的 dtparams：
+必须禁用使用与 GPIO 引脚冲突的所有其他外设覆盖。在 `config.txt` 中，小心地注释掉或反转任何启用 I2C 或 SPI 的 dtparams：
 ```
 dtparam=i2c_arm=off
 dtparam=spi=off
@@ -2755,7 +2755,7 @@ GPIO 引脚编号方案不按数字顺序排列。电路板上有 GPIO 引脚 0 
 要使用 GPIO 端口，用户必须是 `gpio` 组的成员。默认用户账户是该组的成员，但必须使用以下命令手动添加其他用户：
 
 ```sh
-sudo usermod -a -G gpio <用户名
+sudo usermod -a -G gpio <用户名>
 ```
 
 ### GPIO焊盘
@@ -3152,7 +3152,7 @@ vcgencmd otp_dump
 - `45` - MPG2 解码键
 - `46`- WVC1 解码密钥
 - `47-54` - 用于安全启动的 RSA 公钥的 SHA256
-- `55` - 安全启动标志（保留给启动加载程序使用）
+- `55` - 安全启动标志（保留给引导加载程序使用）
 - `56-63` - 256 位设备专用私人密钥
 - `64-65` - MAC 地址；如果设置，系统将优先使用该地址，而不是根据序列号自动生成的地址
 - `66` - 高级启动寄存器（非 BCM2711）
@@ -3233,7 +3233,7 @@ dtparam=pciex1
 
 ### 从 PCIe 启动
 
-默认情况下，Raspberry Pi 设备不会从 PCIe 存储启动。要启用从 PCIe 启动，请更改引导加载器配置中的 `BOOT_ORDER`。使用以下命令编辑 EEPROM 配置：
+默认情况下，Raspberry Pi 设备不会从 PCIe 存储启动。要启用从 PCIe 启动，请更改引导加载程序配置中的 `BOOT_ORDER`。使用以下命令编辑 EEPROM 配置：
 
 ```sh
 sudo rpi-eeprom-config --edit

@@ -1053,7 +1053,7 @@ sudo nano /boot/firmware/config.txt
 ```sh
 sudo raspi-config
 ```
-在 `raspi-config` 中选择 "`高级选项`"，然后选择 "`启动顺序`"，再选择 "`网络启动`"。然后必须重启设备，才能将启动顺序的更改写入引导加载器 EEPROM。重新启动树莓派后，检查启动顺序是否已变为 `0xf21`：
+在 `raspi-config` 中选择 "`高级选项`"，然后选择 "`启动顺序`"，再选择 "`网络启动`"。然后必须重启设备，才能将启动顺序的更改写入引导加载程序 EEPROM。重新启动树莓派后，检查启动顺序是否已变为 `0xf21`：
 ```sh
 vcgencmd bootloader_config
 ```

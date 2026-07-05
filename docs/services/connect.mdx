@@ -114,7 +114,7 @@ Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
 </TabItem>
 
 <TabItem value="authkey" label="使用授权密钥">
-授权密钥是一种一次性临时令牌，可让您自动将设备与Connect账户关联（无需使用网页界面）。个人认证密钥在创建后6小时过期；组织认证密钥在创建后1至90天过期（默认1天）。
+授权密钥是一种一次性临时令牌，可让您自动将设备与Connect账户关联（无需使用网页界面）。个人授权密钥在创建后6小时过期；组织授权密钥在创建后1至90天过期（默认1天）。
 
 创建和使用授权密钥最便捷的方式是通过 Imager 中的自定义选项实现。您也可通过个人或组织Connect账户的**设置**页面手动创建授权密钥，组织管理员还可使用[管理API](./connect-for-organisations.mdx#管理api)创建授权密钥。
 
@@ -123,10 +123,10 @@ Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
 :::
 
 ::::tip
-要使用认证密钥，请确保在树莓派 Connect 网站显示的到期时间之前启动树莓派并连接网络。
+要使用授权密钥，请确保在树莓派 Connect 网站显示的到期时间之前启动树莓派并连接网络。
 ::::
 
-创建认证密钥后，可通过 `rpi-connect signin` 命令提供给设备，或将其写入用户主目录的文件中。
+创建授权密钥后，可通过 `rpi-connect signin` 命令提供给设备，或将其写入用户主目录的文件中。
 
 若以字符串形式提供密钥，请执行以下命令：
 ```sh
@@ -139,7 +139,7 @@ rpi-connect signin --auth-key=rpuak_123456
 rpi-connect signin --auth-key=@/home/alice/auth.key
 ```
 
-若将认证密钥保存至用户主目录下的 `.config/com.raspberrypi.connect/auth.key`，Connect 将自动检测到该文件。
+若将授权密钥保存至用户主目录下的 `.config/com.raspberrypi.connect/auth.key`，Connect 将自动检测到该文件。
 
 </TabItem>
 </Tabs>

@@ -364,7 +364,7 @@ Raspberry Pi OS 提供了灵活的选项来配置网络设置。本节概述了�
 不允许使用其他符号、标点或空格。
 
 <Tabs>
-<TabItem value="desktop" label="桌面端">
+<TabItem value="desktop" label="桌面">
 
 1. 点击系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 2. 在左侧菜单中打开 **系统** 选项卡。
@@ -411,7 +411,7 @@ Raspberry Pi OS 提供了灵活的选项来配置网络设置。本节概述了�
 如果上述所有网络都在覆盖范围内，您的树莓派将首先尝试连接 **Cat** 网络。如果连接失败，它将依次尝试连接 **Dog** 网络和 **Rabbit** 网络。如果树莓派未检测到其他已知网络，它将尝试连接 **Snake** 网络。
 
 <Tabs>
-<TabItem value="desktop" label="桌面端">
+<TabItem value="desktop" label="桌面">
 
 1. 点击右上角系统托盘中的无线图标。该图标会显示当前连接的 Wi-Fi 信号强度，并打开 **网络管理器**。
 2. 选择 **高级选项 > 编辑连接**。这将打开 **网络连接** 窗口。
@@ -610,7 +610,7 @@ IN-USE  BSSID              SSID            MODE   CHAN  RATE        SIGNAL  BARS
 :::
 
 <Tabs>
-<TabItem value="desktop" label="桌面端">
+<TabItem value="desktop" label="桌面">
 
 若要在桌面图形界面中更改或添加无线网络，请按照 [查找网络](#查找网络) 中的说明打开网络管理器，如果要连接的无线网络未被隐藏：
 
@@ -625,7 +625,7 @@ IN-USE  BSSID              SSID            MODE   CHAN  RATE        SIGNAL  BARS
 3. 点击窗口右下角的 **连接**。
 
 </TabItem>
-<TabItem value="disktop-hidden" label="桌面版（隐藏网络）">
+<TabItem value="disktop-hidden" label="桌面（隐藏网络）">
 
 如果您的无线网络因 SSID 被隐藏而未出现在网络管理器菜单中：
 
@@ -757,7 +757,7 @@ WLAN 省电模式是 `raspi-config` 中的高级选项，除非得到 Raspberry 
 使用 `raspi-config` 文本用户界面 (TUI) 配置区域设置时，需通过一个字符串同时设置语言、地区和字符集。例如，**en_GB.UTF-8** 将区域设置为英国英语，并采用 UTF-8 字符编码。
 
 <Tabs>
-<TabItem value="desktop" title="桌面版">
+<TabItem value="desktop" title="桌面">
 
 1. 点击系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 2. 在左侧菜单中打开 **本地化** 选项卡。
@@ -1050,7 +1050,7 @@ sudo deluser --remove-home <username>
 您可以通过桌面、TUI 或命令行更改当前用户的密码。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 1. 点击系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 1. 在左侧菜单中打开 **系统** 选项卡。
 1. 选择 **更改密码**。
@@ -1087,7 +1087,7 @@ sudo deluser --remove-home <username>
 当您关闭自动登录时，可以选择是否分别为登录 **控制台** 和登录 **桌面** 要求输入密码。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 
 1. 选择系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 1. 在左侧菜单中打开 **系统** 选项卡。
@@ -1116,7 +1116,7 @@ sudo deluser --remove-home <username>
 您可以在安装完成后通过桌面环境或交互式 `raspi-config` TUI 覆盖此设置。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 1. 点击系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 1. 在左侧菜单中打开 **系统** 选项卡。
 1. 使用 **管理员密码** 旁边的切换按钮，关闭 `sudo` 命令的密码要求。
@@ -1148,7 +1148,7 @@ sudo deluser --remove-home <username>
 启用 SSH 后，下一步是使用 SSH 客户端从另一台计算机连接到树莓派。有关更多信息，请参阅 [远程访问](./remote-access.mdx) 文档。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 
 1. 点击系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 1. 在左侧菜单中打开 **接口** 选项卡。
@@ -1175,7 +1175,7 @@ Raspberry Pi Connect 允许您从另一台计算机远程访问树莓派的桌�
 启用 Raspberry Pi Connect 后，下一步是关联树莓派设备。有关更多信息，请参阅 [远程访问](./remote-access.mdx) 和 [树莓派连接](../services/connect.mdx) 文档。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 
 树莓派连接可通过桌面 GUI 右上角系统托盘中的树莓派连接图标进行启用和禁用。树莓派连接图标由两个小方块通过一个圆圈连接而成。
 
@@ -1211,7 +1211,7 @@ rpi-connect off
 启用 VNC 后，下一步是使用 VNC 客户端从另一台计算机连接到树莓派。有关更多信息，请参阅 [远程访问](./remote-access.mdx) 文档。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 
 1. 选择系统托盘左上角的树莓派图标，然后进入 *首选项 > 控制中心*。
 1. 在左侧菜单中打开 **接口** 选项卡。
@@ -1246,7 +1246,7 @@ rpi-connect off
 您可以在桌面环境中通过交互式 `raspi-config` TUI 启用 SPI。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 
 1. 点击系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 1. 在左侧菜单中打开 **接口** 选项卡。
@@ -1273,7 +1273,7 @@ rpi-connect off
 您可以在桌面环境中，通过交互式 `raspi-config` 文本用户界面 (TUI) 启用 I2C。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 
 1. 点击系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 1. 在左侧菜单中打开 **接口** 选项卡。
@@ -1293,7 +1293,7 @@ rpi-connect off
 启用1-Wire接口后，您的树莓派即可与温度传感器等简单设备进行通信。您可以在桌面环境中，或通过交互式 `raspi-config` 终端用户界面（TUI）来启用或禁用1-Wire接口。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 
 1. 点击系统托盘左上角的树莓派图标，然后进入 **首选项 > 控制中心**。
 1. 在左侧菜单中打开 **接口** 选项卡。
@@ -1321,7 +1321,7 @@ rpi-connect off
 您可以在桌面端或通过交互式 `raspi-config` 文本用户界面（TUI）分别启用和禁用这些串口选项。对于大多数硬件项目，建议启用串口硬件并禁用串口控制台。
 
 <Tabs>
-<TabItem value="desktop" label="桌面版">
+<TabItem value="desktop" label="桌面">
 
 1. 点击系统托盘左上角的树莓派图标，然后进入 *首选项 > 控制中心*。
 1. 在左侧菜单中打开 **接口** 选项卡。
@@ -3612,7 +3612,7 @@ printf "%d" "0x$(od "/proc/device-tree/chosen/bootloader/partition" -v -An -t x1
 
 `rpi-serial64` - 字符串。64 位序列号的字符串表示。在 Raspberry Pi 5 之后的旗舰型号上，这与普通序列号（`/proc/device-tree/serial-number`）相同。在早期型号上，默认序列号仍然是 32 位，但在更新的固件中，现在可以使用 64 位序列号，并可通过此节点查看。
 
-#### 常用引导加载器属性/chosen/bootloader
+#### 常用引导加载程序属性/chosen/bootloader
 
 `boot-mode` - 用于加载内核的引导模式。有关可能的引导模式值列表，请参阅 [BOOT_ORDER](./raspberry-pi.mdx#boot_order) 文档。
 

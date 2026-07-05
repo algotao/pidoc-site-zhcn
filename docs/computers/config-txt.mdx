@@ -160,7 +160,7 @@ boot_partition=2
 
 默认情况下，Raspberry Pi OS 在 `/boot/firmware/config.txt` 中包含一行启用此设置的内容。
 
-启用后，固件将自动为识别到的 CSI 摄像头加载覆盖图。
+启用后，固件将自动为识别到的 CSI 摄像头加载覆盖层。
 
 要禁用此功能，请将 `camera_auto_detect` 设置为 `0`（或删除 `camera_auto_detect=1`）。
 
@@ -175,13 +175,13 @@ boot_partition=2
 #### dtoverlay
 `dtoverlay` 选项要求固件加载一个名为 "设备树"（Device Tree）的覆盖层，这是一个配置文件，可以启用内核对内置和外部硬件的支持。例如，`dtoverlay=vc4-kms-v3d` 会加载一个可启用内核图形驱动程序的覆盖层。
 
-作为一种特殊情况，如果调用时没有任何值 - `dtoverlay=` - 则该选项标志着覆盖参数列表的结束。如果在任何其他 `dtoverlay` 或 `dtparam` 设置之前使用，则会阻止加载任何 HAT 叠加。
+作为一种特殊情况，如果调用时没有任何值 - `dtoverlay=` - 则该选项标志着覆盖参数列表的结束。如果在任何其他 `dtoverlay` 或 `dtparam` 设置之前使用，则会阻止加载任何 HAT 覆盖层。
 
 更多详情，请参阅 [DTB、覆盖和 config.txt](./configuration.mdx#dtb覆盖层和configtxt)。
 
 #### dtparam
 
-Raspberry Pi 设备的设备树配置文件支持各种参数，例如启用 I2C 和 SPI 接口。许多 DT 叠加都可以通过使用参数进行配置。这两种类型的参数都可以使用 `dtparam` 设置来提供。此外，覆盖参数还可以附加到 `dtoverlay` 选项中，用逗号分隔，但要注意行长限制为 98 个字符。
+Raspberry Pi 设备的设备树配置文件支持各种参数，例如启用 I2C 和 SPI 接口。许多 DT 覆盖层都可以通过使用参数进行配置。这两种类型的参数都可以使用 `dtparam` 设置来提供。此外，覆盖参数还可以附加到 `dtoverlay` 选项中，用逗号分隔，但要注意行长限制为 98 个字符。
 
 更多详情，请参阅 [DTB、覆盖和 config.txt](./configuration.mdx#dtb覆盖层和configtxt)。
 
@@ -252,7 +252,7 @@ dtoverlay=vc4-kms-v3d,noaudio
 :::
 
 :::note[注意]
-Raspberry Pi 5、500、500+，和Compute Module 5 固件自带引导加载器 EEPROM。
+Raspberry Pi 5、500、500+，和Compute Module 5 固件自带引导加载程序 EEPROM。
 :::
 
 ### cmdline
@@ -409,7 +409,7 @@ USB On-The-Go（通常缩写为 OTG）是一项功能，允许使用适当 OTG �
 #### uart_2ndstage
 如果 `uart_2ndstage` 为 `1`，则启用 UART 的调试记录。该选项也会自动启用 `start.elf` 中的 UART 日志记录。启动选项页面对此也有说明。
 
-`BOOT_UART` 属性也可启用引导加载器 UART 日志，但不会在 `start.elf` 中启用 UART 日志，除非同时设置了 `uart_2ndstage=1`。
+`BOOT_UART` 属性也可启用引导加载程序 UART 日志，但不会在 `start.elf` 中启用 UART 日志，除非同时设置了 `uart_2ndstage=1`。
 
 默认值：`0`
 
@@ -797,7 +797,7 @@ vcgencmd pmic_read_adc EXT5V_V
 ```ini
 [pi1]
  initramfs initrd.img-3.18.7+ followkernel
-[pi2］
+[pi2]
  initramfs initrd.img-3.18.7-v7+ followkernel
 [all]
 ```
@@ -815,7 +815,7 @@ vcgencmd pmic_read_adc EXT5V_V
 
 ```ini
 # 引导加载程序 EEPROM 配置。
-# 如果 PM_RSTS 为分区 62，则设置引导加载器属性以禁用
+# 如果 PM_RSTS 为分区 62，则设置引导加载程序属性以禁用
 # 标清高速并显示 HDMI 诊断
 # 使用调试选项从分区 2 启动。
 [partition=62]
@@ -1039,10 +1039,10 @@ Serial          : 0000000012345678
 ### GPIO过滤器
 还可以根据 GPIO 的状态进行筛选。例如
 ```ini
-[gpio4=1］
+[gpio4=1]
 # 如果 GPIO 4 为高电平，此处的设置将被应用
 
-[gpio2=0］
+[gpio2=0]
 # 这里的设置适用于 GPIO 2 为低电平的情况
 
 [all]
@@ -1057,7 +1057,7 @@ Serial          : 0000000012345678
 # 这里的设置适用于所有硬件
 [EDID=VSC-TD2220]
 # 这里的设置仅适用于已连接监视器 VSC-TD2220 的情况
-[pi2］
+[pi2]
 # 这里的设置仅在监视器 VSC-TD2220 已连接 * 和 * 树莓派 2 时应用
 [all]
  # 此处的设置适用于所有硬件
