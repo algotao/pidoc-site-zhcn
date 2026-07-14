@@ -24,14 +24,10 @@ SDK 使用如下默认自旋锁分配，区分哪些自旋锁保留用于独占/
 
 | 编号 (ID) | 描述 |
 | --- | --- |
-| 0-13 |  |
-| 当前保留供 SDK 及其他库独占使用。使用这些自旋锁可能会破坏 SDK 或其他库的功能。每个保留的自旋锁都有对应的 PICO_SPINLOCK_ID，可以搜索这些标识符。 |  |
-| 14,15 |  |
-| （PICO_SPINLOCK_ID_OS1 和 PICO_SPINLOCK_ID_OS2）。当前保留供与 SDK 共存的操作系统（或其他系统级软件）独占使用。 |  |
-| 16-23 |  |
-| （PICO_SPINLOCK_ID_STRIPED_FIRST - PICO_SPINLOCK_ID_STRIPED_LAST）。此范围内的自旋锁通过 next_striped_spin_lock_num() 以轮询方式分配。这些自旋锁是共享的，但从一个范围内分配编号可以降低两个使用*条纹*自旋锁的高层锁原语实际使用同一自旋锁的概率。 |  |
-| 24-31 |  |
-| （PICO_SPINLOCK_ID_CLAIM_FREE_FIRST - PICO_SPINLOCK_ID_CLAIM_FREE_LAST）。这些保留供独占使用，在运行时通过 spin_lock_claim_unused() 按先到先得的方式分配。 |  |
+| 0-13 | 当前保留供 SDK 及其他库独占使用。使用这些自旋锁可能会破坏 SDK 或其他库的功能。每个保留的自旋锁都有对应的 PICO_SPINLOCK_ID，可以搜索这些标识符。 |
+| 14,15 | （PICO_SPINLOCK_ID_OS1 和 PICO_SPINLOCK_ID_OS2）。当前保留供与 SDK 共存的操作系统（或其他系统级软件）独占使用。 |
+| 16-23 | （PICO_SPINLOCK_ID_STRIPED_FIRST - PICO_SPINLOCK_ID_STRIPED_LAST）。此范围内的自旋锁通过 next_striped_spin_lock_num() 以轮询方式分配。这些自旋锁是共享的，但从一个范围内分配编号可以降低两个使用*条纹*自旋锁的高层锁原语实际使用同一自旋锁的概率。 |
+| 24-31 | （PICO_SPINLOCK_ID_CLAIM_FREE_FIRST - PICO_SPINLOCK_ID_CLAIM_FREE_LAST）。这些保留供独占使用，在运行时通过 spin_lock_claim_unused() 按先到先得的方式分配。 |
 
 ### 宏
 
