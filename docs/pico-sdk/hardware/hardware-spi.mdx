@@ -16,16 +16,18 @@ RP 系列微控制器拥有 2 个相同的串行外设接口（SPI）控制器�
 
 PrimeCell SSP 是用于与具有 Motorola SPI、National Semiconductor Microwire 或 Texas Instruments 同步串行接口的外设进行同步串行通信的主设备或从设备接口。
 
-可使用 `spi_set_slave` 函数将控制器定义为主设备或从设备。
+可使用 spi_set_slave 函数将控制器定义为主设备或从设备。
 
 每个控制器可连接到多个 GPIO 引脚，有关更多信息，请参阅数据手册中的 GPIO 功能选择表。
 
 ### 宏
 
-  * `#define spi0 ((spi_inst_t **)spi0_hw)<br/>&emsp;* `#define spi1 ((spi_inst_t **)spi1_hw)`
-* `#define [SPI_NUM](spi)`
-* `#define [SPI_INSTANCE](num)`
-* `#define [SPI_DREQ_NUM](spi, is_tx)`
+  * `#define spi0 ((spi_inst_t **)spi0_hw)<br/>&emsp;* `#define spi1 ((spi_inst_t **)spi1_hw)
+* `#define SPI_NUM(spi)`
+* `#define SPI_INSTANCE(num)`
+* `#define SPI_DREQ_NUM(spi, is_tx)`
+* `#define SPI_IS_INSTANCE(spi)`
+* `#define SPI_RESET_NUM(spi)`
 
 ### 枚举
 
@@ -44,6 +46,8 @@ PrimeCell SSP 是用于与具有 Motorola SPI、National Semiconductor Microwire
 `uint spi_get_baudrate (const spi_inst_t *spi)`<br/>&emsp;获取 SPI 波特率。
 
 `static uint spi_get_index (const spi_inst_t *spi)`<br/>&emsp;将 SPI 实例转换为硬件实例编号。
+
+`static spi_inst_t * spi_get_instance (uint num)`<br/>&emsp;通过实例编号获取 SPI 实例。
 
 `static void spi_set_format (spi_inst_t *spi, uint data_bits, spi_cpol_t cpol, spi_cpha_t cpha, __unused spi_order_t order)`<br/>&emsp;配置 SPI。
 
@@ -73,55 +77,71 @@ PrimeCell SSP 是用于与具有 Motorola SPI、National Semiconductor Microwire
 
 #### spi0
 
-`#define spi0 ((spi_inst_t *)spi0_hw)`
+#define spi0 ((spi_inst_t *)spi0_hw)
 
 第一个（SPI 0）硬件 SPI 实例的标识符（用于 SPI 函数）。
 
 例如：spi_init(spi0, 48000)
 #### spi1
 
-`#define spi1 ((spi_inst_t *)spi1_hw)`
+#define spi1 ((spi_inst_t *)spi1_hw)
 
 第二个（SPI 1）硬件 SPI 实例的标识符（用于 SPI 函数）。
 
 例如：spi_init(spi1, 48000)
 #### SPI_NUM
 
-`#define SPI_NUM(spi)`
+#define SPI_NUM(spi)
 
 返回 SPI 实例的 SPI 编号。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
 #### SPI_INSTANCE
 
-`#define SPI_INSTANCE(num)`
+#define SPI_INSTANCE(num)
 
 返回具有给定 SPI 编号的 SPI 实例。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
 #### SPI_DREQ_NUM
 
-`#define SPI_DREQ_NUM(spi, is_tx)`
+#define SPI_DREQ_NUM(spi, is_tx)
 
-返回用于调节此 SPI 实例 DMA 传输速率的 `dreq_num_t`。若 is_tx 为 true，则用于向 SPI 传输；否则用于从 SPI 传输。
+返回用于调节此 SPI 实例 DMA 传输速率的 dreq_num_t。若 is_tx 为 true，则用于向 SPI 传输；否则用于从 SPI 传输。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
+#### SPI_IS_INSTANCE
+
+#define SPI_IS_INSTANCE(spi)
+
+若 SPI 实例是硬件 SPI 实例之一则返回 true。
+
+注意此宏旨在在编译期求值，不做参数检查。
+
+#### SPI_RESET_NUM
+
+#define SPI_RESET_NUM(spi)
+
+返回用于复位给定 SPI 实例的 reset_num_t。
+
+注意此宏旨在在编译期求值，不做参数检查。
 
 ### 枚举类型文档
 
 #### spi_cpha_t
 
-`enum spi_cpha_t`
+enum spi_cpha_t
 
 SPI CPHA（时钟相位）值枚举。
 #### spi_cpol_t
 
-`enum spi_cpol_t`
+enum spi_cpol_t
 
 SPI CPOL（时钟极性）值枚举。
 #### spi_order_t
 
-`enum spi_order_t`
+enum spi_order_t
 
 SPI 位序值枚举。
 
@@ -137,7 +157,7 @@ SPI 位序值枚举。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
 
 #### spi_get_baudrate
 
@@ -145,11 +165,11 @@ SPI 位序值枚举。
 
 获取 SPI 波特率。
 
-获取由 `spi_set_baudrate` 设置的 SPI 波特率。
+获取由 spi_set_baudrate 设置的 SPI 波特率。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
 
 **返回**
 
@@ -163,8 +183,22 @@ SPI 位序值枚举。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `is_tx`: true 表示向 SPI 实例发送数据，false 表示从 SPI 实例接收数据
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- is_tx: true 表示向 SPI 实例发送数据，false 表示从 SPI 实例接收数据
+
+#### spi_get_instance
+
+`static spi_inst_t * spi_get_instance (uint num) [inline], [static]`
+
+通过实例编号获取 SPI 实例。
+
+**参数**
+
+- num: SPI 编号，0 或 1
+
+**返回**
+
+SPI 实例
 
 #### spi_get_index
 
@@ -174,7 +208,7 @@ SPI 位序值枚举。
 
 **参数**
 
-- `spi`: SPI 实例
+- spi: SPI 实例
 
 **返回**
 
@@ -192,8 +226,8 @@ SPI 编号，0 或 1。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `baudrate`: 请求的波特率，单位 Hz
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- baudrate: 请求的波特率，单位 Hz
 
 **返回**
 
@@ -207,7 +241,7 @@ SPI 编号，0 或 1。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
 
 **返回**
 
@@ -221,7 +255,7 @@ SPI 编号，0 或 1。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
 
 **返回**
 
@@ -235,7 +269,7 @@ SPI 编号，0 或 1。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
 
 **返回**
 
@@ -243,20 +277,20 @@ SPI 编号，0 或 1。
 
 #### spi_read16_blocking
 
-`int spi_read16_blocking (spi_inst_t **` spi, uint16_t repeated_tx_data, uint16_t ** dst, size_t len)`
+`int spi_read16_blocking (spi_inst_t **spi, uint16_t repeated_tx_data, uint16_t ** dst, size_t len)`
 
 从 SPI 设备读取。
 
-从 SPI 读取 `len 个半字到 dst。阻塞直到所有数据传输完成。无超时，因为 SPI 硬件始终以已知的数据速率传输。在从 RX 读入数据时，`repeated_tx_data` 会在 TX 上重复输出。通常可以为 0，但某些设备需要特定值，例如 SD 卡期望 0xff。
+从 SPI 读取 `len` 个半字到 `dst`。阻塞直到所有数据传输完成。无超时，因为 `SPI` 硬件始终以已知的数据速率传输。在从 `RX` 读入数据时，repeated_tx_data 会在 `TX` 上重复输出。通常可以为 0，但某些设备需要特定值，例如 `SD` 卡期望 0`xff`。
 
-应先使用 `spi_set_format` 将 SPI 初始化为 16 个数据位，否则此函数将只读取 8 个数据位。
+应先使用 spi_set_format 将 SPI 初始化为 16 个数据位，否则此函数将只读取 8 个数据位。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `repeated_tx_data`: 要写入的数据缓冲区
-- `dst`: 读取数据的缓冲区
-- `len: 缓冲区 dst` 的半字长度
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- repeated_tx_data: 要写入的数据缓冲区
+- dst: 读取数据的缓冲区
+- `len`: 缓冲区 `dst` 的半字长度
 
 **返回**
 
@@ -264,18 +298,18 @@ SPI 编号，0 或 1。
 
 #### spi_read_blocking
 
-`int spi_read_blocking (spi_inst_t **` spi, uint8_t repeated_tx_data, uint8_t ** dst, size_t len)`
+`int spi_read_blocking (spi_inst_t **spi, uint8_t repeated_tx_data, uint8_t ** dst, size_t len)`
 
 从 SPI 设备读取。
 
-从 SPI 读取 `len 个字节到 dst。阻塞直到所有数据传输完成。无超时，因为 SPI 硬件始终以已知的数据速率传输。在从 RX 读入数据时，`repeated_tx_data` 会在 TX 上重复输出。通常可以为 0，但某些设备需要特定值，例如 SD 卡期望 0xff。
+从 SPI 读取 `len` 个字节到 `dst`。阻塞直到所有数据传输完成。无超时，因为 `SPI` 硬件始终以已知的数据速率传输。在从 `RX` 读入数据时，repeated_tx_data 会在 `TX` 上重复输出。通常可以为 0，但某些设备需要特定值，例如 `SD` 卡期望 0`xff`。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `repeated_tx_data`: 要写入的数据缓冲区
-- `dst`: 读取数据的缓冲区
-- `len: 缓冲区 dst` 的长度
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- repeated_tx_data: 要写入的数据缓冲区
+- dst: 读取数据的缓冲区
+- `len`: 缓冲区 `dst` 的长度
 
 **返回**
 
@@ -291,8 +325,8 @@ SPI 编号，0 或 1。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `baudrate`: 所需波特率，单位 Hz，应能达到至少 2Mbps 或更高的位速率，具体取决于系统时钟设置。
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- baudrate: 所需波特率，单位 Hz，应能达到至少 2Mbps 或更高的位速率，具体取决于系统时钟设置。
 
 **返回**
 
@@ -308,11 +342,11 @@ SPI 编号，0 或 1。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `data_bits`: 每次传输的数据位数。有效值 4..16。
-- `cpol`: SSPCLKOUT 极性，仅适用于 Motorola SPI 帧格式。
-- `cpha`: SSPCLKOUT 相位，仅适用于 Motorola SPI 帧格式
-- `order`: 必须为 SPI_MSB_FIRST，PL022 不支持其他值
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- data_bits: 每次传输的数据位数。有效值 4..16。
+- cpol: SSPCLKOUT 极性，仅适用于 Motorola SPI 帧格式。
+- cpha: SSPCLKOUT 相位，仅适用于 Motorola SPI 帧格式
+- order: 必须为 SPI_MSB_FIRST，PL022 不支持其他值
 
 #### spi_set_slave
 
@@ -320,28 +354,28 @@ SPI 编号，0 或 1。
 
 设置 SPI 主/从模式。
 
-将 SPI 配置为主设备或从设备模式运行。默认情况下，`spi_init()` 设置主设备模式。
+将 SPI 配置为主设备或从设备模式运行。默认情况下，spi_init() 设置主设备模式。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `slave`: true 将 SPI 设备设置为从设备，false 为主设备。
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- slave: true 将 SPI 设备设置为从设备，false 为主设备。
 
 #### spi_write16_blocking
 
-`int spi_write16_blocking (spi_inst_t **` spi, const uint16_t ** src, size_t len)`
+`int spi_write16_blocking (spi_inst_t **spi, const uint16_t ** src, size_t len)`
 
 向 SPI 设备写入。
 
-从 `src 向 SPI 写入 len` 个半字。丢弃接收回的任何数据。阻塞直到所有数据传输完成。无超时，因为 SPI 硬件始终以已知的数据速率传输。
+从 `src` 向 `SPI` 写入 `len` 个半字。丢弃接收回的任何数据。阻塞直到所有数据传输完成。无超时，因为 SPI 硬件始终以已知的数据速率传输。
 
-应先使用 `spi_set_format` 将 SPI 初始化为 16 个数据位，否则此函数将只写入 8 个数据位。
+应先使用 spi_set_format 将 SPI 初始化为 16 个数据位，否则此函数将只写入 8 个数据位。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `src`: 要写入的数据缓冲区
-- `len`: 缓冲区长度
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- src: 要写入的数据缓冲区
+- len: 缓冲区长度
 
 **返回**
 
@@ -349,20 +383,20 @@ SPI 编号，0 或 1。
 
 #### spi_write16_read16_blocking
 
-`int spi_write16_read16_blocking (spi_inst_t **` spi, const uint16_t ** src, uint16_t * dst, size_t len)`
+`int spi_write16_read16_blocking (spi_inst_t **spi, const uint16_t ** src, uint16_t * dst, size_t len)`
 
 向/从 SPI 设备写入/读取半字。
 
-从 `src 向 SPI 写入 len 个半字。同时从 SPI 读取 `len 个半字到 dst`。阻塞直到所有数据传输完成。无超时，因为 SPI 硬件始终以已知的数据速率传输。
+从 `src` 向 `SPI` 写入 `len` 个半字。同时从 `SPI` 读取 len 个半字到 dst。阻塞直到所有数据传输完成。无超时，因为 `SPI` 硬件始终以已知的数据速率传输。
 
-应先使用 `spi_set_format` 将 SPI 初始化为 16 个数据位，否则此函数将只读/写 8 个数据位。
+应先使用 spi_set_format 将 SPI 初始化为 16 个数据位，否则此函数将只读/写 8 个数据位。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `src`: 要写入的数据缓冲区
-- `dst`: 读取数据的缓冲区
-- `len`: 两个缓冲区的半字长度
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- src: 要写入的数据缓冲区
+- dst: 读取数据的缓冲区
+- len: 两个缓冲区的半字长度
 
 **返回**
 
@@ -370,17 +404,17 @@ SPI 编号，0 或 1。
 
 #### spi_write_blocking
 
-`int spi_write_blocking (spi_inst_t **` spi, const uint8_t ** src, size_t len)`
+`int spi_write_blocking (spi_inst_t **spi, const uint8_t ** src, size_t len)`
 
 向 SPI 设备写入，阻塞。
 
-从 `src 向 SPI 写入 len` 个字节，并丢弃接收回的任何数据。阻塞直到所有数据传输完成。无超时，因为 SPI 硬件始终以已知的数据速率传输。
+从 `src` 向 `SPI` 写入 `len` 个字节，并丢弃接收回的任何数据。阻塞直到所有数据传输完成。无超时，因为 SPI 硬件始终以已知的数据速率传输。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `src`: 要写入的数据缓冲区
-- `len: src` 的长度
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- src: 要写入的数据缓冲区
+- len: src 的长度
 
 **返回**
 
@@ -388,18 +422,18 @@ SPI 编号，0 或 1。
 
 #### spi_write_read_blocking
 
-`int spi_write_read_blocking (spi_inst_t **` spi, const uint8_t ** src, uint8_t * dst, size_t len)`
+`int spi_write_read_blocking (spi_inst_t **spi, const uint8_t ** src, uint8_t * dst, size_t len)`
 
 向/从 SPI 设备写入/读取。
 
-从 `src 向 SPI 写入 len 个字节。同时从 SPI 读取 `len 个字节到 dst`。阻塞直到所有数据传输完成。无超时，因为 SPI 硬件始终以已知的数据速率传输。
+从 `src` 向 `SPI` 写入 `len` 个字节。同时从 `SPI` 读取 len 个字节到 dst。阻塞直到所有数据传输完成。无超时，因为 `SPI` 硬件始终以已知的数据速率传输。
 
 **参数**
 
-- `spi`: SPI 实例说明符，[spi0] 或 spi1 之一
-- `src`: 要写入的数据缓冲区
-- `dst`: 读取数据的缓冲区
-- `len`: 两个缓冲区的长度
+- spi: SPI 实例说明符，[spi0] 或 spi1 之一
+- src: 要写入的数据缓冲区
+- dst: 读取数据的缓冲区
+- len: 两个缓冲区的长度
 
 **返回**
 

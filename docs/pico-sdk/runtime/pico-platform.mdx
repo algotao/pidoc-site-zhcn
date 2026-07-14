@@ -4,7 +4,7 @@ draft: false
 description: 为 RP2 系列设备/架构提供针对底层编译器/平台特定内容的通用抽象的宏、定义（以及在非汇编代码中包含时的函数）。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK platform]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -20,19 +20,29 @@ import Normal from "../../_normal.mdx";
 
 ### 宏
 
-* `#define __fast_mul(a, b)`
+* `#define __fast_mul(a, b) (__builtin_constant_p(b) && !__builtin_constant_p(a) && __builtin_popcount(b) >= 2 ? __mul_instruction(a,b) : (a)*(b))`
 * `#define __isr`
 * `#define __force_inline __always_inline`
 * `#define count_of(a) (sizeof(a)/sizeof\((a)[0]))`
 * `#define [MAX](a, b) \((a)>(b)?(a):(b))`
 * `#define [MIN](a, b) \((b)>(a)?(a):(b))`
-* `#define __check_type_compatible(type_a, type_b) [static]_assert(__builtin_types_compatible_p`(type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));`
+* `#define __check_type_compatible(type_a, type_b) _Static_assert(__builtin_types_compatible_p (type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));`
 * `#define __after_data(group) __attribute__\((section(".after_data." group)))`
-* `#define __scratch_x(group) __attribute__\((section(".scratch_x." group)))`
-* `#define __scratch_y(group) __attribute__\((section(".scratch_y." group)))`
+* `#define __in_ram(group) __attribute__\((section(".time_critical." group)))`
+* `#define __in_scratch_x(group) __attribute__\((section(".scratch_x." group)))`
+* `#define __scratch_x(group) __in_scratch_x(group)`
+* `#define __in_scratch_y(group) __attribute__\((section(".scratch_y." group)))`
+* `#define __scratch_y(group) __in_scratch_y(group)`
+* `#define __in_psram(group) __attribute__\((section(".psram_initialised." group)))`
+* `#define __uninitialized_psram(group) __attribute__\((section(".psram_uninitialised." group)))`
+* `#define __in_xip_ram(group) __attribute__\((section(".xip_ram." group)))`
 * `#define __uninitialized_ram(group) __attribute__\((section(".uninitialized_data." #group))) group`
 * `#define __in_flash(group) __attribute__\((section(".flashdata." group)))`
-* `#define __no_inline_not_in_flash_func(func_name) __noinline` __not_in_flash_func(func_name)`
+* `#define __persistent_data(name) __attribute__\((section(".persistent_data." #name))) name`
+* `#define __not_in_flash(group) PICO_NOT_IN_FLASH_PLACEMENT(group)`
+* `#define __not_in_flash_func(func_name) __not_in_flash (__STRING(func_name)) func_name`
+* `#define __time_critical_func(func_name) __noinline PICO_TIME_CRITICAL_PLACEMENT (__STRING(func_name)) func_name`
+* `#define __no_inline_not_in_flash_func(func_name) __noinline` __not_in_flash_func(func_name)
 
 ### 函数
 
@@ -48,8 +58,9 @@ import Normal from "../../_normal.mdx";
 `uint8_t rp2350_chip_version (void)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;返回 RP2350 芯片版本号。
 
 `static uint8_t rp2040_chip_version (void)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;为兼容性返回 RP2040 芯片版本号。
-- `static uint8_t rp2040_rom_version (void)`: 返回 RP2040 ROM 版本号。
-`static __force_inline int32_t __mul_instruction (int32_t a, int32_t b)<br/>&emsp;使用汇编 MUL` 指令将两个整数相乘。
+
+- `static uint8_t rp2350_rom_version (void)` <span className="chip-tag rp2350">RP2350</span>: 返回 RP2350 ROM 版本号。
+`static __force_inline int32_t __mul_instruction (int32_t a, int32_t b)`<br/>&emsp;使用汇编 `MUL` 指令将两个整数相乘。
 
 `static __force_inline void tight_loop_contents (void)`<br/>&emsp;用于紧密循环体的空操作函数。
 
@@ -61,11 +72,7 @@ import Normal from "../../_normal.mdx";
 
 #### `__fast_mul`
 
-```c
-#define __fast_mul(a, b) __builtin_choose_expr(__builtin_constant_p(b) && !__builtin_constant_p(a), \
-    (__builtin_popcount(b) >= 2 ? __mul_instruction(a,b) : (a)*(b)), \
-    (a)*(b))
-```
+`#define __fast_mul(a, b) (__builtin_constant_p(b) && !__builtin_constant_p(a) && __builtin_popcount(b) >= 2 ? __mul_instruction(a,b) : (a)*(b))`
 
 使用最快方式将两个整数值相乘。
 
@@ -120,7 +127,7 @@ int __force_inline my_function(int x) {
 返回两个可比较值中较小值的宏。
 #### `__check_type_compatible`
 
-`#define __check_type_compatible(type_a, type_b) [static]_assert(__builtin_types_compatible_p`(type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));`
+`#define __check_type_compatible(type_a, type_b) _Static_assert(__builtin_types_compatible_p (type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));`
 
 用于断言两个类型等价的工具宏。
 
@@ -142,32 +149,30 @@ uint32_t __after_data("my_group_name") a_big_array[400];
 **参数**
 
 - `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
-#### `__scratch_x`
+#### `__in_ram`
 
-`#define __scratch_x(group) __attribute__\((section(".scratch_x." group)))`
+`#define __in_ram(group) __attribute__\((section(".time_critical." group)))`
 
-用于不在 flash 中放置（即放置在 RAM 中）的节属性宏。
+用于在 RAM 中放置的节属性宏。
 
-例如，一个放置在 RAM 中的 3 元素 `uint32_t 数组（即使它是 static const）：
-
-```c
-static const uint32_t __not_in_flash("my_group_name") an_array[3];
-```
-
-节属性为 `.time_critical.<group>`。
+节属性为 `.time_critical.<group>`，用于保持与旧链接器脚本的兼容性。
 
 **参数**
 
 - `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
 
-用于在 SRAM bank 4（称为"scratch X"）中放置数据的节属性宏。
+#### `__in_scratch_x`
+
+`#define __in_scratch_x(group) __attribute__\((section(".scratch_x." group)))`
+
+用于在倒数第二个 SRAM bank（称为"scratch X"）中放置数据的节属性宏。
 
 Scratch X 通常用于仅被一个核心访问的关键数据和函数（当只有一个核心访问该 RAM bank 时，不存在停顿机会）。
 
 例如，一个放置在"scratch X"中的 `uint32_t` 变量：
 
 ```c
-uint32_t __scratch_x("my_group_name") foo = 23;
+uint32_t __in_scratch_x("my_group_name") foo = 23;
 ```
 
 节属性为 `.scratch_x.<group>`。
@@ -175,18 +180,31 @@ uint32_t __scratch_x("my_group_name") foo = 23;
 **参数**
 
 - `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
-#### `__scratch_y`
 
-`#define __scratch_y(group) __attribute__\((section(".scratch_y." group)))`
+#### `__scratch_x`
 
-用于在 SRAM bank 5（称为"scratch Y"）中放置数据的节属性宏。
+`#define __scratch_x(group) __in_scratch_x(group)`
+
+用于在倒数第二个 SRAM bank（称为"scratch X"）中放置数据的节属性宏。
+
+`__in_scratch_x` 的别名。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
+#### `__in_scratch_y`
+
+`#define __in_scratch_y(group) __attribute__\((section(".scratch_y." group)))`
+
+用于在最后一个 SRAM bank（称为"scratch Y"）中放置数据的节属性宏。
 
 Scratch Y 通常用于仅被一个核心访问的关键数据和函数（当只有一个核心访问该 RAM bank 时，不存在停顿机会）。
 
 例如，一个放置在"scratch Y"中的 `uint32_t` 变量：
 
 ```c
-uint32_t __scratch_y("my_group_name") foo = 23;
+uint32_t __in_scratch_y("my_group_name") foo = 23;
 ```
 
 节属性为 `.scratch_y.<group>`。
@@ -194,6 +212,77 @@ uint32_t __scratch_y("my_group_name") foo = 23;
 **参数**
 
 - `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
+#### `__scratch_y`
+
+`#define __scratch_y(group) __in_scratch_y(group)`
+
+用于在最后一个 SRAM bank（称为"scratch Y"）中放置数据的节属性宏。
+
+`__in_scratch_y` 的别名。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
+#### `__in_psram`
+
+`#define __in_psram(group) __attribute__\((section(".psram_initialised." group)))`
+
+用于在 PSRAM 中放置的节属性宏。
+
+PSRAM 通常用于额外的数据节。可以将数据放置在已初始化或未初始化的 PSRAM 中，具体取决于数据如何加载到 PSRAM 中。
+
+例如，一个放置在 PSRAM 中的 `uint32_t` 变量：
+
+```c
+uint32_t __in_psram("my_group_name") foo = 23;
+```
+
+或放置在未初始化的 PSRAM 中：
+
+```c
+uint32_t __uninitialized_psram("my_group_name") foo;
+```
+
+节属性为 `.psram_initialised.<group>` 或 `.psram_uninitialised.<group>`
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
+#### `__uninitialized_psram`
+
+`#define __uninitialized_psram(group) __attribute__\((section(".psram_uninitialised." group)))`
+
+用于在未初始化 PSRAM 中放置的节属性宏。
+
+用于未初始化数据的 `__in_psram` 版本。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
+#### `__in_xip_ram`
+
+`#define __in_xip_ram(group) __attribute__\((section(".xip_ram." group)))`
+
+用于在 XIP SRAM 中放置的节属性宏。
+
+XIP 缓存可用作额外数据节的 SRAM，但如果您的二进制文件从 Flash 运行（例如默认二进制类型），则会产生性能损失。
+
+例如，一个放置在 XIP SRAM 中的 `uint32_t` 变量：
+
+```c
+uint32_t __in_xip_ram("my_group_name") foo = 23;
+```
+
+节属性为 `.xip_ram.<group>`
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
 #### `__uninitialized_ram`
 
 `#define __uninitialized_ram(group) __attribute__\((section(".uninitialized_data." #group))) group`
@@ -213,6 +302,7 @@ uint32_t __uninitialized_ram(foo);
 **参数**
 
 - `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
 #### `__in_flash`
 
 `#define __in_flash(group) __attribute__\((section(".flashdata." group)))`
@@ -230,13 +320,54 @@ uint32_t __in_flash("my_group_name") foo = 23;
 **参数**
 
 - `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
-#### `__no_inline_not_in_flash_func`
 
-`#define __no_inline_not_in_flash_func(func_name) __noinline` __not_in_flash_func(func_name)`
+#### `__persistent_data`
+
+`#define __persistent_data(name) __attribute__\((section(".persistent_data." #name))) name`
+
+用于在默认 POWMAN 复位后保持的节中放置的节属性宏。
+
+以此方式标记的数据将在默认 POWMAN 复位后保留其值，并在任何其他复位时被清零。
+
+例如，一个 `uint32_t` foo，初始时被清零，然后在程序因默认 POWMAN 复位重启后保留其值。
+
+```c
+uint32_t __persistent_data(foo);
+```
+
+节属性为 `.persistent_data.<name>`
+
+**参数**
+
+- `name`: 要放置在该节中的变量名
+
+#### `__not_in_flash`
+
+`#define __not_in_flash(group) PICO_NOT_IN_FLASH_PLACEMENT(group)`
+
+用于不在 flash 中放置的节属性宏。
+
+例如，一个放置在 RAM 中的 3 元素 `uint32_t` 数组（即使它是 `static const`）：
+
+```c
+static const uint32_t __not_in_flash("my_group_name") an_array[3];
+```
+
+默认情况下，此宏与 `__in_ram` 相同，但可以通过 `PICO_NOT_IN_FLASH_PLACEMENT` 定义进行调整。此定义可使用 `pico_set_not_in_flash_placement` CMake 函数设置。
+
+例如，对于仅使用 core 0 的二进制文件，可以选择使用 `pico_set_not_in_flash_placement(TARGET scratch_x)` 将此代码/数据放置在 scratch X 中，以将其移出条带化 SRAM。
+
+**参数**
+
+- `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
+#### `__not_in_flash_func`
+
+`#define __not_in_flash_func(func_name) __not_in_flash (__STRING(func_name)) func_name`
 
 指示函数不应存储在 flash 中。
 
-修饰函数名，使该函数从 RAM 执行（假设编译器未将其内联到 flash 函数中）。
+修饰函数名，使该函数从 RAM 执行（假设编译器未将其内联到 flash 函数中）以避免可能的 flash 延迟。
 
 例如，一个接受 int 参数的函数 my_func：
 
@@ -244,27 +375,11 @@ uint32_t __in_flash("my_group_name") foo = 23;
 void __not_in_flash_func(my_func)(int some_arg) {
 ```
 
-函数被放置在 `.time_critical.<func_name>` 链接器节中。
+函数使用 `__not_in_flash` 放置，默认为 `__in_ram`。
 
-**参见**
+#### `__no_inline_not_in_flash_func`
 
-`__no_inline_not_in_flash_func`
-
-指示函数对时间/延迟敏感，不应从 flash 运行。
-
-修饰函数名，使该函数从 RAM 执行（假设编译器未将其内联到 flash 函数中），以避免可能的 flash 延迟。目前此宏的实现与 `__not_in_flash_func 相同，但语义不同，`__time_critical_func` 将来可能会受到特殊处理，以减少从 flash 函数调用此类函数的开销。
-
-例如，一个接受 int 参数的函数 my_func：
-
-```c
-void __time_critical_func(my_func)(int some_arg) {
-```
-
-函数被放置在 `.time_critical.<func_name>` 链接器节中。
-
-**参见**
-
-`__not_in_flash_func`
+`#define __no_inline_not_in_flash_func(func_name) __noinline` __not_in_flash_func(func_name)
 
 指示函数不应存储在 flash 中且不应被内联。
 
@@ -276,7 +391,29 @@ void __time_critical_func(my_func)(int some_arg) {
 void __no_inline_not_in_flash_func(my_func)(int some_arg) {
 ```
 
-函数被放置在 `.time_critical.<func_name>` 链接器节中。
+函数使用 `__not_in_flash` 放置，默认为 `__in_ram`。
+
+#### `__time_critical_func`
+
+`#define __time_critical_func(func_name) __noinline PICO_TIME_CRITICAL_PLACEMENT (__STRING(func_name)) func_name`
+
+指示函数对时间/延迟敏感，不应从 flash 运行。
+
+修饰函数名，使该函数从 RAM 执行以避免可能的 flash 延迟。默认情况下，此宏的实现与 `__no_inline_not_in_flash_func` 相同，但语义不同，`__time_critical_func` 可以受到特殊处理以减少从 flash 函数调用此类函数的开销。
+
+例如，一个接受 int 参数的函数 my_func：
+
+```c
+void __time_critical_func(my_func)(int some_arg) {
+```
+
+默认情况下，函数使用 `__in_ram` 放置，但可以通过 `PICO_TIME_CRITICAL_PLACEMENT` 定义进行调整。此定义可使用 `pico_set_time_critical_placement` CMake 函数设置。
+
+例如，对于不从 flash 执行的二进制文件（例如 copy_to_ram 和 no_flash），可以选择使用 `pico_set_time_critical_placement(TARGET xip_ram)` 将这些函数放置在 XIP RAM 中，因为 XIP AHB 端口将 otherwise 闲置。
+
+**参见**
+
+`__not_in_flash`
 
 ### 函数文档
 
@@ -419,7 +556,17 @@ RP2040 ROM 版本号（RP2040-B0 为 1，RP2040-B1 为 2，RP2040-B2 为 3）。
 
 **返回**
 
-RP2350 芯片版本号（B0/B1 为 1，B2 为 2）。
+RP2350 芯片版本号（A2 为 2，A3/A4 为 3）。
+
+#### rp2350_rom_version <span className="chip-tag rp2350">RP2350</span>
+
+`static uint8_t rp2350_rom_version (void) [inline], [static]`
+
+返回 RP2350 ROM 版本号。
+
+**返回**
+
+RP2350 ROM 版本号（RP2350-A2 为 2，RP2350-A3 为 3，RP2350-A4 为 4）。
 
 #### tight_loop_contents
 

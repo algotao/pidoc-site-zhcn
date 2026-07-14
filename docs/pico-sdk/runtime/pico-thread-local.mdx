@@ -1,0 +1,31 @@
+---
+sidebar_position: 23
+draft: false
+description: C/C++ `__thread`/thread_local 支持。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK thread local]
+last_update:
+  date: 2026-07-13
+---
+import Normal from "../../_normal.mdx";
+
+C/C++ `__thread`/thread_local 支持。
+
+### 详细描述
+
+此库为 SDK 支持的编译器和 C 库所使用的不同类型的线程局部实现提供透明的运行时支持。
+
+这意味着默认情况下，每个核心将获得其自己的线程局部变量值，并且在核心重启时将重新初始化 core 1 的值。
+
+此外，即使不使用 picolibc，此库也提供了"picolibc"风格的方法 `_tls_size()`、`_init_tls()` 和 `_set_tls()`，这使得在至少 FreeRTOS 上按任务启用线程局部变量变得容易（只需在 `FreeRTOSConfig.h` 中设置 `#define configUSE_PICOLIBC_TLS 1`）。
+
+pico_thread_local 库有三种主要版本：
+
+1. `per_thread`（默认）- 完全支持线程局部变量。每个线程/核心获得自己的变量副本，并在开始执行时初始化。该库试图在没有使用线程局部变量时将开销降至最低，但特别是在 RISC-V 上始终存在少量开销。
+
+2. `global` - 代码中允许使用线程局部变量，但每个线程/核心共享相同的值（即它们并非真正的线程局部）。此选项的开销非常小。
+
+3. `none` - 不提供线程局部变量支持。使用它们的代码可能无法编译或链接，即使可以，值也不会被共享，甚至可能无法正确初始化。然而，当已知不使用线程局部变量时，此模式可保证基本没有开销。
+
+`pico_thread_local` 库提供的支持可通过 `pico_set_thread_local_implementation(<TARGET> per_thread|global|none)` 从 CMake 中设置，所有目标的默认值可通过 CMake 变量设置（例如 `set(PICO_DEFAULT_THREAD_LOCAL_IMPL global)`）。
+
+<Normal />

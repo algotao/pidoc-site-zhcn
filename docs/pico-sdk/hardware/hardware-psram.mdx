@@ -1,0 +1,232 @@
+---
+sidebar_position: 18.5
+draft: false
+description: 低级 PSRAM 设置函数。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK psram, PSRAM]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+低级 PSRAM 设置函数。 <span className="chip-tag rp2350">RP2350</span>
+
+### 详细描述
+
+使用 runtime_init 初始化时，可以通过 3 种方式初始化 PSRAM，按优先级从高到低排列：
+
+1. 如果设置了 flash_devinfo（例如在 OTP 中配置），将使用 flash_devinfo 的大小和 CS1 的 GPIO 初始化 PSRAM。
+
+2. 如果设置了 `PICO_AUTO_DETECT_PSRAM`，将尝试检测 CS1 上的 PSRAM 大小和 CS GPIO。这将尝试使用所有可用的 QMI CS1n GPIO 作为片选，因此这些 GPIO 会被拨动。默认情况下，会跳过板级头文件中定义的一些 GPIO（参见 `PICO_AUTO_DETECT_PSRAM_CS_SKIP_DEFAULTS`）。
+
+   如果 CS GPIO 已知并在 `PICO_PSRAM_CS_PIN` 中设置，则可以仅启用 `PICO_AUTO_DETECT_PSRAM_SIZE` 来仅检测大小。某些板级头文件在有和无 PSRAM 的变体中使用此行为（例如 adafruit_feather_rp2350）。
+
+3. 如果设置了 `PICO_PSRAM_SIZE_BYTES` 和 `PICO_PSRAM_CS_PIN`（例如在板级头文件中配置，或通过 pico_override_psram_size 配置），将使用该大小和 CS GPIO 初始化 PSRAM。
+
+只有 `PICO_AUTO_DETECT_PSRAM` 方法（包括 `PICO_AUTO_DETECT_PSRAM_SIZE`）会在使用前验证 PSRAM 是否存在。
+
+可以使用 `__in_psram` 或 `__uninitialized_psram` 宏将变量放置在 PSRAM 中，也可以直接读写内存地址。
+
+如果已将变量放置在 PSRAM 中，XIP 将被设置为对任何大于可用大小的 PSRAM 地址访问产生总线错误。在启用自动检测时，应使用 `psram_check_address` 函数在访问 PSRAM 中的变量之前进行检查，以防止这些总线错误。
+
+注意，如果同时使用两个核心，并且另一个核心正在并发地从 flash 或 psram 执行代码，这些函数中部分是*不安全*的。在这种情况下，您必须执行自己的同步，确保在运行这些函数时不会发生 XIP 访问。一种方法是使用 `pico_flash` 中的 `flash_safe_execute` 函数。
+
+同样，如果有中断处理程序或中断向量表位于 flash 或 psram 中，这些函数也是*不安全*的，因此在这种情况下必须在调用前禁用中断——`flash_safe_execute` 也处理这种情况。
+
+不安全的函数有：
+
+* `psram_reinitialize`
+
+* `psram_detect_cs_and_size`
+
+* `psram_detect_size`
+
+### 宏
+
+* `#define [psram_or_malloc](group, type, var, size)`
+* `#define psram_or_free(var) if (!psram_check_address(var##_psram)) { free(var); }`
+
+### 函数
+
+- `bool psram_is_available (void)`: 检查 PSRAM 是否可用并已初始化。
+- `size_t psram_get_size (void)`: 获取 PSRAM 的大小。
+- `bool psram_check_address (void *addr)`: 检查地址是否在可用的 PSRAM 中。
+- `size_t psram_detect_size (void)`: 检测 PSRAM 大小。
+- `size_t psram_detect_cs_and_size (uint8_t *cs_gpios, size_t num)`: 检测 PSRAM 片选引脚和大小。
+- `int psram_configure_params (uint32_t max_psram_freq, uint32_t max_select_ns, uint32_t min_deselect_ns)`: 配置 PSRAM 时序参数。
+- `int psram_set_params (uint32_t divisor, uint32_t rxdelay, uint32_t max_select, uint32_t min_deselect)`: 显式设置 PSRAM 时序参数。
+- `int psram_reinitialize (void)`: 重新初始化 PSRAM。
+- `size_t psram_eid_to_size (uint8_t kgd, uint8_t eid)`: 将 PSRAM EID 转换为大小。
+
+### 宏定义文档
+
+#### psram_or_malloc
+
+```c
+#define psram_or_malloc(group, type, var, size) static type __uninitialized_psram(group) var##_psram[size]; static type* var; \
+    if (!var) { \
+        if (psram_check_address(var##_psram + (size))) { \
+           var = (type*)var##_psram; \
+        } else { \
+            var = (type*)malloc((size) * sizeof(type)); \
+        } \
+    }
+```
+
+提供静态 PSRAM 分配，或在 PSRAM 不可用时使用 malloc。
+
+这将在 PSRAM 中分配一个静态缓冲区，如果可用则使用它，否则使用堆。
+
+如果未设置 PICO_PSRAM_SIZE_BYTES，这将无法编译。
+
+#### psram_or_free
+
+`#define psram_or_free(var) if (!psram_check_address(var##_psram)) { free(var); }`
+
+如果缓冲区不在 PSRAM 中则释放它。
+
+如果由 `psram_or_malloc` 创建的缓冲区是通过 malloc 创建的，则将释放该缓冲区。
+
+### 函数文档
+
+#### psram_check_address
+
+`bool psram_check_address (void * addr)`
+
+检查地址是否在可用的 PSRAM 中。
+
+**返回**
+
+若地址在可用的 PSRAM 中则返回 true，否则返回 false
+
+#### psram_configure_params
+
+`int psram_configure_params (uint32_t max_psram_freq, uint32_t max_select_ns, uint32_t min_deselect_ns)`
+
+配置 PSRAM 时序参数。
+
+这将根据给定值计算并设置 PSRAM 时序参数。
+
+注意：若设置了 PICO_RP2350_A2_SUPPORTED，这还将实现 RP2350-E14 的变通方案。
+
+**参数**
+
+- `max_psram_freq`: PSRAM 的最大频率
+- `max_select_ns`: 最大选择时间（ns）
+- `min_deselect_ns`: 最小取消选择时间（ns）
+
+**返回**
+
+成功返回 PICO_OK，若无法计算有效参数则返回 PICO_ERROR_INVALID_ARG
+
+#### psram_detect_cs_and_size
+
+`size_t psram_detect_cs_and_size (uint8_t * cs_gpios, size_t num)`
+
+检测 PSRAM 片选引脚和大小。
+
+此方法依次对数组中的每个 CS GPIO 运行 `psram_detect_size()`，并在检测到 PSRAM 芯片时立即返回大小。
+
+如果找到 PSRAM，将使用 flash_devinfo 设置 CS GPIO。
+
+**参数**
+
+- `cs_gpios`: 要尝试的 CS GPIO 数组
+- `num`: 数组中 CS GPIO 的数量
+
+**返回**
+
+PSRAM 大小，若未找到则返回 0
+
+#### psram_detect_size
+
+`size_t psram_detect_size (void)`
+
+检测 PSRAM 大小。
+
+这将读取 PSRAM 芯片的 ID，并根据 ID 返回大小。
+
+调用此函数前必须配置 CS 引脚的 GPIO 功能，还应将 CS GPIO 配置到 flash_devinfo 中，以防止切换先前配置的 GPIO（通常为 0，因此会向默认 UART 输出无效字符）。
+
+**返回**
+
+PSRAM 大小，若未找到则返回 0
+
+#### psram_eid_to_size
+
+`size_t psram_eid_to_size (uint8_t kgd, uint8_t eid)`
+
+将 PSRAM EID 转换为大小。
+
+这将把 PSRAM EID 转换为以字节为单位的大小。
+
+此方法不打算由用户调用，但作为弱函数提供，因此在使用具有不同 EID 到大小映射的其他 PSRAM 芯片时可以被覆盖。
+
+此方法由 `psram_detect_size` 用于检查 KGD 并将 EID 转换为大小。
+
+**参数**
+
+- `kgd`: Known Good Die
+- `eid`: EID
+
+**返回**
+
+PSRAM 大小（字节），若 KGD/EID 无法识别则返回 0
+
+#### psram_get_size
+
+`size_t psram_get_size (void)`
+
+获取 PSRAM 的大小。
+
+从 PICO_PSRAM_SIZE_BYTES、flash_devinfo 或自动检测中获取 PSRAM 的大小。
+
+**返回**
+
+PSRAM 大小（字节），若无则返回 0
+
+#### psram_is_available
+
+`bool psram_is_available (void)`
+
+检查 PSRAM 是否可用并已初始化。
+
+**返回**
+
+若 PSRAM 可用且已初始化则返回 true，否则返回 false
+
+#### psram_reinitialize
+
+`int psram_reinitialize (void)`
+
+重新初始化 PSRAM。
+
+这将使用 `psram_configure_params` 设置的参数重新初始化 PSRAM。
+
+此方法内部调用 `flash_start_xip`，因此会重置您对 QSPI pad 所做的任何更改。
+
+**返回**
+
+成功返回 PICO_OK，若 PSRAM 大小未在 flash_devinfo 中设置或 PSRAM 参数未通过 `psram_configure_params` 或 `psram_set_params` 设置则返回 PICO_ERROR_PRECONDITION_NOT_MET
+
+#### psram_set_params
+
+`int psram_set_params (uint32_t divisor, uint32_t rxdelay, uint32_t max_select, uint32_t min_deselect)`
+
+显式设置 PSRAM 时序参数。
+
+这将显式将 PSRAM 时序参数设置为给定值。
+
+如果 `psram_configure_params` 计算的参数不合适，可能需要此方法。
+
+**参数**
+
+- `divisor`: PSRAM 时钟的分频器
+- `rxdelay`: PSRAM 时钟的 RX 延迟
+- `max_select`: 最大选择时间（以 64 个系统时钟为倍数）
+- `min_deselect`: 最小取消选择时间（系统时钟周期数 - ceil(divisor / 2)）
+
+**返回**
+
+成功返回 PICO_OK，若任何参数无效则返回 PICO_ERROR_INVALID_ARG
+
+<Normal />

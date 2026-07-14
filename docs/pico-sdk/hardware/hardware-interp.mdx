@@ -32,7 +32,7 @@ SDK 内部大量使用插值器来加速音频操作，但其灵活的配置也�
 
 `bool interp_lane_is_claimed (interp_hw_t *interp, uint lane)`<br/>&emsp;判断插值器通道是否已被占用。
 
-`void interp_unclaim_lane_mask (interp_hw_t *interp, uint lane_mask)<br/>&emsp;释放先前占用的插值器通道，参见 interp_claim_lane_mask`。
+`void interp_unclaim_lane_mask (interp_hw_t *interp, uint lane_mask)`<br/>&emsp;释放先前占用的插值器通道，参见 `interp_claim_lane_mask`。
 
 `static void interp_set_force_bits (interp_hw_t *interp, uint lane, uint bits)`<br/>&emsp;直接设置指定通道上的强制位。
 
@@ -40,9 +40,9 @@ SDK 内部大量使用插值器来加速音频操作，但其灵活的配置也�
 
 `void interp_restore (interp_hw_t **interp, interp_hw_save_t **saver)`<br/>&emsp;恢复插值器状态。
 
-`static void interp_set_base (interp_hw_t *interp, uint lane, uint32_t val)`<br/>&emsp;按通道设置插值器基址寄存器。
+`static void interp_set_base (interp_hw_t *interp, uint index, uint32_t val)`<br/>&emsp;按索引设置插值器基址寄存器。
 
-`static uint32_t interp_get_base (interp_hw_t *interp, uint lane)`<br/>&emsp;按通道获取插值器基址寄存器的内容。
+`static uint32_t interp_get_base (interp_hw_t *interp, uint index)`<br/>&emsp;按索引获取插值器基址寄存器的内容。
 
 `static void interp_set_base_both (interp_hw_t *interp, uint32_t val)`<br/>&emsp;同时设置插值器基址寄存器。
 
@@ -121,18 +121,18 @@ SDK 内部大量使用插值器来加速音频操作，但其灵活的配置也�
 
 #### interp_get_base
 
-`static uint32_t interp_get_base (interp_hw_t * interp, uint lane) [inline], [static]`
+`static uint32_t interp_get_base (interp_hw_t * interp, uint index) [inline], [static]`
 
-按通道获取插值器基址寄存器的内容。
+按索引获取插值器基址寄存器的内容。
 
 **参数**
 
 - `interp`: 插值器实例，interp0 或 interp1。
-- `lane`: 通道编号，0、1 或 2
+- `lane`: 基址寄存器索引，0、1 或 2
 
 **返回**
 
-通道基址寄存器的当前内容
+基址寄存器的当前内容
 
 #### interp_get_raw
 
@@ -140,7 +140,7 @@ SDK 内部大量使用插值器来加速音频操作，但其灵活的配置也�
 
 获取原始通道值。
 
-返回指定通道的原始移位和掩码值，不添加 BASE0。
+返回指定通道的原始移位和掩码值，不添加 BASE0/BASE1。
 
 **参数**
 
@@ -230,7 +230,7 @@ FULL 寄存器的内容
 
 #### interp_restore
 
-`void interp_restore (interp_hw_t **` interp, interp_hw_save_t ** saver)`
+`void interp_restore (interp_hw_t **interp, interp_hw_save_t ** saver)`
 
 恢复插值器状态。
 
@@ -241,7 +241,7 @@ FULL 寄存器的内容
 
 #### interp_save
 
-`void interp_save (interp_hw_t **` interp, interp_hw_save_t ** saver)`
+`void interp_save (interp_hw_t **interp, interp_hw_save_t ** saver)`
 
 保存指定插值器的状态。
 
@@ -266,14 +266,14 @@ FULL 寄存器的内容
 
 #### interp_set_base
 
-`static void interp_set_base (interp_hw_t * interp, uint lane, uint32_t val) [inline], [static]`
+`static void interp_set_base (interp_hw_t * interp, uint index, uint32_t val) [inline], [static]`
 
-按通道设置插值器基址寄存器。
+按索引设置插值器基址寄存器。
 
 **参数**
 
 - `interp`: 插值器实例，interp0 或 interp1。
-- `lane`: 通道编号，0、1 或 2
+- `index`: 基址寄存器索引，0、1 或 2
 - `val`: 要写入寄存器的值
 
 #### interp_set_base_both
@@ -354,7 +354,7 @@ FULL 寄存器的内容
 `static void interp_config_set_clamp (interp_config *c, bool clamp)`<br/>&emsp;设置插值器钳位模式（仅限插值器 1）
 
 `static void interp_config_set_force_bits (interp_config *c, uint bits)`<br/>&emsp;设置插值器强制位。
-- `static interp_config interp_default_config` (void)`: 获取默认配置。
+- `static interp_config interp_default_config (void)`: 获取默认配置。
 `static void interp_set_config (interp_hw_t **interp, uint lane, interp_config **config)`<br/>&emsp;向通道发送配置。
 
 #### 函数文档
@@ -501,7 +501,7 @@ OR 入呈现给处理器总线的通道结果的 29:28 位。
 
 **interp_set_config**
 
-`static void interp_set_config (interp_hw_t **` interp, uint lane, interp_config ** config) [inline], [static]`
+`static void interp_set_config (interp_hw_t **interp, uint lane, interp_config ** config) [inline], [static]`
 
 向通道发送配置。
 

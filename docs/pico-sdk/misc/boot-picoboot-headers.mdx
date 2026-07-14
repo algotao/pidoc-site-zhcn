@@ -1,13 +1,51 @@
 ---
 sidebar_position: 1
 draft: false
-description: Header file for the PICOBOOT USB interface exposed by an RP2xxx chip in BOOTSEL mode.
+description: RP2xxx 芯片在 BOOTSEL 模式下暴露的 PICOBOOT USB 接口的头部文件。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK boot picoboot headers, USB]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
-Header file for the PICOBOOT USB interface exposed by an RP2xxx chip in BOOTSEL mode.
+RP2xxx 芯片在 BOOTSEL 模式下暴露的 PICOBOOT USB 接口的头部文件。
+
+### 枚举
+
+`enum picoboot_exclusive_type { NOT_EXCLUSIVE = 0, EXCLUSIVE, EXCLUSIVE_AND_EJECT }`<br/>&emsp;PC_EXCLUSIVE_ACCESS 命令的独占级别。
+
+### 函数
+
+`struct __packed __aligned (4) picoboot_cmd`<br/>&emsp;发送到 OUT 端点的 PICOBOOT 命令包。
+
+### 枚举类型文档
+
+#### picoboot_exclusive_type
+
+`enum picoboot_exclusive_type`
+
+PC_EXCLUSIVE_ACCESS 命令的独占级别。
+
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
+| NOT_EXCLUSIVE | 对 USB 大容量存储操作无限制。 |
+| EXCLUSIVE | 禁用 USB 大容量存储写入（任何活动的 UF2 下载将被中止）。 |
+| EXCLUSIVE_AND_EJECT | 通过将驱动器媒体标记为不存在来锁定 USB 大容量存储（弹出驱动器）。 |
+
+### 函数文档
+
+#### __aligned
+
+`struct __packed __aligned (4)`
+
+发送到 OUT 端点的 PICOBOOT 命令包。
+
+由 PICOBOOT_IF_CMD_STATUS 控制请求返回的状态响应。
+
+写入 PICOBOOT OUT 端点的 32 字节包，用于发起任何支持的命令。发送此包后，根据情况通过 IN 或 OUT 端点交换 transfer_length 字节的数据，随后跟随一个零长度的 ACK 包。
+
+从设备读回的 16 字节结构，用于确定最近发出命令的结果。
 
 <Normal />

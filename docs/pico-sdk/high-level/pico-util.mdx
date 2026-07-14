@@ -4,7 +4,7 @@ draft: false
 description: 实用数据结构与工具函数。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK util]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -13,6 +13,8 @@ import Normal from "../../_normal.mdx";
 ### 模块
 
 `datetime`<br/>&emsp;日期/时间格式化。
+
+`fixed_bitset`<br/>&emsp;简单的固定大小位集实现。
 
 `pheap`<br/>&emsp;配对堆实现。
 
@@ -32,7 +34,7 @@ import Normal from "../../_normal.mdx";
 
 **pico_localtime_r**
 
-`struct tm ** pico_localtime_r (const time_t **` time, struct tm * tm)`
+`struct tm ** pico_localtime_r (const time_t **time, struct tm * tm)`
 
 供 pico_util datetime 函数使用的 localtime_r 实现。
 
@@ -40,11 +42,323 @@ import Normal from "../../_normal.mdx";
 
 **pico_mktime**
 
-`time_t pico_mktime (struct tm * tm)`
+time_t pico_mktime (struct tm * tm)
 
 供 pico_util datetime 函数使用的 mktime 实现。
 
 此方法默认调用 C 库中的 mktime，但声明为弱实现以允许用户代码覆盖它。
+
+### fixed_bitset
+
+简单的固定大小位集实现。
+
+#### 宏
+
+* `#define fixed_bitset_type(N)`
+* `#define fixed_bitset_with_fill(type, N, fill) ({ type bitset; fixed_bitset_init(&bitset, type, N, fill); bitset; })`
+* `#define fixed_bitset_init(ptr, type, N, fill)`
+
+#### 函数
+
+`static uint fixed_bitset_size (const fixed_bitset_t *bitset)`<br/>&emsp;获取位集的大小。
+
+`static uint fixed_bitset_word_size (const fixed_bitset_t *bitset)`<br/>&emsp;获取位集的大小（以字为单位）。
+
+`static void check_fixed_bitset (__unused const fixed_bitset_t *bitset)`<br/>&emsp;检查位集是否有效。
+
+`static fixed_bitset_t * fixed_bitset_write_word (fixed_bitset_t *bitset, uint word_num, uint32_t value)`<br/>&emsp;写入位集中的一个字。
+
+`static uint32_t fixed_bitset_read_word (const fixed_bitset_t *bitset, uint word_num)`<br/>&emsp;读取位集中的一个字。
+
+`static fixed_bitset_t * fixed_bitset_clear_all (fixed_bitset_t *bitset)`<br/>&emsp;清除位集中的所有位。
+
+`static fixed_bitset_t * fixed_bitset_set_all (fixed_bitset_t *bitset)`<br/>&emsp;设置位集中的所有位。
+
+`fixed_bitset_t * fixed_bitset_flip_all (fixed_bitset_t *bitset)`<br/>&emsp;翻转位集中的所有位。
+
+`bool fixed_bitset_is_empty (fixed_bitset_t *bitset)`<br/>&emsp;判断位集是否为空。
+
+`static fixed_bitset_t * fixed_bitset_set (fixed_bitset_t *bitset, uint bit_index)`<br/>&emsp;设置位集中的单个位。
+
+`static fixed_bitset_t * fixed_bitset_clear (fixed_bitset_t *bitset, uint bit_index)`<br/>&emsp;清除位集中的单个位。
+
+`static fixed_bitset_t * fixed_bitset_flip (fixed_bitset_t *bitset, uint bit_index)`<br/>&emsp;翻转位集中的单个位。
+
+`static bool fixed_bitset_get (const fixed_bitset_t *bitset, uint bit_index)`<br/>&emsp;获取位集中单个位的值。
+
+`static bool fixed_bitset_equal (const fixed_bitset_t *bitset1, const fixed_bitset_t *bitset2)`<br/>&emsp;检查两个位集是否相等。
+
+#### 宏定义文档
+
+**fixed_bitset_type**
+
+```c
+#define fixed_bitset_type(N) union { \
+    fixed_bitset_t bitset;      \
+    struct {                    \
+        uint16_t size;          \
+        uint16_t word_size;     \
+        uint32_t words[((N) + 31) / 32]; \
+    } sized_bitset;             \
+}
+```
+
+用于定义给定大小的固定位集的宏。
+
+此宏用于声明固定位集的类型。用法如下：
+
+```c
+typedef fixed_bitset_type(17) my_bitset_t;
+```
+
+将定义一个名为 my_bitset_t 的新位集类型，可容纳 17 个布尔值。
+
+该类型可使用 my_bitset_t bitset; 来声明新的位集。
+
+**参数**
+
+- N: 位集中布尔值的数量
+
+**fixed_bitset_with_fill**
+
+`#define fixed_bitset_with_fill(type, N, fill) ({ type bitset; fixed_bitset_init(&bitset, type, N, fill); bitset; })`
+
+用于创建所有位设置为指定值的位集的宏。
+
+**参数**
+
+- type: 位集的类型
+- N: 位集中的位数
+- fill: 要将位设置的值（0 或 1）
+
+**返回**
+
+位集
+
+**fixed_bitset_init**
+
+```c
+#define fixed_bitset_init(ptr, type, N, fill) ({ \
+    assert(sizeof(type) == fixed_bitset_sizeof_for(N)); \
+    __unused type *type_check = ptr; \
+    (ptr)->bitset.size = N; \
+    (ptr)->bitset.word_size = ((N) + 31u) / 32u; \
+    __builtin_memset(&(ptr)->bitset.words, (fill) ? 0xff : 0, (ptr)->bitset.word_size * sizeof(uint32_t)); \
+})
+```
+
+初始化位集。
+
+**参数**
+
+- ptr: 要初始化的位集
+- type: 位集的类型
+- N: 位集中的位数
+- fill: 要填充位集的值（0 或 1）
+
+#### 函数文档
+
+**check_fixed_bitset**
+
+`static void check_fixed_bitset (__unused const fixed_bitset_t * bitset) [inline], [static]`
+
+检查位集是否有效。
+
+如果位集无效，此函数将触发断言。
+
+**参数**
+
+- bitset: 要检查的位集
+
+**fixed_bitset_clear**
+
+`static fixed_bitset_t * fixed_bitset_clear (fixed_bitset_t * bitset, uint bit_index) [inline], [static]`
+
+清除位集中的单个位。
+
+**参数**
+
+- bitset: 位集
+- bit_index: 要清除的位
+
+**返回**
+
+位集
+
+**fixed_bitset_clear_all**
+
+`static fixed_bitset_t * fixed_bitset_clear_all (fixed_bitset_t * bitset) [inline], [static]`
+
+清除位集中的所有位。
+
+**参数**
+
+- bitset: 位集
+
+**返回**
+
+位集
+
+**fixed_bitset_equal**
+
+`static bool fixed_bitset_equal (const fixed_bitset_t * bitset1, const fixed_bitset_t * bitset2) [inline], [static]`
+
+检查两个位集是否相等。
+
+**参数**
+
+- bitset1: 要检查的第一个位集
+- bitset2: 要检查的第二个位集
+
+**返回**
+
+若位集相等返回 true，否则返回 false
+
+**fixed_bitset_flip**
+
+`static fixed_bitset_t * fixed_bitset_flip (fixed_bitset_t * bitset, uint bit_index) [inline], [static]`
+
+翻转位集中的单个位。
+
+**参数**
+
+- bitset: 位集
+- bit_index: 要翻转的位
+
+**返回**
+
+位集
+
+**fixed_bitset_flip_all**
+
+fixed_bitset_t * fixed_bitset_flip_all (fixed_bitset_t * bitset)
+
+翻转位集中的所有位。
+
+**参数**
+
+- bitset: 位集
+
+**返回**
+
+位集
+
+**fixed_bitset_get**
+
+`static bool fixed_bitset_get (const fixed_bitset_t * bitset, uint bit_index) [inline], [static]`
+
+获取位集中单个位的值。
+
+**参数**
+
+- bitset: 位集
+- bit_index: 要获取值的位
+
+**返回**
+
+该位的值
+
+**fixed_bitset_is_empty**
+
+`bool fixed_bitset_is_empty (fixed_bitset_t * bitset)`
+
+判断位集是否为空。
+
+**参数**
+
+- bitset: 位集
+
+**返回**
+
+若没有位被设置返回 true
+
+**fixed_bitset_read_word**
+
+`static uint32_t fixed_bitset_read_word (const fixed_bitset_t * bitset, uint word_num) [inline], [static]`
+
+读取位集中的一个字。
+
+**参数**
+
+- bitset: 位集
+- word_num: 要读取的字编号
+
+**返回**
+
+该字的值
+
+**fixed_bitset_set**
+
+`static fixed_bitset_t * fixed_bitset_set (fixed_bitset_t * bitset, uint bit_index) [inline], [static]`
+
+设置位集中的单个位。
+
+**参数**
+
+- bitset: 位集
+- bit_index: 要设置的位
+
+**返回**
+
+位集
+
+**fixed_bitset_set_all**
+
+`static fixed_bitset_t * fixed_bitset_set_all (fixed_bitset_t * bitset) [inline], [static]`
+
+设置位集中的所有位。
+
+**参数**
+
+- bitset: 位集
+
+**返回**
+
+位集
+
+**fixed_bitset_size**
+
+`static uint fixed_bitset_size (const fixed_bitset_t * bitset) [inline], [static]`
+
+获取位集的大小。
+
+**参数**
+
+- bitset: 要获取大小的位集
+
+**返回**
+
+位集的大小
+
+**fixed_bitset_word_size**
+
+`static uint fixed_bitset_word_size (const fixed_bitset_t * bitset) [inline], [static]`
+
+获取位集的大小（以字为单位）。
+
+**参数**
+
+- bitset: 要获取大小的位集
+
+**返回**
+
+位集的大小（以字为单位）
+
+**fixed_bitset_write_word**
+
+`static fixed_bitset_t * fixed_bitset_write_word (fixed_bitset_t * bitset, uint word_num, uint32_t value) [inline], [static]`
+
+写入位集中的一个字。
+
+**参数**
+
+- bitset: 要写入的位集
+- word_num: 要写入的字编号
+- value: 要写入该字的值
+
+**返回**
+
+位集
 
 ### pheap
 
@@ -60,11 +374,15 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 #### 宏
 
-* `#define [PHEAP_DEFINE_STATIC](name, _max_nodes)`
+* `#define PHEAP_DEFINE_STATIC(name, _max_nodes)`
 
 #### 类型定义
 
 `typedef bool(** pheap_comparator)(void **user_data, pheap_node_id_t a, pheap_node_id_t b)`<br/>&emsp;配对堆节点的用户比较函数。
+
+`typedef struct pheap_node pheap_node_t`<br/>&emsp;配对堆中的一个节点。
+
+`typedef struct pheap pheap_t`<br/>&emsp;配对堆实例。
 
 #### 函数
 
@@ -84,7 +402,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 `static pheap_node_id_t ph_remove_and_free_head (pheap_t *heap)`<br/>&emsp;从配对堆中移除头节点。头节点是比较器提供的逻辑顺序中排在最前面的节点。
 
-`bool ph_remove_and_free_node (pheap_t *heap, pheap_node_id_t id)<br/>&emsp;从配对堆中移除并释放任意节点。此操作比通过 ph_remove_and_free_head()` 移除头节点代价更高。
+`bool ph_remove_and_free_node (pheap_t *heap, pheap_node_id_t id)`<br/>&emsp;从配对堆中移除并释放任意节点。此操作比通过 `ph_remove_and_free_head()` 移除头节点代价更高。
 
 `static bool ph_contains_node (pheap_t *heap, pheap_node_id_t id)`<br/>&emsp;判断堆是否包含给定节点。注意包含是指节点是否已被插入（ph_insert_node()）而非已分配（`ph_new_node()`）。
 
@@ -121,6 +439,22 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 若按自然顺序 a &lt; b 则返回 true。注意，此相对顺序必须在每次调用间保持稳定。
 
+**pheap_node_t**
+
+typedef struct pheap_node pheap_node_t
+
+配对堆中的一个节点。
+
+存储堆树中单个节点的链接索引。每个节点的用户状态单独保存在伴随数组中。
+
+**pheap_t**
+
+typedef struct pheap pheap_t
+
+配对堆实例。
+
+维护配对堆的状态。通过 ph_create() 创建，或通过 PHEAP_DEFINE_STATIC() 和 ph_post_alloc_init() 静态初始化。
+
 #### 函数文档
 
 **ph_clear**
@@ -131,18 +465,18 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `heap`: 堆
+- heap: 堆
 
 **ph_contains_node**
 
 `static bool ph_contains_node (pheap_t * heap, pheap_node_id_t id) [inline], [static]`
 
-判断堆是否包含给定节点。注意包含是指节点是否已被插入（`ph_insert_node()）而非已分配（ph_new_node()`）。
+判断堆是否包含给定节点。注意包含是指节点是否已被插入（`ph_insert_node()`）而非已分配（`ph_new_node()`）。
 
 **参数**
 
-- `heap`: 堆
-- `id`: 节点的 id
+- heap: 堆
+- id: 节点的 id
 
 **返回**
 
@@ -150,15 +484,15 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **ph_create**
 
-`pheap_t ** ph_create (uint max_nodes, pheap_comparator` comparator, void ** user_data)`
+pheap_t ** ph_create (uint max_nodes, pheap_comparator comparator, void ** user_data)
 
 创建一个配对堆，有效地维护节点的高效排序。堆本身不存储每个节点的用户状态，用户需要维护一个伴随数组。必须提供比较函数，以便堆实现能够确定节点的相对顺序。
 
 **参数**
 
-- `max_nodes`: 堆中可能存在的最大节点数（受限于 PICO_PHEAP_MAX_ENTRIES，默认为 255，以便在单字节中存储索引）。
-- `comparator`: 节点比较函数
-- `user_data`: 与堆关联的用户数据指针，在回调中提供
+- max_nodes: 堆中可能存在的最大节点数（受限于 PICO_PHEAP_MAX_ENTRIES，默认为 255，以便在单字节中存储索引）。
+- comparator: 节点比较函数
+- user_data: 与堆关联的用户数据指针，在回调中提供
 
 **返回**
 
@@ -170,11 +504,11 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 释放配对堆。
 
-注意，此方法只能用于通过 `ph_create()` 创建的堆。
+注意，此方法只能用于通过 ph_create() 创建的堆。
 
 **参数**
 
-- `heap`: 堆
+- heap: 堆
 
 **ph_dump**
 
@@ -184,9 +518,9 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `heap`: 堆
-- `dump_key`: 用于打印节点值的方法
-- `user_data`: 要传递给 dump_key 方法的用户数据
+- heap: 堆
+- dump_key: 用于打印节点值的方法
+- user_data: 要传递给 dump_key 方法的用户数据
 
 **ph_free_node**
 
@@ -196,8 +530,8 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `heap`: 堆
-- `id`: 节点的 id
+- heap: 堆
+- id: 节点的 id
 
 **ph_insert_node**
 
@@ -205,12 +539,12 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 将节点插入堆中。
 
-此方法将一个（之前通过 `ph_new_node()` 分配的）节点插入堆中，通过调用堆的比较函数确定正确的顺序。
+此方法将一个（之前通过 ph_new_node() 分配的）节点插入堆中，通过调用堆的比较函数确定正确的顺序。
 
 **参数**
 
-- `heap`: 堆
-- `id`: 要插入的节点的 id
+- heap: 堆
+- id: 要插入的节点的 id
 
 **返回**
 
@@ -224,7 +558,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `heap`: 堆
+- heap: 堆
 
 **返回**
 
@@ -238,7 +572,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `heap`: 堆
+- heap: 堆
 
 **返回**
 
@@ -246,16 +580,16 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **ph_post_alloc_init**
 
-`void ph_post_alloc_init (pheap_t **` heap, uint max_nodes, pheap_comparator comparator, void ** user_data)`
+`void ph_post_alloc_init (pheap_t **heap, uint max_nodes, pheap_comparator comparator, void ** user_data)`
 
-初始化静态分配的堆（通过 C 堆使用 `ph_create()）。堆的 nodes` 成员必须已分配大小为 max_nodes。
+初始化静态分配的堆（通过 C 堆使用 `ph_create()`）。堆的 `nodes` 成员必须已分配大小为 max_nodes。
 
 **参数**
 
-- `heap`: 堆
-- `max_nodes`: 堆中的最大节点数（匹配堆的 nodes 数组大小）
-- `comparator`: 堆的比较函数
-- `user_data`: 堆的用户数据
+- heap: 堆
+- max_nodes: 堆中的最大节点数（匹配堆的 nodes 数组大小）
+- comparator: 堆的比较函数
+- user_data: 堆的用户数据
 
 **ph_remove_and_free_head**
 
@@ -267,7 +601,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `heap`: 堆
+- heap: 堆
 
 **返回**
 
@@ -277,12 +611,12 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 `bool ph_remove_and_free_node (pheap_t * heap, pheap_node_id_t id)`
 
-从配对堆中移除并释放任意节点。此操作比通过 `ph_remove_and_free_head()` 移除头节点代价更高。
+从配对堆中移除并释放任意节点。此操作比通过 ph_remove_and_free_head() 移除头节点代价更高。
 
 **参数**
 
-- `heap`: 堆
-- `id`: 要释放的节点 id
+- heap: 堆
+- id: 要释放的节点 id
 
 **返回**
 
@@ -290,7 +624,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **ph_remove_head**
 
-`pheap_node_id_t ph_remove_head (pheap_t * heap, bool free)`
+pheap_node_id_t ph_remove_head (pheap_t * heap, bool free)
 
 从配对堆中移除头节点。头节点是比较器提供的逻辑顺序中排在最前面的节点。
 
@@ -298,8 +632,8 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `heap`: 堆
-- `free`: 若为 true，则同时释放该 id；若为 false 则不释放——适用于调用者可能希望以相同 id 重新插入条目的情况
+- heap: 堆
+- free: 若为 true，则同时释放该 id；若为 false 则不释放——适用于调用者可能希望以相同 id 重新插入条目的情况
 
 **返回**
 
@@ -315,9 +649,9 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 #### 函数
 
-`void queue_init_with_spinlock (queue_t *q, uint element_size, uint element_count, uint spinlock_num)`<br/>&emsp;使用特定自旋锁初始化队列以进行并发保护。
+`bool queue_init_with_spinlock (queue_t *q, uint element_size, uint element_count, uint spinlock_num)`<br/>&emsp;使用特定自旋锁初始化队列以进行并发保护。
 
-`static void queue_init (queue_t *q, uint element_size, uint element_count)`<br/>&emsp;初始化队列，分配一个（可能共享的）自旋锁。
+`static bool queue_init (queue_t *q, uint element_size, uint element_count)`<br/>&emsp;初始化队列，分配一个（可能共享的）自旋锁。
 
 `void queue_free (queue_t *q)`<br/>&emsp;销毁指定队列。
 
@@ -345,14 +679,14 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **queue_add_blocking**
 
-`void queue_add_blocking (queue_t **` q, const void ** data)`
+`void queue_add_blocking (queue_t **q, const void ** data)`
 
 阻塞地向队列添加值。
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
-- `data`: 指向要复制到队列中的值的指针
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
+- data: 指向要复制到队列中的值的指针
 
 若队列已满，此函数将阻塞，直到队列上发生一次移除操作。
 
@@ -364,9 +698,9 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
 
-不会释放 `queue_t` 结构本身。
+不会释放 queue_t 结构本身。
 
 **queue_get_level**
 
@@ -376,7 +710,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
 
 **返回**
 
@@ -390,7 +724,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
 
 **返回**
 
@@ -400,28 +734,36 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **queue_init**
 
-`static void queue_init (queue_t * q, uint element_size, uint element_count) [inline], [static]`
+`static bool queue_init (queue_t * q, uint element_size, uint element_count) [inline], [static]`
 
 初始化队列，分配一个（可能共享的）自旋锁。
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
-- `element_size`: 队列中每个值的大小
-- `element_count`: 队列中的最大条目数
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
+- element_size: 队列中每个值的大小
+- element_count: 队列中的最大条目数
+
+**返回**
+
+若队列初始化成功返回 true；若无法初始化（例如 malloc 失败）返回 false。
 
 **queue_init_with_spinlock**
 
-`void queue_init_with_spinlock (queue_t * q, uint element_size, uint element_count, uint spinlock_num)`
+`bool queue_init_with_spinlock (queue_t * q, uint element_size, uint element_count, uint spinlock_num)`
 
 使用特定自旋锁初始化队列以进行并发保护。
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
-- `element_size`: 队列中每个值的大小
-- `element_count`: 队列中的最大条目数
-- `spinlock_num`: 用于保护队列的自旋锁 ID
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
+- element_size: 队列中每个值的大小
+- element_count: 队列中的最大条目数
+- spinlock_num: 用于保护队列的自旋锁 ID
+
+**返回**
+
+若队列初始化成功返回 true；若无法初始化（例如内存分配失败）返回 false。
 
 **queue_is_empty**
 
@@ -431,7 +773,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
 
 **返回**
 
@@ -447,7 +789,7 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
 
 **返回**
 
@@ -457,40 +799,40 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **queue_peek_blocking**
 
-`void queue_peek_blocking (queue_t **` q, void ** data)`
+`void queue_peek_blocking (queue_t **q, void ** data)`
 
 阻塞地查看队列中下一个待移除的值。
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
-- `data`: 指向接收查看值的位置的指针，若不需要数据可为 NULL
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
+- data: 指向接收查看值的位置的指针，若不需要数据可为 NULL
 
 若队列为空，函数将阻塞直到有值被添加。
 
 **queue_remove_blocking**
 
-`void queue_remove_blocking (queue_t **` q, void ** data)`
+`void queue_remove_blocking (queue_t **q, void ** data)`
 
 阻塞地从队列移除条目。
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
-- `data`: 指向接收被移除值的位置的指针，若不需要数据可为 NULL
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
+- data: 指向接收被移除值的位置的指针，若不需要数据可为 NULL
 
 若队列为空，此函数将阻塞直到有值被添加。
 
 **queue_try_add**
 
-`bool queue_try_add (queue_t **` q, const void ** data)`
+`bool queue_try_add (queue_t **q, const void ** data)`
 
 若队列未满则非阻塞地向队列添加值。
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
-- `data`: 指向要复制到队列中的值的指针
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
+- data: 指向要复制到队列中的值的指针
 
 **返回**
 
@@ -500,14 +842,14 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **queue_try_peek**
 
-`bool queue_try_peek (queue_t **` q, void ** data)`
+`bool queue_try_peek (queue_t **q, void ** data)`
 
 非阻塞地查看队列中下一个待移除的条目。
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
-- `data`: 指向接收查看值的位置的指针，若不需要数据可为 NULL
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
+- data: 指向接收查看值的位置的指针，若不需要数据可为 NULL
 
 **返回**
 
@@ -517,14 +859,14 @@ pheap 定义了一个简单的配对堆。该实现仅跟踪数组索引，由�
 
 **queue_try_remove**
 
-`bool queue_try_remove (queue_t **` q, void ** data)`
+`bool queue_try_remove (queue_t **q, void ** data)`
 
 若队列非空则非阻塞地从队列移除条目。
 
 **参数**
 
-- `q: 指向 queue_t` 结构的指针，用作句柄
-- `data`: 指向接收被移除值的位置的指针，若不需要数据可为 NULL
+- `q`: 指向 `queue_t` 结构的指针，用作句柄
+- data: 指向接收被移除值的位置的指针，若不需要数据可为 NULL
 
 **返回**
 

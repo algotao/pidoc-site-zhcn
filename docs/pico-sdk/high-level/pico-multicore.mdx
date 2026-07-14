@@ -4,7 +4,7 @@ draft: false
 description: 支持在第二个处理器核心（core 1）上运行代码并与其交互。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK multicore]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -66,7 +66,7 @@ int main() {
 
 ### 宏
 
-* `#define [SIO_FIFO_IRQ_NUM](core)`
+* `#define SIO_FIFO_IRQ_NUM(core)`
 
 ### 函数
 
@@ -81,11 +81,11 @@ int main() {
 
 #### SIO_FIFO_IRQ_NUM
 
-`#define SIO_FIFO_IRQ_NUM(core)`
+#define SIO_FIFO_IRQ_NUM(core)
 
-返回给定核心上 FIFO IRQ 的 `irq_num_t`。
+返回给定核心上 FIFO IRQ 的 irq_num_t。
 
-在 RP2040 上，每个核心有不同的 IRQ 编号：`SIO_IRQ_PROC0 和 SIO_IRQ_PROC1。在 RP2350 上，两个核心共享相同的 IRQ 编号（`SIO_IRQ_PROC），只是每个核心有不同的 SIO 中断输出路由到该 IRQ 输入。
+在 RP2040 上，每个核心有不同的 IRQ 编号：`SIO_IRQ_PROC0` 和 `SIO_IRQ_PROC1`。在 `RP2350` 上，两个核心共享相同的 `IRQ` 编号（SIO_IRQ_PROC），只是每个核心有不同的 SIO 中断输出路由到该 IRQ 输入。
 
 注意，此宏旨在编译时解析，不进行参数检查。
 
@@ -99,17 +99,17 @@ int main() {
 
 唤醒（之前已重置的）core 1，并使用默认的 core 1 栈（位于 core 0 栈下方）在 core 1 上进入给定函数。
 
-core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 `multicore_reset_core1` 的结果。
+core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 multicore_reset_core1 的结果。
 
 core 1 将使用与 core 0 相同的向量表。
 
 **参数**
 
-- `entry`: 函数入口点
+- entry: 函数入口点
 
 **另请参阅**
 
-`multicore_reset_core1`
+multicore_reset_core1
 
 #### multicore_launch_core1_raw
 
@@ -121,17 +121,17 @@ core 1 将使用与 core 0 相同的向量表。
 
 这是一个低级函数，即使定义了 USE_STACK_GUARDS 也不提供栈保护。
 
-core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 `multicore_reset_core1` 的结果。
+core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 multicore_reset_core1 的结果。
 
 **参数**
 
-- `entry`: 函数入口点
-- `sp`: 指向 core 1 栈顶的指针
-- `vector_table`: core 1 使用的向量表地址
+- entry: 函数入口点
+- sp: 指向 core 1 栈顶的指针
+- vector_table: core 1 使用的向量表地址
 
 **另请参阅**
 
-`multicore_reset_core1`
+multicore_reset_core1
 
 #### multicore_launch_core1_with_stack
 
@@ -141,19 +141,19 @@ core 1 必须之前已被重置，可以是系统重置的结果，也可以是�
 
 唤醒（之前已重置的）core 1，并使用传入的栈在 core 1 上进入给定函数。
 
-core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 `multicore_reset_core1` 的结果。
+core 1 必须之前已被重置，可以是系统重置的结果，也可以是调用 multicore_reset_core1 的结果。
 
 core 1 将使用与 core 0 相同的向量表。
 
 **参数**
 
-- `entry`: 函数入口点
-- `stack_bottom`: 栈的底部（最低地址）
-- `stack_size_bytes`: 栈的大小（字节，必须是 4 的倍数）
+- entry: 函数入口点
+- stack_bottom: 栈的底部（最低地址）
+- stack_size_bytes: 栈的大小（字节，必须是 4 的倍数）
 
 **另请参阅**
 
-`multicore_reset_core1`
+multicore_reset_core1
 
 #### multicore_reset_core1
 
@@ -161,7 +161,7 @@ core 1 将使用与 core 0 相同的向量表。
 
 重置 core 1。
 
-此函数可用于将 core 1 重置到初始状态（准备好通过 `multicore_launch_core1` 及类似方法启动代码）。
+此函数可用于将 core 1 重置到初始状态（准备好通过 multicore_launch_core1 及类似方法启动代码）。
 
 此函数只应从 core 0 调用。
 
@@ -241,7 +241,7 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 从读取 FIFO 中弹出数据（来自另一个核心的数据）。
 
-此函数将阻塞直到有数据可读。如果不希望阻塞，可使用 `multicore_fifo_rvalid()` 检查数据是否已准备好。
+此函数将阻塞直到有数据可读。如果不希望阻塞，可使用 multicore_fifo_rvalid() 检查数据是否已准备好。
 
 参见 fifo 章节中关于使用核间 FIFO 的注意事项。
 
@@ -255,7 +255,7 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 从读取 FIFO 中弹出数据（来自另一个核心的数据）。
 
-此函数将阻塞直到有数据可读。如果不希望阻塞，可使用 `multicore_fifo_rvalid()` 检查数据是否已准备好。
+此函数将阻塞直到有数据可读。如果不希望阻塞，可使用 multicore_fifo_rvalid() 检查数据是否已准备好。
 
 参见 fifo 章节中关于使用核间 FIFO 的注意事项。
 
@@ -275,12 +275,12 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `timeout_us`: 超时时间（微秒）
-- `out`: 若有可用数据，用于存储弹出数据的位置
+- timeout_us: 超时时间（微秒）
+- out: 若有可用数据，用于存储弹出数据的位置
 
 **返回**
 
-如果数据已弹出并将值复制到 `out`，返回 true；如果超时前无法弹出数据，返回 false。
+如果数据已弹出并将值复制到 out，返回 true；如果超时前无法弹出数据，返回 false。
 
 **multicore_fifo_push_blocking**
 
@@ -288,13 +288,13 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 将数据推送到写入 FIFO（发送给另一个核心）。
 
-此函数将阻塞直到有空间发送数据。如果不希望阻塞，可使用 `multicore_fifo_wready()` 检查是否可以写入 FIFO。
+此函数将阻塞直到有空间发送数据。如果不希望阻塞，可使用 multicore_fifo_wready() 检查是否可以写入 FIFO。
 
 参见 fifo 章节中关于使用核间 FIFO 的注意事项。
 
 **参数**
 
-- `data`: 要推送到 FIFO 的 32 位值
+- data: 要推送到 FIFO 的 32 位值
 
 **multicore_fifo_push_blocking_inline**
 
@@ -302,13 +302,13 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 将数据推送到写入 FIFO（发送给另一个核心）。
 
-此函数将阻塞直到有空间发送数据。如果不希望阻塞，可使用 `multicore_fifo_wready()` 检查是否可以写入 FIFO。
+此函数将阻塞直到有空间发送数据。如果不希望阻塞，可使用 multicore_fifo_wready() 检查是否可以写入 FIFO。
 
 参见 fifo 章节中关于使用核间 FIFO 的注意事项。
 
 **参数**
 
-- `data`: 要推送到 FIFO 的 32 位值
+- data: 要推送到 FIFO 的 32 位值
 
 **multicore_fifo_push_timeout_us**
 
@@ -320,8 +320,8 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `data`: 要推送到 FIFO 的 32 位值
-- `timeout_us`: 超时时间（微秒）
+- data: 要推送到 FIFO 的 32 位值
+- timeout_us: 超时时间（微秒）
 
 **返回**
 
@@ -357,7 +357,7 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 #### 宏
 
-* `#define [DOORBELL_IRQ_NUM](doorbell_num)`
+* `#define DOORBELL_IRQ_NUM(doorbell_num)`
 
 #### 函数
 
@@ -375,17 +375,17 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 `static void multicore_doorbell_clear_current_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;停用当前核心上的指定门铃。
 
-`static bool multicore_doorbell_is_set_current_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;判断指定门铃是否在另一个核心上处于激活状态。
+`static bool multicore_doorbell_is_set_current_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;判断指定门铃是否在当前核心上处于激活状态。
 
-`static bool multicore_doorbell_is_set_other_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;判断指定门铃是否在当前核心上处于激活状态。
+`static bool multicore_doorbell_is_set_other_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;判断指定门铃是否在另一个核心上处于激活状态。
 
 #### 宏定义文档
 
 **DOORBELL_IRQ_NUM** <span className="chip-tag rp2350">RP2350</span>
 
-`#define DOORBELL_IRQ_NUM(doorbell_num)`
+#define DOORBELL_IRQ_NUM(doorbell_num)
 
-返回给定门铃编号的处理器中断的 `irq_num_t`。
+返回给定门铃编号的处理器中断的 irq_num_t。
 
 注意，此宏旨在编译时解析，不进行参数检查。
 
@@ -401,8 +401,8 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `doorbell_num`: 要申请的门铃编号
-- `core_mask`: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
+- doorbell_num: 要申请的门铃编号
+- core_mask: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
 
 **另请参阅**
 
@@ -417,8 +417,8 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `core_mask`: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
-- `required`: 若为 true，则在无可用资源时函数将触发 panic
+- core_mask: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
+- required: 若为 true，则在无可用资源时函数将触发 panic
 
 **返回**
 
@@ -435,7 +435,7 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `doorbell_num`: 门铃编号
+- doorbell_num: 门铃编号
 
 **multicore_doorbell_clear_other_core** <span className="chip-tag rp2350">RP2350</span>
 
@@ -445,27 +445,27 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `doorbell_num`: 门铃编号
+- doorbell_num: 门铃编号
 
 **multicore_doorbell_is_set_current_core** <span className="chip-tag rp2350">RP2350</span>
 
 `static bool multicore_doorbell_is_set_current_core (uint doorbell_num) [inline], [static]`
 
-判断指定门铃是否在另一个核心上处于激活状态。
+判断指定门铃是否在当前核心上处于激活状态。
 
 **参数**
 
-- `doorbell_num`: 门铃编号
+- doorbell_num: 门铃编号
 
 **multicore_doorbell_is_set_other_core** <span className="chip-tag rp2350">RP2350</span>
 
 `static bool multicore_doorbell_is_set_other_core (uint doorbell_num) [inline], [static]`
 
-判断指定门铃是否在当前核心上处于激活状态。
+判断指定门铃是否在另一个核心上处于激活状态。
 
 **参数**
 
-- `doorbell_num`: 门铃编号
+- doorbell_num: 门铃编号
 
 **multicore_doorbell_set_current_core** <span className="chip-tag rp2350">RP2350</span>
 
@@ -475,7 +475,7 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `doorbell_num`: 门铃编号
+- doorbell_num: 门铃编号
 
 **multicore_doorbell_set_other_core** <span className="chip-tag rp2350">RP2350</span>
 
@@ -485,7 +485,7 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `doorbell_num`: 门铃编号
+- doorbell_num: 门铃编号
 
 **multicore_doorbell_unclaim** <span className="chip-tag rp2350">RP2350</span>
 
@@ -495,8 +495,8 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **参数**
 
-- `doorbell_num`: 要释放的门铃编号
-- `core_mask`: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
+- doorbell_num: 要释放的门铃编号
+- core_mask: 0b01：core 0，0b10：core 1，0b11：core 0 和 core 1
 
 **另请参阅**
 
@@ -511,11 +511,13 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 这些 "lockout" 函数使用核间 FIFO 从一个核心向另一个核心发出中断，并管理等待另一个核心进入 "locked out" 状态的过程。
 
-使用方式是："victim" 核心（即可被另一个核心 "lock out" 的核心）调用 `multicore_lockout_victim_init` 来挂钩 FIFO 中断。注意任意一个或两个核心都可以执行此操作。
+默认情况下，为了方便起见，如果 core 1 尚未通过 multicore_launch_core1 函数启动，或已通过 multicore_reset_core1 重置，multicore_lockout_start_ 函数将在 core 0 上成功执行。因此，在 core 0 处于 multicore_lockout_ 函数内部时调用 multicore_launch_core1 是不安全的（尽管你不太可能这样做）。可以通过设置 PICO_MULTICORE_LOCKOUT_BEFORE_CORE1_STARTED=0 来禁用此默认行为，在这种情况下，core 1 必须正在运行且处于 "victim 已初始化" 状态，才能在 core 0 上调用 multicore_lockout_start 函数。
+
+使用方式是："victim" 核心（即可被另一个核心 "lock out" 的核心）调用 multicore_lockout_victim_init 来挂钩 FIFO 中断。注意任意一个或两个核心都可以执行此操作。
 
 当处于 "locked out" 状态时，victim 核心会暂停（实际上是在 RAM 中执行一个紧循环）并禁用中断。这使得 lockout 函数适合用于需要向 Flash 写入数据的代码（此时不允许从 Flash 执行任何代码）。
 
-希望锁定另一个核心的核心调用 `multicore_lockout_start_blocking 或 multicore_lockout_start_timeout_us 来中断另一个 "victim" 核心并等待其进入 "locked out" 状态。一旦不再需要锁定，它调用 `multicore_lockout_end_blocking 或 multicore_lockout_end_timeout_us` 来解除锁定。
+希望锁定另一个核心的核心调用 `multicore_lockout_start_blocking` 或 `multicore_lockout_start_timeout_us` 来中断另一个 "`victim`" 核心并等待其进入 "`locked` `out`" 状态。一旦不再需要锁定，它调用 multicore_lockout_end_blocking 或 multicore_lockout_end_timeout_us 来解除锁定。
 
 由于 multicore lockout 使用核间 FIFO，FIFO **不能**用于任何其他目的。
 
@@ -523,7 +525,8 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 - `void multicore_lockout_victim_init (void)`: 初始化当前核心，使其可以成为 lockout 的 "victim"（即被另一个核心强制在已知状态下暂停）。
 - `void multicore_lockout_victim_deinit (void)`: 使当前核心不再能够成为 lockout 的 "victim"（即被另一个核心强制在已知状态下暂停）。
-- `bool multicore_lockout_victim_is_initialized (uint core_num): 判断指定核心是否已调用过 `multicore_lockout_victim_init()`。
+- `bool multicore_lockout_victim_is_initialized (uint core_num)`: 判断指定核心是否已调用过 `multicore_lockout_victim_init()`。
+- `bool multicore_lockout_ready (void)`: 判断从此核心调用 multicore_lockout_start 函数是否安全。
 - `void multicore_lockout_start_blocking (void)`: 请求另一个核心在已知状态下暂停，并等待其完成。
 - `bool multicore_lockout_start_timeout_us (uint64_t timeout_us)`: 请求另一个核心在已知状态下暂停，并在超时时间内等待。
 - `void multicore_lockout_end_blocking (void)`: 释放另一个核心的锁定状态。
@@ -537,7 +540,7 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 释放另一个核心的锁定状态。
 
-另一个核心必须之前已通过从此核心调用 `multicore_lockout_start_` 函数而进入 "locked out" 状态。
+另一个核心必须之前已通过从此核心调用 multicore_lockout_start_ 函数而进入 "locked out" 状态。
 
 调用此函数后，另一个核心将离开锁定状态。此函数仅阻塞以等待访问 lockout 互斥锁，不等待另一个核心离开锁定状态。
 
@@ -547,13 +550,13 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 释放另一个核心的锁定状态。
 
-另一个核心必须之前已通过从此核心调用 `multicore_lockout_start_` 函数而进入 "locked out" 状态。
+另一个核心必须之前已通过从此核心调用 multicore_lockout_start_ 函数而进入 "locked out" 状态。
 
 如果此函数返回 true，另一个核心将离开锁定状态。此函数仅阻塞以等待访问 lockout 互斥锁，不等待另一个核心离开锁定状态。如果无法获取 lockout 互斥锁，则函数返回 false，不执行任何操作。
 
 **参数**
 
-- `timeout_us`: 超时时间（微秒）
+- timeout_us: 超时时间（微秒）
 
 **返回**
 
@@ -565,9 +568,9 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 请求另一个核心在已知状态下暂停，并等待其完成。
 
-另一个（victim）核心必须已预先执行过 `multicore_lockout_victim_init()`。
+另一个（victim）核心必须已预先执行过 multicore_lockout_victim_init()。
 
-multicore_lockout_start_ 函数不可嵌套，必须与对应的 `multicore_lockout_end_blocking` 调用配对使用。
+multicore_lockout_start_ 函数不可嵌套，必须与对应的 multicore_lockout_end_blocking 调用配对使用。
 
 **multicore_lockout_start_timeout_us**
 
@@ -575,17 +578,31 @@ multicore_lockout_start_ 函数不可嵌套，必须与对应的 `multicore_lock
 
 请求另一个核心在已知状态下暂停，并在超时时间内等待。
 
-另一个核心必须已预先执行过 `multicore_lockout_victim_init()`。
+另一个核心必须已预先执行过 multicore_lockout_victim_init()。
 
-multicore_lockout_start_ 函数不可嵌套，必须与对应的 `multicore_lockout_end_blocking` 调用配对使用。
+multicore_lockout_start_ 函数不可嵌套，必须与对应的 multicore_lockout_end_blocking 调用配对使用。
 
 **参数**
 
-- `timeout_us`: 超时时间（微秒）
+- timeout_us: 超时时间（微秒）
 
 **返回**
 
 如果另一个核心在超时内进入锁定状态返回 true，否则返回 false。
+
+**multicore_lockout_ready**
+
+`bool multicore_lockout_ready (void)`
+
+判断从此核心调用 multicore_lockout_start 函数是否安全。
+
+**返回**
+
+如果可以从此核心安全调用 multicore_lockout_start_blocking() 和 multicore_lockout_start_timeout_us() 则返回 true
+
+:::::note
+当 PICO_MULTICORE_LOCKOUT_BEFORE_CORE1_STARTED=1 时，如果 core 1 尚未通过 multicore_launch_core1 函数启动，或已通过 multicore_reset_core1 重置，则在 core 0 上调用此函数返回 true。否则，它返回与 multicore_lockout_victim_is_initialized(other_core) 相同的值。此行为旨在方便可能想在 core 0 上执行操作、但可能尚未启动 core 1 的应用程序。
+:::::
 
 **multicore_lockout_victim_deinit**
 
@@ -607,16 +624,16 @@ multicore_lockout_start_ 函数不可嵌套，必须与对应的 `multicore_lock
 
 `bool multicore_lockout_victim_is_initialized (uint core_num)`
 
-判断指定核心是否已调用过 `multicore_lockout_victim_init()`。
+判断指定核心是否已调用过 multicore_lockout_victim_init()。
 
-此状态在核心随后被重置后仍会保留；因此，建议在重置之前已初始化过的核心后，始终重新调用 `multicore_lockout_victim_init()`。
+此状态在核心随后被重置后仍会保留（通过 pico_multicore_reset_core1 重置的除外）；因此，建议在重置之前已初始化过的核心后，始终重新调用 multicore_lockout_victim_init()。
 
 **参数**
 
-- `core_num`: 核心编号（0 或 1）
+- core_num: 核心编号（0 或 1）
 
 **返回**
 
-如果指定核心已调用过 `multicore_lockout_victim_init()` 返回 true，否则返回 false。
+如果指定核心已调用过 multicore_lockout_victim_init() 返回 true，否则返回 false。
 
 <Normal />

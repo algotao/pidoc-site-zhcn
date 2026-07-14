@@ -13,7 +13,7 @@ import Normal from "../../_normal.mdx";
 ### 函数
 
 - `void vreg_set_voltage (enum vreg_voltage voltage)`: 设置电压。
-- `enum vreg_voltage vreg_get_voltage` (void)`: 获取电压。
+- enum vreg_voltage vreg_get_voltage (void): 获取电压。
 - `void vreg_disable_voltage_limit (void)`: 启用超出安全运行范围的电压使用。
 
 ### 函数文档
@@ -28,13 +28,13 @@ import Normal from "../../_normal.mdx";
 
 #### vreg_get_voltage
 
-`enum vreg_voltage vreg_get_voltage (void)`
+enum vreg_voltage vreg_get_voltage (void)
 
 获取电压。
 
 **返回值**
 
-电压调节器的当前电压（来自枚举 `vreg_voltage）。
+电压调节器的当前电压（来自枚举 `vreg_voltage`）。
 
 #### vreg_set_voltage
 
@@ -44,6 +44,6 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `voltage: 要施加到电压调节器的电压值（来自枚举 vreg_voltage）
+- `voltage`: 要施加到电压调节器的电压值（来自枚举 `vreg_voltage`）
 
 <Normal />

@@ -107,25 +107,38 @@ int main() {
 
 `void flash_get_unique_id (uint8_t *id_out)`<br/>&emsp;获取 flash 的唯一 64 位标识符。
 
-`void flash_do_cmd (const uint8_t **txbuf, uint8_t **rxbuf, size_t count)`<br/>&emsp;执行双向 flash 命令。
+`void flash_do_cmd_cs (const uint8_t *txbuf, uint8_t *rxbuf, size_t count, uint cs)`<br/>&emsp;执行双向 QSPI 命令。
+
+`static void flash_do_cmd (const uint8_t *txbuf, uint8_t *rxbuf, size_t count)`<br/>&emsp;在片选 0 上执行双向 flash 命令。
 
 ### 函数文档
 
 #### flash_do_cmd
 
-`void flash_do_cmd (const uint8_t ** txbuf, uint8_t ** rxbuf, size_t count)`
+`static void flash_do_cmd (const uint8_t ** txbuf, uint8_t ** rxbuf, size_t count) [inline], [static]`
 
-执行双向 flash 命令。
+在片选 0 上执行双向 flash 命令。
 
-底层函数，用于在连接到 QSPI 接口的 flash 设备上执行串行命令。字节从 txbuf 同时发送，并从 rxbuf 接收。因此，两个缓冲区的长度必须相同，即 count（整个事务的长度）。这对于读取 flash 芯片的元数据（如设备 ID 或 SFDP 参数）非常有用。
+详见 `flash_do_cmd_cs`。
+
+#### flash_do_cmd_cs
+
+`void flash_do_cmd_cs (const uint8_t * txbuf, uint8_t * rxbuf, size_t count, uint cs)`
+
+执行双向 QSPI 命令。
+
+底层函数，用于在连接到 QSPI 接口的设备上执行串行命令。字节从 txbuf 同时发送，并从 rxbuf 接收。因此，两个缓冲区的长度必须相同，即 count（整个事务的长度）。这对于读取芯片的元数据（如设备 ID 或 SFDP 参数）非常有用。
 
 每条命令执行后会刷新 XIP 缓存，以防 flash 状态被修改。与其他 hardware_flash 函数一样，命令执行过程中 flash 无法用于就地执行传输，因此并发进入 flash 驻留的中断处理程序或在第二个核心上执行 flash 代码将导致致命错误。为避免这些风险，建议仅在启动阶段（主应用程序开始运行之前）使用此函数提取 flash 元数据：请参阅 pico_get_unique_id() 的实现作为示例。
 
+在 RP2040 上，片选索引会被忽略，因为只有一个片选。
+
 **参数**
 
-- `txbuf`: 指向将发送到 flash 的字节缓冲区的指针
-- `rxbuf`: 指向接收来自 flash 数据的字节缓冲区的指针。txbuf 和 rxbuf 可以是同一个缓冲区。
+- `txbuf`: 指向将发送的字节缓冲区的指针
+- `rxbuf`: 指向接收数据将写入的字节缓冲区的指针。txbuf 和 rxbuf 可以是同一个缓冲区。
 - `count`: txbuf 和 rxbuf 的字节长度
+- `cs`: 片选索引
 
 #### flash_get_unique_id
 

@@ -12,7 +12,7 @@ import Normal from "../../_normal.mdx";
 
 ### 详细描述
 
-`hardware_claim` 提供了一个简单的 API，用于在运行时管理硬件资源。
+hardware_claim 提供了一个简单的 API，用于在运行时管理硬件资源。
 
 此 API 通常由其他特定硬件的*申请* API 调用，并提供简单的多核安全方法，用于操作表示硬件资源的紧凑位集。
 
@@ -38,8 +38,8 @@ import Normal from "../../_normal.mdx";
 `bool hw_is_claimed (const uint8_t *bits, uint bit_index)`<br/>&emsp;确定调用时资源是否已被申请。
 
 `void hw_claim_clear (uint8_t *bits, uint bit_index)`<br/>&emsp;原子地取消申请资源。
-- `uint32_t hw_claim_lock (void): 获取 `hardware_claim` 库提供的运行时互斥锁。
-- `void hw_claim_unlock (uint32_t token): 释放 `hardware_claim` 库提供的运行时互斥锁。
+- `uint32_t hw_claim_lock (void)`: 获取 `hardware_claim` 库提供的运行时互斥锁。
+- `void hw_claim_unlock (uint32_t token)`: 释放 `hardware_claim` 库提供的运行时互斥锁。
 
 ### 函数文档
 
@@ -53,22 +53,22 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `bits`: 指向位数组的指针（每字节 8 位）
-- `bit_index`: 要取消申请的资源（位数组中的位索引）
+- bits: 指向位数组的指针（每字节 8 位）
+- bit_index: 要取消申请的资源（位数组中的位索引）
 
 #### hw_claim_lock
 
 `uint32_t hw_claim_lock (void)`
 
-获取 `hardware_claim` 库提供的运行时互斥锁。
+获取 hardware_claim 库提供的运行时互斥锁。
 
-此方法会被其他 `hw_claim_` 方法自动调用，但也作为便利方法提供，供需要保护其他硬件初始化代码免受并发使用的代码调用。
+此方法会被其他 hw_claim_ 方法自动调用，但也作为便利方法提供，供需要保护其他硬件初始化代码免受并发使用的代码调用。
 
-`hw_claim_lock()` 内部使用自旋锁，因此会禁用调用核心的中断，并在调用核心已持有锁时产生死锁。
+hw_claim_lock() 内部使用自旋锁，因此会禁用调用核心的中断，并在调用核心已持有锁时产生死锁。
 
 **返回**
 
-一个传递给 `hw_claim_unlock()` 的令牌。
+一个传递给 hw_claim_unlock() 的令牌。
 
 #### hw_claim_or_assert
 
@@ -80,21 +80,21 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `bits`: 指向位数组的指针（每字节 8 位）
-- `bit_index`: 要申请的资源（位数组中的位索引）
-- `message`: 若无法申请该位时显示的字符串；注意此字符串可以包含一个 printf 格式说明符 "%d" 用于表示位序号
+- bits: 指向位数组的指针（每字节 8 位）
+- bit_index: 要申请的资源（位数组中的位索引）
+- message: 若无法申请该位时显示的字符串；注意此字符串可以包含一个 printf 格式说明符 "%d" 用于表示位序号
 
 #### hw_claim_unlock
 
 `void hw_claim_unlock (uint32_t token)`
 
-释放 `hardware_claim` 库提供的运行时互斥锁。
+释放 hardware_claim 库提供的运行时互斥锁。
 
-此方法**必须**从调用 `hw_claim_lock()` 的同一核心调用。
+此方法**必须**从调用 hw_claim_lock() 的同一核心调用。
 
 **参数**
 
-- `token: 对应 hw_claim_lock()` 调用返回的令牌
+- `token`: 对应 `hw_claim_lock()` 调用返回的令牌
 
 #### hw_claim_unused_from_range
 
@@ -104,11 +104,11 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `bits`: 指向位数组的指针（每字节 8 位）
-- `required`: 若为 true，当资源不空闲时此方法将触发 panic
-- `bit_lsb`: 要申请的资源范围的下界（含）
-- `bit_msb`: 要申请的资源范围的上界（含）
-- `message`: 若无法申请该位时显示的字符串
+- bits: 指向位数组的指针（每字节 8 位）
+- required: 若为 true，当资源不空闲时此方法将触发 panic
+- bit_lsb: 要申请的资源范围的下界（含）
+- bit_msb: 要申请的资源范围的上界（含）
+- message: 若无法申请该位时显示的字符串
 
 **返回**
 
@@ -124,8 +124,8 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `bits`: 指向位数组的指针（每字节 8 位）
-- `bit_index`: 要检查的资源（位数组中的位索引）
+- bits: 指向位数组的指针（每字节 8 位）
+- bit_index: 要检查的资源（位数组中的位索引）
 
 **返回**
 

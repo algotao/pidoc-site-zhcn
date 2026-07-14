@@ -57,7 +57,7 @@ mtimecmp 的当前值
 
 **参数**
 
-- `enabled`: 传入 true 以启用，传入 false 以禁用
+- enabled: 传入 true 以启用，传入 false 以禁用
 
 #### riscv_timer_set_fullspeed
 
@@ -67,7 +67,7 @@ mtimecmp 的当前值
 
 **参数**
 
-- `fullspeed: 传入 true 以按系统时钟速度递增，传入 false 以按系统 tick 生成器（ticks` 模块）定义的频率递增
+- `fullspeed`: 传入 `true` 以按系统时钟速度递增，传入 `false` 以按系统 `tick` 生成器（`ticks` 模块）定义的频率递增
 
 #### riscv_timer_set_mtime
 
@@ -75,11 +75,11 @@ mtimecmp 的当前值
 
 更新 RISC-V 平台定时器。
 
-此函数只应在通过 `riscv_timer_set_enabled()` 禁用定时器后调用。另请注意，与 mtimecmp 比较值不同，mtime 并非核心本地的，因此在一个核心上的更新对另一个核心也可见。
+此函数只应在通过 riscv_timer_set_enabled() 禁用定时器后调用。另请注意，与 mtimecmp 比较值不同，mtime 并非核心本地的，因此在一个核心上的更新对另一个核心也可见。
 
 **参数**
 
-- `mtime`: 要设置的 RISC-V 平台定时器新值
+- mtime: 要设置的 RISC-V 平台定时器新值
 
 #### riscv_timer_set_mtimecmp
 
@@ -91,6 +91,6 @@ mtimecmp 的当前值
 
 **参数**
 
-- `mtime`: 要设置的 RISC-V 平台定时器新值
+- mtime: 要设置的 RISC-V 平台定时器新值
 
 <Normal />

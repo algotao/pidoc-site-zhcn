@@ -43,6 +43,11 @@ RP 系列微控制器具有 2 个相同的 UART 外设实例，基于 ARM PL011�
 * `#define [UART_FUNCSEL_NUM](uart, gpio)`
 * `#define [UART_IRQ_NUM](uart)`
 * `#define [UART_RESET_NUM](uart)`
+* `#define [UART_IS_INSTANCE](uart)`
+
+### 类型定义
+
+`typedef struct uart_inst uart_inst_t`<br/>&emsp;表示 UART 实例的不透明类型。
 
 ### 枚举
 
@@ -96,9 +101,9 @@ RP 系列微控制器具有 2 个相同的 UART 外设实例，基于 ARM PL011�
 - `static void uart_default_tx_wait_blocking (void)`: 等待默认 UART 的 TX FIFO 排空。
 `bool uart_is_readable_within_us (uart_inst_t *uart, uint32_t us)`<br/>&emsp;等待最多指定微秒数，直到 RX FIFO 非空。
 
-`static uint uart_get_dreq_num (uart_inst_t *uart, bool is_tx)<br/>&emsp;返回用于特定 UART 实例传输节拍的 dreq_num_t`。
+`static uint uart_get_dreq_num (uart_inst_t *uart, bool is_tx)`<br/>&emsp;返回用于特定 `UART` 实例传输节拍的 `dreq_num_t`。
 
-`static uint uart_get_reset_num (uart_inst_t *uart)<br/>&emsp;返回用于复位特定 UART 实例的 reset_num_t`。
+`static uint uart_get_reset_num (uart_inst_t *uart)`<br/>&emsp;返回用于复位特定 `UART` 实例的 `reset_num_t`。
 
 #### uart0
 
@@ -167,6 +172,24 @@ UART 实例 1 的标识符。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
 
+#### UART_IS_INSTANCE
+
+`#define UART_IS_INSTANCE(uart)`
+
+若 UART 实例是硬件 UART 实例之一则返回 true。
+
+注意此宏旨在在编译期求值，不做参数检查。
+
+### 类型定义文档
+
+#### uart_inst_t
+
+`typedef struct uart_inst uart_inst_t`
+
+表示 UART 实例的不透明类型。
+
+使用 [uart0] 或 uart1 而非直接构造此类型。
+
 ### 枚举类型文档
 
 #### uart_parity_t
@@ -208,7 +231,7 @@ UART 奇偶校验枚举。
 
 #### uart_get_hw
 
-`static uart_hw_t **` uart_get_hw (uart_inst_t ** uart) [inline], [static]`
+`static uart_hw_t **uart_get_hw (uart_inst_t ** uart) [inline], [static]`
 
 从 UART 实例获取真实的硬件 UART 实例。
 

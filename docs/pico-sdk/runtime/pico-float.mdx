@@ -4,7 +4,7 @@ draft: false
 description: 优化的单精度浮点函数。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK float]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -14,62 +14,53 @@ import Normal from "../../_normal.mdx";
 
 应用程序可以通过依赖 pico_float 库，对程序中使用的浮点运算例程进行比编译器所提供的更深层次的控制。用户可能希望这样做的原因包括：
 
-. 
-使用 RP2-series 设备 bootrom 或 SDK 提供的优化软件实现
+1. 使用 RP2-series 设备 bootrom 或 SDK 提供的优化软件实现
 
-. 
-使用利用 RP2-series 自定义硬件加速的优化软硬件组合实现
+2. 使用利用 RP2-series 自定义硬件加速的优化软硬件组合实现
 
-. 
-控制 C 编译器/库代码体积膨胀的程度
+3. 控制 C 编译器/库代码体积膨胀的程度
 
-. 
-确保程序中完全不调用浮点运算
+4. 确保程序中完全不调用浮点运算
 
 pico_float 库有三种主要版本：
 
-. 
-`pico_float_none` - 所有浮点操作都会引发 panic —— 不包含任何单精度浮点代码
+1. `none` - 所有浮点操作都会引发 panic —— 不包含任何单精度浮点代码
 
-. 
-`pico_float_compiler` - 不提供自定义函数；所有单精度浮点运算均由 C 编译器/库处理
+2. `compiler` - 不提供自定义函数；所有单精度浮点运算均由 C 编译器/库处理
 
-. 
-`pico_float_pico` - 适用于该平台的最小且最快的版本，并附带额外功能（如定点数转换），详见下文
+3. `pico` - 适用于该平台的最小且最快的版本，并附带额外功能（如定点数转换），详见下文
 
-用户可以通过设置 CMake 全局变量 `PICO_DEFAULT_FLOAT_IMPL=xxx，或使用 CMake 函数 pico_set_float_implementation(<TARGET> xxx)` 来控制使用哪个版本（即 **pico_float_xxx**）。注意：若两者均未设置，默认使用 pico_float_pico。
+用户可以通过设置 CMake 全局变量 `PICO_DEFAULT_FLOAT_IMPL=xxx`，或使用 CMake 函数 `pico_set_float_implementation(<TARGET> xxx)` 来控制使用哪个版本（例如 pico_float `compiler`）。注意：若两者均未设置，默认使用 pico_float `pico`。
 
-在 RP2040 上，`pico_float_pico` 使用来自 bootrom 和 SDK 的优化手写实现，涵盖基本单精度浮点运算和浮点数学库函数。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
+在 RP2040 上，pico_float `pico` 使用来自 bootrom 和 SDK 的优化手写实现，涵盖基本单精度浮点运算和浮点数学库函数。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
 
-在 RP2350 的 Arm 上，`pico_float_pico` 有多个选项：
+在 RP2350 的 Arm 上，pico_float `pico` 有多个选项：
 
-. 
-`pico_float_pico_vfp` - 此库将基本 C 单精度浮点运算交由编译器处理，编译器可以使用内联的 VFP（Arm FPU）代码。同时提供自定义优化版本的三角函数和科学计算函数。不使用 DCP（RP2350 双精度协处理器）指令。
+1. pico_float `pico_vfp` - 此库将基本 C 单精度浮点运算交由编译器处理，编译器可以使用内联的 VFP（Arm FPU）代码。同时提供自定义优化版本的三角函数和科学计算函数。不使用 DCP（RP2350 双精度协处理器）指令。
 
-. 
-`pico_float_pico_dcp` - 此库阻止编译器注入内联 VFP 代码，并用优化的 DCP 或 M33 代码实现所有单精度浮点运算。此选项速度略慢于 pico_float_pico_vfp，但允许在不启用 CPU 浮点协处理器的情况下执行浮点运算；在某些场景下（例如，不希望为任务或中断的浮点状态保留栈空间时）这会很有用。
+2. pico_float `pico_dcp` - 此库阻止编译器注入内联 VFP 代码，并用优化的 DCP 或 M33 代码实现所有单精度浮点运算。此选项速度略慢于 pico_float `pico_vfp`，但允许在不启用 CPU 浮点协处理器的情况下执行浮点运算；在某些场景下（例如，不希望为任务或中断的浮点状态保留栈空间时）这会很有用。
 
-注意：在 RP2350 上，`pico_float_pico 等同于 pico_float_pico_vfp`，因为这是最合理的默认选项。
+注意：在 RP2350 上，pico_float `pico` 等同于 pico_float `pico_vfp`，因为这是最合理的默认选项。
 
-在 Arm 上，使用 `pico_float 的 _pico` 变体时，以下编译器内置函数和数学库函数将提供（替换性的）优化实现：
+在 Arm 上，使用 `pico_float` 的 `_pico` 变体时，以下编译器内置函数和数学库函数将提供（替换性的）优化实现：
 
-* 基本算术：（`pico_float_pico_vfp` 除外）
+* 基本算术：（pico_float `pico_vfp` 除外）
 
-`__aeabi_fadd, __aeabi_fdiv, `__aeabi_fmul, __aeabi_frsub, __aeabi_fsub`
+`__aeabi_fadd`, `__aeabi_fdiv`, `__aeabi_fmul`, `__aeabi_frsub`, `__aeabi_fsub`
 
-* 比较：（`pico_float_pico_vfp` 除外）
+* 比较：（pico_float `pico_vfp` 除外）
 
-`__aeabi_cfcmpeq, __aeabi_cfrcmple, `__aeabi_cfcmple, __aeabi_fcmpeq`, __aeabi_fcmplt, __aeabi_fcmple`, `__aeabi_fcmpge, __aeabi_fcmpgt, __aeabi_fcmpun`
+`__aeabi_cfcmpeq`, `__aeabi_cfrcmple`, `__aeabi_cfcmple`, `__aeabi_fcmpeq`, `__aeabi_fcmplt`, `__aeabi_fcmple`, `__aeabi_fcmpge`, `__aeabi_fcmpgt`, `__aeabi_fcmpun`
 
-* (u)int32 &lt;\-> float：（`pico_float_pico_vfp` 除外）
+* (u)int32 &lt;\-> float：（pico_float `pico_vfp` 除外）
 
-`__aeabi_i2f, __aeabi_ui2f, `__aeabi_f2iz, __aeabi_f2uiz`
+`__aeabi_i2f`, `__aeabi_ui2f`, `__aeabi_f2iz`, `__aeabi_f2uiz`
 
-* (u)int64 &lt;\-> float：（`pico_float_pico_vfp` 除外）
+* (u)int64 &lt;\-> float：（pico_float `pico_vfp` 除外）
 
-`__aeabi_l2f, __aeabi_ul2f, `__aeabi_f2lz, __aeabi_f2ulz`
+`__aeabi_l2f`, `__aeabi_ul2f`, `__aeabi_f2lz`, `__aeabi_f2ulz`
 
-* float \-> double：（`pico_float_pico_vfp` 除外）
+* float \-> double：（pico_float `pico_vfp` 除外）
 
 `__aeabi_f2d`
 
@@ -83,19 +74,19 @@ ldexpf, copysignf, truncf, floorf, ceilf, roundf, asinf, acosf, atanf, sinhf, co
 
 * GNU 扩展：
 
-powintf, sincosf
+sincosf
 
-在 Arm 上，使用 `pico_float 的 _pico` 变体时还提供以下额外的优化函数：
+在 Arm 上，使用 `pico_float` 的 `_pico` 变体时还提供以下额外的优化函数，所有这些函数在从浮点类型转换时，对于过大的输入会饱和到最近的可表示值：
 
 * 与整数类型之间的转换：
 
   * (u)int \-> float（四舍五入到最近）：
 int2float, uint2float, int642float, uint642float
-注意：在 `pico_float_pico_vfp` 上，32 位函数也作为 C 宏提供，因为它们映射到内联 VFP 代码
+注意：在 pico_float `pico_vfp` 上，32 位函数也作为 C 宏提供，因为它们映射到内联 VFP 代码
 
   * (u)float \-> int（向零舍入）：
 float2int_z, float2uint_z, float2int64_z, float2uint64_z
-注意：在 `pico_float_pico_vfp` 上，32 位函数也作为 C 宏提供，因为它们映射到内联 VFP 代码
+注意：在 pico_float `pico_vfp` 上，32 位函数也作为 C 宏提供，因为它们映射到内联 VFP 代码
 
   * (u)float \-> int（向负无穷舍入）：
 float2int, float2uint, float2int64, float2uint64
@@ -107,20 +98,342 @@ fix2float, ufix2float, fix642float, ufix642float
 
   * float \-> (u)fix（向零舍入）：
 float2fix_z, float2ufix_z, float2fix64_z, float2ufix64_z
-注意：在 `pico_float_pico_vfp` 上，当小数位数是 1 到 32 之间的编译时常量时，32 位函数也作为 C 宏提供，因为它们可以映射到内联 VFP 代码
+注意：在 pico_float `pico_vfp` 上，当小数位数是 1 到 32 之间的编译时常量时，32 位函数也作为 C 宏提供，因为它们可以映射到内联 VFP 代码
 
   * float \-> (u)fix（向负无穷舍入）：
 float2fix, float2ufix, float2fix64, float2ufix64
-注意：在 `pico_float_pico_vfp` 上，当小数位数是 1 到 32 之间的编译时常量时，32 位函数也作为 C 宏提供，因为它们可以映射到内联 VFP 代码
+注意：在 pico_float `pico_vfp` 上，当小数位数是 1 到 32 之间的编译时常量时，32 位函数也作为 C 宏提供，因为它们可以映射到内联 VFP 代码
 
-* 不能正确舍入的更快版本的除法和平方根函数：（仅 `pico_float_pico_dcp）
+* 科学函数：
+
+powintf
+
+* 不能正确舍入的更快版本的除法和平方根函数：（仅 pico_float `pico_dcp`）
 
 fdiv_fast, sqrtf_fast
 
-在 RISC-V 上，使用 `pico_float_pico` 库时，以下编译器内置函数将提供（替换性的）优化实现（注意：在 Arm 上存在不同变体，但在 RISC-V 上没有）：
+在 RISC-V 上，使用 pico_float `pico` 库时，以下编译器内置函数将提供（替换性的）优化实现（注意：与 Arm 上不同，此库没有变体）：
 
 * 基本算术：
 
-`__addsf3, __subsf3, __mulsf3`
+`__addsf3`, `__subsf3`, `__mulsf3`
+
+### 宏
+
+* `#define PICO_FLOAT_HAS_INT32_TO_FLOAT_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_INT64_TO_FLOAT_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FLOAT_TO_INT32_Z_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FLOAT_TO_INT64_Z_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FIX32_TO_FLOAT_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FIX64_TO_FLOAT_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FLOAT_TO_FIX32_Z_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FLOAT_TO_FIX64_Z_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FLOAT_TO_INT32_M_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FLOAT_TO_INT64_M_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FLOAT_TO_FIX32_M_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FLOAT_TO_FIX64_M_CONVERSIONS 1`
+* `#define PICO_FLOAT_HAS_FDIV_FAST 1`
+* `#define PICO_FLOAT_HAS_SQRTF_FAST 1`
+* `#define PICO_FLOAT_HAS_POWINTF 1`
+
+### 函数
+
+- `float int2float (int32_t i)`: 将有符号 32 位整数转换为最近的单精度浮点数。
+- `float uint2float (uint32_t u)`: 将无符号 32 位整数转换为最近的单精度浮点数。
+- `float int642float (int64_t i)`: 将有符号 64 位整数转换为最近的单精度浮点数。
+- `float uint642float (uint64_t u)`: 将无符号 64 位整数转换为最近的单精度浮点数。
+- `int32_t float2int_z (float f)`: 将单精度浮点数转换为有符号 32 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN），但使用 pico_float `compiler` 时除外。
+- `uint32_t float2uint_z (float f)`: 将单精度浮点数转换为无符号 32 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN），但使用 pico_float `compiler` 时除外。
+- `int64_t float2int64_z (float f)`: 将单精度浮点数转换为有符号 64 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN），但使用 pico_float `compiler` 时除外。
+- `uint64_t float2uint64_z (float f)`: 将单精度浮点数转换为无符号 64 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN），但使用 pico_float `compiler` 时除外。
+- `float fix2float (int32_t m, int e)`: 将给定小数位数的有符号 32 位定点整数转换为最近的单精度浮点数。超出范围的输入将转换为 +/- 无穷大。
+- `float ufix2float (uint32_t m, int e)`: 将给定小数位数的无符号 32 位定点整数转换为最近的单精度浮点数。超出范围的输入将转换为 +无穷大。
+- `float fix642float (int64_t m, int e)`: 将给定小数位数的有符号 64 位定点整数转换为最近的单精度浮点数。超出范围的输入将转换为 +/- 无穷大。
+- `float ufix642float (uint64_t m, int e)`: 将给定小数位数的无符号 64 位定点整数转换为最近的单精度浮点数。超出范围的输入将转换为 +无穷大。
+- `int32_t float2fix_z (float f, int e)`: 将单精度浮点数转换为给定小数位数的有符号 32 位定点整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN），但使用 pico_float `compiler` 时除外。
+- `uint32_t float2ufix_z (float f, int e)`: 将单精度浮点数转换为给定小数位数的无符号 32 位定点整数，向零舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+- `int64_t float2fix64_z (float f, int e)`: 将单精度浮点数转换为给定小数位数的有符号 64 位定点整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN），但使用 pico_float `compiler` 时除外。
+- `uint64_t float2ufix64_z (float f, int e)`: 将单精度浮点数转换为给定小数位数的无符号 64 位定点整数，向零舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+- `int32_t float2int (float f)`: 将单精度浮点数转换为有符号 32 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN）。
+- `uint32_t float2uint (float f)`: 将单精度浮点数转换为无符号 32 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+- `int64_t float2int64 (float f)`: 将单精度浮点数转换为有符号 64 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN）。
+- `uint64_t float2uint64 (float f)`: 将单精度浮点数转换为无符号 64 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+- `int32_t float2fix (float f, int e)`: 将单精度浮点数转换为给定小数位数的有符号 32 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN）。
+- `uint32_t float2ufix (float f, int e)`: 将单精度浮点数转换为给定小数位数的无符号 32 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+- `int64_t float2fix64 (float f, int e)`: 将单精度浮点数转换为给定小数位数的有符号 64 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN）。
+- `uint64_t float2ufix64 (float f, int e)`: 将单精度浮点数转换为给定小数位数的无符号 64 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+- `float exp10f (float x)`: 计算 10.0f 的给定次幂。
+- `void sincosf (float x, float *sinx, float *cosx)`: 高效地返回一个角度的正弦和余弦值。
+- `float powintf (float x, int32_t y)`: 将浮点数提升到整数幂。
+- `float fdiv_fast (float n, float d)`: 执行精度降低的快速浮点除法。
+- `float sqrtf_fast (float f)`: 执行精度降低的快速浮点平方根。
+
+### 宏定义文档
+
+#### PICO_FLOAT_HAS_INT32_TO_FLOAT_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_INT32_TO_FLOAT_CONVERSIONS 1`
+
+若 `int2float` 和 `uint2float` 可用则设置。
+
+#### PICO_FLOAT_HAS_INT64_TO_FLOAT_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_INT64_TO_FLOAT_CONVERSIONS 1`
+
+若 `int642float` 和 `uint642float` 可用则设置。
+
+#### PICO_FLOAT_HAS_FLOAT_TO_INT32_Z_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FLOAT_TO_INT32_Z_CONVERSIONS 1`
+
+若 `float2int_z` 和 `float2uint_z` 可用则设置（向零舍入）
+
+#### PICO_FLOAT_HAS_FLOAT_TO_INT64_Z_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FLOAT_TO_INT64_Z_CONVERSIONS 1`
+
+若 `float2int64_z` 和 `float2uint64_z` 可用则设置（向零舍入）
+
+#### PICO_FLOAT_HAS_FIX32_TO_FLOAT_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FIX32_TO_FLOAT_CONVERSIONS 1`
+
+若 `fix2float` 和 `ufix2float` 可用则设置。
+
+#### PICO_FLOAT_HAS_FIX64_TO_FLOAT_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FIX64_TO_FLOAT_CONVERSIONS 1`
+
+若 `fix642float` 和 `ufix642float` 可用则设置。
+
+#### PICO_FLOAT_HAS_FLOAT_TO_FIX32_Z_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FLOAT_TO_FIX32_Z_CONVERSIONS 1`
+
+若 `float2fix_z` 和 `float2ufix_z` 可用则设置（向零舍入）
+
+#### PICO_FLOAT_HAS_FLOAT_TO_FIX64_Z_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FLOAT_TO_FIX64_Z_CONVERSIONS 1`
+
+若 `float2fix64_z` 和 `float2ufix64_z` 可用则设置（向零舍入）
+
+#### PICO_FLOAT_HAS_FLOAT_TO_INT32_M_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FLOAT_TO_INT32_M_CONVERSIONS 1`
+
+若 `float2int` 和 `float2uint` 可用则设置（向负无穷舍入）
+
+#### PICO_FLOAT_HAS_FLOAT_TO_INT64_M_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FLOAT_TO_INT64_M_CONVERSIONS 1`
+
+若 `float2int64` 和 `float2uint64` 可用则设置（向负无穷舍入）
+
+#### PICO_FLOAT_HAS_FLOAT_TO_FIX32_M_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FLOAT_TO_FIX32_M_CONVERSIONS 1`
+
+若 `float2fix` 和 `float2ufix` 可用则设置（向负无穷舍入）
+
+#### PICO_FLOAT_HAS_FLOAT_TO_FIX64_M_CONVERSIONS
+
+`#define PICO_FLOAT_HAS_FLOAT_TO_FIX64_M_CONVERSIONS 1`
+
+若 `float2fix64` 和 `float2ufix64` 可用则设置（向负无穷舍入）
+
+#### PICO_FLOAT_HAS_FDIV_FAST
+
+`#define PICO_FLOAT_HAS_FDIV_FAST 1`
+
+若 `fdiv_fast` 可用则设置。
+
+#### PICO_FLOAT_HAS_SQRTF_FAST
+
+`#define PICO_FLOAT_HAS_SQRTF_FAST 1`
+
+若 `sqrtf_fast` 可用则设置。
+
+#### PICO_FLOAT_HAS_POWINTF
+
+`#define PICO_FLOAT_HAS_POWINTF 1`
+
+若 powintf 可用则设置。
+
+### 函数文档
+
+#### exp10f
+
+`float exp10f (float x)`
+
+计算 10.0f 的给定次幂。
+
+#### fdiv_fast
+
+`float fdiv_fast (float n, float d)`
+
+执行精度降低的快速浮点除法。
+
+#### fix2float
+
+`float fix2float (int32_t m, int e)`
+
+将给定小数位数的有符号 32 位定点整数转换为最近的单精度浮点数。超出范围的输入将转换为 +/- 无穷大。
+
+#### fix642float
+
+`float fix642float (int64_t m, int e)`
+
+将给定小数位数的有符号 64 位定点整数转换为最近的单精度浮点数。超出范围的输入将转换为 +/- 无穷大。
+
+#### float2fix
+
+`int32_t float2fix (float f, int e)`
+
+将单精度浮点数转换为给定小数位数的有符号 32 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN）。
+
+#### float2fix64
+
+`int64_t float2fix64 (float f, int e)`
+
+将单精度浮点数转换为给定小数位数的有符号 64 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN）。
+
+#### float2fix64_z
+
+`int64_t float2fix64_z (float f, int e)`
+
+将单精度浮点数转换为给定小数位数的有符号 64 位定点整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN），但使用 pico_float `compiler` 时除外。
+
+#### float2fix_z
+
+`int32_t float2fix_z (float f, int e)`
+
+将单精度浮点数转换为给定小数位数的有符号 32 位定点整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN），但使用 pico_float `compiler` 时除外。
+
+#### float2int
+
+`int32_t float2int (float f)`
+
+将单精度浮点数转换为有符号 32 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN）。
+
+#### float2int64
+
+`int64_t float2int64 (float f)`
+
+将单精度浮点数转换为有符号 64 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN）。
+
+#### float2int64_z
+
+`int64_t float2int64_z (float f)`
+
+将单精度浮点数转换为有符号 64 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN），但使用 pico_float `compiler` 时除外。
+
+#### float2int_z
+
+`int32_t float2int_z (float f)`
+
+将单精度浮点数转换为有符号 32 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN），但使用 pico_float `compiler` 时除外。
+
+#### float2ufix
+
+`uint32_t float2ufix (float f, int e)`
+
+将单精度浮点数转换为给定小数位数的无符号 32 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+
+#### float2ufix64
+
+`uint64_t float2ufix64 (float f, int e)`
+
+将单精度浮点数转换为给定小数位数的无符号 64 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+
+#### float2ufix64_z
+
+`uint64_t float2ufix64_z (float f, int e)`
+
+将单精度浮点数转换为给定小数位数的无符号 64 位定点整数，向零舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+
+#### float2ufix_z
+
+`uint32_t float2ufix_z (float f, int e)`
+
+将单精度浮点数转换为给定小数位数的无符号 32 位定点整数，向零舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+
+#### float2uint
+
+`uint32_t float2uint (float f)`
+
+将单精度浮点数转换为无符号 32 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+
+#### float2uint64
+
+`uint64_t float2uint64 (float f)`
+
+将单精度浮点数转换为无符号 64 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+
+#### float2uint64_z
+
+`uint64_t float2uint64_z (float f)`
+
+将单精度浮点数转换为无符号 64 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN），但使用 pico_float `compiler` 时除外。
+
+#### float2uint_z
+
+`uint32_t float2uint_z (float f)`
+
+将单精度浮点数转换为无符号 32 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN），但使用 pico_float `compiler` 时除外。
+
+#### int2float
+
+`float int2float (int32_t i)`
+
+将有符号 32 位整数转换为最近的单精度浮点数。
+
+#### int642float
+
+`float int642float (int64_t i)`
+
+将有符号 64 位整数转换为最近的单精度浮点数。
+
+#### powintf
+
+`float powintf (float x, int32_t y)`
+
+将浮点数提升到整数幂。
+
+#### sincosf
+
+`void sincosf (float x, float * sinx, float * cosx)`
+
+高效地返回一个角度的正弦和余弦值。
+
+#### sqrtf_fast
+
+`float sqrtf_fast (float f)`
+
+执行精度降低的快速浮点平方根。
+
+#### ufix2float
+
+`float ufix2float (uint32_t m, int e)`
+
+将给定小数位数的无符号 32 位定点整数转换为最近的单精度浮点数。超出范围的输入将转换为 +无穷大。
+
+#### ufix642float
+
+`float ufix642float (uint64_t m, int e)`
+
+将给定小数位数的无符号 64 位定点整数转换为最近的单精度浮点数。超出范围的输入将转换为 +无穷大。
+
+#### uint2float
+
+`float uint2float (uint32_t u)`
+
+将无符号 32 位整数转换为最近的单精度浮点数。
+
+#### uint642float
+
+`float uint642float (uint64_t u)`
+
+将无符号 64 位整数转换为最近的单精度浮点数。
 
 <Normal />

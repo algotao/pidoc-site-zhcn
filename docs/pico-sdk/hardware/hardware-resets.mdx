@@ -14,7 +14,7 @@ import Normal from "../../_normal.mdx";
 
 复位控制器允许通过软件控制 RP 系列微控制器中所有非启动处理器所必需的外设的复位。
 
-**reset_bitmask**
+#### reset_bitmask
 
 使用位掩码引用多个块，格式如下：
 
@@ -130,31 +130,31 @@ int main() {
 `static __force_inline void unreset_block_mask (uint32_t bits)`<br/>&emsp;将指定的 HW 块移出复位状态
 
 `static __force_inline void unreset_block_mask_wait_blocking (uint32_t bits)`<br/>&emsp;将指定的 HW 块移出复位状态并等待完成。
-- `static void reset_block_num (uint32_t block_num)`: 复位指定的 HW 块。
-- `static void unreset_block_num (uint block_num)`: 将指定的 HW 块移出复位状态
-- `static void unreset_block_num_wait_blocking (uint block_num)`: 将指定的 HW 块移出复位状态并等待完成。
-- `static void reset_unreset_block_num_wait_blocking (uint block_num)`: 复位指定的 HW 块，然后将其移出复位状态并等待完成。
+- `static void reset_block_num (reset_num_t block_num)`: 复位指定的 HW 块。
+- `static void unreset_block_num (reset_num_t block_num)`: 将指定的 HW 块移出复位状态
+- `static void unreset_block_num_wait_blocking (reset_num_t block_num)`: 将指定的 HW 块移出复位状态并等待完成。
+- `static void reset_unreset_block_num_wait_blocking (reset_num_t block_num)`: 复位指定的 HW 块，然后将其移出复位状态并等待完成。
 
 ### 类型定义文档
 
 #### reset_num_t <span className="chip-tag rp2040">RP2040</span>
 
-`typedef enum reset_num_rp2040 reset_num_t`
+typedef enum reset_num_rp2040 reset_num_t
 
-RP2040 上可复位的组件编号（用作 typedef `reset_num_t）
+RP2040 上可复位的组件编号（用作 typedef `reset_num_t`）
 #### reset_num_t <span className="chip-tag rp2350">RP2350</span>
 
-`typedef enum reset_num_rp2350 reset_num_t`
+typedef enum reset_num_rp2350 reset_num_t
 
-RP2350 上可复位的组件编号（用作 typedef `reset_num_t）
+RP2350 上可复位的组件编号（用作 typedef `reset_num_t`）
 
 ### 枚举类型文档
 
 #### reset_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
 
-`enum reset_num_rp2040`
+enum reset_num_rp2040
 
-RP2040 上可复位的组件编号（用作 typedef `reset_num_t）
+RP2040 上可复位的组件编号（用作 typedef `reset_num_t`）
 
 | 枚举值 | 说明 |
 | --- | --- |
@@ -186,9 +186,9 @@ RP2040 上可复位的组件编号（用作 typedef `reset_num_t）
 
 #### reset_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
 
-`enum reset_num_rp2350`
+enum reset_num_rp2350
 
-RP2350 上可复位的组件编号（用作 typedef `reset_num_t）
+RP2350 上可复位的组件编号（用作 typedef `reset_num_t`）
 
 | 枚举值 | 说明 |
 | --- | --- |
@@ -232,27 +232,27 @@ RP2350 上可复位的组件编号（用作 typedef `reset_num_t）
 
 **参数**
 
-- `bits: 指示要复位的块的位模式。参见 reset_bitmask`
+- `bits`: 指示要复位的块的位模式。参见 `reset_bitmask`
 
 #### reset_block_num
 
-`static void reset_block_num (uint32_t block_num) [inline], [static]`
+`static void reset_block_num (reset_num_t block_num) [inline], [static]`
 
 复位指定的 HW 块。
 
 **参数**
 
-- `block_num`: 块编号
+- block_num: 块编号
 
 #### reset_unreset_block_num_wait_blocking
 
-`static void reset_unreset_block_num_wait_blocking (uint block_num) [inline], [static]`
+`static void reset_unreset_block_num_wait_blocking (reset_num_t block_num) [inline], [static]`
 
 复位指定的 HW 块，然后将其移出复位状态并等待完成。
 
 **参数**
 
-- `block_num`: 块编号
+- block_num: 块编号
 
 #### unreset_block_mask
 
@@ -262,7 +262,7 @@ RP2350 上可复位的组件编号（用作 typedef `reset_num_t）
 
 **参数**
 
-- `bits: 指示要取消复位的块的位模式。参见 reset_bitmask`
+- `bits`: 指示要取消复位的块的位模式。参见 `reset_bitmask`
 
 #### unreset_block_mask_wait_blocking
 
@@ -272,26 +272,26 @@ RP2350 上可复位的组件编号（用作 typedef `reset_num_t）
 
 **参数**
 
-- `bits: 指示要取消复位的块的位模式。参见 reset_bitmask`
+- `bits`: 指示要取消复位的块的位模式。参见 `reset_bitmask`
 
 #### unreset_block_num
 
-`static void unreset_block_num (uint block_num) [inline], [static]`
+`static void unreset_block_num (reset_num_t block_num) [inline], [static]`
 
 将指定的 HW 块移出复位状态
 
 **参数**
 
-- `block_num`: 块编号
+- block_num: 块编号
 
 #### unreset_block_num_wait_blocking
 
-`static void unreset_block_num_wait_blocking (uint block_num) [inline], [static]`
+`static void unreset_block_num_wait_blocking (reset_num_t block_num) [inline], [static]`
 
 将指定的 HW 块移出复位状态并等待完成。
 
 **参数**
 
-- `block_num`: 块编号
+- block_num: 块编号
 
 <Normal />

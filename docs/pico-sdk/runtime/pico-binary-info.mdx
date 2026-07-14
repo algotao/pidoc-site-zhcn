@@ -4,7 +4,7 @@ draft: false
 description: 二进制信息用于将机器可读信息嵌入到 FLASH 中的二进制文件中。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK binary info]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -26,6 +26,23 @@ import Normal from "../../_normal.mdx";
 
 * `#define bi_decl(_decl) __bi_mark_enclosure` _decl; __bi_decl(`__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.keep.", __used);`<br/>&emsp;* `#define bi_decl_if_func_used(_decl) ({__bi_mark_enclosure` _decl; __bi_decl(`__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.", ); `**`(const volatile uint8_t *)&__bi_ptr_lineno_var_name;});`
 
+### 类型定义
+
+- `typedef struct _binary_info_core binary_info_core_t`: 所有二进制信息条目共享的公共头字段。
+- `typedef struct _binary_info_raw_data binary_info_raw_data_t`: 携带原始、未解释字节数据的二进制信息条目。
+- `typedef struct _binary_info_sized_data binary_info_sized_data_t`: 携带长度前缀字节缓冲区的二进制信息条目。
+- `typedef struct _binary_info_list_zero_terminated binary_info_list_zero_terminated_t`: 保存以 null 结尾的二进制信息指针列表的二进制信息条目。
+- `typedef struct _binary_info_id_and_int binary_info_id_and_int_t`: 将 32 位整数值与 ID 关联的二进制信息条目。
+- `typedef struct _binary_info_id_and_string binary_info_id_and_string_t`: 将字符串值与 ID 关联的二进制信息条目。
+- `typedef struct _binary_info_ptr_int32_with_name binary_info_ptr_int32_with_name_t`: 持有指向命名的 32 位整型变量指针的二进制信息条目。
+- `typedef struct _binary_info_ptr_string_with_name binary_info_ptr_string_with_name_t`: 持有指向命名的字符串变量指针的二进制信息条目。
+- `typedef struct _binary_info_block_device binary_info_block_device_t`: 描述二进制文件中块设备的二进制信息条目。
+- `typedef struct _binary_info_pins_with_func binary_info_pins_with_func_t`: 描述一个或多个 GPIO 引脚及其分配功能的二进制信息条目，支持引脚号 &lt;32，最多 5 个引脚。
+- `typedef struct _binary_info_pins64_with_func binary_info_pins64_with_func_t`: 描述一个或多个 GPIO 引脚及其分配功能的二进制信息条目，支持引脚号 &lt;256，最多 7 个引脚。
+- `typedef struct _binary_info_pins_with_name binary_info_pins_with_name_t`: 将人类可读的标签与一组 GPIO 引脚关联的二进制信息条目。
+- `typedef struct _binary_info_pins64_with_name binary_info_pins64_with_name_t`: 将人类可读的标签与一组 GPIO 引脚（最多 64 个）关联的二进制信息条目。
+- `typedef struct _binary_info_named_group binary_info_named_group_t`: 定义一组相关二进制信息条目的命名组的二进制信息条目。
+
 ### 宏定义文档
 
 #### bi_decl
@@ -39,5 +56,95 @@ import Normal from "../../_normal.mdx";
 `#define bi_decl_if_func_used(_decl) ({__bi_mark_enclosure _decl; __bi_decl`(__bi_ptr_lineno_var_name, &`__bi_lineno_var_name.core, ".binary_info.", ); **(const volatile uint8_t `**`)&__bi_ptr_lineno_var_name;});`
 
 声明一些二进制信息，只有当包含该声明的函数被链接进二进制文件时，这些信息才会被包含。SDK 使用 --gc-sections，因此从未被调用的函数将被链接器移除，以这种方式声明的任何相关二进制信息也会被删除。
+
+### 类型定义文档
+
+#### binary_info_core_t
+
+`typedef struct _binary_info_core binary_info_core_t`
+
+所有二进制信息条目共享的公共头字段。
+
+每个二进制信息结构体都以这个核心头开始，用于标识条目类型及其所属的标签命名空间。
+
+#### binary_info_raw_data_t
+
+`typedef struct _binary_info_raw_data binary_info_raw_data_t`
+
+携带原始、未解释字节数据的二进制信息条目。
+
+#### binary_info_sized_data_t
+
+`typedef struct _binary_info_sized_data binary_info_sized_data_t`
+
+携带长度前缀字节缓冲区的二进制信息条目。
+
+#### binary_info_list_zero_terminated_t
+
+`typedef struct _binary_info_list_zero_terminated binary_info_list_zero_terminated_t`
+
+保存以 null 结尾的二进制信息指针列表的二进制信息条目。
+
+#### binary_info_id_and_int_t
+
+`typedef struct _binary_info_id_and_int binary_info_id_and_int_t`
+
+将 32 位整数值与 ID 关联的二进制信息条目。
+
+#### binary_info_id_and_string_t
+
+`typedef struct _binary_info_id_and_string binary_info_id_and_string_t`
+
+将字符串值与 ID 关联的二进制信息条目。
+
+#### binary_info_ptr_int32_with_name_t
+
+`typedef struct _binary_info_ptr_int32_with_name binary_info_ptr_int32_with_name_t`
+
+持有指向命名的 32 位整型变量指针的二进制信息条目。
+
+#### binary_info_ptr_string_with_name_t
+
+`typedef struct _binary_info_ptr_string_with_name binary_info_ptr_string_with_name_t`
+
+持有指向命名的字符串变量指针的二进制信息条目。
+
+#### binary_info_block_device_t
+
+`typedef struct _binary_info_block_device binary_info_block_device_t`
+
+描述二进制文件中块设备的二进制信息条目。
+
+#### binary_info_pins_with_func_t
+
+`typedef struct _binary_info_pins_with_func binary_info_pins_with_func_t`
+
+描述一个或多个 GPIO 引脚及其分配功能的二进制信息条目，支持引脚号 &lt;32，最多 5 个引脚。
+
+#### binary_info_pins64_with_func_t
+
+`typedef struct _binary_info_pins64_with_func binary_info_pins64_with_func_t`
+
+描述一个或多个 GPIO 引脚及其分配功能的二进制信息条目，支持引脚号 &lt;256，最多 7 个引脚。
+
+#### binary_info_pins_with_name_t
+
+`typedef struct _binary_info_pins_with_name binary_info_pins_with_name_t`
+
+将人类可读的标签与一组 GPIO 引脚关联的二进制信息条目。
+
+#### binary_info_pins64_with_name_t
+
+`typedef struct _binary_info_pins64_with_name binary_info_pins64_with_name_t`
+
+将人类可读的标签与一组 GPIO 引脚（最多 64 个）关联的二进制信息条目。
+
+#### binary_info_named_group_t
+
+`typedef struct _binary_info_named_group binary_info_named_group_t`
+
+定义一组相关二进制信息条目的命名组的二进制信息条目。
+
+命名组允许工具在公共标签下将相关的二进制信息条目一起呈现，并具有可配置的显示行为。
 
 <Normal />

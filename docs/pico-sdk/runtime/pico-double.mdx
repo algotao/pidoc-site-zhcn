@@ -4,7 +4,7 @@ draft: false
 description: 优化的双精度浮点函数。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK double]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -14,52 +14,45 @@ import Normal from "../../_normal.mdx";
 
 应用程序可以通过依赖 pico_double 库，对程序中使用的浮点运算例程进行比编译器所提供的更深层次的控制。用户可能希望这样做的原因包括：
 
-. 
-使用 RP2-series 设备 bootrom 或 SDK 提供的优化软件实现
+1. 使用 RP2-series 设备 bootrom 或 SDK 提供的优化软件实现
 
-. 
-使用利用 RP2-series 自定义硬件加速的优化软硬件组合实现
+2. 使用利用 RP2-series 自定义硬件加速的优化软硬件组合实现
 
-. 
-控制 C 编译器/库代码体积膨胀的程度
+3. 控制 C 编译器/库代码体积膨胀的程度
 
-. 
-确保程序中完全不调用浮点运算
+4. 确保程序中完全不调用浮点运算
 
 pico_double 库有三种主要版本：
 
-. 
-`pico_double_none` - 所有浮点操作都会引发 panic —— 不包含任何双精度浮点代码
+1. `none` - 所有浮点操作都会引发 panic —— 不包含任何双精度浮点代码
 
-. 
-`pico_double_compiler` - 不提供自定义函数；所有双精度浮点运算均由 C 编译器/库处理
+2. `compiler` - 不提供自定义函数；所有双精度浮点运算均由 C 编译器/库处理
 
-. 
-`pico_double_pico` - 适用于该平台的最小且最快的版本，并附带额外功能（如定点数转换），详见下文
+3. `pico` - 适用于该平台的最小且最快的版本，并附带额外功能（如定点数转换），详见下文
 
-用户可以通过设置 CMake 全局变量 `PICO_DEFAULT_DOUBLE_IMPL=xxx，或使用 CMake 函数 pico_set_double_implementation(<TARGET> xxx)` 来控制使用哪个版本（即 **pico_double_xxx**）。注意：若两者均未设置，默认使用 pico_double_pico。
+用户可以通过设置 CMake 全局变量 `PICO_DEFAULT_DOUBLE_IMPL=compiler`，或使用 CMake 函数 `pico_set_double_implementation(<TARGET> compiler)` 来控制使用哪个版本（例如 pico_double `compiler`）。注意：若两者均未设置，默认使用 pico_double `pico`。
 
-在 RP2040 上，`pico_double_pico` 使用来自 bootrom 和 SDK 的优化手写实现，涵盖基本双精度浮点运算和浮点数学库函数。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
+在 RP2040 上，pico_double `pico` 使用来自 bootrom 和 SDK 的优化手写实现，涵盖基本双精度浮点运算和浮点数学库函数。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
 
-在 RP2350 上，`pico_double_pico` 使用 RP2350 DCP 指令（双精度协处理器）实现基本算术函数的快速版本，并为三角函数和科学计算函数提供优化的 M33 实现。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
+在 RP2350 上，pico_double `pico` 使用 RP2350 DCP 指令（双精度协处理器）实现基本算术函数的快速版本，并为三角函数和科学计算函数提供优化的 M33 实现。这些实现通常比 C 编译器/库提供的更快、更小，但不支持完全符合规范的浮点实现的所有特性；不过，对于大多数使用场景而言通常已足够。
 
-在 Arm 上，使用 `pico_double_pico` 时，以下编译器内置函数和数学库函数将提供（替换性的）优化实现：
+在 Arm 上，使用 pico_double `pico` 时，以下编译器内置函数和数学库函数将提供（替换性的）优化实现：
 
 * 基本算术：
 
-`__aeabi_dadd, __aeabi_ddiv, `__aeabi_dmul, __aeabi_drsub, __aeabi_dsub`
+`__aeabi_dadd`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_drsub`, `__aeabi_dsub`
 
 * 比较：
 
-`__aeabi_cfcmpeq, __aeabi_cfrcmple, `__aeabi_cfcmple, __aeabi_dcmpeq`, __aeabi_dcmplt, __aeabi_dcmple`, `__aeabi_dcmpge, __aeabi_dcmpgt, __aeabi_dcmpun`
+`__aeabi_cfcmpeq`, `__aeabi_cfrcmple`, `__aeabi_cfcmple`, `__aeabi_dcmpeq`, `__aeabi_dcmplt`, `__aeabi_dcmple`, `__aeabi_dcmpge`, `__aeabi_dcmpgt`, `__aeabi_dcmpun`
 
 * (u)int32 &lt;\-> double：
 
-`__aeabi_i2d, __aeabi_ui2d, `__aeabi_d2iz, __aeabi_d2uiz`
+`__aeabi_i2d`, `__aeabi_ui2d`, `__aeabi_d2iz`, `__aeabi_d2uiz`
 
 * (u)int64 &lt;\-> double：
 
-`__aeabi_l2d, __aeabi_ul2d, `__aeabi_d2lz, __aeabi_d2ulz`
+`__aeabi_l2d`, `__aeabi_ul2d`, `__aeabi_d2lz`, `__aeabi_d2ulz`
 
 * double \-> float：
 
@@ -75,9 +68,9 @@ ldexp, copysign, trunc, floor, ceil, round, asin, acos, atan, sinh, cosh, tanh, 
 
 * GNU 扩展：
 
-powint, sincos
+sincos
 
-在 Arm 上，使用 `pico_double_pico` 时还提供以下额外的优化函数：
+在 Arm 上，使用 pico_double `pico` 时还提供以下额外的优化函数，所有这些函数在从浮点类型转换时，对于过大的输入会饱和到最近的可表示值：
 
 * 与整数类型之间的转换：
 
@@ -101,14 +94,357 @@ double2fix_z, double2ufix_z, double2fix64_z, double2ufix64_z
   * double \-> (u)fix（向负无穷舍入）：
 double2fix, double2ufix, double2fix64, double2ufix64
 
+* 科学函数：
+
+powint
+
 * 不能正确舍入的更快版本的除法和平方根函数：
 
-ddiv_fast, sqrt_fast（这些函数不能正确舍入）
+ddiv_fast, sqrt_fast
 
 * 更快的非融合乘加：
 
-mla（快速 fma）
+mla/fma_fast
 
-在 RISC-V 上，不支持自定义双精度浮点运算，因此 `pico_double_pico 等同于 pico_double_compiler`。
+在 RISC-V 上，不支持自定义双精度浮点运算，因此 pico_double `pico` 等同于 pico_double `compiler`。
+
+### 宏
+
+* `#define PICO_DOUBLE_HAS_INT32_TO_DOUBLE_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_INT64_TO_DOUBLE_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DOUBLE_TO_INT32_Z_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DOUBLE_TO_INT64_Z_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_FIX32_TO_DOUBLE_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_FIX64_TO_DOUBLE_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DOUBLE_TO_FIX32_Z_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DOUBLE_TO_FIX64_Z_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DOUBLE_TO_INT32_M_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DOUBLE_TO_INT64_M_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DOUBLE_TO_FIX32_M_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DOUBLE_TO_FIX64_M_CONVERSIONS 1`
+* `#define PICO_DOUBLE_HAS_DDIV_FAST 1`
+* `#define PICO_DOUBLE_HAS_SQRT_FAST 1`
+* `#define PICO_DOUBLE_HAS_FMA_FAST 1`
+* `#define PICO_DOUBLE_HAS_POWINT 1`
+
+### 函数
+
+- `double int2double (int32_t i)`: 将有符号 32 位整数转换为最近的双精度浮点数。
+- `double uint2double (uint32_t u)`: 将无符号 32 位整数转换为最近的双精度浮点数。
+- `double int642double (int64_t i)`: 将有符号 64 位整数转换为最近的双精度浮点数。
+- `double uint642double (uint64_t u)`: 将无符号 64 位整数转换为最近的双精度浮点数。
+- `int32_t double2int_z (double d)`: 将双精度浮点数转换为有符号 32 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN），但使用 pico_double `compiler` 时除外。
+- `uint32_t double2uint_z (double d)`: 将双精度浮点数转换为无符号 32 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN），但使用 pico_double `compiler` 时除外。
+- `int64_t double2int64_z (double d)`: 将双精度浮点数转换为有符号 64 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN），但使用 pico_double `compiler` 时除外。
+- `uint64_t double2uint64_z (double d)`: 将双精度浮点数转换为无符号 64 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN），但使用 pico_double `compiler` 时除外。
+- `double fix2double (int32_t m, int e)`: 将给定小数位数的有符号 32 位定点整数转换为最近的双精度浮点数。超出范围的输入将转换为 +/- 无穷大。
+- `double ufix2double (uint32_t m, int e)`: 将给定小数位数的无符号 32 位定点整数转换为最近的双精度浮点数。超出范围的输入将转换为 +无穷大。
+- `double fix642double (int64_t m, int e)`: 将给定小数位数的有符号 64 位定点整数转换为最近的双精度浮点数。超出范围的输入将转换为 +/- 无穷大。
+- `double ufix642double (uint64_t m, int e)`: 将给定小数位数的无符号 64 位定点整数转换为最近的双精度浮点数。超出范围的输入将转换为 +无穷大。
+- `int32_t double2fix_z (double d, int e)`: 将双精度浮点数转换为给定小数位数的有符号 32 位定点整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN），但使用 pico_double `compiler` 时除外。
+- `uint32_t double2ufix_z (double d, int e)`: 将双精度浮点数转换为给定小数位数的无符号 32 位定点整数，向零舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+- `int64_t double2fix64_z (double d, int e)`: 将双精度浮点数转换为给定小数位数的有符号 64 位定点整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN），但使用 pico_double `compiler` 时除外。
+- `uint64_t double2ufix64_z (double d, int e)`: 将双精度浮点数转换为给定小数位数的无符号 64 位定点整数，向零舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+- `int32_t double2int (double d)`: 将双精度浮点数转换为有符号 32 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN）。
+- `uint32_t double2uint (double d)`: 将双精度浮点数转换为无符号 32 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+- `int64_t double2int64 (double d)`: 将双精度浮点数转换为有符号 64 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN）。
+- `uint64_t double2uint64 (double d)`: 将双精度浮点数转换为无符号 64 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+- `int32_t double2fix (double d, int e)`: 将双精度浮点数转换为给定小数位数的有符号 32 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN）。
+- `uint32_t double2ufix (double d, int e)`: 将双精度浮点数转换为给定小数位数的无符号 32 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+- `int64_t double2fix64 (double d, int e)`: 将双精度浮点数转换为给定小数位数的有符号 64 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN）。
+- `uint64_t double2ufix64 (double d, int e)`: 将双精度浮点数转换为给定小数位数的无符号 64 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+- `double exp10 (double x)`: 计算 10.0 的给定次幂。
+- `void sincos (double x, double *sinx, double *cosx)`: 高效地返回一个角度的正弦和余弦值。
+- `double powint (double x, int32_t y)`: 将浮点数提升到整数幂。
+- `double ddiv_fast (double n, double d)`: 执行精度降低的快速浮点除法。
+- `double sqrt_fast (double d)`: 执行精度降低的快速浮点平方根。
+- `double fma_fast (double x, double y, double z)`: 执行精度降低的快速（非融合）乘加（x * y + z）。
+- `double mla (double x, double y, double z)`: 执行精度降低的快速乘加（x * y + z）（非融合乘加）。这是 `fma_fast` 的另一个名称。
+
+### 宏定义文档
+
+#### PICO_DOUBLE_HAS_INT32_TO_DOUBLE_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_INT32_TO_DOUBLE_CONVERSIONS 1`
+
+若 `int2double` 和 `uint2double` 可用则设置。
+
+#### PICO_DOUBLE_HAS_INT64_TO_DOUBLE_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_INT64_TO_DOUBLE_CONVERSIONS 1`
+
+若 `int642double` 和 `uint642double` 可用则设置。
+
+#### PICO_DOUBLE_HAS_DOUBLE_TO_INT32_Z_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_DOUBLE_TO_INT32_Z_CONVERSIONS 1`
+
+若 `double2int_z` 和 `double2uint_z` 可用则设置（向零舍入）
+
+#### PICO_DOUBLE_HAS_DOUBLE_TO_INT64_Z_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_DOUBLE_TO_INT64_Z_CONVERSIONS 1`
+
+若 `double2int64_z` 和 `double2uint64_z` 可用则设置（向零舍入）
+
+#### PICO_DOUBLE_HAS_FIX32_TO_DOUBLE_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_FIX32_TO_DOUBLE_CONVERSIONS 1`
+
+若 `fix2double` 和 `ufix2double` 可用则设置。
+
+#### PICO_DOUBLE_HAS_FIX64_TO_DOUBLE_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_FIX64_TO_DOUBLE_CONVERSIONS 1`
+
+若 `fix642double` 和 `ufix642double` 可用则设置。
+
+#### PICO_DOUBLE_HAS_DOUBLE_TO_FIX32_Z_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_DOUBLE_TO_FIX32_Z_CONVERSIONS 1`
+
+若 `double2fix_z` 和 `double2ufix_z` 可用则设置（向零舍入）
+
+#### PICO_DOUBLE_HAS_DOUBLE_TO_FIX64_Z_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_DOUBLE_TO_FIX64_Z_CONVERSIONS 1`
+
+若 `double2fix64_z` 和 `double2ufix64_z` 可用则设置（向零舍入）
+
+#### PICO_DOUBLE_HAS_DOUBLE_TO_INT32_M_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_DOUBLE_TO_INT32_M_CONVERSIONS 1`
+
+若 `double2int` 和 `double2uint` 可用则设置（向负无穷舍入）
+
+#### PICO_DOUBLE_HAS_DOUBLE_TO_INT64_M_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_DOUBLE_TO_INT64_M_CONVERSIONS 1`
+
+若 `double2int64` 和 `double2uint64` 可用则设置（向负无穷舍入）
+
+#### PICO_DOUBLE_HAS_DOUBLE_TO_FIX32_M_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_DOUBLE_TO_FIX32_M_CONVERSIONS 1`
+
+若 `double2fix` 和 `double2ufix` 可用则设置（向负无穷舍入）
+
+#### PICO_DOUBLE_HAS_DOUBLE_TO_FIX64_M_CONVERSIONS
+
+`#define PICO_DOUBLE_HAS_DOUBLE_TO_FIX64_M_CONVERSIONS 1`
+
+若 `double2fix64` 和 `double2ufix64` 可用则设置（向负无穷舍入）
+
+#### PICO_DOUBLE_HAS_DDIV_FAST
+
+`#define PICO_DOUBLE_HAS_DDIV_FAST 1`
+
+若 `ddiv_fast` 可用则设置。
+
+#### PICO_DOUBLE_HAS_SQRT_FAST
+
+`#define PICO_DOUBLE_HAS_SQRT_FAST 1`
+
+若 `sqrt_fast` 可用则设置。
+
+#### PICO_DOUBLE_HAS_FMA_FAST
+
+`#define PICO_DOUBLE_HAS_FMA_FAST 1`
+
+若 `fma_fast` 可用则设置。
+
+#### PICO_DOUBLE_HAS_POWINT
+
+`#define PICO_DOUBLE_HAS_POWINT 1`
+
+若 powint 可用则设置。
+
+### 函数文档
+
+#### ddiv_fast
+
+`double ddiv_fast (double n, double d)`
+
+执行精度降低的快速浮点除法。
+
+#### double2fix
+
+`int32_t double2fix (double d, int e)`
+
+将双精度浮点数转换为给定小数位数的有符号 32 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN）。
+
+#### double2fix64
+
+`int64_t double2fix64 (double d, int e)`
+
+将双精度浮点数转换为给定小数位数的有符号 64 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN）。
+
+#### double2fix64_z
+
+`int64_t double2fix64_z (double d, int e)`
+
+将双精度浮点数转换为给定小数位数的有符号 64 位定点整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN），但使用 pico_double `compiler` 时除外。
+
+#### double2fix_z
+
+`int32_t double2fix_z (double d, int e)`
+
+将双精度浮点数转换为给定小数位数的有符号 32 位定点整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN），但使用 pico_double `compiler` 时除外。
+
+#### double2int
+
+`int32_t double2int (double d)`
+
+将双精度浮点数转换为有符号 32 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN）。
+
+#### double2int64
+
+`int64_t double2int64 (double d)`
+
+将双精度浮点数转换为有符号 64 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN）。
+
+#### double2int64_z
+
+`int64_t double2int64_z (double d)`
+
+将双精度浮点数转换为有符号 64 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT64_MAX/INT64_MIN），但使用 pico_double `compiler` 时除外。
+
+#### double2int_z
+
+`int32_t double2int_z (double d)`
+
+将双精度浮点数转换为有符号 32 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 INT32_MAX/INT32_MIN），但使用 pico_double `compiler` 时除外。
+
+#### double2ufix
+
+`uint32_t double2ufix (double d, int e)`
+
+将双精度浮点数转换为给定小数位数的无符号 32 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+
+#### double2ufix64
+
+`uint64_t double2ufix64 (double d, int e)`
+
+将双精度浮点数转换为给定小数位数的无符号 64 位定点整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+
+#### double2ufix64_z
+
+`uint64_t double2ufix64_z (double d, int e)`
+
+将双精度浮点数转换为给定小数位数的无符号 64 位定点整数，向零舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+
+#### double2ufix_z
+
+`uint32_t double2ufix_z (double d, int e)`
+
+将双精度浮点数转换为给定小数位数的无符号 32 位定点整数，向零舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+
+#### double2uint
+
+`uint32_t double2uint (double d)`
+
+将双精度浮点数转换为无符号 32 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN）。
+
+#### double2uint64
+
+`uint64_t double2uint64 (double d)`
+
+将双精度浮点数转换为无符号 64 位整数，向负无穷舍入。此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN）。
+
+#### double2uint64_z
+
+`uint64_t double2uint64_z (double d)`
+
+将双精度浮点数转换为无符号 64 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 UINT64_MAX/UINT64_MIN），但使用 pico_double `compiler` 时除外。
+
+#### double2uint_z
+
+`uint32_t double2uint_z (double d)`
+
+将双精度浮点数转换为无符号 32 位整数，向零舍入。在 Arm 上，此转换对超出范围的输入是饱和的（到 UINT32_MAX/UINT32_MIN），但使用 pico_double `compiler` 时除外。
+
+#### exp10
+
+`double exp10 (double x)`
+
+计算 10.0 的给定次幂。
+
+#### fix2double
+
+`double fix2double (int32_t m, int e)`
+
+将给定小数位数的有符号 32 位定点整数转换为最近的双精度浮点数。超出范围的输入将转换为 +/- 无穷大。
+
+#### fix642double
+
+`double fix642double (int64_t m, int e)`
+
+将给定小数位数的有符号 64 位定点整数转换为最近的双精度浮点数。超出范围的输入将转换为 +/- 无穷大。
+
+#### fma_fast
+
+`double fma_fast (double x, double y, double z)`
+
+执行精度降低的快速（非融合）乘加（x * y + z）。
+
+#### int2double
+
+`double int2double (int32_t i)`
+
+将有符号 32 位整数转换为最近的双精度浮点数。
+
+#### int642double
+
+`double int642double (int64_t i)`
+
+将有符号 64 位整数转换为最近的双精度浮点数。
+
+#### mla
+
+`double mla (double x, double y, double z)`
+
+执行精度降低的快速乘加（x * y + z）（非融合乘加）。这是 `fma_fast` 的另一个名称。
+
+#### powint
+
+`double powint (double x, int32_t y)`
+
+将浮点数提升到整数幂。
+
+#### sincos
+
+`void sincos (double x, double * sinx, double * cosx)`
+
+高效地返回一个角度的正弦和余弦值。
+
+#### sqrt_fast
+
+`double sqrt_fast (double d)`
+
+执行精度降低的快速浮点平方根。
+
+#### ufix2double
+
+`double ufix2double (uint32_t m, int e)`
+
+将给定小数位数的无符号 32 位定点整数转换为最近的双精度浮点数。超出范围的输入将转换为 +无穷大。
+
+#### ufix642double
+
+`double ufix642double (uint64_t m, int e)`
+
+将给定小数位数的无符号 64 位定点整数转换为最近的双精度浮点数。超出范围的输入将转换为 +无穷大。
+
+#### uint2double
+
+`double uint2double (uint32_t u)`
+
+将无符号 32 位整数转换为最近的双精度浮点数。
+
+#### uint642double
+
+`double uint642double (uint64_t u)`
+
+将无符号 64 位整数转换为最近的双精度浮点数。
 
 <Normal />

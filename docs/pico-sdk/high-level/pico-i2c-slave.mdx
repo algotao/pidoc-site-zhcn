@@ -14,11 +14,11 @@ import Normal from "../../_normal.mdx";
 
 此 I2C 从机辅助库配置从机模式，并挂钩相关的 I2C IRQ，使得用户提供的处理函数能够以枚举的 I2C 事件被调用。
 
-使用本库的示例应用程序 `slave_mem_i2c 可在 pico_examples`(https://github.com/raspberrypi/pico-examples/blob/master/i2c/slave_mem_i2c/slave_mem_i2c.c) 中找到。
+使用本库的示例应用程序 `slave_mem_i2c` 可在 `pico_examples`(https://github.com/raspberrypi/pico-examples/blob/master/i2c/slave_mem_i2c/slave_mem_i2c.c) 中找到。
 
 ### 类型定义
 
-- `typedef enum i2c_slave_event_t i2c_slave_event_t``: I2C 从机事件类型。
+- typedef enum i2c_slave_event_t i2c_slave_event_t: I2C 从机事件类型。
 `typedef void(** i2c_slave_handler_t)(i2c_inst_t **i2c, i2c_slave_event_t event)`<br/>&emsp;I2C 从机事件处理函数。
 
 ### 枚举
@@ -35,27 +35,27 @@ import Normal from "../../_normal.mdx";
 
 #### i2c_slave_event_t
 
-`typedef enum i2c_slave_event_t i2c_slave_event_t`
+typedef enum i2c_slave_event_t i2c_slave_event_t
 
 I2C 从机事件类型。
 #### i2c_slave_handler_t
 
-`typedef void(** i2c_slave_handler_t) (i2c_inst_t **i2c, i2c_slave_event_t event)`
+typedef void(** i2c_slave_handler_t) (i2c_inst_t **i2c, i2c_slave_event_t event)
 
 I2C 从机事件处理函数。
 
-事件处理函数将从 I2C ISR 中运行，因此应快速返回（在 400 kb/s 时需在 25 us 以内）。避免在处理函数中阻塞，并将大数据传输拆分为多次调用以获得最佳效果。向主机发送数据时，最多可以写入 `i2c_get_write_available() 字节而不阻塞。从主机接收数据时，最多可以读取 i2c_get_read_available()` 字节而不阻塞。
+事件处理函数将从 I2C ISR 中运行，因此应快速返回（在 400 kb/s 时需在 25 us 以内）。避免在处理函数中阻塞，并将大数据传输拆分为多次调用以获得最佳效果。向主机发送数据时，最多可以写入 `i2c_get_write_available()` 字节而不阻塞。从主机接收数据时，最多可以读取 `i2c_get_read_available()` 字节而不阻塞。
 
 **参数**
 
-- `i2c`: [i2c0] 或 i2c1
-- `event`: 事件类型。
+- i2c: [i2c0] 或 i2c1
+- event: 事件类型。
 
 ### 枚举类型文档
 
 #### i2c_slave_event_t
 
-`enum i2c_slave_event_t`
+enum i2c_slave_event_t
 
 I2C 从机事件类型。
 
@@ -74,18 +74,18 @@ I2C 从机事件类型。
 
 **参数**
 
-- `i2c`: [i2c0] 或 i2c1
+- i2c: [i2c0] 或 i2c1
 
 #### i2c_slave_init
 
-`void i2c_slave_init (i2c_inst_t *` i2c, uint8_t address, i2c_slave_handler_t handler)`
+`void i2c_slave_init (i2c_inst_t *i2c, uint8_t address, i2c_slave_handler_t handler)`
 
 将 I2C 实例配置为从机模式。
 
 **参数**
 
-- `i2c`: I2C 实例。
-- `address`: 7 位从机地址。
-- `handler`: 用于处理来自 I2C 主机事件的回调函数。它将在 I2C ISR 中运行，位于从机初始化所在的 CPU 核心上。
+- i2c: I2C 实例。
+- address: 7 位从机地址。
+- handler: 用于处理来自 I2C 主机事件的回调函数。它将在 I2C ISR 中运行，位于从机初始化所在的 CPU 核心上。
 
 <Normal />

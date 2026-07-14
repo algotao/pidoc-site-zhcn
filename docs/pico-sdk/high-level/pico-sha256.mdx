@@ -119,7 +119,7 @@ int main() {
 
 ### 类型定义
 
-- `typedef struct pico_sha256_state pico_sha256_state_t``: API 使用的 SHA-256 状态。
+- `typedef struct pico_sha256_state pico_sha256_state_t`: API 使用的 SHA-256 状态。
 
 ### 函数
 
@@ -161,7 +161,7 @@ API 使用的 SHA-256 状态。
 
 #### pico_sha256_finish
 
-`void pico_sha256_finish (pico_sha256_state_t **` state, sha256_result_t ** out)`
+`void pico_sha256_finish (pico_sha256_state_t **state, sha256_result_t ** out)`
 
 完成 SHA-256 计算并返回结果。
 
@@ -174,7 +174,7 @@ API 使用的 SHA-256 状态。
 
 #### pico_sha256_start_blocking
 
-`static int pico_sha256_start_blocking (pico_sha256_state_t *` state, enum sha256_endianness endianness, bool use_dma) [inline], [static]`
+`static int pico_sha256_start_blocking (pico_sha256_state_t *state, enum sha256_endianness endianness, bool use_dma) [inline], [static]`
 
 启动 SHA-256 计算，永久阻塞等待直到 SHA-256 硬件可用。
 
@@ -192,7 +192,7 @@ API 使用的 SHA-256 状态。
 
 #### pico_sha256_start_blocking_until
 
-`int pico_sha256_start_blocking_until (pico_sha256_state_t *` state, enum sha256_endianness endianness, bool use_dma, absolute_time_t until)`
+`int pico_sha256_start_blocking_until (pico_sha256_state_t *state, enum sha256_endianness endianness, bool use_dma, absolute_time_t until)`
 
 启动 SHA-256 计算，在指定时间内等待 SHA-256 硬件可用。
 
@@ -211,7 +211,7 @@ API 使用的 SHA-256 状态。
 
 #### pico_sha256_try_start
 
-`int pico_sha256_try_start (pico_sha256_state_t *` state, enum sha256_endianness endianness, bool use_dma)`
+`int pico_sha256_try_start (pico_sha256_state_t *state, enum sha256_endianness endianness, bool use_dma)`
 
 启动 SHA-256 计算，若 SHA-256 硬件不可用则立即返回错误。
 
@@ -229,7 +229,7 @@ API 使用的 SHA-256 状态。
 
 #### pico_sha256_update
 
-`void pico_sha256_update (pico_sha256_state_t **` state, const uint8_t ** data, size_t data_size_bytes)`
+`void pico_sha256_update (pico_sha256_state_t **state, const uint8_t ** data, size_t data_size_bytes)`
 
 向 SHA-256 计算中添加字节数据。
 
@@ -245,7 +245,7 @@ API 使用的 SHA-256 状态。
 
 #### pico_sha256_update_blocking
 
-`void pico_sha256_update_blocking (pico_sha256_state_t **` state, const uint8_t ** data, size_t data_size_bytes)`
+`void pico_sha256_update_blocking (pico_sha256_state_t **state, const uint8_t ** data, size_t data_size_bytes)`
 
 向 SHA-256 计算中添加字节数据（阻塞版本）。
 

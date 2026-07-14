@@ -18,8 +18,8 @@ Raspberry Pi Pico SDK 的核心类型和宏定义。
 
 ### 宏
 
-* `#define pico_board_cmake_set(x, y)`
-* `#define pico_board_cmake_set_default(x, y)`
+* #define pico_board_cmake_set(x, y)
+* #define pico_board_cmake_set_default(x, y)
 
 ### 枚举
 
@@ -29,11 +29,11 @@ Raspberry Pi Pico SDK 的核心类型和宏定义。
 
 #### pico_board_cmake_set
 
-`#define pico_board_cmake_set(x, y)`
+#define pico_board_cmake_set(x, y)
 
 在板级头文件中使用的标记，用于指定当使用该板级头文件时应在 CMake 构建中设置的 CMake 变量和值。
 
-基于 PICO_BOARD CMake 变量，构建系统将扫描板级头文件中的 `[ value)] 并在构建配置过程的早期阶段设置这些变量。这允许从板级头文件中设置 CMake 变量（如 PICO_PLATFORM），从而影响（例如）构建所用编译器的选择。
+基于 PICO_BOARD CMake 变量，构建系统将扫描板级头文件中的 [ `value`)] 并在构建配置过程的早期阶段设置这些变量。这允许从板级头文件中设置 `CMake` 变量（如 `PICO_PLATFORM`），从而影响（例如）构建所用编译器的选择。
 
 使用此宏将覆盖已设置的 CMake 变量。
 
@@ -41,11 +41,11 @@ Raspberry Pi Pico SDK 的核心类型和宏定义。
 
 #### pico_board_cmake_set_default
 
-`#define pico_board_cmake_set_default(x, y)`
+#define pico_board_cmake_set_default(x, y)
 
 在板级头文件中使用的标记，用于指定当使用该板级头文件时应在 CMake 构建中设置的 CMake 变量和值（前提是该 CMake 变量尚未被设置）。
 
-基于 PICO_BOARD CMake 变量，构建系统将扫描板级头文件中的 `[ value)] 并在构建配置过程的早期阶段设置这些变量。这允许从板级头文件中设置 CMake 变量（如 PICO_PLATFORM），从而影响（例如）构建所用编译器的选择。
+基于 PICO_BOARD CMake 变量，构建系统将扫描板级头文件中的 [ `value`)] 并在构建配置过程的早期阶段设置这些变量。这允许从板级头文件中设置 `CMake` 变量（如 `PICO_PLATFORM`），从而影响（例如）构建所用编译器的选择。
 
 使用此宏不会覆盖已设置的 CMake 变量。
 
@@ -55,11 +55,11 @@ Raspberry Pi Pico SDK 的核心类型和宏定义。
 
 #### pico_error_codes
 
-`enum pico_error_codes`
+enum pico_error_codes
 
 pico_sdk 方法返回状态时的通用返回码。
 
-所有 `PICO_ERROR_` 值均为负数，因此可从同时返回零或正数表示成功的函数中返回。
+所有 PICO_ERROR_ 值均为负数，因此可从同时返回零或正数表示成功的函数中返回。
 
 注意，这些错误码也可能通过 bootrom 函数返回。
 

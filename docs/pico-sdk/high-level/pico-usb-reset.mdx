@@ -1,0 +1,39 @@
+---
+sidebar_position: 14
+draft: false
+description: 使 RP 系列微控制器能够通过 USB 接口复位的 功能。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK usb reset, USB]
+last_update:
+  date: 2026-07-13
+---
+import Normal from "../../_normal.mdx";
+
+使 RP 系列微控制器能够通过 USB 接口复位的功能。
+
+### 详细说明
+
+此库可用于使 RP 系列微控制器能够通过 USB 接口复位。
+
+当使用 `pico_stdio_usb` 库且不直接使用 TinyUSB 时，此功能默认包含。
+
+要在直接使用 TinyUSB 的项目中添加此功能，你需要：
+
+1. 链接 pico_usb_reset 库，并在需要的地方包含 `pico/usb_reset.h` 头文件。
+
+2. 定义 PICO_ENABLE_USB_RESET_VIA_VENDOR_INTERFACE=1
+
+3. 将 `TUD_RPI_RESET_DESCRIPTOR(<ITF_NUM>, <STR_IDX>)` 添加到你的 USB 描述符中（长度为 `TUD_RPI_RESET_DESC_LEN`）
+
+4. 检查你的项目是否有现有的 `usbd_app_driver_get_cb` 函数：
+
+   - 如果有，你需要将 `usb_reset_interface_driver` 添加到返回的驱动程序中
+
+   - 如果没有，且你未使用 `pico_stdio_usb` 库，你需要定义 `PICO_USB_RESET_INCLUDE_DEFAULT_APP_DRIVER_CB=1`
+
+5. 检查你的项目是否有现有的 Microsoft OS 2.0 描述符：
+
+   - 如果有，你需要将 Function Subset 头 `RPI_RESET_MS_OS_20_DESCRIPTOR(<ITF_NUM>)` 添加到你的 Microsoft OS 2.0 描述符中（长度为 `RPI_RESET_MS_OS_20_DESC_LEN`）
+
+   - 如果没有，你需要定义 `PICO_USB_RESET_SUPPORT_MS_OS_20_DESCRIPTOR=1` 和 `PICO_USB_RESET_MS_OS_20_DESCRIPTOR_ITF=<ITF_NUM>`
+
+<Normal />

@@ -4,7 +4,7 @@ draft: false
 description: 为标准 SDK 可执行文件设置链接选项。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK standard link]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -16,10 +16,44 @@ import Normal from "../../_normal.mdx";
 
 * C 运行时初始化
 
-* 用于"default"、"no_flash"、"blocked_ram"和"copy_to_ram"二进制文件的链接脚本
+* 用于 `default`、`no_flash`、`blocked_ram`和 `copy_to_ram`二进制文件的链接脚本
 
 * "二进制信息"支持
 
 * 链接器选项控制
+
+默认链接脚本由一个基础 `memmap_*.ld` 文件和一系列由它包含的 `.incl` 文件组成。
+
+基础 `memmap_*.ld` 文件位于目标芯片的 `pico_platform` 目录中。每个文件都有一个树状图显示由它包含的文件。
+
+要覆盖任何包含的文件，请将覆盖文件放在一个目录中，并将该目录传递给 `pico_add_linker_script_override_path` CMake 函数。制作自定义链接脚本时通常要覆盖的文件有：
+
+* `memory_extra.incl`，用于添加额外的内存区域
+
+* `section_extra_*.incl` 文件，用于向二进制文件添加额外的节——详见文件中的注释了解更多细节
+
+* `default_*_excludes.incl` 文件，用于更改 flash 二进制类型（如 `default`、`blocked_ram`）中放置在 RAM 中的内容
+
+还可以使用 `pico_set_linker_script_var` CMake 函数在链接脚本中设置变量，以更改默认内存区域的位置和大小。可用变量有：
+
+* `HEAP_LOC`，用于设置堆位置
+
+* `HEAP_LIMIT`，用于设置堆限制
+
+* `RAM_ORIGIN`，用于设置 RAM 的起始地址
+
+* `RAM_LENGTH`，用于设置 RAM 的长度
+
+* `XIP_RAM_ORIGIN`，用于设置 XIP RAM 的起始地址
+
+* `XIP_RAM_LENGTH`，用于设置 XIP RAM 的长度
+
+* `SCRATCH_X_ORIGIN`，用于设置 scratch x 的起始地址
+
+* `SCRATCH_X_LENGTH`，用于设置 scratch x 的长度
+
+* `SCRATCH_Y_ORIGIN`，用于设置 scratch y 的起始地址
+
+* `SCRATCH_Y_LENGTH`，用于设置 scratch y 的长度
 
 <Normal />

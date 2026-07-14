@@ -22,7 +22,7 @@ RP2040 没有板载唯一标识符（所有 RP2040 芯片实例完全相同，�
 
 ### 宏
 
-* `#define [PICO_UNIQUE_BOARD_ID_INIT_PRIORITY] 1000`
+* #define [PICO_UNIQUE_BOARD_ID_INIT_PRIORITY] 1000
 
 ### 函数
 
@@ -34,7 +34,7 @@ RP2040 没有板载唯一标识符（所有 RP2040 芯片实例完全相同，�
 
 #### PICO_UNIQUE_BOARD_ID_INIT_PRIORITY
 
-`#define PICO_UNIQUE_BOARD_ID_INIT_PRIORITY 1000`
+#define PICO_UNIQUE_BOARD_ID_INIT_PRIORITY 1000
 
 静态初始化顺序。
 
@@ -62,7 +62,7 @@ RP2040 没有板载唯一标识符（所有 RP2040 芯片实例完全相同，�
 
 **参数**
 
-- `id_out: 指向 pico_unique_board_id_t` 结构的指针，标识符将被写入此处
+- `id_out`: 指向 `pico_unique_board_id_t` 结构的指针，标识符将被写入此处
 
 #### pico_get_unique_board_id_string
 
@@ -78,7 +78,7 @@ RP2040 没有板载唯一标识符（所有 RP2040 芯片实例完全相同，�
 
 **参数**
 
-- `id_out`: 指向大小为 len 的字符缓冲区的指针，标识符将被写入此处
-- `len: id_out 的大小。完整序列号需要 len >= 2 *` PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1
+- id_out: 指向大小为 len 的字符缓冲区的指针，标识符将被写入此处
+- `len`: `id_out` 的大小。完整序列号需要 `len` >= 2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1
 
 <Normal />

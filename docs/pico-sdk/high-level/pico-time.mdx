@@ -4,7 +4,7 @@ draft: false
 description: 用于精确时间戳、睡眠和基于时间回调的 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK time]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -27,6 +27,20 @@ import Normal from "../../_normal.mdx";
 
 `repeating_timer`<br/>&emsp;用于简单调度重复执行的重复定时器函数。
 
+### 类型定义
+
+- typedef struct timeout_state timeout_state_t: 用于跟踪超时条件的状态。
+
+### 类型定义文档
+
+#### timeout_state_t
+
+typedef struct timeout_state timeout_state_t
+
+用于跟踪超时条件的状态。
+
+保存截止时间和一个可选的每次迭代参数，供 init 函数返回的 check_timeout_fn 回调使用。
+
 ### timestamp
 
 与时间点（包括当前时间）相关的时间戳函数。
@@ -35,48 +49,27 @@ import Normal from "../../_normal.mdx";
 
 这些函数用于处理以 absolute_time_t 类型表示的时间戳（即时间点）。提供此不透明类型是为了帮助防止时间戳与相对时间值意外混用。
 
-#### 类型定义
-
-- `typedef uint64_t absolute_time_t`: 以微秒为单位的不透明 64 位时间戳。
-
 #### 函数
 
 - `static uint64_t to_us_since_boot (absolute_time_t t)`: 将 absolute_time_t 转换为自启动以来的微秒数。
 `static void update_us_since_boot (absolute_time_t *t, uint64_t us_since_boot)`<br/>&emsp;更新 absolute_time_t 值以表示自启动以来的给定微秒数。
-- `static absolute_time_t from_us_since_boot` (uint64_t us_since_boot)`: 将自启动以来的微秒数转换为 absolute_time_t。
-- `static absolute_time_t get_absolute_time` (void)`: 返回当前时间的表示。
+- `static absolute_time_t from_us_since_boot (uint64_t us_since_boot)`: 将自启动以来的微秒数转换为 absolute_time_t。
+- `static absolute_time_t get_absolute_time (void)`: 返回当前时间的表示。
 - `static uint32_t to_ms_since_boot (absolute_time_t t)`: 将时间戳转换为自启动以来的毫秒数。
-- `static absolute_time_t delayed_by_us` (const absolute_time_t t, uint64_t us)`: 返回在另一个时间戳基础上加上若干微秒后得到的时间戳值。
-- `static absolute_time_t delayed_by_ms` (const absolute_time_t t, uint32_t ms)`: 返回在另一个时间戳基础上加上若干毫秒后得到的时间戳值。
-- `static absolute_time_t make_timeout_time_us` (uint64_t us)`: 获取距当前时间若干微秒后时间戳的便捷方法。
-- `static absolute_time_t make_timeout_time_ms` (uint32_t ms)`: 获取距当前时间若干毫秒后时间戳的便捷方法。
+- `static uint64_t to_ms_64_since_boot (absolute_time_t t)`: 将时间戳转换为自启动以来的 64 位毫秒数。
+- `static absolute_time_t delayed_by_us (const absolute_time_t t, uint64_t us)`: 返回在另一个时间戳基础上加上若干微秒后得到的时间戳值。
+- `static absolute_time_t delayed_by_ms (const absolute_time_t t, uint32_t ms)`: 返回在另一个时间戳基础上加上若干毫秒后得到的时间戳值。
+- `static absolute_time_t make_timeout_time_us (uint64_t us)`: 获取距当前时间若干微秒后时间戳的便捷方法。
+- `static absolute_time_t make_timeout_time_ms (uint32_t ms)`: 获取距当前时间若干毫秒后时间戳的便捷方法。
 - `static int64_t absolute_time_diff_us (absolute_time_t from, absolute_time_t to)`: 返回两个时间戳之间的微秒差值。
-- `static absolute_time_t absolute_time_min` (absolute_time_t a, absolute_time_t b)`: 返回两个时间戳中较早的一个。
+- `static absolute_time_t absolute_time_min (absolute_time_t a, absolute_time_t b)`: 返回两个时间戳中较早的一个。
 - `static bool is_at_the_end_of_time (absolute_time_t t)`: 判断给定时间戳是否为"时间终点"。
 - `static bool is_nil_time (absolute_time_t t)`: 判断给定时间戳是否为空。
 
 #### 变量
 
-- `const absolute_time_t at_the_end_of_time``: 表示时间终点的时间戳；实际上并非最大可能的时间戳，而是设置为 0x7fffffff_ffffffff 微秒，以避免时间运算中的符号溢出。这大约是 300,000 年，应该足够用了。
-- `const absolute_time_t nil_time``: 表示空时间戳的时间戳。
-
-#### 类型定义文档
-
-**absolute_time_t**
-
-`typedef uint64_t absolute_time_t`
-
-以微秒为单位的不透明 64 位时间戳。
-
-使用此类型而非原始 uint64_t，是为了防止在需要绝对时间的地方意外传入相对时间或单位错误的时间。
-
-注意：从 SDK 2.0.0 起，此类型默认为 uint64_t（即无保护）；可通过将 PICO_OPAQUE_ABSOLUTE_TIME_T 设为 1 来启用保护。
-
-**另请参阅**
-
-`to_us_since_boot()`
-
-`update_us_since_boot()`
+- `const absolute_time_t at_the_end_of_time`: 表示时间终点的时间戳；实际上并非最大可能的时间戳，而是设置为 0x7fffffff_ffffffff 微秒，以避免时间运算中的符号溢出。这大约是 300,000 年，应该足够用了。
+- `const absolute_time_t nil_time`: 表示空时间戳的时间戳。
 
 #### 函数文档
 
@@ -86,27 +79,27 @@ import Normal from "../../_normal.mdx";
 
 返回两个时间戳之间的微秒差值。
 
-在与大时间戳（如 `at_the_end_of_time）求差时要小心，因为有符号整数可能溢出。
+在与大时间戳（如 `at_the_end_of_time`）求差时要小心，因为有符号整数可能溢出。
 
 **参数**
 
-- `from`: 第一个时间戳
-- `to`: 第二个时间戳
+- from: 第一个时间戳
+- to: 第二个时间戳
 
 **返回**
 
-两个时间戳之间的微秒数（若 `to 在 from` 之后则为正值，溢出情况除外）。
+两个时间戳之间的微秒数（若 `to` 在 `from` 之后则为正值，溢出情况除外）。
 
 **absolute_time_min**
 
-`static absolute_time_t absolute_time_min (absolute_time_t` a, absolute_time_t b) [inline], [static]`
+`static absolute_time_t absolute_time_min (absolute_time_t` a, absolute_time_t b) [inline], [static]
 
 返回两个时间戳中较早的一个。
 
 **参数**
 
-- `a`: 第一个时间戳
-- `b`: 第二个时间戳
+- a: 第一个时间戳
+- b: 第二个时间戳
 
 **返回**
 
@@ -120,8 +113,8 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `t`: 基础时间戳
-- `ms`: 要加的毫秒数
+- t: 基础时间戳
+- ms: 要加的毫秒数
 
 **返回**
 
@@ -135,8 +128,8 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `t`: 基础时间戳
-- `us`: 要加的微秒数
+- t: 基础时间戳
+- us: 要加的微秒数
 
 **返回**
 
@@ -152,7 +145,7 @@ fn from_us_since_boot
 
 **参数**
 
-- `us_since_boot`: 自启动以来的微秒数
+- us_since_boot: 自启动以来的微秒数
 
 **返回**
 
@@ -173,9 +166,9 @@ fn from_us_since_boot
 **另请参阅**
 
 
-`sleep_until()`
+sleep_until()
 
-`time_us_64()`
+time_us_64()
 
 **is_at_the_end_of_time**
 
@@ -185,7 +178,7 @@ fn from_us_since_boot
 
 **参数**
 
-- `t`: 时间戳
+- t: 时间戳
 
 **返回**
 
@@ -202,7 +195,7 @@ fn from_us_since_boot
 
 **参数**
 
-- `t`: 时间戳
+- t: 时间戳
 
 **返回**
 
@@ -219,7 +212,7 @@ fn from_us_since_boot
 
 **参数**
 
-- `ms`: 要加到当前时间戳的毫秒数
+- ms: 要加到当前时间戳的毫秒数
 
 **返回**
 
@@ -233,11 +226,29 @@ fn from_us_since_boot
 
 **参数**
 
-- `us`: 要加到当前时间戳的微秒数
+- us: 要加到当前时间戳的微秒数
 
 **返回**
 
 未来的时间戳。
+
+**to_ms_64_since_boot**
+
+`static uint64_t to_ms_64_since_boot (absolute_time_t t) [inline], [static]`
+
+将时间戳转换为自启动以来的 64 位毫秒数。
+
+**参数**
+
+- t: 要转换的 absolute_time_t 值
+
+**返回**
+
+t 所表示的自启动以来的毫秒数。
+
+**另请参阅**
+
+to_us_since_boot()
 
 **to_ms_since_boot**
 
@@ -249,7 +260,7 @@ fn to_ms_since_boot
 
 **参数**
 
-- `t`: 要转换的 absolute_time_t 值
+- t: 要转换的 absolute_time_t 值
 
 **返回**
 
@@ -257,7 +268,7 @@ t 所表示的自启动以来的毫秒数。
 
 **另请参阅**
 
-`to_us_since_boot()`
+to_us_since_boot()
 
 **to_us_since_boot**
 
@@ -269,7 +280,7 @@ fn to_us_since_boot
 
 **参数**
 
-- `t`: 要转换的绝对时间
+- t: 要转换的绝对时间
 
 **返回**
 
@@ -285,8 +296,8 @@ fn update_us_since_boot
 
 **参数**
 
-- `t`: 要更新的绝对时间值
-- `us_since_boot`: 要表示的自启动以来的微秒数。注意，此值应可表示为有符号 64 位整数。
+- t: 要更新的绝对时间值
+- us_since_boot: 要表示的自启动以来的微秒数。注意，此值应可表示为有符号 64 位整数。
 
 #### 变量文档
 
@@ -317,11 +328,11 @@ fn update_us_since_boot
 
 **另请参阅**
 
-`busy_wait_until()`
+busy_wait_until()
 
-`busy_wait_us()`
+busy_wait_us()
 
-`busy_wait_us_32()`
+busy_wait_us_32()
 
 #### 函数
 
@@ -338,11 +349,11 @@ fn update_us_since_boot
 
 用于在超时上阻塞的辅助方法。
 
-此方法将在响应事件（如 `__wfe）时返回，或在目标时间到达时返回，也可能在此之前的任何时刻返回。
+此方法将在响应事件（如 `__wfe`）时返回，或在目标时间到达时返回，也可能在此之前的任何时刻返回。
 
-此方法可用于实现较低功耗的轮询循环，等待由事件（[`__sev`()]）发出信号的某个条件。
+此方法可用于实现较低功耗的轮询循环，等待由事件（[__sev()]）发出信号的某个条件。
 
-之所以称为 _best_effort_，是因为在某些情况下（尤其是默认定时器池被禁用或已满时），最佳努力就是直接返回而不执行 `__wfe`，从而将调用代码变为忙等待。
+之所以称为 _best_effort_，是因为在某些情况下（尤其是默认定时器池被禁用或已满时），最佳努力就是直接返回而不执行 __wfe，从而将调用代码变为忙等待。
 
 示例用法：
 
@@ -369,7 +380,7 @@ bool my_function_with_timeout_us(uint64_t timeout_us) {
 
 **参数**
 
-- `timeout_timestamp`: 超时时间
+- timeout_timestamp: 超时时间
 
 **返回**
 
@@ -385,7 +396,7 @@ bool my_function_with_timeout_us(uint64_t timeout_us) {
 
 **参数**
 
-- `ms`: 睡眠的毫秒数
+- ms: 睡眠的毫秒数
 
 **sleep_until**
 
@@ -397,13 +408,13 @@ bool my_function_with_timeout_us(uint64_t timeout_us) {
 
 **参数**
 
-- `target`: 返回后的时间
+- target: 返回后的时间
 
 **另请参阅**
 
-`sleep_us()`
+sleep_us()
 
-`busy_wait_until()`
+busy_wait_until()
 
 **sleep_us**
 
@@ -415,11 +426,11 @@ bool my_function_with_timeout_us(uint64_t timeout_us) {
 
 **参数**
 
-- `us`: 睡眠的微秒数
+- us: 睡眠的微秒数
 
 **另请参阅**
 
-`busy_wait_us()`
+busy_wait_us()
 
 ### alarm
 
@@ -433,18 +444,18 @@ bool my_function_with_timeout_us(uint64_t timeout_us) {
 
 **另请参阅**
 
-struct `alarm_pool`
+struct alarm_pool
 
 
 #### 宏
 
-* `#define [PICO_TIME_DEFAULT_ALARM_POOL_DISABLED] 0`
-* `#define [PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM] 3`
-* `#define [PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS] 16`
+* #define [PICO_TIME_DEFAULT_ALARM_POOL_DISABLED] 0
+* #define [PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM] 3
+* #define [PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS] 16
 
 #### 类型定义
 
-- `typedef int32_t alarm_id_t`: 定时器的标识符。
+- typedef int32_t alarm_id_t: 定时器的标识符。
 `typedef int64_t(** alarm_callback_t)(alarm_id_t id, void **user_data)`<br/>&emsp;用户定时器回调函数。
 
 #### 函数
@@ -482,14 +493,14 @@ struct `alarm_pool`
 
 `static alarm_id_t add_alarm_in_ms (uint32_t ms, alarm_callback_t callback, void *user_data, bool fire_if_past)`<br/>&emsp;添加一个在指定毫秒延迟后调用的定时器回调。
 - `static bool cancel_alarm (alarm_id_t alarm_id)`: 从默认定时器池取消一个定时器。
-- `int64_t remaining_alarm_time_us (alarm_id_t alarm_id)`: 返回定时器下次触发前的剩余时间。
-- `int32_t remaining_alarm_time_ms (alarm_id_t alarm_id)`: 返回定时器下次触发前的剩余时间。
+- int64_t remaining_alarm_time_us (alarm_id_t alarm_id): 返回定时器下次触发前的剩余时间。
+- int32_t remaining_alarm_time_ms (alarm_id_t alarm_id): 返回定时器下次触发前的剩余时间。
 
 #### 宏定义文档
 
 **PICO_TIME_DEFAULT_ALARM_POOL_DISABLED**
 
-`#define PICO_TIME_DEFAULT_ALARM_POOL_DISABLED 0`
+#define PICO_TIME_DEFAULT_ALARM_POOL_DISABLED 0
 
 若为 1，则禁用默认定时器池（不为池申请 timer_alarm）。
 
@@ -501,19 +512,19 @@ struct `alarm_pool`
 
 [PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM]
 
-`alarm_pool_get_default()`
+alarm_pool_get_default()
 **PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM**
 
-`#define PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM 3`
+#define PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM 3
 
 选择用于默认定时器池的 timer_alarm。
 
 **另请参阅**
 
-`alarm_pool_get_default()`
+alarm_pool_get_default()
 **PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS**
 
-`#define PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS 16`
+#define PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS 16
 
 选择默认定时器池中并发定时器的最大数量。
 
@@ -523,13 +534,13 @@ struct `alarm_pool`
 
 [PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM]
 
-`alarm_pool_get_default()`
+alarm_pool_get_default()
 
 #### 类型定义文档
 
 **alarm_id_t**
 
-`typedef int32_t alarm_id_t`
+typedef int32_t alarm_id_t
 
 定时器的标识符。
 
@@ -541,14 +552,14 @@ struct `alarm_pool`
 
 **alarm_callback_t**
 
-`typedef int64_t(** alarm_callback_t) (alarm_id_t id, void **user_data)`
+typedef int64_t(** alarm_callback_t) (alarm_id_t id, void **user_data)
 
 用户定时器回调函数。
 
 **参数**
 
-- `id`: 添加定时器时返回的 alarm_id
-- `user_data`: 添加定时器时传入的用户数据
+- id: 添加定时器时返回的 alarm_id
+- user_data: 添加定时器时传入的用户数据
 
 **返回**
 
@@ -566,7 +577,7 @@ struct `alarm_pool`
 
 **add_alarm_at**
 
-`static alarm_id_t add_alarm_at (absolute_time_t` time, alarm_callback_t callback, void * user_data, bool fire_if_past) [inline], [static]`
+`static alarm_id_t add_alarm_at (absolute_time_t` time, alarm_callback_t callback, void * user_data, bool fire_if_past) [inline], [static]
 
 添加一个在指定时间调用的定时器回调。
 
@@ -576,10 +587,10 @@ struct `alarm_pool`
 
 **参数**
 
-- `time`: 回调应触发的时间戳（在此时间或之后）
-- `callback`: 回调函数
-- `user_data`: 传递给回调函数的用户数据
-- `fire_if_past`: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+- time: 回调应触发的时间戳（在此时间或之后）
+- callback: 回调函数
+- user_data: 传递给回调函数的用户数据
+- fire_if_past: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
 
 **返回**
 
@@ -595,7 +606,7 @@ struct `alarm_pool`
 
 **add_alarm_in_ms**
 
-`static alarm_id_t add_alarm_in_ms (uint32_t ms, alarm_callback_t` callback, void * user_data, bool fire_if_past) [inline], [static]`
+`static alarm_id_t add_alarm_in_ms (uint32_t ms, alarm_callback_t` callback, void * user_data, bool fire_if_past) [inline], [static]
 
 添加一个在指定毫秒延迟后调用的定时器回调。
 
@@ -605,10 +616,10 @@ struct `alarm_pool`
 
 **参数**
 
-- `ms`: 回调应触发的延迟（从现在起）的毫秒数
-- `callback`: 回调函数
-- `user_data`: 传递给回调函数的用户数据
-- `fire_if_past`: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+- ms: 回调应触发的延迟（从现在起）的毫秒数
+- callback: 回调函数
+- user_data: 传递给回调函数的用户数据
+- fire_if_past: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
 
 **返回**
 
@@ -624,7 +635,7 @@ struct `alarm_pool`
 
 **add_alarm_in_us**
 
-`static alarm_id_t add_alarm_in_us (uint64_t us, alarm_callback_t` callback, void * user_data, bool fire_if_past) [inline], [static]`
+`static alarm_id_t add_alarm_in_us (uint64_t us, alarm_callback_t` callback, void * user_data, bool fire_if_past) [inline], [static]
 
 添加一个在指定微秒延迟后调用的定时器回调。
 
@@ -634,10 +645,10 @@ struct `alarm_pool`
 
 **参数**
 
-- `us`: 回调应触发的延迟（从现在起）的微秒数
-- `callback`: 回调函数
-- `user_data`: 传递给回调函数的用户数据
-- `fire_if_past`: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+- us: 回调应触发的延迟（从现在起）的微秒数
+- callback: 回调函数
+- user_data: 传递给回调函数的用户数据
+- fire_if_past: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
 
 **返回**
 
@@ -653,7 +664,7 @@ struct `alarm_pool`
 
 **alarm_pool_add_alarm_at**
 
-`alarm_id_t alarm_pool_add_alarm_at (alarm_pool_t **` pool, absolute_time_t time, `alarm_callback_t callback, void ** user_data, bool fire_if_past)`
+`alarm_id_t alarm_pool_add_alarm_at (alarm_pool_t ** pool, absolute_time_t time, alarm_callback_t callback, void ** user_data, bool fire_if_past)`
 
 添加一个在指定时间调用的定时器回调。
 
@@ -663,11 +674,11 @@ struct `alarm_pool`
 
 **参数**
 
-- `pool`: 用于调度回调的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
-- `time`: 回调应触发的时间戳（在此时间或之后）
-- `callback`: 回调函数
-- `user_data`: 传递给回调函数的用户数据
-- `fire_if_past`: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+- pool: 用于调度回调的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- time: 回调应触发的时间戳（在此时间或之后）
+- callback: 回调函数
+- user_data: 传递给回调函数的用户数据
+- fire_if_past: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
 
 **返回**
 
@@ -683,20 +694,20 @@ struct `alarm_pool`
 
 **alarm_pool_add_alarm_at_force_in_context**
 
-`alarm_id_t alarm_pool_add_alarm_at_force_in_context (alarm_pool_t **` pool, absolute_time_t time, `alarm_callback_t callback, void ** user_data)`
+`alarm_id_t alarm_pool_add_alarm_at_force_in_context (alarm_pool_t ** pool, absolute_time_t time, alarm_callback_t callback, void ** user_data)`
 
 添加一个在指定时间或之后调用的定时器回调。
 
-回调在指定时间后尽快从创建定时器池的核心的 IRQ 处理程序中调用。与 `alarm_pool_add_alarm_at` 不同，此方法保证即使时间在此方法调用期间或过去也会从该核心调用回调。
+回调在指定时间后尽快从创建定时器池的核心的 IRQ 处理程序中调用。与 alarm_pool_add_alarm_at 不同，此方法保证即使时间在此方法调用期间或过去也会从该核心调用回调。
 
 从 IRQ 处理程序（包括定时器回调）以及任意核心调用此方法都是安全的。
 
 **参数**
 
-- `pool`: 用于调度回调的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
-- `time`: 回调应触发的时间戳（在此时间或之后）
-- `callback`: 回调函数
-- `user_data`: 传递给回调函数的用户数据
+- pool: 用于调度回调的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- time: 回调应触发的时间戳（在此时间或之后）
+- callback: 回调函数
+- user_data: 传递给回调函数的用户数据
 
 **返回**
 
@@ -718,11 +729,11 @@ struct `alarm_pool`
 
 **参数**
 
-- `pool`: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
-- `ms`: 回调应触发的延迟（从现在起）的毫秒数
-- `callback`: 回调函数
-- `user_data`: 传递给回调函数的用户数据
-- `fire_if_past`: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+- pool: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- ms: 回调应触发的延迟（从现在起）的毫秒数
+- callback: 回调函数
+- user_data: 传递给回调函数的用户数据
+- fire_if_past: 若为 true，且定时器时间在此次调用之前或期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
 
 **返回**
 
@@ -748,11 +759,11 @@ struct `alarm_pool`
 
 **参数**
 
-- `pool`: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
-- `us`: 回调应触发的延迟（从现在起）的微秒数
-- `callback`: 回调函数
-- `user_data`: 传递给回调函数的用户数据
-- `fire_if_past`: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
+- pool: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- us: 回调应触发的延迟（从现在起）的微秒数
+- callback: 回调函数
+- user_data: 传递给回调函数的用户数据
+- fire_if_past: 若为 true，且定时器时间在此次调用期间（即在定时器可以设置之前），则应在此函数调用期间由该函数调用回调
 
 **返回**
 
@@ -768,14 +779,14 @@ struct `alarm_pool`
 
 **alarm_pool_cancel_alarm**
 
-`bool alarm_pool_cancel_alarm (alarm_pool_t *` pool, alarm_id_t alarm_id)`
+`bool alarm_pool_cancel_alarm (alarm_pool_t *pool, alarm_id_t alarm_id)`
 
 取消一个定时器。
 
 **参数**
 
-- `pool: 包含该定时器的 alarm_pool`
-- `alarm_id`: 定时器
+- `pool`: 包含该定时器的 `alarm_pool`
+- alarm_id: 定时器
 
 **返回**
 
@@ -783,7 +794,7 @@ struct `alarm_pool`
 
 **另请参阅**
 
-`alarm_id_t` 关于 ID 重用的说明
+alarm_id_t 关于 ID 重用的说明
 
 **alarm_pool_core_num**
 
@@ -793,7 +804,7 @@ struct `alarm_pool`
 
 **参数**
 
-- `pool`: 定时器池
+- pool: 定时器池
 
 **返回**
 
@@ -813,14 +824,14 @@ struct `alarm_pool`
 
 **参数**
 
-- `timer_alarm_num`: 用于支持此池的 timer_alarm
-- `max_timers`: 最大定时器数量
+- timer_alarm_num: 用于支持此池的 timer_alarm
+- max_timers: 最大定时器数量
 
 由于实现原因，此值受限于 PICO_PHEAP_MAX_ENTRIES（默认为 255）。
 
 **另请参阅**
 
-`alarm_pool_get_default()`
+alarm_pool_get_default()
 
 
 **alarm_pool_create_with_unused_hardware_alarm**
@@ -837,13 +848,13 @@ struct `alarm_pool`
 
 **参数**
 
-- `max_timers`: 最大定时器数量
+- max_timers: 最大定时器数量
 
 由于实现原因，此值受限于 PICO_PHEAP_MAX_ENTRIES（默认为 255）。
 
 **另请参阅**
 
-`alarm_pool_get_default()`
+alarm_pool_get_default()
 
 
 **alarm_pool_destroy**
@@ -854,11 +865,11 @@ struct `alarm_pool`
 
 **参数**
 
-- `pool`: 定时器池
+- pool: 定时器池
 
 **alarm_pool_get_default**
 
-`alarm_pool_t * alarm_pool_get_default (void)`
+alarm_pool_t * alarm_pool_get_default (void)
 
 在不指定定时器池时用于添加定时器的默认定时器池，也被 SDK 用于支持较低功耗的睡眠和超时。
 
@@ -874,14 +885,14 @@ struct `alarm_pool`
 
 **alarm_pool_remaining_alarm_time_ms**
 
-`int32_t alarm_pool_remaining_alarm_time_ms (alarm_pool_t *` pool, alarm_id_t alarm_id)`
+int32_t alarm_pool_remaining_alarm_time_ms (alarm_pool_t *pool, alarm_id_t alarm_id)
 
 返回定时器下次触发前的剩余时间。
 
 **参数**
 
-- `pool: 包含该定时器的 alarm_pool`
-- `alarm_id`: 定时器
+- `pool`: 包含该定时器的 `alarm_pool`
+- alarm_id: 定时器
 
 **返回**
 
@@ -893,14 +904,14 @@ struct `alarm_pool`
 
 **alarm_pool_remaining_alarm_time_us**
 
-`int64_t alarm_pool_remaining_alarm_time_us (alarm_pool_t *` pool, alarm_id_t alarm_id)`
+int64_t alarm_pool_remaining_alarm_time_us (alarm_pool_t *pool, alarm_id_t alarm_id)
 
 返回定时器下次触发前的剩余时间。
 
 **参数**
 
-- `pool: 包含该定时器的 alarm_pool`
-- `alarm_id`: 定时器
+- `pool`: 包含该定时器的 `alarm_pool`
+- alarm_id: 定时器
 
 **返回**
 
@@ -918,7 +929,7 @@ struct `alarm_pool`
 
 **参数**
 
-- `pool`: 定时器池
+- pool: 定时器池
 
 **返回**
 
@@ -932,7 +943,7 @@ struct `alarm_pool`
 
 **参数**
 
-- `alarm_id`: 定时器
+- alarm_id: 定时器
 
 **返回**
 
@@ -940,17 +951,17 @@ struct `alarm_pool`
 
 **另请参阅**
 
-`alarm_id_t` 关于 ID 重用的说明
+alarm_id_t 关于 ID 重用的说明
 
 **remaining_alarm_time_ms**
 
-`int32_t remaining_alarm_time_ms (alarm_id_t alarm_id)`
+int32_t remaining_alarm_time_ms (alarm_id_t alarm_id)
 
 返回定时器下次触发前的剩余时间。
 
 **参数**
 
-- `alarm_id`: 定时器
+- alarm_id: 定时器
 
 **返回**
 
@@ -962,13 +973,13 @@ struct `alarm_pool`
 
 **remaining_alarm_time_us**
 
-`int64_t remaining_alarm_time_us (alarm_id_t alarm_id)`
+int64_t remaining_alarm_time_us (alarm_id_t alarm_id)
 
 返回定时器下次触发前的剩余时间。
 
 **参数**
 
-- `alarm_id`: 定时器
+- alarm_id: 定时器
 
 **返回**
 
@@ -1006,13 +1017,13 @@ struct `alarm_pool`
 
 **repeating_timer_callback_t**
 
-`typedef bool(** repeating_timer_callback_t) (repeating_timer_t **rt)`
+typedef bool(** repeating_timer_callback_t) (repeating_timer_t **rt)
 
 重复定时器的回调函数。
 
 **参数**
 
-- `rt`: 包含重复定时器信息的重复定时器结构。用户数据对用户而言最为重要。
+- rt: 包含重复定时器信息的重复定时器结构。用户数据对用户而言最为重要。
 
 **返回**
 
@@ -1022,7 +1033,7 @@ true 表示继续重复，false 表示停止。
 
 **add_repeating_timer_ms**
 
-`static bool add_repeating_timer_ms (int32_t delay_ms, repeating_timer_callback_t callback, void **` user_data, repeating_timer_t ** out) [inline], [static]`
+`static bool add_repeating_timer_ms (int32_t delay_ms, repeating_timer_callback_t callback, void **user_data, repeating_timer_t ** out) [inline], [static]`
 
 添加一个以指定毫秒间隔重复调用的定时器。
 
@@ -1033,9 +1044,9 @@ true 表示继续重复，false 表示停止。
 **参数**
 
 - `delay_ms`: 重复延迟（毫秒）；若 &gt;0 则为一次回调结束到下一次开始的延迟；若 &lt;0 则为各次回调开始时间间隔的负值。值 0 被视为 1 微秒。
-- `callback`: 重复定时器回调函数
-- `user_data: 存储在 repeating_timer` 结构中供回调使用的用户数据
-- `out`: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
+- callback: 重复定时器回调函数
+- `user_data`: 存储在 `repeating_timer` 结构中供回调使用的用户数据
+- out: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
 
 **返回**
 
@@ -1043,7 +1054,7 @@ true 表示继续重复，false 表示停止。
 
 **add_repeating_timer_us**
 
-`static bool add_repeating_timer_us (int64_t delay_us, repeating_timer_callback_t callback, void **` user_data, repeating_timer_t ** out) [inline], [static]`
+`static bool add_repeating_timer_us (int64_t delay_us, repeating_timer_callback_t callback, void **user_data, repeating_timer_t ** out) [inline], [static]`
 
 添加一个以指定微秒间隔重复调用的定时器。
 
@@ -1054,9 +1065,9 @@ true 表示继续重复，false 表示停止。
 **参数**
 
 - `delay_us`: 重复延迟（微秒）；若 &gt;0 则为一次回调结束到下一次开始的延迟；若 &lt;0 则为各次回调开始时间间隔的负值。值 0 被视为 1。
-- `callback`: 重复定时器回调函数
-- `user_data: 存储在 repeating_timer` 结构中供回调使用的用户数据
-- `out`: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
+- callback: 重复定时器回调函数
+- `user_data`: 存储在 `repeating_timer` 结构中供回调使用的用户数据
+- out: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
 
 **返回**
 
@@ -1074,11 +1085,11 @@ true 表示继续重复，false 表示停止。
 
 **参数**
 
-- `pool`: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- pool: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
 - `delay_ms`: 重复延迟（毫秒）；若 &gt;0 则为一次回调结束到下一次开始的延迟；若 &lt;0 则为各次回调开始时间间隔的负值。值 0 被视为 1 微秒。
-- `callback`: 重复定时器回调函数
-- `user_data: 存储在 repeating_timer` 结构中供回调使用的用户数据
-- `out`: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
+- callback: 重复定时器回调函数
+- `user_data`: 存储在 `repeating_timer` 结构中供回调使用的用户数据
+- out: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
 
 **返回**
 
@@ -1096,11 +1107,11 @@ true 表示继续重复，false 表示停止。
 
 **参数**
 
-- `pool`: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
+- pool: 用于调度重复定时器的定时器池（决定使用哪个 timer_alarm 以及哪个核心调用回调）
 - `delay_us`: 重复延迟（微秒）；若 &gt;0 则为一次回调结束到下一次开始的延迟；若 &lt;0 则为各次回调开始时间间隔的负值。值 0 被视为 1。
-- `callback`: 重复定时器回调函数
-- `user_data: 存储在 repeating_timer` 结构中供回调使用的用户数据
-- `out`: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
+- callback: 重复定时器回调函数
+- `user_data`: 存储在 `repeating_timer` 结构中供回调使用的用户数据
+- out: 指向用户持有的结构的指针，用于存储重复定时器信息。注意此存储位置必须比重复定时器存活更久，因此使用栈空间时需小心
 
 **返回**
 
@@ -1114,7 +1125,7 @@ true 表示继续重复，false 表示停止。
 
 **参数**
 
-- `timer`: 要取消的重复定时器
+- timer: 要取消的重复定时器
 
 **返回**
 
@@ -1122,6 +1133,6 @@ true 表示继续重复，false 表示停止。
 
 **另请参阅**
 
-`alarm_id_t` 关于 ID 重用的说明
+alarm_id_t 关于 ID 重用的说明
 
 <Normal />

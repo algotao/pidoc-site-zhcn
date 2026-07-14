@@ -12,11 +12,11 @@ import Normal from "../../_normal.mdx";
 
 ### 详细描述
 
-RP2350 内置了 SHA-256 哈希算法的硬件实现。使用前应先调用 `sha256_set_dma_size 和 sha256_set_bswap 函数对硬件进行配置。开始生成新哈希时，需先调用 `sha256_start 初始化硬件。当 sha256_is_ready` 返回 true 时，硬件已准备好接收数据，此时可将待哈希数据写入 sha256_get_write_addr 返回的地址。硬件要求一次性写入 64 字节，否则 sha256_err_not_ready` 将指示错误，需重新开始哈希过程。当有效的校验和结果可用时，`sha256_is_sum_valid 返回 true，此时可调用 sha256_get_result` 获取结果。
+RP2350 内置了 SHA-256 哈希算法的硬件实现。使用前应先调用 `sha256_set_dma_size` 和 `sha256_set_bswap` 函数对硬件进行配置。开始生成新哈希时，需先调用 sha256_start 初始化硬件。当 sha256_is_ready 返回 `true` 时，硬件已准备好接收数据，此时可将待哈希数据写入 `sha256_get_write_addr` 返回的地址。硬件要求一次性写入 64 字节，否则 `sha256_err_not_ready` 将指示错误，需重新开始哈希过程。当有效的校验和结果可用时，`sha256_is_sum_valid` 返回 `true`，此时可调用 `sha256_get_result` 获取结果。
 
 ### 宏
 
-* `#define [SHA256_RESULT_BYTES] 32`
+* #define [SHA256_RESULT_BYTES] 32
 
 ### 枚举
 
@@ -42,7 +42,7 @@ RP2350 内置了 SHA-256 哈希算法的硬件实现。使用前应先调用 `sh
 
 #### SHA256_RESULT_BYTES
 
-`#define SHA256_RESULT_BYTES 32`
+#define SHA256_RESULT_BYTES 32
 
 SHA-256 结果的字节大小。
 
@@ -50,7 +50,7 @@ SHA-256 结果的字节大小。
 
 #### sha256_endianness
 
-`enum sha256_endianness`
+enum sha256_endianness
 
 API 中使用的 SHA-256 字节序定义。
 
@@ -82,15 +82,15 @@ API 中使用的 SHA-256 字节序定义。
 
 #### sha256_get_result
 
-`void sha256_get_result (sha256_result_t *` out, enum sha256_endianness endianness)`
+`void sha256_get_result (sha256_result_t *out, enum sha256_endianness endianness)`
 
 获取校验和结果。
 
-读取硬件计算出的 32 字节结果。仅在 `sha256_is_sum_valid` 为 True 时有效。
+读取硬件计算出的 32 字节结果。仅在 sha256_is_sum_valid 为 True 时有效。
 
 **参数**
 
-- `out`: 校验和结果
+- out: 校验和结果
 
 Copyright (c) 2024 Raspberry Pi (Trading) Ltd.
 
@@ -114,7 +114,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 检查硬件是否准备好接收更多数据。
 
-向硬件写入 64 字节数据后，硬件将暂时无法接收更多数据。调用此函数检查硬件是否已准备好接收更多数据。参见 `sha256_err_not_ready`。
+向硬件写入 64 字节数据后，硬件将暂时无法接收更多数据。调用此函数检查硬件是否已准备好接收更多数据。参见 sha256_err_not_ready。
 
 **返回值**
 
@@ -130,7 +130,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 **返回值**
 
-若 `sha256_get_result` 将返回有效结果则为 True
+若 sha256_get_result 将返回有效结果则为 True
 
 #### sha256_put_byte
 
@@ -140,7 +140,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 **参数**
 
-- `b`: 要写入的数据
+- b: 要写入的数据
 
 #### sha256_put_word
 
@@ -150,7 +150,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 **参数**
 
-- `word`: 要写入的数据
+- word: 要写入的数据
 
 #### sha256_set_bswap
 
@@ -162,7 +162,7 @@ SHA256 算法期望数据以大端序排列，但系统总线处理的是小端�
 
 **参数**
 
-- `swap`: false 表示禁用字节交换
+- swap: false 表示禁用字节交换
 
 #### sha256_set_dma_size
 
@@ -174,7 +174,7 @@ SHA256 算法期望数据以大端序排列，但系统总线处理的是小端�
 
 **参数**
 
-- `size_in_bytes`: DMA 传输大小，仅支持 1、2 或 4 字节。
+- size_in_bytes: DMA 传输大小，仅支持 1、2 或 4 字节。
 
 #### sha256_start
 

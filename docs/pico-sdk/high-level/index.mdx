@@ -4,7 +4,7 @@ draft: false
 description: Index
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK index]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -12,20 +12,22 @@ import Normal from "../../_normal.mdx";
 
 本章包含以下 API 分组：
 
-- `pico_aon_timer`(pico-aon-timer.mdx): High Level "Always on Timer" Abstraction.
-- `pico_async_context`(pico-async-context.mdx): An async_context provides a logically single-threaded context for performing work, and responding to asynchronous events
-- `pico_bootsel_via_double_reset`(pico-bootsel-via-double-reset.mdx): Optional support to make fast double reset of the system enter BOOTSEL mode.
-- `pico_fix(pico-fix.mdx): void rp2040_usb_device_enumeration_fix (void)`<br/>&emsp;Perform a brute force workaround for USB device enumeration issue.
-- `pico_flash`(pico-flash.mdx): High level flash API.
-- `pico_i2c_slave`(pico-i2c-slave.mdx): Functions providing an interrupt driven I2C slave interface.
-- `pico_multicore`(pico-multicore.mdx): Adds support for running code on, and interacting with the second processor core (core 1).
-- `pico_rand`(pico-rand.mdx): Random Number Generator API.
-- `pico_sha256(pico-sha256.mdx)` <span className="chip-tag rp2350">RP2350</span>: SHA-256 Hardware Accelerated implementation.
-- `pico_status_led`(pico-status-led.mdx): Enables access to the on-board status LED(s)
-- `pico_stdlib`(pico-stdlib.mdx): Aggregation of a core subset of Raspberry Pi Pico SDK libraries used by most executables along with some additional util
-- `pico_sync`(pico-sync.mdx): Synchronization primitives and mutual exclusion.
-- `pico_time`(pico-time.mdx): API for accurate timestamps, sleeping, and time based callbacks.
-- `pico_unique_id`(pico-unique-id.mdx): Unique device ID access API.
-- `pico_util`(pico-util.mdx): Useful data structures and utility functions.
+- [pico_aon_timer](./pico-aon-timer.mdx): 高级"常开定时器"抽象接口。
+- [pico_async_context](./pico-async-context.mdx): async_context 提供一个逻辑上单线程的上下文，用于执行工作并响应异步事件。
+- [pico_bootsel_via_double_reset](./pico-bootsel-via-double-reset.mdx): 可选的快速双重复位支持，使系统进入 BOOTSEL 模式。
+- `pico_fix(pico-fix.mdx)`: 杂项设备特定的变通方案/修复。
+- [pico_flash](./pico-flash.mdx): 高级 Flash API。
+- [pico_i2c_slave](./pico-i2c-slave.mdx): 提供中断驱动的 I2C 从机接口的函数。
+- [pico_low_power](./pico-low-power.mdx): 用于使用低功耗状态的 API。
+- [pico_multicore](./pico-multicore.mdx): 支持在第二个处理器核心（core 1）上运行代码并与其交互。
+- [pico_rand](./pico-rand.mdx): 随机数生成器 API。
+- `pico_sha256(pico-sha256.mdx)` <span className="chip-tag rp2350">RP2350</span>: SHA-256 硬件加速实现。
+- [pico_status_led](./pico-status-led.mdx): 提供对板载状态 LED 的访问。
+- [pico_stdlib](./pico-stdlib.mdx): 聚合了大多数可执行程序所使用的 Raspberry Pi Pico SDK 核心库子集，以及部分附加实用工具。
+- [pico_sync](./pico-sync.mdx): 同步原语与互斥机制。
+- [pico_time](./pico-time.mdx): 用于精确时间戳、休眠和基于时间的回调的 API。
+- [pico_unique_id](./pico-unique-id.mdx): 唯一设备 ID 访问 API。
+- [pico_usb_reset](./pico-usb-reset.mdx): 使 RP 系列微控制器能够通过 USB 接口复位的功能。
+- [pico_util](./pico-util.mdx): 实用的数据结构与工具函数。
 
 <Normal />

@@ -1,0 +1,76 @@
+---
+sidebar_position: 23.5
+draft: false
+description: 环形振荡器（ROSC）API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK rosc, ROSC]
+last_update:
+  date: 2026-05-30
+---
+import Normal from "../../_normal.mdx";
+
+环形振荡器（ROSC）API。
+
+### 详细描述
+
+环形振荡器是一种片上振荡器，不需要外部晶振。其输出由一系列串联的反相器产生，这些反相器链在一起形成反馈环路。RP2 芯片最初从环形振荡器启动，这意味着引导 ROM 的早期阶段（包括从 SPI flash 启动）都由环形振荡器提供时钟。如果您的设计使用晶振振荡器，可能会希望尽快切换到它作为参考时钟，因为晶振的频率比环形振荡器更精确。
+
+### 函数
+
+- `void rosc_disable (void)`: 禁用环形振荡器。
+- `void rosc_set_dormant (void)`: 将环形振荡器置入休眠模式。
+- `void rosc_restart (void)`: 重新启用环形振荡器，使处理器核心在睡眠/休眠模式后可以唤醒。
+- `uint rosc_measure_freq_khz (void)`: 测量环形振荡器的频率。
+- `static void rosc_write (io_rw_32 *addr, uint32_t value)`: 带检查地写入环形振荡器寄存器。
+
+### 函数文档
+
+#### rosc_disable
+
+`void rosc_disable (void)`
+
+禁用环形振荡器。
+
+#### rosc_measure_freq_khz
+
+`uint rosc_measure_freq_khz (void)`
+
+测量环形振荡器的频率。
+
+仅当 clk_ref 当前运行在精确源（例如 XOSC）上时，此测量才准确。
+
+**返回**
+
+环形振荡器的频率（kHz）。
+
+#### rosc_restart
+
+`void rosc_restart (void)`
+
+重新启用环形振荡器，使处理器核心在睡眠/休眠模式后可以唤醒。
+
+此方法必须在睡眠周期结束时调用（例如在中断服务程序中）。
+
+#### rosc_set_dormant
+
+`void rosc_set_dormant (void)`
+
+将环形振荡器置入休眠模式。
+
+ROSC 支持休眠模式，该模式停止振荡，直到被异步中断唤醒。这可以来自由外部时钟驱动的 RTC，或 GPIO 引脚的电平变化。如果在进入休眠模式前未配置任何 IRQ，ROSC 将永远不会重启。
+
+在选择休眠模式前应停止 PLL。
+
+#### rosc_write
+
+`static void rosc_write (io_rw_32 * addr, uint32_t value) [inline], [static]`
+
+带检查地写入环形振荡器寄存器。
+
+这通常会清除错误写入标志并断言写入正确。但是，ROSC BADWRITE 不可靠（参见 RP2040-E10），因此我们不这样做。
+
+**参数**
+
+- `addr`: 寄存器地址。
+- `value`: 要写入的值。
+
+<Normal />

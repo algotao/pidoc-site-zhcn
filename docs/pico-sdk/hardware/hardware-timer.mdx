@@ -139,8 +139,8 @@ int main() {
 - `void hardware_alarm_cancel (uint alarm_num)`: 取消默认定时器实例上指定 hardware_alarm 的现有目标（如有）。
 `void timer_hardware_alarm_force_irq (timer_hw_t *timer, uint alarm_num)`<br/>&emsp;强制触发给定定时器实例上指定硬件报警的 IRQ。
 - `void hardware_alarm_force_irq (uint alarm_num)`: 强制触发默认定时器实例上指定硬件报警的 IRQ。
-`static uint timer_hardware_alarm_get_irq_num (timer_hw_t *timer, uint alarm_num)<br/>&emsp;返回给定定时器实例上指定报警的报警中断 irq_num_t`。
-- `static uint hardware_alarm_get_irq_num (uint alarm_num): 返回默认定时器实例上指定报警的报警中断 `irq_num_t`。
+`static uint timer_hardware_alarm_get_irq_num (timer_hw_t *timer, uint alarm_num)`<br/>&emsp;返回给定定时器实例上指定报警的报警中断 `irq_num_t`。
+- `static uint hardware_alarm_get_irq_num (uint alarm_num)`: 返回默认定时器实例上指定报警的报警中断 `irq_num_t`。
 `static uint timer_get_index (timer_hw_t *timer)`<br/>&emsp;返回定时器实例的定时器编号。
 
 `static timer_hw_t * timer_get_instance (uint timer_num)`<br/>&emsp;返回具有给定定时器编号的定时器实例。
@@ -172,7 +172,7 @@ int main() {
 
 `#define PICO_DEFAULT_TIMER 0`
 
-用于不接受显式定时器实例参数的 API 的默认定时器实例编号。在 RP2040 上，由于只有一个定时器实例，必须为 0；在 RP2040 上，可设置为 0 或 1。
+用于不接受显式定时器实例参数的 API 的默认定时器实例编号。在 RP2040 上，由于只有一个定时器实例，必须为 0；在 RP2350 上，可设置为 0 或 1。
 #### PICO_DEFAULT_TIMER_INSTANCE
 
 `#define PICO_DEFAULT_TIMER_INSTANCE()`
@@ -469,7 +469,7 @@ alarm_num 已申请的硬件报警编号，如果 required 为 false 且无可�
 
 #### timer_busy_wait_until
 
-`void timer_busy_wait_until (timer_hw_t *` timer, absolute_time_t t)`
+`void timer_busy_wait_until (timer_hw_t *timer, absolute_time_t t)`
 
 使用给定定时器实例忙等待直到指定时间戳之后。
 
@@ -650,7 +650,7 @@ alarm_num 已申请的硬件报警编号，如果 required 为 false 且无可�
 
 #### timer_hardware_alarm_set_callback
 
-`void timer_hardware_alarm_set_callback (timer_hw_t *` timer, uint alarm_num, hardware_alarm_callback_t callback)`
+`void timer_hardware_alarm_set_callback (timer_hw_t *timer, uint alarm_num, hardware_alarm_callback_t callback)`
 
 为给定定时器实例上的硬件报警启用/禁用回调（在当前核心上）。
 
@@ -673,7 +673,7 @@ alarm_num 已申请的硬件报警编号，如果 required 为 false 且无可�
 
 #### timer_hardware_alarm_set_target
 
-`bool timer_hardware_alarm_set_target (timer_hw_t *` timer, uint alarm_num, absolute_time_t t)`
+`bool timer_hardware_alarm_set_target (timer_hw_t *timer, uint alarm_num, absolute_time_t t)`
 
 设置给定定时器实例上指定硬件报警的目标时间。
 
@@ -709,7 +709,7 @@ alarm_num 已申请的硬件报警编号，如果 required 为 false 且无可�
 
 #### timer_time_reached
 
-`static bool timer_time_reached (timer_hw_t *` timer, absolute_time_t t) [inline], [static]`
+`static bool timer_time_reached (timer_hw_t *timer, absolute_time_t t) [inline], [static]`
 
 检查给定定时器实例上指定时间戳是否已到达。
 

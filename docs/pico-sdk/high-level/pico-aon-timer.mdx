@@ -4,7 +4,7 @@ draft: false
 description: 高级"常开定时器"抽象接口。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK aon timer]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -14,15 +14,19 @@ import Normal from "../../_normal.mdx";
 
 此库在 RP2040 上使用 RTC，在 RP2350 上使用 Powman 定时器。
 
-此库同时支持使用日历日期/时间（struct tm）的 `aon_timer_xxx_calendar() 方法，以及使用相对内部参考时间线性时间值（struct timespec）的 aon_timer_xxx()` 方法。
+此库同时支持使用日历日期/时间（struct tm）的 `aon_timer_xxx_calendar()` 方法，以及使用相对内部参考时间线性时间值（`struct` `timespec`）的 `aon_timer_xxx()` 方法。
 
 在 RP2040 上，非"日历日期/时间"方法需要在内部将线性时间值转换为日历日期/时间，这些方法包括：
 
-* * * * * 此转换由 `pico_localtime_r 方法处理。默认情况下，它会引入 C 库的 local_time_r 方法，可能导致二进制体积大幅增加。`pico_localtime_r 的默认实现为弱符号，可在有更优/更小替代方案时覆盖；否则，在 RP2040 上可考虑改用以 _calendar()` 结尾的方法变体。
+* * * * * 此转换由 `pico_localtime_r` 方法处理。默认情况下，它会引入 `C` 库的 `local_time_r` 方法，可能导致二进制体积大幅增加。pico_localtime_r 的默认实现为弱符号，可在有更优/更小替代方案时覆盖；否则，在 RP2040 上可考虑改用以 _calendar() 结尾的方法变体。
 
 在 RP2350 上，"日历日期/时间"方法需要在内部将日历日期/时间转换为线性时间值，这些方法包括：
 
-* * * * 此转换由 `pico_mktime 方法处理。默认情况下，它会引入 C 库的 mktime 方法，可能导致二进制体积大幅增加。`pico_mktime 的默认实现为弱符号，可在有更优/更小替代方案时覆盖；否则，在 RP2350 上可考虑改用不以 _calendar()` 结尾的方法变体。
+* * * * 此转换由 `pico_mktime` 方法处理。默认情况下，它会引入 `C` 库的 `mktime` 方法，可能导致二进制体积大幅增加。pico_mktime 的默认实现为弱符号，可在有更优/更小替代方案时覆盖；否则，在 RP2350 上可考虑改用不以 _calendar() 结尾的方法变体。
+
+### 宏
+
+* `#define [AON_TIMER_IRQ_NUM]()` <span className="chip-tag rp2350">RP2350</span>
 
 ### 函数
 
@@ -39,6 +43,10 @@ import Normal from "../../_normal.mdx";
 
 `bool aon_timer_get_time_calendar (struct tm *tm)`<br/>&emsp;以日历日期/时间形式获取 AON 定时器的当前时间。
 
+`absolute_time_t aon_timer_get_absolute_time (void)`<br/>&emsp;以绝对时间形式获取 AON 定时器的当前时间。
+
+`static absolute_time_t aon_timer_make_timeout_time_ms (uint32_t ms)`<br/>&emsp;获取距 AON 定时器当前时间指定毫秒数后时间戳的便捷方法。
+
 `void aon_timer_get_resolution (struct timespec *ts)`<br/>&emsp;获取 AON 定时器的精度。
 
 `aon_timer_alarm_handler_t aon_timer_enable_alarm (const struct timespec *ts, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)`<br/>&emsp;为指定时间启用 AON 定时器闹钟。
@@ -46,6 +54,16 @@ import Normal from "../../_normal.mdx";
 `aon_timer_alarm_handler_t aon_timer_enable_alarm_calendar (const struct tm *tm, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)`<br/>&emsp;为指定的日历日期/时间启用 AON 定时器闹钟。
 - `void aon_timer_disable_alarm (void)`: 禁用当前已启用的 AON 定时器闹钟（如有）。
 - `bool aon_timer_is_running (void)`: 检查 AON 定时器是否正在运行。
+
+### 宏定义文档
+
+#### AON_TIMER_IRQ_NUM <span className="chip-tag rp2350">RP2350</span>
+
+#define AON_TIMER_IRQ_NUM()
+
+返回 AON 定时器抽象底层硬件中断的 irq_num_t。
+
+注意，此宏旨在编译时解析，不进行参数检查。
 
 ### 函数文档
 
@@ -57,7 +75,7 @@ import Normal from "../../_normal.mdx";
 
 #### aon_timer_enable_alarm
 
-`aon_timer_alarm_handler_t aon_timer_enable_alarm (const struct timespec * ts, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)`
+aon_timer_alarm_handler_t aon_timer_enable_alarm (const struct timespec * ts, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)
 
 为指定时间启用 AON 定时器闹钟。
 
@@ -67,9 +85,9 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `ts`: 闹钟时间
-- `handler`: 定时器触发时调用的回调（当 wakeup_from_low_power = true 时可为 NULL）
-- `wakeup_from_low_power`: 若 AON 定时器用于从 DORMANT 状态唤醒，则为 true
+- ts: 闹钟时间
+- handler: 定时器触发时调用的回调（当 wakeup_from_low_power = true 时可为 NULL）
+- wakeup_from_low_power: 若 AON 定时器用于从 DORMANT 状态唤醒，则为 true
 
 **返回值**
 
@@ -80,7 +98,7 @@ import Normal from "../../_normal.mdx";
 
 #### aon_timer_enable_alarm_calendar
 
-`aon_timer_alarm_handler_t aon_timer_enable_alarm_calendar (const struct tm * tm, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)`
+aon_timer_alarm_handler_t aon_timer_enable_alarm_calendar (const struct tm * tm, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)
 
 为指定的日历日期/时间启用 AON 定时器闹钟。
 
@@ -92,9 +110,9 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `tm`: 闹钟日历日期/时间
-- `handler`: 定时器触发时调用的回调（当 wakeup_from_low_power = true 时可为 NULL）
-- `wakeup_from_low_power`: 若 AON 定时器用于从 DORMANT 状态唤醒，则为 true
+- tm: 闹钟日历日期/时间
+- handler: 定时器触发时调用的回调（当 wakeup_from_low_power = true 时可为 NULL）
+- wakeup_from_low_power: 若 AON 定时器用于从 DORMANT 状态唤醒，则为 true
 
 **返回值**
 
@@ -102,6 +120,16 @@ import Normal from "../../_normal.mdx";
 
 **参见**
 
+
+#### aon_timer_get_absolute_time
+
+absolute_time_t aon_timer_get_absolute_time (void)
+
+以绝对时间形式获取 AON 定时器的当前时间。
+
+**返回值**
+
+AON 定时器的当前时间（绝对时间）
 
 #### aon_timer_get_resolution
 
@@ -111,7 +139,7 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `ts`: AON 定时器精度的输出值
+- ts: AON 定时器精度的输出值
 
 #### aon_timer_get_time
 
@@ -123,7 +151,7 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `ts`: 当前时间的输出值
+- ts: 当前时间的输出值
 
 **返回值**
 
@@ -142,7 +170,7 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `tm`: 当前日历日期/时间的输出值
+- tm: 当前日历日期/时间的输出值
 
 **返回值**
 
@@ -161,6 +189,20 @@ import Normal from "../../_normal.mdx";
 
 若 AON 定时器正在运行则返回 true
 
+#### aon_timer_make_timeout_time_ms
+
+`static absolute_time_t aon_timer_make_timeout_time_ms (uint32_t ms) [inline], [static]`
+
+获取距 AON 定时器当前时间指定毫秒数后时间戳的便捷方法。
+
+**参数**
+
+- ms: 要加到当前时间戳的毫秒数
+
+**返回值**
+
+未来的时间戳
+
 #### aon_timer_set_time
 
 `bool aon_timer_set_time (const struct timespec * ts)`
@@ -171,7 +213,7 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `ts`: 新的当前时间
+- ts: 新的当前时间
 
 **返回值**
 
@@ -190,7 +232,7 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `tm`: 新的当前时间
+- tm: 新的当前时间
 
 **返回值**
 
@@ -209,7 +251,7 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `ts`: 设置为"当前"时间的时间值
+- ts: 设置为"当前"时间的时间值
 
 **返回值**
 
@@ -228,7 +270,7 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `tm`: 设置为"当前"时间的日历日期/时间
+- tm: 设置为"当前"时间的日历日期/时间
 
 **返回值**
 

@@ -16,7 +16,7 @@ import Normal from "../../_normal.mdx";
 
 时钟模块为片上和外部组件提供独立的时钟信号。它从多种时钟源获取输入，允许用户在性能与成本、电路板面积和功耗之间进行权衡。通过这些时钟源，使用多个时钟发生器提供所需的时钟信号。该架构使用户可以灵活地独立启停时钟，并在保持其他时钟最优频率的同时改变某些时钟频率。
 
-有关 RP 系列时钟的更多详情，请参阅相应的数据手册。
+有关 RP 系列微控制器中时钟的更多详情，请参阅相应的数据手册。
 
 时钟源取决于您要配置的时钟。下面第一张表显示主时钟源。如果您不是在设置参考时钟或系统时钟，或者您指定这两者之一将使用辅助时钟源，则需要使用后续表格中的条目。
 
@@ -183,7 +183,7 @@ int main() {
 
 ### 宏
 
-* `#define [GPIO_TO_GPOUT_CLOCK_HANDLE]`
+* #define [GPIO_TO_GPOUT_CLOCK_HANDLE]
 
 ### 类型定义
 
@@ -210,11 +210,13 @@ int main() {
 ### 函数
 
 - `bool clock_configure (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq, uint32_t freq)`: 使用自动时钟分频配置指定时钟。
+- `bool clock_configure_mhz (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq_mhz, uint32_t freq_mhz)`: 以 1MHz 精度配置指定时钟。
 - `void clock_configure_undivided (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq)`: 将指定时钟配置为使用不分频的输入源。
 - `void clock_configure_int_divider (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq, uint32_t int_divider)`: 将指定时钟配置为使用不分频的输入源。
 - `void clock_stop (clock_handle_t clock)`: 停止指定时钟。
 - `uint32_t clock_get_hz (clock_handle_t clock)`: 获取指定时钟的当前频率。
 - `uint32_t frequency_count_khz (uint src)`: 使用频率计数器测量时钟频率。
+- `static float frequency_count_mhz (uint src)`: 使用频率计数器测量时钟频率。
 - `void clock_set_reported_hz (clock_handle_t clock, uint hz)`: 设置 clock_get_hz 所报告的时钟"当前频率"，而不实际改变时钟。
 - `void clocks_enable_resus (resus_callback_t resus_callback)`: 启用 resus 功能。若 clk_sys 意外停止则自动重启。
 - `void clock_gpio_init_int_frac16 (uint gpio, uint src, uint32_t div_int, uint16_t div_frac16)`: 将可选分频后的时钟输出到指定 GPIO 引脚。
@@ -234,7 +236,7 @@ int main() {
 
 #### GPIO_TO_GPOUT_CLOCK_HANDLE
 
-`#define GPIO_TO_GPOUT_CLOCK_HANDLE`
+#define GPIO_TO_GPOUT_CLOCK_HANDLE
 
 返回与特定 GPIO 关联的 GPOUT 时钟编号（如有），否则返回 default_clk_handle。
 
@@ -244,27 +246,27 @@ int main() {
 
 #### clock_num_t <span className="chip-tag rp2040">RP2040</span>
 
-`typedef enum clock_num_rp2040 clock_num_t`
+typedef enum clock_num_rp2040 clock_num_t
 
-RP2040 上的时钟编号（用作 typedef `clock_num_t）
+RP2040 上的时钟编号（用作 typedef `clock_num_t`）
 #### clock_dest_num_t <span className="chip-tag rp2040">RP2040</span>
 
-`typedef enum clock_dest_num_rp2040 clock_dest_num_t`
+typedef enum clock_dest_num_rp2040 clock_dest_num_t
 
-RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t）
+RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
 #### clock_num_t <span className="chip-tag rp2350">RP2350</span>
 
-`typedef enum clock_num_rp2350 clock_num_t`
+typedef enum clock_num_rp2350 clock_num_t
 
-RP2350 上的时钟编号（用作 typedef `clock_num_t）
+RP2350 上的时钟编号（用作 typedef `clock_num_t`）
 #### clock_dest_num_t <span className="chip-tag rp2350">RP2350</span>
 
-`typedef enum clock_dest_num_rp2350 clock_dest_num_t`
+typedef enum clock_dest_num_rp2350 clock_dest_num_t
 
-RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
+RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
 #### resus_callback_t
 
-`typedef void(* resus_callback_t) (void)`
+typedef void(* resus_callback_t) (void)
 
 Resus 回调函数类型。
 
@@ -274,9 +276,9 @@ Resus 回调函数类型。
 
 #### clock_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
 
-`enum clock_num_rp2040`
+enum clock_num_rp2040
 
-RP2040 上的时钟编号（用作 typedef `clock_num_t）
+RP2040 上的时钟编号（用作 typedef `clock_num_t`）
 
 | 枚举值 | 说明 |
 | --- | --- |
@@ -293,9 +295,9 @@ RP2040 上的时钟编号（用作 typedef `clock_num_t）
 
 #### clock_dest_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
 
-`enum clock_dest_num_rp2040`
+enum clock_dest_num_rp2040
 
-RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t）
+RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
 
 | 枚举值 | 说明 |
 | --- | --- |
@@ -349,9 +351,9 @@ RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t）
 
 #### clock_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
 
-`enum clock_num_rp2350`
+enum clock_num_rp2350
 
-RP2350 上的时钟编号（用作 typedef `clock_num_t）
+RP2350 上的时钟编号（用作 typedef `clock_num_t`）
 
 | 枚举值 | 说明 |
 | --- | --- |
@@ -368,9 +370,9 @@ RP2350 上的时钟编号（用作 typedef `clock_num_t）
 
 #### clock_dest_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
 
-`enum clock_dest_num_rp2350`
+enum clock_dest_num_rp2350
 
-RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
+RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
 
 | 枚举值 | 说明 |
 | --- | --- |
@@ -442,16 +444,16 @@ RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
 
 #### check_sys_clock_hz
 
-`bool check_sys_clock_hz (uint32_t freq_hz, uint ** vco_freq_out, uint **` post_div1_out, uint * post_div2_out)`
+`bool check_sys_clock_hz (uint32_t freq_hz, uint ** vco_freq_out, uint **post_div1_out, uint * post_div2_out)`
 
 检查给定系统时钟频率是否有效/可达。
 
 **参数**
 
-- `freq_hz`: 请求的频率
-- `vco_freq_out`: 成功时，SYS PLL 所使用的压控振荡器频率
-- `post_div1_out`: 成功时，SYS PLL 的第一后置分频器
-- `post_div2_out`: 成功时，SYS PLL 的第二后置分频器。
+- freq_hz: 请求的频率
+- vco_freq_out: 成功时，SYS PLL 所使用的压控振荡器频率
+- post_div1_out: 成功时，SYS PLL 的第一后置分频器
+- post_div2_out: 成功时，SYS PLL 的第二后置分频器。
 
 **返回**
 
@@ -459,16 +461,16 @@ RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
 
 #### check_sys_clock_khz
 
-`bool check_sys_clock_khz (uint32_t freq_khz, uint ** vco_freq_out, uint **` post_div1_out, uint * post_div2_out)`
+`bool check_sys_clock_khz (uint32_t freq_khz, uint ** vco_freq_out, uint **post_div1_out, uint * post_div2_out)`
 
 检查给定系统时钟频率是否有效/可达。
 
 **参数**
 
-- `freq_khz`: 请求的频率
-- `vco_freq_out`: 成功时，SYS PLL 所使用的压控振荡器频率
-- `post_div1_out`: 成功时，SYS PLL 的第一后置分频器
-- `post_div2_out`: 成功时，SYS PLL 的第二后置分频器。
+- freq_khz: 请求的频率
+- vco_freq_out: 成功时，SYS PLL 所使用的压控振荡器频率
+- post_div1_out: 成功时，SYS PLL 的第一后置分频器
+- post_div2_out: 成功时，SYS PLL 的第二后置分频器。
 
 **返回**
 
@@ -490,11 +492,37 @@ RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
 
 **参数**
 
-- `clock`: 要配置的时钟
-- `src`: 主时钟源，可以为 0
-- `auxsrc`: 辅助时钟源，取决于正在设置的时钟，可以为 0
-- `src_freq`: 输入时钟源的频率
-- `freq`: 请求的频率
+- clock: 要配置的时钟
+- src: 主时钟源，可以为 0
+- auxsrc: 辅助时钟源，取决于正在设置的时钟，可以为 0
+- src_freq: 输入时钟源的频率
+- freq: 请求的频率
+
+**返回**
+
+若时钟已更新则返回 true，若 freq > src_freq 则返回 false。
+
+#### clock_configure_mhz
+
+`bool clock_configure_mhz (clock_handle_t clock, uint32_t src, uint32_t auxsrc, uint32_t src_freq_mhz, uint32_t freq_mhz)`
+
+以 1MHz 精度配置指定时钟。
+
+此函数与 clock_configure 的不同之处在于它不会以那么高的精度配置时钟，因此不需要引入 64 位除法函数，从而在应用程序未以其他方式使用 64 位除法时减小代码体积。
+
+注意：RP2350 时钟硬件支持 1.0\-&gt;65536.0 范围内步进为 1/65536 的分频器。
+
+注意：RP2040 时钟硬件仅支持精确为 1.0 或 2.0\-&gt;16777216.0 范围内步进为 1/256 的分频器。
+
+有关时钟源可能值的详细信息，请参阅描述中的表格。
+
+**参数**
+
+- clock: 要配置的时钟
+- src: 主时钟源，可以为 0
+- auxsrc: 辅助时钟源，取决于正在设置的时钟，可以为 0
+- src_freq_mhz: 输入时钟源的频率（MHz）
+- freq_mhz: 请求的频率（MHz）
 
 **返回**
 
@@ -508,10 +536,10 @@ RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
 
 **参数**
 
-- `clock`: 要配置的时钟
-- `gpio`: 运行时钟的 GPIO 引脚。有效 GPIO 为：20 和 22。
-- `src_freq`: 输入时钟源的频率
-- `freq`: 请求的频率
+- clock: 要配置的时钟
+- gpio: 运行时钟的 GPIO 引脚。有效 GPIO 为：20 和 22。
+- src_freq: 输入时钟源的频率
+- freq: 请求的频率
 
 #### clock_configure_int_divider
 
@@ -523,11 +551,11 @@ RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
 
 **参数**
 
-- `clock`: 要配置的时钟
-- `src`: 主时钟源，可以为 0
-- `auxsrc`: 辅助时钟源，取决于正在设置的时钟，可以为 0
-- `src_freq`: 输入时钟源的频率
-- `int_divider`: 整数分频器
+- clock: 要配置的时钟
+- src: 主时钟源，可以为 0
+- auxsrc: 辅助时钟源，取决于正在设置的时钟，可以为 0
+- src_freq: 输入时钟源的频率
+- int_divider: 整数分频器
 
 #### clock_configure_undivided
 
@@ -539,10 +567,10 @@ RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
 
 **参数**
 
-- `clock`: 要配置的时钟
-- `src`: 主时钟源，可以为 0
-- `auxsrc`: 辅助时钟源，取决于正在设置的时钟，可以为 0
-- `src_freq`: 输入时钟源的频率
+- clock: 要配置的时钟
+- src: 主时钟源，可以为 0
+- auxsrc: 辅助时钟源，取决于正在设置的时钟，可以为 0
+- src_freq: 输入时钟源的频率
 
 #### clock_get_hz
 
@@ -552,7 +580,7 @@ RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t）
 
 **参数**
 
-- `clock`: 时钟
+- clock: 时钟
 
 **返回**
 
@@ -568,9 +596,9 @@ RP2040 上有效 GPIO 为 21、23、24、25，这些 GPIO 连接到 GPOUT0-3 时
 
 **参数**
 
-- `gpio`: 输出时钟的 GPIO 引脚。
-- `src`: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
-- `div`: 源时钟的浮点分频量。用于避免过快的时钟压垮 GPIO 引脚。
+- gpio: 输出时钟的 GPIO 引脚。
+- src: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
+- div: 源时钟的浮点分频量。用于避免过快的时钟压垮 GPIO 引脚。
 
 #### clock_gpio_init_int_frac16
 
@@ -582,10 +610,10 @@ RP2040 上有效 GPIO 为 21、23、24、25，这些 GPIO 连接到 GPOUT0-3 时
 
 **参数**
 
-- `gpio`: 输出时钟的 GPIO 引脚。
-- `src`: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
-- `div_int`: 源时钟分频值的整数部分。用于避免过快的时钟压垮 GPIO 引脚。RP2040 上范围为 1..2^24-1，RP2350 上为 1..2^16-1。
-- `div_frac16`: 源时钟分频值的小数部分，范围为 0..65535（/65536）。
+- gpio: 输出时钟的 GPIO 引脚。
+- src: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
+- div_int: 源时钟分频值的整数部分。用于避免过快的时钟压垮 GPIO 引脚。RP2040 上范围为 1..2^24-1，RP2350 上为 1..2^16-1。
+- div_frac16: 源时钟分频值的小数部分，范围为 0..65535（/65536）。
 
 #### clock_gpio_init_int_frac8
 
@@ -597,10 +625,10 @@ RP2040 上有效 GPIO 为 21、23、24、25，这些 GPIO 连接到 GPOUT0-3 时
 
 **参数**
 
-- `gpio`: 输出时钟的 GPIO 引脚。
-- `src`: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
-- `div_int`: 源时钟分频值的整数部分。RP2040 上范围为 1..2^24-1，RP2350 上为 1..2^16-1。
-- `div_frac8`: 源时钟分频值的小数部分，范围为 0..255（/256）。
+- gpio: 输出时钟的 GPIO 引脚。
+- src: 源时钟。完整列表参见寄存器字段 CLOCKS_CLK_GPOUT0_CTRL_AUXSRC，各 GPOUT 时钟发生器列表相同。
+- div_int: 源时钟分频值的整数部分。RP2040 上范围为 1..2^24-1，RP2350 上为 1..2^16-1。
+- div_frac8: 源时钟分频值的小数部分，范围为 0..255（/256）。
 
 #### clock_set_reported_hz
 
@@ -610,7 +638,7 @@ RP2040 上有效 GPIO 为 21、23、24、25，这些 GPIO 连接到 GPOUT0-3 时
 
 **参见**
 
-`clock_get_hz()`
+clock_get_hz()
 
 #### clock_stop
 
@@ -620,7 +648,7 @@ RP2040 上有效 GPIO 为 21、23、24、25，这些 GPIO 连接到 GPOUT0-3 时
 
 **参数**
 
-- `clock`: 要停止的时钟
+- clock: 要停止的时钟
 
 #### clocks_enable_resus
 
@@ -632,7 +660,7 @@ resuscitate 功能会在系统时钟速度降至某一阈值以下（或停止�
 
 **参数**
 
-- `resus_callback`: 用户提供的函数指针，在发生 resus 事件时调用。
+- resus_callback: 用户提供的函数指针，在发生 resus 事件时调用。
 
 #### frequency_count_khz
 
@@ -640,7 +668,31 @@ resuscitate 功能会在系统时钟速度降至某一阈值以下（或停止�
 
 使用频率计数器测量时钟频率。
 
-使用内置频率计数器测量指定时钟的频率。当前该函数精度为 ±1KHz。详见数据手册。
+使用内置频率计数器测量指定时钟的频率。当前该函数精度为 ±1kHz。详见数据手册。
+
+**参数**
+
+- src: 要测量的时钟源，参见数据手册中的 FC0_SRC 寄存器
+
+**返回**
+
+测得的频率（kHz）
+
+#### frequency_count_mhz
+
+`static float frequency_count_mhz (uint src) [inline], [static]`
+
+使用频率计数器测量时钟频率。
+
+使用内置频率计数器测量指定时钟的频率。当前该函数精度为 ±1kHz。详见数据手册。
+
+**参数**
+
+- src: 要测量的时钟源，参见数据手册中的 FC0_SRC 寄存器
+
+**返回**
+
+测得的频率（MHz）
 
 #### gpio_to_gpout_clock_handle
 
@@ -670,8 +722,8 @@ resuscitate 功能会在系统时钟速度降至某一阈值以下（或停止�
 
 **参数**
 
-- `freq_hz`: 请求的频率
-- `required`: 若为 true，则在频率不可达时此函数将断言失败。
+- freq_hz: 请求的频率
+- required: 若为 true，则在频率不可达时此函数将断言失败。
 
 **返回**
 
@@ -687,8 +739,8 @@ resuscitate 功能会在系统时钟速度降至某一阈值以下（或停止�
 
 **参数**
 
-- `freq_khz`: 请求的频率
-- `required`: 若为 true，则在频率不可达时此函数将断言失败。
+- freq_khz: 请求的频率
+- required: 若为 true，则在频率不可达时此函数将断言失败。
 
 **返回**
 
@@ -702,9 +754,9 @@ resuscitate 功能会在系统时钟速度降至某一阈值以下（或停止�
 
 **参数**
 
-- `vco_freq`: SYS PLL 使用的压控振荡器频率
-- `post_div1`: SYS PLL 的第一后置分频器
-- `post_div2`: SYS PLL 的第二后置分频器。
+- vco_freq: SYS PLL 使用的压控振荡器频率
+- post_div1: SYS PLL 的第一后置分频器
+- post_div2: SYS PLL 的第二后置分频器。
 
 有关驱动 PLL 的详细信息，请参阅数据手册中的 PLL 文档。
 

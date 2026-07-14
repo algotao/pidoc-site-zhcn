@@ -12,7 +12,7 @@ import Normal from "../../_normal.mdx";
 
 ### 详细描述
 
-异常由 `exception_number` 标识，该数值范围为 -15 到 -1；这些是相对于向量表中第一个 IRQ 向量索引的相对编号。（即向量表索引等于 exception_num 加 16）
+异常由 exception_number 标识，该数值范围为 -15 到 -1；这些是相对于向量表中第一个 IRQ 向量索引的相对编号。（即向量表索引等于 exception_num 加 16）
 
 每个核心有一套独立的异常处理程序，因此通过这些方法为每个核心设置的异常处理程序是相互独立的。
 
@@ -28,9 +28,9 @@ import Normal from "../../_normal.mdx";
 
 ### 函数
 
-- `exception_handler_t exception_set_exclusive_handler (enum exception_number num, exception_handler_t handler)`: 为当前执行核心的指定异常设置处理程序。
+- exception_handler_t exception_set_exclusive_handler (enum exception_number num, exception_handler_t handler): 为当前执行核心的指定异常设置处理程序。
 - `void exception_restore_handler (enum exception_number num, exception_handler_t original_handler)`: 为当前核心恢复指定异常的原始处理程序。
-- `exception_handler_t exception_get_vtable_handler (enum exception_number num)`: 从当前执行核心已安装的向量表中获取指定异常的当前处理程序。
+- exception_handler_t exception_get_vtable_handler (enum exception_number num): 从当前执行核心已安装的向量表中获取指定异常的当前处理程序。
 - `bool exception_set_priority (uint num, uint8_t hardware_priority)`: 设置指定异常的优先级。
 - `uint exception_get_priority (uint num)`: 获取指定异常的优先级。
 
@@ -38,7 +38,7 @@ import Normal from "../../_normal.mdx";
 
 #### exception_handler_t
 
-`typedef void(* exception_handler_t) (void)`
+typedef void(* exception_handler_t) (void)
 
 异常处理函数类型。
 
@@ -48,7 +48,7 @@ import Normal from "../../_normal.mdx";
 
 #### exception_number
 
-`enum exception_number`
+enum exception_number
 
 异常编号定义。
 
@@ -110,7 +110,7 @@ RP2350 上 ARM Cortex-M33 仅高 4 位有效，RISC-V 不支持异常优先级�
 
 **参数**
 
-- `num: 异常编号 exception_number`
+- `num`: 异常编号 `exception_number`
 
 **返回**
 
@@ -118,13 +118,13 @@ RP2350 上 ARM Cortex-M33 仅高 4 位有效，RISC-V 不支持异常优先级�
 
 #### exception_get_vtable_handler
 
-`exception_handler_t exception_get_vtable_handler (enum exception_number num)`
+exception_handler_t exception_get_vtable_handler (enum exception_number num)
 
 从当前执行核心已安装的向量表中获取指定异常的当前处理程序。
 
 **参数**
 
-- `num`: 异常编号
+- num: 异常编号
 
 **返回**
 
@@ -136,20 +136,20 @@ RP2350 上 ARM Cortex-M33 仅高 4 位有效，RISC-V 不支持异常优先级�
 
 为当前核心恢复指定异常的原始处理程序。
 
-此方法可用于将当前核心上某异常的处理程序恢复至调用 `exception_set_exclusive_handler() 之前的状态，以便将来再次调用 exception_set_exclusive_handler()`。
+此方法可用于将当前核心上某异常的处理程序恢复至调用 `exception_set_exclusive_handler()` 之前的状态，以便将来再次调用 `exception_set_exclusive_handler()`。
 
 **参数**
 
-- `num: 异常编号 exception_number`
-- `original_handler: 从 exception_set_exclusive_handler` 返回的原始处理程序
+- `num`: 异常编号 `exception_number`
+- `original_handler`: 从 `exception_set_exclusive_handler` 返回的原始处理程序
 
 **参见**
 
-`exception_set_exclusive_handler()`
+exception_set_exclusive_handler()
 
 #### exception_set_exclusive_handler
 
-`exception_handler_t exception_set_exclusive_handler (enum exception_number num, exception_handler_t handler)`
+exception_handler_t exception_set_exclusive_handler (enum exception_number num, exception_handler_t handler)
 
 为当前执行核心的指定异常设置处理程序。
 
@@ -159,8 +159,8 @@ RP2350 上 ARM Cortex-M33 仅高 4 位有效，RISC-V 不支持异常优先级�
 
 **参数**
 
-- `num`: 异常编号
-- `handler`: 要设置的处理程序
+- num: 异常编号
+- handler: 要设置的处理程序
 
 **参见**
 
@@ -173,8 +173,8 @@ RP2350 上 ARM Cortex-M33 仅高 4 位有效，RISC-V 不支持异常优先级�
 
 **参数**
 
-- `num: 异常编号 exception_number`
-- `hardware_priority`: 要设置的优先级。
+- `num`: 异常编号 `exception_number`
+- hardware_priority: 要设置的优先级。
 
 数值越小优先级越高。硬件优先级范围为 0（最高优先级）到 255（最低优先级）。
 

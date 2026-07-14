@@ -4,7 +4,7 @@ draft: false
 description: 随机数生成器 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK rand]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -42,11 +42,25 @@ ROSC 位采样的最大吞吐量由 PICO_RAND_MIN_ROSC_BIT_SAMPLE_TIME_US 控制
 
 pico_rand 的方法可以从任意核心或 IRQ 中安全调用，但在后一种情况下需注意，调用可能会阻塞数微秒以等待更多熵。
 
+### 类型定义
+
+- `typedef struct rng_128 rng_128_t`: 128 位随机数值。
+
 ### 函数
 
 `void get_rand_128 (rng_128_t *rand128)`<br/>&emsp;获取 128 位随机数。
 - `uint64_t get_rand_64 (void)`: 获取 64 位随机数。
 - `uint32_t get_rand_32 (void)`: 获取 32 位随机数。
+
+### 类型定义文档
+
+#### rng_128_t
+
+`typedef struct rng_128 rng_128_t`
+
+128 位随机数值。
+
+保存由 `get_rand_128` 返回的最多 128 位熵。
 
 ### 函数文档
 

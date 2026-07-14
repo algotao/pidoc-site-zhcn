@@ -12,11 +12,11 @@ import Normal from "../../_normal.mdx";
 
 ### 详细描述
 
-**自旋锁**
+#### 自旋锁
 
 RP 系列微控制器提供 32 个硬件自旋锁，可用于管理对共享软件和硬件资源的互斥访问。
 
-通常每个自旋锁本身也是一种共享资源，即同一个硬件自旋锁可以被多个高层原语使用（前提是自旋锁既不被长时间持有，也不被同一核心同时与其他自旋锁一起持有——否则可能导致死锁）。独占所有的硬件自旋锁可以单独使用，无需考虑其他软件的影响。注意，任何硬件自旋锁都不可重入获取（即硬件自旋锁本身对线程代码和 IRQ 的同时使用是不安全的），但此处默认的自旋锁相关方法（如 `spin_lock_blocking）在持锁期间总会禁用中断，因为 IRQ 处理程序和用户代码同时使用是常见且可取的场景，且自旋锁预期只被短暂持有。
+通常每个自旋锁本身也是一种共享资源，即同一个硬件自旋锁可以被多个高层原语使用（前提是自旋锁既不被长时间持有，也不被同一核心同时与其他自旋锁一起持有——否则可能导致死锁）。独占所有的硬件自旋锁可以单独使用，无需考虑其他软件的影响。注意，任何硬件自旋锁都不可重入获取（即硬件自旋锁本身对线程代码和 IRQ 的同时使用是不安全的），但此处默认的自旋锁相关方法（如 `spin_lock_blocking`）在持锁期间总会禁用中断，因为 `IRQ` 处理程序和用户代码同时使用是常见且可取的场景，且自旋锁预期只被短暂持有。
 
 RP2350 警告：由于勘误 RP2350-E2，向偏移量 +0x180 以上的新 SIO 寄存器写入会与自旋锁地址别名重叠，导致虚假的锁释放。作为对 RP2350 A2 的变通方案，SDK 默认使用原子内存访问来实现 hardware_sync_spin_lock API。
 
@@ -29,13 +29,17 @@ SDK 使用如下默认自旋锁分配，区分哪些自旋锁保留用于独占/
 | 14,15 |  |
 | （PICO_SPINLOCK_ID_OS1 和 PICO_SPINLOCK_ID_OS2）。当前保留供与 SDK 共存的操作系统（或其他系统级软件）独占使用。 |  |
 | 16-23 |  |
-| （PICO_SPINLOCK_ID_STRIPED_FIRST - PICO_SPINLOCK_ID_STRIPED_LAST）。此范围内的自旋锁通过 `next_striped_spin_lock_num()` 以轮询方式分配。这些自旋锁是共享的，但从一个范围内分配编号可以降低两个使用*条纹*自旋锁的高层锁原语实际使用同一自旋锁的概率。 |  |
+| （PICO_SPINLOCK_ID_STRIPED_FIRST - PICO_SPINLOCK_ID_STRIPED_LAST）。此范围内的自旋锁通过 next_striped_spin_lock_num() 以轮询方式分配。这些自旋锁是共享的，但从一个范围内分配编号可以降低两个使用*条纹*自旋锁的高层锁原语实际使用同一自旋锁的概率。 |  |
 | 24-31 |  |
-| （PICO_SPINLOCK_ID_CLAIM_FREE_FIRST - PICO_SPINLOCK_ID_CLAIM_FREE_LAST）。这些保留供独占使用，在运行时通过 `spin_lock_claim_unused()` 按先到先得的方式分配。 |  |
+| （PICO_SPINLOCK_ID_CLAIM_FREE_FIRST - PICO_SPINLOCK_ID_CLAIM_FREE_LAST）。这些保留供独占使用，在运行时通过 spin_lock_claim_unused() 按先到先得的方式分配。 |  |
 
 ### 宏
 
-* `#define [SW_SPIN_LOCK_TYPE] volatile uint8_t`
+* #define [SW_SPIN_LOCK_TYPE] volatile uint8_t
+
+### 类型定义
+
+`typedef volatile uint32_t boot_lock_t` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;引导锁标识符。
 
 ### 函数
 
@@ -88,18 +92,147 @@ SDK 使用如下默认自旋锁分配，区分哪些自旋锁保留用于独占/
 
 `spin_lock_t * spin_lock_init (uint lock_num)`<br/>&emsp;初始化自旋锁。
 - `void spin_locks_reset (void)`: 释放所有自旋锁。
+`static __force_inline boot_lock_t * boot_lock_instance (uint lock_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;通过编号获取硬件引导锁实例。
+`static __force_inline uint boot_lock_get_num (boot_lock_t *lock)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;通过实例获取硬件引导锁编号。
+`static __force_inline void boot_lock_unsafe_blocking (boot_lock_t *lock)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;在不禁用中断的情况下获取引导锁（因此不安全）。
+`static __force_inline bool boot_try_lock_unsafe (boot_lock_t *lock)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;尝试在不禁用中断的情况下获取引导锁（因此不安全）。
+`static __force_inline void boot_unlock_unsafe (boot_lock_t *lock)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;在不重新启用中断的情况下释放引导锁。
+`static __force_inline uint32_t boot_lock_blocking (boot_lock_t *lock)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;安全地获取引导锁。
+`static bool is_boot_locked (boot_lock_t *lock)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;检查引导锁当前是否被其他地方持有。
+`static __force_inline void boot_unlock (boot_lock_t *lock, uint32_t saved_irq)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;安全地释放引导锁。
+`boot_lock_t * boot_lock_init (uint lock_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;初始化引导锁。
+- `void boot_locks_reset (void)`: 释放所有引导锁。
 
 ### 宏定义文档
 
 #### SW_SPIN_LOCK_TYPE <span className="chip-tag rp2350">RP2350</span>
 
-`#define SW_SPIN_LOCK_TYPE volatile uint8_t`
+#define SW_SPIN_LOCK_TYPE volatile uint8_t
 
 自旋锁标识符。
 
 ### 函数文档
 
-#### `__dmb`
+#### boot_lock_t <span className="chip-tag rp2350">RP2350</span>
+
+typedef volatile uint32_t boot_lock_t
+
+引导锁标识符。
+
+#### boot_lock_blocking <span className="chip-tag rp2350">RP2350</span>
+
+`static __force_inline uint32_t boot_lock_blocking (boot_lock_t * lock) [static]`
+
+安全地获取引导锁。
+
+此函数在获取引导锁之前会禁用中断。
+
+**参数**
+
+- lock: 引导锁实例
+
+**返回值**
+
+解锁时使用的中断状态，用于恢复原始状态。
+
+#### boot_lock_get_num <span className="chip-tag rp2350">RP2350</span>
+
+`static __force_inline uint boot_lock_get_num (boot_lock_t * lock) [static]`
+
+通过实例获取硬件引导锁编号。
+
+**参数**
+
+- lock: 引导锁实例
+
+**返回值**
+
+引导锁 ID
+
+#### boot_lock_init <span className="chip-tag rp2350">RP2350</span>
+
+boot_lock_t * boot_lock_init (uint lock_num)
+
+初始化引导锁。
+
+引导锁初始状态为未锁定。
+
+**参数**
+
+- lock_num: 引导锁编号
+
+**返回值**
+
+引导锁实例
+
+#### boot_lock_instance <span className="chip-tag rp2350">RP2350</span>
+
+`static __force_inline boot_lock_t * boot_lock_instance (uint lock_num) [static]`
+
+通过编号获取硬件引导锁实例。
+
+**参数**
+
+- lock_num: 引导锁 ID
+
+**返回值**
+
+引导锁实例
+
+#### boot_lock_unsafe_blocking <span className="chip-tag rp2350">RP2350</span>
+
+`static __force_inline void boot_lock_unsafe_blocking (boot_lock_t * lock) [static]`
+
+在不禁用中断的情况下获取引导锁（因此不安全）。
+
+**参数**
+
+- lock: 引导锁实例
+
+#### boot_locks_reset <span className="chip-tag rp2350">RP2350</span>
+
+`void boot_locks_reset (void)`
+
+释放所有引导锁。
+
+#### boot_try_lock_unsafe <span className="chip-tag rp2350">RP2350</span>
+
+`static __force_inline bool boot_try_lock_unsafe (boot_lock_t * lock) [static]`
+
+尝试在不禁用中断的情况下获取引导锁（因此不安全）。
+
+**参数**
+
+- lock: 引导锁实例
+
+#### boot_unlock <span className="chip-tag rp2350">RP2350</span>
+
+`static __force_inline void boot_unlock (boot_lock_t * lock, uint32_t saved_irq) [static]`
+
+安全地释放引导锁。
+
+此函数将根据参数重新启用中断。
+
+**参数**
+
+- lock: 引导锁实例
+- saved_irq: 来自 boot_lock_blocking() 函数的返回值。
+
+**另请参阅**
+
+boot_lock_blocking()
+
+#### boot_unlock_unsafe <span className="chip-tag rp2350">RP2350</span>
+
+`static __force_inline void boot_unlock_unsafe (boot_lock_t * lock) [static]`
+
+在不重新启用中断的情况下释放引导锁。
+
+**参数**
+
+- lock: 引导锁实例
+
+#### __dmb
 
 `static __force_inline void __dmb (void) [static]`
 
@@ -107,7 +240,7 @@ SDK 使用如下默认自旋锁分配，区分哪些自旋锁保留用于独占/
 
 DMB（数据内存屏障）作为内存屏障，此指令之前的所有内存访问都会在此指令之后的任何显式访问之前完成。
 
-#### `__dsb`
+#### __dsb
 
 `static __force_inline void __dsb (void) [static]`
 
@@ -115,7 +248,7 @@ DMB（数据内存屏障）作为内存屏障，此指令之前的所有内存�
 
 DSB（数据同步屏障）是一种特殊的数据内存屏障（DMB）。DSB 操作在此指令之前的所有显式内存访问完成后才完成。
 
-#### `__isb`
+#### __isb
 
 `static __force_inline void __isb (void) [static]`
 
@@ -123,19 +256,19 @@ DSB（数据同步屏障）是一种特殊的数据内存屏障（DMB）。DSB �
 
 ISB 作为指令同步屏障，它刷新处理器的流水线，使得在 ISB 指令完成之后，ISB 之后的所有指令都从缓存或内存中重新取指。
 
-#### `__mem_fence_acquire`
+#### __mem_fence_acquire
 
 `static __force_inline void __mem_fence_acquire (void) [static]`
 
 获取内存屏障。
 
-#### `__mem_fence_release`
+#### __mem_fence_release
 
 `static __force_inline void __mem_fence_release (void) [static]`
 
 释放内存屏障。
 
-#### `__nop`
+#### __nop
 
 `static __force_inline void __nop (void) [static]`
 
@@ -143,7 +276,7 @@ ISB 作为指令同步屏障，它刷新处理器的流水线，使得在 ISB �
 
 NOP 空转一个周期。在 RP2350 Arm 二进制文件中，该指令被强制为 32 位，以避免 NOP 的双发射。
 
-#### `__sev`
+#### __sev
 
 `static __force_inline void __sev (void) [static]`
 
@@ -151,7 +284,7 @@ NOP 空转一个周期。在 RP2350 Arm 二进制文件中，该指令被强制�
 
 SEV（发送事件）指令向两个核心都发送一个事件。
 
-#### `__wfe`
+#### __wfe
 
 `static __force_inline void __wfe (void) [static]`
 
@@ -159,7 +292,7 @@ SEV（发送事件）指令向两个核心都发送一个事件。
 
 WFE（等待事件）指令等待多种事件之一发生，包括由任一核心上的 SEV 指令发出的事件。
 
-#### `__wfi`
+#### __wfi
 
 `static __force_inline void __wfi (void) [static]`
 
@@ -179,6 +312,16 @@ WFI（等待中断）指令等待中断唤醒核心。
 
 显式启用调用核心上的中断。
 
+#### is_boot_locked <span className="chip-tag rp2350">RP2350</span>
+
+`static bool is_boot_locked (boot_lock_t * lock) [inline], [static]`
+
+检查引导锁当前是否被其他地方持有。
+
+**参数**
+
+- lock: 引导锁实例
+
 #### is_spin_locked
 
 `static bool is_spin_locked (spin_lock_t * lock) [inline], [static]`
@@ -187,7 +330,7 @@ WFI（等待中断）指令等待中断唤醒核心。
 
 **参数**
 
-- `lock`: 自旋锁实例
+- lock: 自旋锁实例
 
 #### next_striped_spin_lock_num
 
@@ -198,7 +341,7 @@ WFI（等待中断）指令等待中断唤醒核心。
 以轮询方式返回 PICO_SPINLOCK_ID_STRIPED_FIRST 到 PICO_SPINLOCK_ID_STRIPED_LAST 范围内的自旋锁编号。调用者不会获得对该自旋锁的独占访问权，因此调用者必须：
 
 . 
-（与其他调用者）遵守只短暂持有该自旋锁的约定（且在禁用 IRQ 的情况下持有——默认通过 `spin_lock_blocking()`），且不在持有其他自旋锁的同时持有它。
+（与其他调用者）遵守只短暂持有该自旋锁的约定（且在禁用 IRQ 的情况下持有——默认通过 spin_lock_blocking()），且不在持有其他自旋锁的同时持有它。
 
 . 
 接受由于上述要求导致的短暂竞争，以及可能与其他使用者发生的竞争。
@@ -221,7 +364,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `status: 来自 save_and_disable_interrupts()` 的先前中断状态
+- `status`: 来自 `save_and_disable_interrupts()` 的先前中断状态
 
 #### restore_interrupts_from_disabled
 
@@ -229,11 +372,11 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 以受限转换方式将调用核心上的中断恢复到指定状态。
 
-此方法仅应在当前中断状态已知为禁用时使用，例如与 `save_and_disable_interrupts()` 配对使用时。
+此方法仅应在当前中断状态已知为禁用时使用，例如与 save_and_disable_interrupts() 配对使用时。
 
 **参数**
 
-- `status: 来自 save_and_disable_interrupts()` 的先前中断状态
+- `status`: 来自 `save_and_disable_interrupts()` 的先前中断状态
 
 #### save_and_disable_interrupts
 
@@ -241,11 +384,11 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 禁用调用核心上的中断，并返回之前的中断状态。
 
-此方法通常与 `restore_interrupts_from_disabled()` 配对使用，以临时禁用某段代码周围的中断，而无需关心中断之前是否已启用。
+此方法通常与 restore_interrupts_from_disabled() 配对使用，以临时禁用某段代码周围的中断，而无需关心中断之前是否已启用。
 
 **返回值**
 
-先前的中断使能状态，可通过 `restore_interrupts_from_disabled() 或 restore_interrupts()` 恢复。
+先前的中断使能状态，可通过 `restore_interrupts_from_disabled()` 或 `restore_interrupts()` 恢复。
 
 #### spin_lock_blocking
 
@@ -257,7 +400,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock`: 自旋锁实例
+- lock: 自旋锁实例
 
 **返回值**
 
@@ -273,7 +416,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock_num`: 自旋锁编号
+- lock_num: 自旋锁编号
 
 #### spin_lock_claim_mask
 
@@ -285,7 +428,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock_num_mask`: 所有需要申请的自旋锁的位域（位 0 == 自旋锁 0，位 1 == 自旋锁 1，以此类推）
+- lock_num_mask: 所有需要申请的自旋锁的位域（位 0 == 自旋锁 0，位 1 == 自旋锁 1，以此类推）
 
 #### spin_lock_claim_unused
 
@@ -295,7 +438,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `required`: 如果为 true，则在没有可用自旋锁时触发 panic
+- required: 如果为 true，则在没有可用自旋锁时触发 panic
 
 **返回值**
 
@@ -309,7 +452,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock`: 自旋锁实例
+- lock: 自旋锁实例
 
 **返回值**
 
@@ -317,7 +460,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 #### spin_lock_init
 
-`spin_lock_t * spin_lock_init (uint lock_num)`
+spin_lock_t * spin_lock_init (uint lock_num)
 
 初始化自旋锁。
 
@@ -325,7 +468,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock_num`: 自旋锁编号
+- lock_num: 自旋锁编号
 
 **返回值**
 
@@ -339,7 +482,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock_num`: 自旋锁 ID
+- lock_num: 自旋锁 ID
 
 **返回值**
 
@@ -353,7 +496,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock_num`: 自旋锁编号
+- lock_num: 自旋锁编号
 
 **返回值**
 
@@ -373,7 +516,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock_num`: 要释放的自旋锁编号
+- lock_num: 要释放的自旋锁编号
 
 #### spin_lock_unsafe_blocking
 
@@ -383,7 +526,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock`: 自旋锁实例
+- lock: 自旋锁实例
 
 #### spin_locks_reset
 
@@ -401,12 +544,12 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock`: 自旋锁实例
-- `saved_irq: 来自 spin_lock_blocking()` 函数的返回值。
+- lock: 自旋锁实例
+- `saved_irq`: 来自 `spin_lock_blocking()` 函数的返回值。
 
 **另请参阅**
 
-`spin_lock_blocking()`
+spin_lock_blocking()
 
 #### spin_unlock_unsafe
 
@@ -416,6 +559,6 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 **参数**
 
-- `lock`: 自旋锁实例
+- lock: 自旋锁实例
 
 <Normal />

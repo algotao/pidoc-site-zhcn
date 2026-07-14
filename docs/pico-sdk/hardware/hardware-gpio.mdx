@@ -16,7 +16,7 @@ RP 系列微控制器有两组通用输入/输出（GPIO）引脚，分配如下
 
 RP2040 在 bank 0 中有 30 个用户 GPIO 引脚，在 QSPI bank 1 中有 6 个 QSPI 引脚（QSPI_SS、QSPI_SCLK 和 QSPI_SD0 至 QSPI_SD3）。QSPI 引脚用于从外部 flash 设备执行代码，因此用户 bank（GPIO0 到 GPIO29）供程序员使用。
 
-可用 GPIO 引脚的数量取决于封装。QFN-60 封装（RP2350A）的 bank 0 中有 30 个用户 GPIO，QFN-80 封装中有 48 个用户 GPIO。Bank 1 包含 6 个 QSPI 引脚和 USB DP/DM 引脚。
+可用 GPIO 引脚的数量取决于封装。QFN-60 封装（RP2350A）的 bank 0 中有 30 个用户 GPIO，QFN-80 封装（RP2350B）中有 48 个用户 GPIO。Bank 1 包含 6 个 QSPI 引脚和 USB DP/DM 引脚。
 
 所有 GPIO 都支持数字输入和输出，但其中部分还可用作芯片模数转换器（ADC）的输入。GPIO 引脚到 ADC 的分配取决于封装。
 

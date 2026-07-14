@@ -4,7 +4,7 @@ draft: false
 description: 同步原语与互斥机制。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK sync]
 last_update:
-  date: 2026-05-30
+  date: 2026-07-13
 ---
 import Normal from "../../_normal.mdx";
 
@@ -28,19 +28,35 @@ import Normal from "../../_normal.mdx";
 
 临界区是不可重入的，它使用自旋锁提供互斥，防止另一个核心访问，并通过禁用调用核心上的中断来防止（更高优先级的）中断访问。前者通过自旋锁实现，后者通过禁用调用核心上的中断实现。
 
-由于拥有 `critical_section 时中断被禁用，critical_section` 的使用应尽可能短暂。
+由于拥有 `critical_section` 时中断被禁用，`critical_section` 的使用应尽可能短暂。
+
+#### 类型定义
+
+- typedef struct critical_section critical_section_t: 临界区实例。
 
 #### 函数
 
-`void critical_section_init (critical_section_t *crit_sec)<br/>&emsp;初始化 critical_section` 结构，由系统分配自旋锁编号。
+`void critical_section_init (critical_section_t *crit_sec)`<br/>&emsp;初始化 `critical_section` 结构，由系统分配自旋锁编号。
 
-`void critical_section_init_with_lock_num (critical_section_t *crit_sec, uint lock_num)<br/>&emsp;初始化 critical_section` 结构，指定特定的自旋锁编号。
+`void critical_section_init_with_lock_num (critical_section_t *crit_sec, uint lock_num)`<br/>&emsp;初始化 `critical_section` 结构，指定特定的自旋锁编号。
 
-`static __force_inline void critical_section_enter_blocking (critical_section_t *crit_sec)<br/>&emsp;进入 critical_section`。
+`static bool critical_section_is_initialized (critical_section_t *crit_sec)`<br/>&emsp;测试 `critical_section` 是否已初始化。
 
-`static __force_inline void critical_section_exit (critical_section_t *crit_sec)<br/>&emsp;释放 critical_section`。
+`static __force_inline void critical_section_enter_blocking (critical_section_t *crit_sec)`<br/>&emsp;进入 `critical_section`。
 
-`void critical_section_deinit (critical_section_t *crit_sec)<br/>&emsp;反初始化由 critical_section_init 方法创建的 critical_section`。
+`static __force_inline void critical_section_exit (critical_section_t *crit_sec)`<br/>&emsp;释放 `critical_section`。
+
+`void critical_section_deinit (critical_section_t *crit_sec)`<br/>&emsp;反初始化由 `critical_section_init` 方法创建的 `critical_section`。
+
+#### 类型定义文档
+
+**critical_section_t**
+
+typedef struct __packed_aligned critical_section critical_section_t
+
+临界区实例。
+
+保存单个临界区状态的结构，包括关联的自旋锁和保存的中断状态。
 
 #### 函数文档
 
@@ -48,58 +64,72 @@ import Normal from "../../_normal.mdx";
 
 `void critical_section_deinit (critical_section_t * crit_sec)`
 
-反初始化由 critical_section_init 方法创建的 `critical_section`。
+反初始化由 critical_section_init 方法创建的 critical_section。
 
 此方法仅用于释放通过 critical_section_init 方法分配的关联自旋锁（不应用于反初始化通过 critical_section_init_with_lock_num 创建的自旋锁）。调用此方法后，临界区将变为无效状态。
 
 **参数**
 
-- `crit_sec: 指向 critical_section` 结构的指针
+- `crit_sec`: 指向 `critical_section` 结构的指针
+
+**critical_section_is_initialized**
+
+`static bool critical_section_is_initialized (critical_section_t * crit_sec) [inline], [static]`
+
+测试 critical_section 是否已初始化。
+
+**参数**
+
+- `crit_sec`: 指向 `critical_section` 结构的指针
+
+**返回**
+
+若临界区已初始化返回 true，否则返回 false。
 
 **critical_section_enter_blocking**
 
 `static __force_inline void critical_section_enter_blocking (critical_section_t * crit_sec) [static]`
 
-进入 `critical_section`。
+进入 critical_section。
 
 如果与此临界区关联的自旋锁正在使用中，此方法将阻塞直到其被释放。
 
 **参数**
 
-- `crit_sec: 指向 critical_section` 结构的指针
+- `crit_sec`: 指向 `critical_section` 结构的指针
 
 **critical_section_exit**
 
 `static __force_inline void critical_section_exit (critical_section_t * crit_sec) [static]`
 
-释放 `critical_section`。
+释放 critical_section。
 
 **参数**
 
-- `crit_sec: 指向 critical_section` 结构的指针
+- `crit_sec`: 指向 `critical_section` 结构的指针
 
 **critical_section_init**
 
 `void critical_section_init (critical_section_t * crit_sec)`
 
-初始化 `critical_section` 结构，由系统分配自旋锁编号。
+初始化 critical_section 结构，由系统分配自旋锁编号。
 
-临界区初始化完成后即可使用，并将使用系统分配的（可能共享的）自旋锁编号。注意，通常情况下不太可能嵌套临界区，但如果确实需要嵌套，*必须*使用 `critical_section_init_with_lock_num` 以确保使用不同的自旋锁。
+临界区初始化完成后即可使用，并将使用系统分配的（可能共享的）自旋锁编号。注意，通常情况下不太可能嵌套临界区，但如果确实需要嵌套，*必须*使用 critical_section_init_with_lock_num 以确保使用不同的自旋锁。
 
 **参数**
 
-- `crit_sec: 指向 critical_section` 结构的指针
+- `crit_sec`: 指向 `critical_section` 结构的指针
 
 **critical_section_init_with_lock_num**
 
 `void critical_section_init_with_lock_num (critical_section_t * crit_sec, uint lock_num)`
 
-初始化 `critical_section` 结构，指定特定的自旋锁编号。
+初始化 critical_section 结构，指定特定的自旋锁编号。
 
 **参数**
 
-- `crit_sec: 指向 critical_section` 结构的指针
-- `lock_num`: 要使用的特定自旋锁编号
+- `crit_sec`: 指向 `critical_section` 结构的指针
+- lock_num: 要使用的特定自旋锁编号
 
 ### lock_core
 
@@ -109,9 +139,9 @@ import Normal from "../../_normal.mdx";
 
 大多数 pico_sync 锁原语都包含一个 lock_core_t 结构成员。该结构目前仅持有一个自旋锁，该自旋锁仅用于在实现同步原语时保护结构其余部分的内容。因此，lock core 的 spin_lock 成员在任何原语函数返回时都不会仍然被持有。
 
-`critical_section` 是一个例外情况，它没有 lock_core_t，只是简单地封装了一个自旋锁，提供加锁和解锁该自旋锁的方法。
+critical_section 是一个例外情况，它没有 lock_core_t，只是简单地封装了一个自旋锁，提供加锁和解锁该自旋锁的方法。
 
-`lock_core` 基础结构的工作方式是：锁定自旋锁，检查状态，然后决定在自旋锁释放时是否还需要阻塞或通知。在阻塞情况下，它们将在未来某时再次唤醒，并重新尝试该过程。
+lock_core 基础结构的工作方式是：锁定自旋锁，检查状态，然后决定在自旋锁释放时是否还需要阻塞或通知。在阻塞情况下，它们将在未来某时再次唤醒，并重新尝试该过程。
 
 默认情况下，SDK 使用处理器的 SEV 和 WEV 事件进行通知和阻塞，这对于跨核心以及来自中断处理程序的通知已经足够。但此文件中定义的宏抽象了等待和通知机制，以允许 SDK 锁定函数在 RTOS 或其他环境中有效使用。
 
@@ -119,13 +149,13 @@ import Normal from "../../_normal.mdx";
 
 #### 宏
 
-* `#define lock_owner_id_t int8_t`
-* `#define [LOCK_INVALID_OWNER_ID] ((lock_owner_id_t)-1)`
-* `#define lock_get_caller_owner_id() \((lock_owner_id_t)get_core_num())`
-* `#define lock_internal_spin_unlock_with_wait(lock, save) spin_unlock((lock)\->spin_lock, save), __wfe()`
-* `#define lock_internal_spin_unlock_with_notify(lock, save) spin_unlock((lock)\->spin_lock, save), __sev()`
-* `#define lock_internal_spin_unlock_with_best_effort_wait_or_timeout(lock, save, until)`
-* `#define sync_internal_yield_until_before(until) ((void)0)`
+* #define lock_owner_id_t int8_t
+* #define [LOCK_INVALID_OWNER_ID] ((lock_owner_id_t)-1)
+* #define lock_get_caller_owner_id() \((lock_owner_id_t)get_core_num())
+* #define lock_internal_spin_unlock_with_wait(lock, save) spin_unlock((lock)\->spin_lock, save), __wfe()
+* #define lock_internal_spin_unlock_with_notify(lock, save) spin_unlock((lock)\->spin_lock, save), __sev()
+* #define lock_internal_spin_unlock_with_best_effort_wait_or_timeout(lock, save, until)
+* #define sync_internal_yield_until_before(until) ((void)0)
 
 #### 函数
 
@@ -135,26 +165,26 @@ import Normal from "../../_normal.mdx";
 
 **lock_owner_id_t**
 
-`#define lock_owner_id_t int8_t`
+#define lock_owner_id_t int8_t
 
 用于存储锁"所有者"的类型。
 
 默认为 int8_t，因为它只需要存储核心编号或 -1；但如果需要更大的类型（例如 RTOS 任务 ID），可以覆盖此定义。
 **LOCK_INVALID_OWNER_ID**
 
-`#define LOCK_INVALID_OWNER_ID ((lock_owner_id_t)-1)`
+#define LOCK_INVALID_OWNER_ID ((lock_owner_id_t)-1)
 
 用于表示不指向任何有效所有者的 lock_owner_id_t 标记值。
 **lock_get_caller_owner_id**
 
-`#define lock_get_caller_owner_id() \((lock_owner_id_t)get_core_num())`
+#define lock_get_caller_owner_id() \((lock_owner_id_t)get_core_num())
 
 返回调用者的所有者 ID。
 
 默认返回调用核心的编号，但可以被覆盖（例如返回 RTOS 任务 ID）。
 **lock_internal_spin_unlock_with_wait**
 
-`#define lock_internal_spin_unlock_with_wait(lock, save) spin_unlock((lock)\->spin_lock, save), __wfe()`
+#define lock_internal_spin_unlock_with_wait(lock, save) spin_unlock((lock)\->spin_lock, save), __wfe()
 
 原子地解锁锁的自旋锁，并等待通知。
 
@@ -166,11 +196,11 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `lock: 需要阻塞的原语的 lock_core`
-- `save: 解锁自旋锁时应传递给 spin_unlock 的 uint32_t 值（即获取自旋锁时的 PRIMASK` 状态）
+- `lock`: 需要阻塞的原语的 `lock_core`
+- `save`: 解锁自旋锁时应传递给 `spin_unlock` 的 `uint32_t` 值（即获取自旋锁时的 `PRIMASK` 状态）
 **lock_internal_spin_unlock_with_notify**
 
-`#define lock_internal_spin_unlock_with_notify(lock, save) spin_unlock((lock)\->spin_lock, save), __sev()`
+#define lock_internal_spin_unlock_with_notify(lock, save) spin_unlock((lock)\->spin_lock, save), __sev()
 
 原子地解锁锁的自旋锁，并发送通知。
 
@@ -182,8 +212,8 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `lock: 需要阻塞的原语的 lock_core`
-- `save`: 解锁自旋锁时应传递给 spin_unlock 的 uint32_t 值（即获取自旋锁时的 PRIMASK 状态）
+- `lock`: 需要阻塞的原语的 `lock_core`
+- save: 解锁自旋锁时应传递给 spin_unlock 的 uint32_t 值（即获取自旋锁时的 PRIMASK 状态）
 **lock_internal_spin_unlock_with_best_effort_wait_or_timeout**
 
 ```c
@@ -199,20 +229,20 @@ import Normal from "../../_normal.mdx";
 
 理想实现中，此方法应在相应的 lock_internal_spin_unlock_with_notify 在同一锁实例上被调用后或超时到达时立即返回，但此方法可以在那之前的*任意*时刻返回；此宏*始终*在循环中使用，循环中会锁定自旋锁、检查内部锁原语状态，若调用线程不应继续则再次等待。
 
-默认情况下，此宏简单地解锁自旋锁，然后调用 `best_effort_wfe_or_timeout`，但可以被覆盖（例如实际以超时阻塞 RTOS 任务）。
+默认情况下，此宏简单地解锁自旋锁，然后调用 best_effort_wfe_or_timeout，但可以被覆盖（例如实际以超时阻塞 RTOS 任务）。
 
 **参数**
 
-- `lock: 需要阻塞的原语的 lock_core`
-- `save`: 解锁自旋锁时应传递给 spin_unlock 的 uint32_t 值（即获取自旋锁时的 PRIMASK 状态）
-- `until: absolute_time_t` 值
+- `lock`: 需要阻塞的原语的 `lock_core`
+- save: 解锁自旋锁时应传递给 spin_unlock 的 uint32_t 值（即获取自旋锁时的 PRIMASK 状态）
+- until: absolute_time_t 值
 
 **返回**
 
 若超时已到达返回 true。
 **sync_internal_yield_until_before**
 
-`#define sync_internal_yield_until_before(until) ((void)0)`
+#define sync_internal_yield_until_before(until) ((void)0)
 
 让出处理器直到请求时间之前的某个时刻。
 
@@ -222,7 +252,7 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `until: absolute_time_t` 值
+- until: absolute_time_t 值
 
 #### 函数文档
 
@@ -236,8 +266,8 @@ import Normal from "../../_normal.mdx";
 
 **参数**
 
-- `core: 指向要初始化的 lock_core` 的指针
-- `lock_num`: 用于锁的自旋锁编号。由于自旋锁仅在锁原语方法实现内部使用，因此不需要全局唯一，但可能会产生竞争。
+- `core`: 指向要初始化的 `lock_core` 的指针
+- lock_num: 用于锁的自旋锁编号。由于自旋锁仅在锁原语方法实现内部使用，因此不需要全局唯一，但可能会产生竞争。
 
 ### mutex
 
@@ -247,11 +277,11 @@ import Normal from "../../_normal.mdx";
 
 Mutex 是应用层级的锁，通常用于保护可能被多个执行线程使用的数据结构。与临界区不同，受 mutex 保护的代码不一定需要/预期快速完成，因为获取 mutex 不会持有任何系统级别的其他锁。
 
-获取 mutex 时，mutex 有一个所有者（参见 `lock_get_caller_owner_id），在普通 SDK 中所有者就是获取的核心，但在 RTOS 中可以是任务或 IRQ 处理程序上下文。
+获取 mutex 时，mutex 有一个所有者（参见 `lock_get_caller_owner_id`），在普通 SDK 中所有者就是获取的核心，但在 RTOS 中可以是任务或 IRQ 处理程序上下文。
 
-提供两种 mutex 变体：`mutex_t（及相关 mutex_ 函数）是普通 mutex，同一所有者不能递归获取（尝试将导致死锁）。recursive_mutex_t`（及相关 recursive_mutex_ 函数）是递归 mutex，同一调用者可以递归获取，但获取和释放时会有额外开销。
+提供两种 mutex 变体：`mutex_t`（及相关 `mutex_` 函数）是普通 `mutex`，同一所有者不能递归获取（尝试将导致死锁）。`recursive_mutex_t`（及相关 recursive_mutex_ 函数）是递归 mutex，同一调用者可以递归获取，但获取和释放时会有额外开销。
 
-通常不建议在 IRQ 处理程序中调用阻塞的 mutex_ 或 recursive_mutex_ 函数。如果在锁定下执行的操作在 mutex 被锁定时可以跳过（至少被同一所有者锁定时），则可以在 IRQ 处理程序中调用 `mutex_try_enter 或 recursive_mutex_try_enter`。
+通常不建议在 IRQ 处理程序中调用阻塞的 mutex_ 或 recursive_mutex_ 函数。如果在锁定下执行的操作在 mutex 被锁定时可以跳过（至少被同一所有者锁定时），则可以在 IRQ 处理程序中调用 `mutex_try_enter` 或 `recursive_mutex_try_enter`。
 
 ::::note
 为保持与 SDK 1.2.0 版本的向后兼容性，如果将 PICO_MUTEX_ENABLE_SDK120_COMPATIBILITY 设为 1，则普通 mutex_ 函数也可用于递归 mutex。此标志将在未来版本的 SDK 中移除。
@@ -265,11 +295,9 @@ Mutex 是应用层级的锁，通常用于保护可能被多个执行线程使�
 
 #### 类型定义
 
-- `typedef struct mutex mutex_t`: 普通（非递归）mutex 实例。
+- typedef struct mutex mutex_t: 普通（非递归）mutex 实例。
 
 #### 函数
-
-`static bool critical_section_is_initialized (critical_section_t *crit_sec)<br/>&emsp;测试 critical_section` 是否已初始化。
 
 `void mutex_init (mutex_t *mtx)`<br/>&emsp;初始化 mutex 结构。
 
@@ -309,7 +337,7 @@ Mutex 是应用层级的锁，通常用于保护可能被多个执行线程使�
 
 **auto_init_mutex**
 
-`#define auto_init_mutex(name) [static] __attribute__\((section(".mutex_array"))) mutex_t name`
+#define auto_init_mutex(name) [static] __attribute__\((section(".mutex_array"))) mutex_t name
 
 用于静态定义 mutex 的辅助宏。
 
@@ -334,7 +362,7 @@ void my_init_function() {
 但 mutex 的初始化在运行时初始化期间自动执行。
 **auto_init_recursive_mutex**
 
-`#define auto_init_recursive_mutex(name) [static] __attribute__\((section(".mutex_array"))) recursive_mutex_t name = { .core = { .spin_lock = (spin_lock_t **`)1 /** marker for runtime_init */ }, .owner = 0, .enter_count = 0 }`
+`#define auto_init_recursive_mutex(name) [static] __attribute__((section(".mutex_array"))) recursive_mutex_t name = { .core = { .spin_lock = (spin_lock_t **)1 /** marker for runtime_init */ }, .owner = 0, .enter_count = 0 }`
 
 用于静态定义递归 mutex 的辅助宏。
 
@@ -362,29 +390,15 @@ void my_init_function() {
 
 **mutex_t**
 
-`typedef struct mutex mutex_t`
+typedef struct mutex mutex_t
 
 普通（非递归）mutex 实例。
 
 #### 函数文档
 
-**critical_section_is_initialized**
-
-`static bool critical_section_is_initialized (critical_section_t * crit_sec) [inline], [static]`
-
-测试 `critical_section` 是否已初始化。
-
-**参数**
-
-- `crit_sec: 指向 critical_section` 结构的指针
-
-**返回**
-
-若临界区已初始化返回 true，否则返回 false。
-
 **mutex_enter_block_until**
 
-`bool mutex_enter_block_until (mutex_t *` mtx, absolute_time_t until)`
+`bool mutex_enter_block_until (mutex_t *mtx, absolute_time_t until)`
 
 等待 mutex 直到指定时间。
 
@@ -392,8 +406,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
-- `until`: 若调用者无法获得 mutex 所有权，超过此时间后返回
+- mtx: 指向 mutex 结构的指针
+- until: 若调用者无法获得 mutex 所有权，超过此时间后返回
 
 **返回**
 
@@ -409,7 +423,7 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
+- mtx: 指向 mutex 结构的指针
 
 **mutex_enter_timeout_ms**
 
@@ -421,8 +435,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
-- `timeout_ms`: 超时时间（毫秒）。
+- mtx: 指向 mutex 结构的指针
+- timeout_ms: 超时时间（毫秒）。
 
 **返回**
 
@@ -438,8 +452,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
-- `timeout_us`: 超时时间（微秒）。
+- mtx: 指向 mutex 结构的指针
+- timeout_us: 超时时间（微秒）。
 
 **返回**
 
@@ -453,7 +467,7 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
+- mtx: 指向 mutex 结构的指针
 
 **mutex_init**
 
@@ -463,7 +477,7 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
+- mtx: 指向 mutex 结构的指针
 
 **mutex_is_initialized**
 
@@ -473,7 +487,7 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
+- mtx: 指向 mutex 结构的指针
 
 **返回**
 
@@ -481,7 +495,7 @@ void my_init_function() {
 
 **mutex_try_enter**
 
-`bool mutex_try_enter (mutex_t **` mtx, uint32_t ** owner_out)`
+`bool mutex_try_enter (mutex_t **mtx, uint32_t ** owner_out)`
 
 尝试获取 mutex 的所有权。
 
@@ -489,8 +503,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
-- `owner_out`: 若 mutex 已被拥有且此指针非零，将填入当前 mutex 所有者的 owner id。
+- mtx: 指向 mutex 结构的指针
+- owner_out: 若 mutex 已被拥有且此指针非零，将填入当前 mutex 所有者的 owner id。
 
 **返回**
 
@@ -498,7 +512,7 @@ void my_init_function() {
 
 **mutex_try_enter_block_until**
 
-`bool mutex_try_enter_block_until (mutex_t *` mtx, absolute_time_t until)`
+`bool mutex_try_enter_block_until (mutex_t *mtx, absolute_time_t until)`
 
 尝试在指定时间前获取 mutex 的所有权。
 
@@ -506,8 +520,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
-- `until`: 若调用者无法获得 mutex 所有权，超过此时间后返回
+- mtx: 指向 mutex 结构的指针
+- until: 若调用者无法获得 mutex 所有权，超过此时间后返回
 
 **返回**
 
@@ -515,7 +529,7 @@ void my_init_function() {
 
 **recursive_mutex_enter_block_until**
 
-`bool recursive_mutex_enter_block_until (recursive_mutex_t *` mtx, absolute_time_t until)`
+`bool recursive_mutex_enter_block_until (recursive_mutex_t *mtx, absolute_time_t until)`
 
 等待 mutex 直到指定时间。
 
@@ -523,8 +537,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向递归 mutex 结构的指针
-- `until`: 若调用者无法获得 mutex 所有权，超过此时间后返回
+- mtx: 指向递归 mutex 结构的指针
+- until: 若调用者无法获得 mutex 所有权，超过此时间后返回
 
 **返回**
 
@@ -540,7 +554,7 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向递归 mutex 结构的指针
+- mtx: 指向递归 mutex 结构的指针
 
 **recursive_mutex_enter_timeout_ms**
 
@@ -552,8 +566,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向递归 mutex 结构的指针
-- `timeout_ms`: 超时时间（毫秒）。
+- mtx: 指向递归 mutex 结构的指针
+- timeout_ms: 超时时间（毫秒）。
 
 **返回**
 
@@ -569,8 +583,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向 mutex 结构的指针
-- `timeout_us`: 超时时间（微秒）。
+- mtx: 指向 mutex 结构的指针
+- timeout_us: 超时时间（微秒）。
 
 **返回**
 
@@ -584,7 +598,7 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向递归 mutex 结构的指针
+- mtx: 指向递归 mutex 结构的指针
 
 **recursive_mutex_init**
 
@@ -596,7 +610,7 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向递归 mutex 结构的指针
+- mtx: 指向递归 mutex 结构的指针
 
 **recursive_mutex_is_initialized**
 
@@ -606,7 +620,7 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向递归 mutex 结构的指针
+- mtx: 指向递归 mutex 结构的指针
 
 **返回**
 
@@ -614,7 +628,7 @@ void my_init_function() {
 
 **recursive_mutex_try_enter**
 
-`bool recursive_mutex_try_enter (recursive_mutex_t **` mtx, uint32_t ** owner_out)`
+`bool recursive_mutex_try_enter (recursive_mutex_t **mtx, uint32_t ** owner_out)`
 
 尝试获取递归 mutex 的所有权。
 
@@ -622,8 +636,8 @@ void my_init_function() {
 
 **参数**
 
-- `mtx`: 指向递归 mutex 结构的指针
-- `owner_out`: 若 mutex 已被其他所有者拥有且此指针非零，将填入当前 mutex 所有者的 owner id。
+- mtx: 指向递归 mutex 结构的指针
+- owner_out: 若 mutex 已被其他所有者拥有且此指针非零，将填入当前 mutex 所有者的 owner id。
 
 **返回**
 
@@ -635,11 +649,15 @@ void my_init_function() {
 
 #### 详细描述
 
-信号量持有一定数量的可用许可。`sem_acquire 方法在有许可可用时获取一个许可（可用数减 1），若可用许可数为 0 则阻塞。sem_release() 将可用许可数加一，从而可能解除某个 `sem_acquire` 方法的阻塞。
+信号量持有一定数量的可用许可。`sem_acquire` 方法在有许可可用时获取一个许可（可用数减 1），若可用许可数为 0 则阻塞。`sem_release()` 将可用许可数加一，从而可能解除某个 sem_acquire 方法的阻塞。
 
-注意，`sem_release()` 可以被任意次调用，但可用许可数上限为初始化时指定的 max_permit 值。
+注意，sem_release() 可以被任意次调用，但可用许可数上限为初始化时指定的 max_permit 值。
 
 虽然这些信号量相关函数可以在 IRQ 处理程序中使用，但显然最好只在 IRQ 处理程序中释放信号量（即避免阻塞）。
+
+#### 类型定义
+
+- typedef struct semaphore semaphore_t: 用于控制对共享资源访问的信号量。
 
 #### 函数
 
@@ -661,11 +679,21 @@ void my_init_function() {
 
 `bool sem_try_acquire (semaphore_t *sem)`<br/>&emsp;尝试从信号量非阻塞地获取一个许可。
 
+#### 类型定义文档
+
+**semaphore_t**
+
+typedef struct semaphore semaphore_t
+
+用于控制对共享资源访问的信号量。
+
+保存当前可用许可数和允许的最大计数。
+
 #### 函数文档
 
 **sem_acquire_block_until**
 
-`bool sem_acquire_block_until (semaphore_t *` sem, absolute_time_t until)`
+`bool sem_acquire_block_until (semaphore_t *sem, absolute_time_t until)`
 
 等待从信号量获取许可直到指定时间。
 
@@ -673,8 +701,8 @@ void my_init_function() {
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
-- `until`: 若信号量不可用，超过此时间后返回。
+- sem: 指向信号量结构的指针
+- until: 若信号量不可用，超过此时间后返回。
 
 **返回**
 
@@ -690,7 +718,7 @@ void my_init_function() {
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
+- sem: 指向信号量结构的指针
 
 **sem_acquire_timeout_ms**
 
@@ -702,8 +730,8 @@ void my_init_function() {
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
-- `timeout_ms`: 等待获取信号量的时间（毫秒）。
+- sem: 指向信号量结构的指针
+- timeout_ms: 等待获取信号量的时间（毫秒）。
 
 **返回**
 
@@ -719,8 +747,8 @@ void my_init_function() {
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
-- `timeout_us`: 等待获取信号量的时间（微秒）。
+- sem: 指向信号量结构的指针
+- timeout_us: 等待获取信号量的时间（微秒）。
 
 **返回**
 
@@ -734,7 +762,7 @@ void my_init_function() {
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
+- sem: 指向信号量结构的指针
 
 **返回**
 
@@ -748,9 +776,9 @@ void my_init_function() {
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
-- `initial_permits`: 初始已获取的许可数
-- `max_permits`: 此信号量允许的最大许可总数
+- sem: 指向信号量结构的指针
+- initial_permits: 初始已获取的许可数
+- max_permits: 此信号量允许的最大许可总数
 
 **sem_release**
 
@@ -758,11 +786,11 @@ void my_init_function() {
 
 释放信号量上的一个许可。
 
-将许可数加一（除非许可数已达到最大值）。若许可数增加，被阻塞的 `sem_acquire` 将被释放。
+将许可数加一（除非许可数已达到最大值）。若许可数增加，被阻塞的 sem_acquire 将被释放。
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
+- sem: 指向信号量结构的指针
 
 **返回**
 
@@ -778,8 +806,8 @@ void my_init_function() {
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
-- `permits`: 新的可用许可数
+- sem: 指向信号量结构的指针
+- permits: 新的可用许可数
 
 **sem_try_acquire**
 
@@ -791,7 +819,7 @@ void my_init_function() {
 
 **参数**
 
-- `sem`: 指向信号量结构的指针
+- sem: 指向信号量结构的指针
 
 **返回**
 

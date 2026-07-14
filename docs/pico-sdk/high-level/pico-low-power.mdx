@@ -1,0 +1,444 @@
+---
+sidebar_position: 6
+draft: false
+description: 用于使用低功耗状态的 API。
+keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK low power, sleep, dormant, pstate]
+last_update:
+  date: 2026-07-13
+---
+import Normal from "../../_normal.mdx";
+
+用于使用低功耗状态的 API。
+
+### 详细说明
+
+有三种工作模式：sleep（睡眠）、dormant（休眠）和 Pstate（P 状态），其中功耗最低的是 Pstate。
+
+注意：在 RP2040 上没有 Pstate 模式，并且使用 AON 定时器进入 dormant 需要为 RTC 提供外部时钟源（参见 `low_power_set_external_clock_source`）。
+
+**sleep 模式：**
+
+* 某些时钟可以保持运行，由时钟块中的 SLEEP_EN 寄存器控制。例如你可以保持 clk_rtc 运行。
+* 某些目标（proc0 和 proc1 唤醒逻辑）在 sleep 模式下不能被停止，否则将没有足够的逻辑再次唤醒。
+* 你可以通过任何中断从 sleep 中唤醒，前提是该中断的时钟保持启用。
+* sleep API 会在睡眠期间保持 stdio 的时钟启用，以及使用 tinyusb 时的 USB 时钟。
+
+**dormant 模式：**
+
+* xosc 和 rosc 都会停止，直到休眠时钟源被外部事件再次启动。
+* 进入 dormant 之前 USB 将被禁用，唤醒后重新启用。
+* 你只能使用 AON 定时器或通过 `gpio_set_dormant_irq_enabled` 配置的 GPIO 中断从 dormant 中唤醒。所有其他中断在 dormant 期间将被禁用。
+
+**Pstate 模式：**
+
+* 某些电源域被关闭且不保留状态（例如指定的 SRAM）。默认情况下，仅保持持久数据通电所需的电源域会保持开启。
+* 你只能使用 AON 定时器或通过 `powman_enable_gpio_wakeup` 配置的 GPIO 唤醒从 Pstate 中唤醒。
+* 从 Pstate 唤醒将从头开始运行你的程序，可选择在运行时初始化期间执行 resume_func。所有非持久数据在程序重新启动时将被 crt0 覆盖。
+* 变量可以使用 `__persistent_data` 宏标记为持久。数据的位置可以通过 CMake 函数 pico_set_persistent_data_loc 设置。持久数据可以存储在 XIP_SRAM 或主 SRAM 中。
+* Pstate API 将覆盖最后 2 个 powman scratch 寄存器——其他 scratch 寄存器不被修改，因此可用于其他持久数据。
+
+使用定时器进入低功耗模式时，在 Pico 系列开发板上测得的一些粗略功耗值（由 VSYS 5.2V 供电，或由 3V3 3.3V 供电，运行 low_power_test_simple）：
+
+| 模式 | Pico (VSYS) | Pico 2 (VSYS) | Pico (3V3) | Pico 2 (3V3) |
+| --- | --- | --- | --- | --- |
+| Sleep | 7.3mA (37.9mW) | 5.9mA (30.7mW) | 8.7mA (28.5mW) | 6.9mA (22.7mW) |
+| Dormant | 0.95mA (5.0mW) | 3.3mA (17.0mW) | 1.2mA (4.0mW) | 3.7mA (12.0mW) |
+| Pstate (SRAM0 On) | N/A | 0.25mA (1.32mW) | N/A | 0.14mA (0.47mW) |
+| Pstate (XIP SRAM On) | N/A | 0.22mA (1.21mW) | N/A | 0.10mA (0.44mW) |
+| Pstate (All SRAM Off) | N/A | 0.18mA (1.10mW) | N/A | 0.08mA (0.40mW) |
+
+注意：RP2350 的 dormant 值高于 RP2040，因为 RP2350 在 dormant 期间继续从 LPOSC 运行 clk_ref 来驱动定时器，而 RP2040 仅从 XOSC 运行 clk_rtc。
+
+### 函数
+
+`void low_power_set_pins_low_leakage_exclude_mask (uint32_t exclude_mask)`<br/>&emsp;将所有引脚设置为低漏电状态。
+
+`static void low_power_set_pins_low_leakage_exclude_mask64 (uint64_t exclude_mask)`<br/>&emsp;将所有引脚设置为低漏电状态（64 位掩码版本）。
+
+`int low_power_sleep_until_irq (const clock_dest_bitset_t *keep_enabled)`<br/>&emsp;睡眠直到中断发生。
+
+`int low_power_sleep_until_timer (timer_hw_t *timer, absolute_time_t until, const clock_dest_bitset_t *keep_enabled, bool exclusive)`<br/>&emsp;使用定时器睡眠到指定时间。
+
+`static int low_power_sleep_until_default_timer (absolute_time_t until, const clock_dest_bitset_t *keep_enabled, bool exclusive)`<br/>&emsp;使用默认定时器睡眠到指定时间。
+
+`int low_power_sleep_until_aon_timer (absolute_time_t until, const clock_dest_bitset_t *keep_enabled, bool exclusive)`<br/>&emsp;使用 AON 定时器睡眠到指定时间。
+
+`int low_power_sleep_until_gpio_pin_state (uint gpio_pin, bool edge, bool high, const clock_dest_bitset_t *keep_enabled, bool exclusive)`<br/>&emsp;睡眠直到 GPIO 引脚状态变化。
+
+`int low_power_set_external_clock_source (uint src_hz, uint gpio_pin)` <span className="chip-tag rp2040">RP2040</span><br/>&emsp;设置 AON 定时器的外部时钟源。
+
+`int low_power_dormant_until_aon_timer (absolute_time_t until, dormant_clock_source_t dormant_clock_source, const clock_dest_bitset_t *keep_enabled)`<br/>&emsp;使用 AON 定时器进入 dormant 直到指定时间。
+
+`int low_power_dormant_until_gpio_pin_state (uint gpio_pin, bool edge, bool high, dormant_clock_source_t dormant_clock_source, const clock_dest_bitset_t *keep_enabled)`<br/>&emsp;进入 dormant 直到 GPIO 引脚状态变化。
+
+`int low_power_pstate_until_aon_timer (absolute_time_t until, pstate_bitset_t *pstate, low_power_pstate_resume_func resume_func)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;进入 Pstate 直到 AON 定时器到达指定时间。
+
+`int low_power_pstate_until_gpio_pin_state (uint gpio_pin, bool edge, bool high, pstate_bitset_t *pstate, low_power_pstate_resume_func resume_func)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;进入 Pstate 直到 GPIO 引脚状态变化。
+
+`pstate_bitset_t * low_power_persistent_pstate_get (pstate_bitset_t *pstate)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;获取保持持久数据通电的 Pstate。
+
+`static bool low_power_start_aon_timer_at_time_ms (uint64_t ms)`<br/>&emsp;以指定的毫秒时间启动 AON 定时器。
+
+`static bool low_power_start_aon_timer (void)`<br/>&emsp;以当前系统时间启动 AON 定时器。
+
+`static int low_power_sleep_for_us (timer_hw_t *timer, uint64_t us, const clock_dest_bitset_t *keep_enabled, bool exclusive)`<br/>&emsp;睡眠指定的微秒数。
+
+`static int low_power_sleep_for_ms (uint32_t ms, const clock_dest_bitset_t *keep_enabled, bool exclusive)`<br/>&emsp;睡眠指定的毫秒数。
+
+`static int low_power_dormant_for_ms (uint32_t ms, dormant_clock_source_t dormant_clock_source, const clock_dest_bitset_t *keep_enabled)`<br/>&emsp;进入 dormant 指定的毫秒数。
+
+`static int low_power_pstate_for_ms (uint32_t ms, pstate_bitset_t *pstate, low_power_pstate_resume_func resume_func)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;进入 Pstate 指定的毫秒数。
+
+### 函数文档
+
+#### low_power_dormant_for_ms
+
+`static int low_power_dormant_for_ms (uint32_t ms, dormant_clock_source_t dormant_clock_source, const clock_dest_bitset_t * keep_enabled) [inline], [static]`
+
+进入 dormant 指定的毫秒数。
+
+参见 `low_power_dormant_until_aon_timer` 获取更多信息。
+
+**参数**
+
+- `ms`: 进入 dormant 的毫秒数
+- `dormant_clock_source`: 用于 dormant 的时钟源
+- `keep_enabled`: dormant 期间保持启用的时钟
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_dormant_until_aon_timer
+
+`int low_power_dormant_until_aon_timer (absolute_time_t until, dormant_clock_source_t dormant_clock_source, const clock_dest_bitset_t * keep_enabled)`
+
+使用 AON 定时器进入 dormant 直到指定时间。
+
+进入 dormant 直到给定的 AON 定时器达到指定值。keep_enabled 中指定的时钟将在 dormant 期间保持启用，但 XOSC 和 ROSC 将被停止。
+
+如果时钟源设置为 DORMANT_CLOCK_SOURCE_RTC，所有时钟将在 dormant 期间切换到 ROSC 以便停止，但 clk_rtc 将从 XOSC 运行以便定时器继续运行。在这种情况下 XOSC 不会被停止。
+
+否则，这需要在调用此函数之前使用 `low_power_set_external_clock_source` 设置外部时钟源。如果未设置外部时钟源或其未运行，将返回 PICO_ERROR_PRECONDITION_NOT_MET。
+
+时钟源必须设置为 DORMANT_CLOCK_SOURCE_LPOSC，这意味着 clk_sys 将在 dormant 期间切换到 ROSC 以便停止，而 clk_ref 将从 LPOSC 运行以便定时器继续运行。
+
+**参数**
+
+- `until`: 进入 dormant 直到的时间
+- `dormant_clock_source`: 用于 dormant 的时钟源。在 RP2350 上必须为 DORMANT_CLOCK_SOURCE_LPOSC。
+- `keep_enabled`: dormant 期间保持启用的时钟
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_dormant_until_gpio_pin_state
+
+`int low_power_dormant_until_gpio_pin_state (uint gpio_pin, bool edge, bool high, dormant_clock_source_t dormant_clock_source, const clock_dest_bitset_t * keep_enabled)`
+
+进入 dormant 直到 GPIO 引脚状态变化。
+
+进入 dormant 直到给定的 GPIO 引脚状态变化。keep_enabled 中指定的时钟将在 dormant 期间保持启用，但 XOSC 和 ROSC 将被停止。
+
+如果时钟源设置为 DORMANT_CLOCK_SOURCE_RTC，所有时钟将在 dormant 期间切换到 ROSC 以便停止，但 clk_rtc 将从 XOSC 运行。在这种情况下 XOSC 不会被停止。为了获得最低功耗，你应使用 DORMANT_CLOCK_SOURCE_ROSC，因为 GPIO 中断不需要时钟。
+
+如果时钟源设置为 DORMANT_CLOCK_SOURCE_LPOSC，clk_sys 将在 dormant 期间从 ROSC 运行以便停止，而 clk_ref 将从 LPOSC 运行。为了获得最低功耗，你应使用 DORMANT_CLOCK_SOURCE_ROSC，因为 GPIO 中断不需要时钟。
+
+**参数**
+
+- `gpio_pin`: 要使用的 GPIO 引脚
+- `edge`: 监听边沿还是电平
+- `high`: 监听高电平/上升沿（true）还是低电平/下降沿（false）
+- `dormant_clock_source`: 用于 dormant 的时钟源
+- `keep_enabled`: dormant 期间保持启用的时钟
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_persistent_pstate_get <span className="chip-tag rp2350">RP2350</span>
+
+`pstate_bitset_t * low_power_persistent_pstate_get (pstate_bitset_t * pstate)`
+
+获取保持持久数据通电的 Pstate。
+
+**参数**
+
+- `pstate`: 指向用于写入结果的 Pstate 的指针
+
+**返回值**
+
+该 Pstate。
+
+#### low_power_pstate_for_ms <span className="chip-tag rp2350">RP2350</span>
+
+`static int low_power_pstate_for_ms (uint32_t ms, pstate_bitset_t * pstate, low_power_pstate_resume_func resume_func) [inline], [static]`
+
+进入 Pstate 指定的毫秒数。
+
+参见 `low_power_pstate_until_aon_timer` 获取更多信息。
+
+**参数**
+
+- `ms`: 进入 Pstate 的毫秒数
+- `pstate`: 要使用的 Pstate
+- `resume_func`: 重启时调用的函数
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_pstate_until_aon_timer <span className="chip-tag rp2350">RP2350</span>
+
+`int low_power_pstate_until_aon_timer (absolute_time_t until, pstate_bitset_t * pstate, low_power_pstate_resume_func resume_func)`
+
+进入 Pstate 直到 AON 定时器到达指定时间。
+
+进入 Pstate 直到给定的 AON 定时器达到指定值。resume_func 中指定的函数将在重启时被调用，并将低功耗 Pstate 传递给它。
+
+如果 pstate 为 NULL，将进入保持持久数据通电的最低 Pstate。
+
+要同时从 GPIO 唤醒，请在调用此函数之前通过 `powman_enable_gpio_wakeup` 进行配置。
+
+注意：此函数将覆盖最后 2 个 powman scratch 寄存器——其他 scratch 寄存器不被修改。
+
+**参数**
+
+- `until`: 进入 Pstate 直到的时间
+- `pstate`: 要使用的 Pstate。如果为 NULL，Pstate 将保持持久数据通电。
+- `resume_func`: 重启时调用的函数
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_pstate_until_gpio_pin_state <span className="chip-tag rp2350">RP2350</span>
+
+`int low_power_pstate_until_gpio_pin_state (uint gpio_pin, bool edge, bool high, pstate_bitset_t * pstate, low_power_pstate_resume_func resume_func)`
+
+进入 Pstate 直到 GPIO 引脚状态变化。
+
+进入 Pstate 直到给定的 GPIO 引脚状态变化。resume_func 中指定的函数将在重启时被调用，并将低功耗 Pstate 传递给它。
+
+如果 pstate 为 NULL，将进入保持持久数据通电的最低 Pstate。
+
+注意：此函数将覆盖最后 2 个 powman scratch 寄存器——其他 scratch 寄存器不被修改。
+
+**参数**
+
+- `gpio_pin`: 要使用的 GPIO 引脚
+- `edge`: 监听边沿还是电平
+- `high`: 监听高/低电平，还是上升/下降沿
+- `pstate`: 要使用的 Pstate。如果为 NULL，Pstate 将保持持久数据通电。
+- `resume_func`: 重启时调用的函数
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_set_external_clock_source <span className="chip-tag rp2040">RP2040</span>
+
+`int low_power_set_external_clock_source (uint src_hz, uint gpio_pin)`
+
+设置 AON 定时器的外部时钟源。
+
+为 AON 定时器设置外部时钟源。这仅在 RP2040 上使用。
+
+**参数**
+
+- `src_hz`: 外部时钟源的频率
+- `gpio_pin`: 用于外部时钟源的 GPIO 引脚
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_set_pins_low_leakage_exclude_mask
+
+`void low_power_set_pins_low_leakage_exclude_mask (uint32_t exclude_mask)`
+
+将所有引脚设置为低漏电状态。
+
+禁用焊盘上的上拉和输入，并禁用 IO 输出，将所有引脚设置为输入。这会产生最低的漏电流。
+
+不改变 exclude_mask 中引脚的状态。
+
+**参数**
+
+- `exclude_mask`: 要排除的引脚掩码
+
+#### low_power_set_pins_low_leakage_exclude_mask64
+
+`static void low_power_set_pins_low_leakage_exclude_mask64 (uint64_t exclude_mask) [inline], [static]`
+
+将所有引脚设置为低漏电状态（64 位掩码版本）
+
+**参见**
+
+`low_power_set_pins_low_leakage_exclude_mask`
+
+**参数**
+
+- `exclude_mask`: 要排除的引脚掩码
+
+#### low_power_sleep_for_ms
+
+`static int low_power_sleep_for_ms (uint32_t ms, const clock_dest_bitset_t * keep_enabled, bool exclusive) [inline], [static]`
+
+睡眠指定的毫秒数。
+
+参见 `low_power_sleep_until_default_timer` 获取更多信息。
+
+**参数**
+
+- `ms`: 睡眠的毫秒数
+- `keep_enabled`: 睡眠期间保持启用的时钟
+- `exclusive`: 是否仅监听定时器中断，还是其他中断也监听
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_sleep_for_us
+
+`static int low_power_sleep_for_us (timer_hw_t * timer, uint64_t us, const clock_dest_bitset_t * keep_enabled, bool exclusive) [inline], [static]`
+
+睡眠指定的微秒数。
+
+参见 `low_power_sleep_until_default_timer` 获取更多信息。
+
+**参数**
+
+- `us`: 睡眠的微秒数
+- `keep_enabled`: 睡眠期间保持启用的时钟
+- `exclusive`: 是否仅监听定时器中断，还是其他中断也监听
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_sleep_until_aon_timer
+
+`int low_power_sleep_until_aon_timer (absolute_time_t until, const clock_dest_bitset_t * keep_enabled, bool exclusive)`
+
+使用 AON 定时器睡眠到指定时间。
+
+睡眠直到 AON 定时器达到指定值。keep_enabled 中指定的时钟将在睡眠期间保持启用，以及 AON 定时器所需的时钟。如果 exclusive 为 true，则仅监听 AON 定时器中断，否则也监听其他中断。
+
+**参数**
+
+- `until`: 睡眠直到的时间
+- `keep_enabled`: 睡眠期间保持启用的时钟
+- `exclusive`: 是否仅监听 AON 定时器中断，还是其他中断也监听
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_sleep_until_default_timer
+
+`static int low_power_sleep_until_default_timer (absolute_time_t until, const clock_dest_bitset_t * keep_enabled, bool exclusive) [inline], [static]`
+
+使用默认定时器睡眠到指定时间。
+
+参见 `low_power_sleep_until_timer` 获取更多信息。
+
+**参数**
+
+- `until`: 睡眠直到的时间
+- `keep_enabled`: 睡眠期间保持启用的时钟
+- `exclusive`: 是否仅监听定时器中断，还是其他中断也监听
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_sleep_until_gpio_pin_state
+
+`int low_power_sleep_until_gpio_pin_state (uint gpio_pin, bool edge, bool high, const clock_dest_bitset_t * keep_enabled, bool exclusive)`
+
+睡眠直到 GPIO 引脚状态变化。
+
+睡眠直到给定的 GPIO 引脚状态变化。keep_enabled 中指定的时钟将在睡眠期间保持启用。如果 exclusive 为 true，则仅监听 GPIO 中断，否则也监听其他中断。
+
+**参数**
+
+- `gpio_pin`: 要使用的 GPIO 引脚
+- `edge`: 监听边沿还是电平
+- `high`: 监听高电平/上升沿（true）还是低电平/下降沿（false）
+- `keep_enabled`: 睡眠期间保持启用的时钟
+- `exclusive`: 是否仅监听 GPIO 中断，还是其他中断也监听
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_sleep_until_irq
+
+`int low_power_sleep_until_irq (const clock_dest_bitset_t * keep_enabled)`
+
+睡眠直到中断发生。
+
+睡眠直到任意中断发生。keep_enabled 中指定的时钟将在睡眠期间保持启用。
+
+**参数**
+
+- `keep_enabled`: 睡眠期间保持启用的时钟
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_sleep_until_timer
+
+`int low_power_sleep_until_timer (timer_hw_t * timer, absolute_time_t until, const clock_dest_bitset_t * keep_enabled, bool exclusive)`
+
+使用定时器睡眠到指定时间。
+
+睡眠直到给定的定时器达到指定值。keep_enabled 中指定的时钟将在睡眠期间保持启用，以及定时器所需的时钟。如果 exclusive 为 true，则仅监听定时器中断，否则也监听其他中断。
+
+**参数**
+
+- `timer`: 要使用的定时器
+- `until`: 睡眠直到的时间
+- `keep_enabled`: 睡眠期间保持启用的时钟
+- `exclusive`: 是否仅监听定时器中断，还是其他中断也监听
+
+**返回值**
+
+成功返回 0，错误返回非零值。
+
+#### low_power_start_aon_timer
+
+`static bool low_power_start_aon_timer (void) [inline], [static]`
+
+以当前系统时间启动 AON 定时器。
+
+参见 `aon_timer_start` 获取更多信息。
+
+如果 AON 定时器已在运行，此函数不会重启它。
+
+**返回值**
+
+成功返回 true，失败返回 false。
+
+#### low_power_start_aon_timer_at_time_ms
+
+`static bool low_power_start_aon_timer_at_time_ms (uint64_t ms) [inline], [static]`
+
+以指定的毫秒时间启动 AON 定时器。
+
+参见 `aon_timer_start` 获取更多信息。
+
+如果 AON 定时器已在运行，此函数将从指定时间重启它。
+
+**参数**
+
+- `ms`: 启动 AON 定时器的时间（毫秒）
+
+**返回值**
+
+成功返回 true，失败返回 false。
+
+<Normal />

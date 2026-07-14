@@ -63,7 +63,7 @@ int main() {
 
 ### 类型定义
 
-`typedef void(* rtc_callback_t)(void)`
+typedef void(* rtc_callback_t)(void)
 
 ### 函数
 
@@ -80,13 +80,13 @@ int main() {
 
 #### rtc_callback_t
 
-`typedef void(* rtc_callback_t) (void)`
+typedef void(* rtc_callback_t) (void)
 
 RTC 闹钟的回调函数类型
 
 **另请参阅**
 
-`rtc_set_alarm()`
+rtc_set_alarm()
 
 ### 函数文档
 
@@ -110,7 +110,7 @@ RTC 闹钟的回调函数类型
 
 **参数**
 
-- `t: 指向 datetime_t` 结构体的指针，用于接收当前 RTC 时间
+- `t`: 指向 `datetime_t` 结构体的指针，用于接收当前 RTC 时间
 
 **返回值**
 
@@ -130,14 +130,14 @@ RTC 是否正在运行？
 
 #### rtc_set_alarm
 
-`void rtc_set_alarm (const datetime_t *` t, rtc_callback_t user_callback)`
+`void rtc_set_alarm (const datetime_t *t, rtc_callback_t user_callback)`
 
 设置未来某个时间，RTC 届时将调用用户提供的回调函数。
 
 **参数**
 
-- `t: 指向 datetime_t` 结构体的指针，包含未来触发闹钟的时间。设置为 -1 的字段将不参与匹配。
-- `user_callback: 指向闹钟触发时调用的 rtc_callback_t` 的指针
+- `t`: 指向 `datetime_t` 结构体的指针，包含未来触发闹钟的时间。设置为 -1 的字段将不参与匹配。
+- `user_callback`: 指向闹钟触发时调用的 `rtc_callback_t` 的指针
 
 #### rtc_set_datetime
 
@@ -145,11 +145,11 @@ RTC 是否正在运行？
 
 将 RTC 设置为指定时间。
 
-注意，设置 RTC 日期和时间后，后续读取（例如通过 `rtc_get_datetime()`）可能不会立即反映新设置，需等待最多三个 RTC 时钟域周期。使用默认 RTC 时钟配置时，这对应约 64 微秒的延迟。
+设置 RTC 日期和时间后，后续读取（例如通过 rtc_get_datetime()）可能不会立即反映新设置，需等待最多三个 RTC 时钟域周期。使用默认 RTC 时钟配置时，这对应约 64 微秒的延迟。
 
 **参数**
 
-- `t: 指向包含要设置时间的 datetime_t` 结构体的指针
+- `t`: 指向包含要设置时间的 `datetime_t` 结构体的指针
 
 **返回值**
 
