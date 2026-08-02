@@ -5,7 +5,7 @@ title_meta: 带键盘的树莓派电脑
 description: 树莓派键盘电脑集成完整PC于键盘中，有400/500/500+三款型号，搭载树莓派SoC，支持4K显示、多任务处理与机械键盘定制（500+），可选配M.2 SSD扩展，套装丰富，适合入门与进阶用户。
 keywords: [树莓派, Raspberry Pi, Keyboard, 400, 500, 500+]
 last_update: 
-  date: 2026-02-01
+  date: 2026-08-02
 ---
 
 import Normal from "../_normal.mdx";
@@ -37,7 +37,7 @@ import Normal from "../_normal.mdx";
 树莓派500+提供以下新增功能：
 
 * 机械键盘配备可定制RGB背光LED及可更换键帽。详情参见 [树莓派500+机械键盘](#树莓派500机械键盘)。操作指南请参阅 [自定义背光效果](#自定义背光效果) 及 [更换键帽](#更换键帽)。
-* 内置 256 GB 可更换 M.2 固态硬盘。该硬盘预装树莓派操作系统。操作指南详见 [更换 M.2 固态硬盘](#更换-m2-固态硬盘)。
+* 内置 256 GB M.2 固态硬盘，预装树莓派操作系统且可更换。操作指南详见 [更换 M.2 固态硬盘](#更换-m2-固态硬盘)。
 * 更大内存（16 GB）。对比详情请参阅下表。
 
 |  | Raspberry Pi 400 | Raspberry Pi 500 | Raspberry Pi 500+ |
@@ -57,7 +57,7 @@ import Normal from "../_normal.mdx";
 | 存储 | microSD卡槽 | microSD卡槽 | microSD卡槽与M.2 SSD硬盘 |
 | 电源输入 | 通过USB-C接口输入5V/3A（15W） | 通过USB-C接口输入5V/5A（25W） | 通过USB-C接口输入5V/5A（25W） |
 | 电源按钮 | 组合键（Fn + F10） | 专用按钮 | 专用按钮 |
-| 可定制性 |  | 键位映射 | 键位映射；RGB背光；可更换键帽 |
+| 可定制性 | — | 键位映射 | 键位映射；RGB背光；可更换键帽 |
 
 ## 键盘电脑套装
 
@@ -238,6 +238,7 @@ Raspberry Pi 500+支持其他RGB背光预设，由[Vial QMK固件](https://githu
 
 * 为树莓派500+启用并配置高级LED设置。详情参见 [高级LED设置](#高级led设置)。
 * 重新映射树莓派500和500+的键位。详情请参阅 [键位重映射](#键位重映射)。
+* 在树莓派500和500+上使用 [Vial](https://get.vial.today/) 重新映射按键。详情请参阅 [使用Vial重新映射按键](#使用vial重新映射按键)。
 * 在树莓派500+上运行《Flappy Bird》风格游戏。详情请参阅 [Flappy Bird游戏](#Flappy Bird游戏)。
 
 
@@ -426,9 +427,8 @@ rpi-keyboard-config reset-presets
 * 重映射键盘按键。详情参见 [键位重映射](#键位重映射)。
 * 在配置软件中监视按键操作。详情参见 [监控按键状态](#监控按键状态)。
 * 编辑最多四个键位映射层。详情参见 [层级管理](#层级管理)。
+* 在树莓派500和500+上使用 [Vial](https://get.vial.today/) 重新映射按键。详情请参阅 [使用Vial重新映射按键](#使用vial重新映射按键)。
 * 将键盘重置为默认键位映射。详情参见 [恢复默认键盘布局](#恢复默认键盘布局)。
-
-树莓派500和500+兼容[Vial](https://get.vial.today/)。您可通过Vial网页界面重映射按键。详情请参阅 [使用Vial重新映射按键](#使用vial重新映射按键)。
 
 #### 列出键码
 
@@ -531,6 +531,20 @@ rpi-keyboard-config lock
 * `rpi-keyboard-config key set`
 
 
+#### 使用Vial重新映射按键
+
+您可以通过 Vial 网页界面重新映射按键。Vial 通过键盘固件实现实时键盘配置。
+
+1. 在树莓派500或500+上访问 [Vial 网页界面](https://vial.rocks/)。
+2. 在弹出窗口中选择您的键盘型号，然后选择 **连接**。
+3. 使用 Vial 网页界面修改按键映射。
+
+使用指南详见 [Vial 文档](https://get.vial.today/)。
+
+::::important[重要]
+建议仅使用 Vial 调整按键映射，勿用于自定义 RGB LED 灯光效果。
+::::
+
 #### 恢复默认键盘布局
 
 以下命令将键盘布局重置为默认键位映射，包括重置所有层级：
@@ -538,18 +552,6 @@ rpi-keyboard-config lock
 ```sh
 rpi-keyboard-config reset-keymap
 ```
-
-#### 使用Vial重新映射按键
-
-1. Vial通过键盘固件实现实时配置。
-1. 在树莓派500或500+上访问[Vial网页界面](https://vial.rocks/)。在弹出窗口中选择键盘型号并点击**连接**。
-1. 通过Vial网页界面修改按键映射。
-
-使用指南详见[Vial文档](https://get.vial.today/)。
-
-:::tip
-建议仅使用Vial调整按键映射，勿用于自定义RGB LED灯光效果。
-:::
 
 ### 恢复默认设置
 

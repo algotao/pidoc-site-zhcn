@@ -13,7 +13,7 @@ const config = {
       swcJsMinimizer: true,
     },
   },
-  title: 'Raspberry Pi 树莓派 (官网26年07月更新)',
+  title: 'Raspberry Pi 树莓派 (官网26年08月更新)',
   tagline: '中文版文档',
   favicon: 'favicon.ico',
 

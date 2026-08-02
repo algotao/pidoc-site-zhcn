@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update: 
-  date: 2026-07-05
+  date: 2026-08-02
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -1829,7 +1829,11 @@ sudo -E rpi-eeprom-config --edit
 本节介绍bootloader中可用的所有配置项。语法与[config.txt](./config-txt.mdx)相同，但属性特定于bootloader。除EDID外，还支持[条件过滤器](./config-txt.mdx#条件筛选器)。
 
 #### BOOT_UART
-如果为`1`则在GPIO 14和15上启用UART调试输出。将接收调试终端配置为115200bps、8数据位、无奇偶校验位、1停止位。
+如果为`1`则启用到主 UART（`/dev/serial0` 指向的 UART）的固件调试输出。
+
+在 Raspberry Pi 5 上，默认情况下这是 `UART10`，通过调试 UART 连接器对外暴露。但在某些配置中，Raspberry Pi 5 也会在 GPIO 14 和 15 上暴露主 UART（`UART0`）。在 Raspberry Pi 4 上，主 UART 在 GPIO 14 和 15 上暴露。更多信息请参阅[主 UART 和辅助 UART](./configuration.mdx#主uart和辅助uart)。
+
+将接收调试终端配置为115200bps、8数据位、无奇偶校验位、1停止位。
 
 默认值：`0`
 

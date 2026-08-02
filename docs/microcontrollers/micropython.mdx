@@ -4,7 +4,7 @@ draft: false
 description: MicroPython 是 Python 3 的精简高效实现，专为像树莓派 Pico 这样的嵌入式硬件设计，支持通过 USB 进行交互式编程（REPL），并内置文件系统。本文介绍了如何通过简单的拖放 UF2 文件方式在树莓派 Pico 或 Pico W 上安装 MicroPython，以及如何利用其访问底层硬件、连接 Wi-Fi 和蓝牙等功能。同时提供了丰富的官方文档链接与资源，帮助开发者快速上手，适用于 RP2040 和 RP2350 等芯片平台。
 keywords: [MicroPython, 树莓派 Pico, 树莓派 Pico W, RP2040, 嵌入式编程, UF2 文件, REPL, 交互式编程, Wi-Fi, 蓝牙, Python, 硬件编程, Thonny IDE, 树莓派官方文档, MicroPython 固件, sys模块, network模块, 嵌入式硬件, C/C++]
 last_update: 
-  date: 2026-05-30
+  date: 2026-08-02
 ---
 import Normal from "../_normal.mdx";
 
@@ -27,7 +27,7 @@ MicroPython 是 Python 3 编程语言的完整实现，可直接在树莓派Pico
 * [Pico 2](https://micropython.org/download/RPI_PICO2/RPI_PICO2-latest.uf2)
 * [Pico 2 W](https://micropython.org/download/RPI_PICO2_W/RPI_PICO2_W-latest.uf2)
 
-有关使用 C/C++ 或 MicroPython 在 Raspberry Pi Pico W 系列设备上使用 Wi-Fi 和蓝牙的更多信息，请参阅 [使用 Raspberry Pi Pico W 系列连接到互联网](https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf)。
+有关使用 C/C++ 或 MicroPython 在 Raspberry Pi Pico W 系列设备上使用 Wi-Fi 和蓝牙的更多信息，请参阅 [Pico W 系列设备的 Wi-Fi 和蓝牙连接](https://pip.raspberrypi.com/documents/RP-008257-DS)。
 
 有关 [支持的蓝牙协议和配置文件](https://github.com/bluekitchen/btstack#supported-protocols-and-profiles) 的更多信息，请参阅 Blue Kitchen [BTStack](https://github.com/bluekitchen/btstack) Github 代码库。
 
@@ -49,14 +49,17 @@ MicroPython 是 Python 3 编程语言的完整实现，可直接在树莓派Pico
 [树莓派Pico Python SDK](https://pip.raspberrypi.com/documents/RP-008355-DS)<br />
 &emsp;&emsp;用于 Raspberry Pi 微控制器的 MicroPython 环境
 
-[使用树莓派Pico W 连接互联网](https://pip.raspberrypi.com/documents/RP-008257-DS)<br />
-&emsp;&emsp;使用 C/C++ 或 MicroPython 让 树莓派 Pico W 上网
+[Pico W 系列设备的 Wi-Fi 和蓝牙连接](https://pip.raspberrypi.com/documents/RP-008257-DS)<br />
+&emsp;&emsp;在 Pico W 系列设备上使用 C/C++ 或 MicroPython 进行无线连接
 
 [RP2快速参考](https://docs.micropython.org/en/latest/rp2/quickref.html)<br />
 &emsp;&emsp;有关 MicroPython RP2XXX 移植的官方文档
 
 [RP2库](https://docs.micropython.org/en/latest/library/rp2.html)<br />
 &emsp;&emsp;有关 MicroPython 中 rp2 模块的官方文档
+
+[pico-micropython-examples 代码库](https://github.com/raspberrypi/pico-micropython-examples)<br />
+&emsp;&emsp;MicroPython 示例项目
 
 ## 我在哪个硬件上运行？
 

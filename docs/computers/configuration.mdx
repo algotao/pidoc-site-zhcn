@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解
 description: 全面掌握树莓派系统配置！本文详细介绍如何使用raspi-config工具进行系统设置，包括网络、音频、显示、接口、性能、本地化和高级选项。通过config.txt文件，您可以自定义启动参数、优化性能、调整显示设置，并管理设备树。本文还涵盖了系统安全性、网络配置、用户管理等实用技巧，助您高效定制和优化树莓派系统。
 keywords: [树莓派系统配置, raspi-config, config.txt, 网络设置, 音频配置, 显示选项, 接口选项, 性能优化, 本地化设置, 用户管理, 系统安全性, 网络代理, 启动顺序, 设备树]
 last_update: 
-  date: 2026-07-05
+  date: 2026-08-02
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -347,7 +347,6 @@ Raspberry Pi OS 提供了灵活的选项来配置网络设置。本节概述了�
 * [网络优先级](#设置网络优先级)，通过桌面界面和命令行设置 。
 * [可预测名称](#启用或禁用可预测的网络接口名称)，通过交互式 `raspi-config` TUI 设置。这是一项高级选项，默认处于关闭状态。
 * [本地连接](#启用或禁用链路本地地址回退)，通过交互式 `raspi-config` TUI 设置。这是一项高级选项，默认处于关闭状态。
-* [代理服务器](#配置树莓派使用代理服务器)，通过交互式 `raspi-config` TUI 设置。这是一项高级选项，默认处于关闭状态。
 
 ### 更改主机名
 设置主机名具有以下优势：
@@ -1371,7 +1370,7 @@ mini UART 与 BCM2835 版本的 PL011 均不具备 DCD、DSR、DTR 和 RI 信号
 | --- | --- |
 | 树莓派 Zero、1、2、3；Compute Module 1、3 和 3+ | `UART0`：PL011 <br /> `UART1`：mini UART |
 | 树莓派 4、400 和 Compute Module 4、4S | `UART0`：PL011 <br /> `UART1`：mini UART <br /> `UART2` 至 `UART5`：PL011（默认禁用） |
-| 树莓派 5、500、500+ 和 Compute Module 5 | `UART0` 至 `UART4`：PL011（默认禁用） <br /> 没有 mini UART |
+| 树莓派 5、500、500+ 和 Compute Module 5 | `UART0` 至 `UART4` 以及 `UART10`（也称调试 UART）：PL011（默认禁用） <br /> 没有 mini UART |
 
 在 Compute Module 上，所有 UART 默认都被禁用，可以通过设备树覆盖启用，例如：
 
@@ -1380,12 +1379,17 @@ dtoverlay=uart1,txd1_pin=32,rxd1_pin=33
 ```
 
 ##### 主 UART 和辅助 UART {#主uart和辅助uart}
-**主 UART** 是树莓派对外暴露的主要串行接口。当您连接外部设备并用于 Linux 串行控制台时，通常就是使用这个 UART。除了树莓派 5 之外，所有树莓派的主 UART 都被路由到特定的 GPIO 引脚：
+**主 UART** 是树莓派对外暴露的主要串行接口。当您连接外部设备并用于 Linux 串行控制台时，通常就是使用这个 UART。
+
+除了树莓派 5 之外，所有树莓派设备的主 UART 都被路由到特定的 GPIO 引脚：
 
 * **GPIO 14**（发送）对应 GPIO 排针上的 8 号引脚。
 * **GPIO 15**（接收）对应 GPIO 排针上的 10 号引脚。
 
-在树莓派 5 上，主 UART 改为通过专用的调试排针对外暴露。
+在树莓派 5 上，默认情况下主 UART 通过专用的调试排针对外暴露（`UART10`）。该专用调试排针是一个标有 `UART` 的三针排针。但是，以下 `config.txt` 设置可以更改主 UART：
+
+- 如果 [`enable_rp1_uart`](./config-txt.mdx#enable_rp1_uart) 设置为 1，树莓派 5 会将后续固件调试信息（包括所有文件访问记录）通过 GPIO 14 和 15 上的 UART 输出。
+- 如果专用调试排针上没有插入 UART 线缆，且 [`enable_uart`](./config-txt.mdx#enable_uart) 设置为 1，树莓派 5 会自动将内核日志调试输出路由到 GPIO 14 和 15 上的 UART。
 
 **辅助 UART** 是系统内部另一个可用的串行接口；默认情况下通常不通过 GPIO 排针对外暴露。在带有内置无线功能的型号上，该 UART 通常在内部连接到蓝牙控制器，使系统在不使用外部 GPIO 引脚的情况下与蓝牙硬件通信。
 
@@ -2427,82 +2431,6 @@ sudo nmcli connection up Hotspot
 使用 [arp-scan](https://github.com/royhills/arp-scan) 等工具检查父网络上的设备在连接到热点后是否可以访问。
 :::
 
-## 使用代理服务器
-
-**代理服务器**是客户端设备和互联网之间的中介。
-要将 Raspberry Pi 配置为代理服务器客户端，请按照本节的说明操作。
-
-您需要
-- 代理服务器的 IP 地址或主机名和端口
-- 代理服务器的用户名和密码（如需要）
-
-### 配置您的树莓派
-您需要设置三个环境变量（`http_proxy`、`https_proxy` 和 `no_proxy`），以便树莓派知道如何访问代理服务器。
-
-打开终端窗口，使用 nano 打开 `/etc/environment` 文件：
-```sh
-sudo nano /etc/environment
-```
-
-在 `/etc/environment` 文件中添加以下内容，创建 `http_proxy` 变量：
-```sh
-export http_proxy="http://<proxy_ip_address>:<proxy_port>"
-```
-
-用代理的 IP 地址和端口替换 `<proxyipaddress>` 和 `<proxyport>`。
-
-:::note[注意]
-如果代理需要用户名和密码，请使用以下格式添加：
-
-```sh
-export http_proxy="http://<username>:<password>@proxyipaddress:proxyport"
-```
-
-将 `<username>` 和 `<password>`占位符替换为您用来与代理进行身份验证的用户名和密码。
-:::
-
-为环境变量 `https_proxy` 输入相同的信息：
-
-```sh
-export https_proxy="http://username:password@proxyipaddress:proxyport"
-```
-
-创建 `no_proxy` 环境变量，这是一个以逗号分隔的地址列表，树莓派不应使用代理的地址：
-
-```sh
-export no_proxy="localhost, 127.0.0.1"
-```
-
-现在，你的 `/etc/environment` 文件应该是这样的：
-
-```sh
-export http_proxy="http://username:password@proxyipaddress:proxyport"
-export https_proxy="http://username:password@proxyipaddress:proxyport"
-export no_proxy="localhost, 127.0.0.1"
-```
-
-按 **Ctrl + X** 保存并退出。
-
-### 更新sudoers文件
-
-要在下载和安装软件等以 `sudo` 运行的操作中使用代理环境变量，请更新 `sudoers`。
-
-使用以下命令打开 `sudoers`：
-
-```sh
-sudo visudo
-```
-
-在文件中添加以下一行，以便 `sudo` 使用你刚刚创建的环境变量：
-
-```sh
-Defaults	env_keep+="http_proxy https_proxy no_proxy"
-```
-
-按 **Ctrl + X** 保存并退出。
-
-### 重启树莓派
-重新启动树莓派使更改生效。现在您应该可以通过代理服务器访问互联网了。
 
 ## boot 文件夹
 

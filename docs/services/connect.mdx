@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update: 
-  date: 2026-07-05
+  date: 2026-08-02
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -413,6 +413,10 @@ sudo apt remove --purge rpi-connect
 Raspberry Pi Connect 具备远程推送更新至树莓派设备的能力。
 
 远程更新适用于更新防火墙后的设备、离线设备（将在下次登录 Connect 时接收更新）以及地理位置偏远或难以接触的设备。
+
+:::note
+在 [Connect for Organisations](./connect-for-organisations.mdx) 账户中，只有管理员可以部署远程更新和管理更新构件；成员无法执行这些操作。此限制不适用于个人账户。
+:::
 
 如果你是管理设备团队的用户，Connect for Organisations 的管理员还可以使用[管理 API](#组织版-connect) 自动管理更新构件和部署。
 

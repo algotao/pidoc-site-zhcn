@@ -1,10 +1,10 @@
 ---
 sidebar_position: 5
 draft: false
-description: Raspberry Pi Touch Display 2 是一款触摸屏 LCD，提供 5 英寸和 7 英寸两种尺寸，专为平板电脑、娱乐系统和信息仪表盘等交互式使用场景设计。该显示屏兼容 Raspberry Pi B+ 及更高版本，通过 DSI 连接器和 GPIO 排针连接，支持自动检测。具备 720×1280 像素分辨率、24 位 RGB 显示、五指多点触控、鼠标等效功能、屏幕键盘和集成供电。附带 FFC 线缆、GPIO 电源线和安装螺丝，可安装到树莓派背面。
-keywords: [Raspberry Pi Touch Display 2, 触摸显示屏, 5英寸, 7英寸, 多点触控, 屏幕键盘, DSI连接器, GPIO排针, FFC, 树莓派兼容性, 720×1280分辨率, 24位RGB, 亮度调节]
+description: 树莓派触摸显示屏 2 是一款触摸屏 LCD，提供 5 英寸、7 英寸和 10 英寸三种尺寸，专为平板电脑、娱乐系统和信息仪表盘等交互式使用场景设计。该显示屏兼容 Raspberry Pi B+ 及更高版本，通过 DSI 连接器和 GPIO 排针连接，支持自动检测。5 英寸和 7 英寸型号具备 720×1280 像素分辨率、五指多点触控；10 英寸型号具备 1200×1920 像素分辨率、十指多点触控。支持鼠标等效功能、屏幕键盘和集成供电。附带 FFC 线缆、GPIO 电源线和安装螺丝，可安装到树莓派背面。
+keywords: [树莓派触摸显示屏 2, 触摸显示屏, 5英寸, 7英寸, 10英寸, 多点触控, 屏幕键盘, DSI连接器, GPIO排针, FFC, 树莓派兼容性, 720×1280分辨率, 1200×1920分辨率, 24位RGB, 亮度调节]
 last_update: 
-  date: 2026-06-13
+  date: 2026-08-02
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -14,20 +14,20 @@ import TabItem from '@theme/TabItem';
 
 ## 树莓派触摸显示屏 2
 
-[树莓派触摸显示屏 2](https://www.raspberrypi.com/products/touch-display-2/) 是一款触摸屏 LCD，提供 5 英寸和 7 英寸两种版本，适用于平板电脑、娱乐系统和信息仪表盘等交互式使用场景。
+[树莓派触摸显示屏 2](https://www.raspberrypi.com/products/touch-display-2/) 是一款触摸屏 LCD，提供 5 英寸、7 英寸和 10 英寸三种版本，适用于平板电脑、娱乐系统和信息仪表盘等交互式使用场景。
 
 <img src="/img/accessories/touch-display-2/touch-display-2-hero.jpg" alt="树莓派触摸显示屏 2" width="100%" />
 *树莓派触摸显示屏 2*
 
 ## 兼容性
 
-触摸显示屏 2 兼容 Raspberry Pi B+ 及更高版本。
+| 触摸显示屏 2 | 兼容设备 | 不兼容设备 | 支持多个触摸显示屏 2 |
+| --- | --- | --- | --- |
+| **5 英寸**和**7 英寸** | * Raspberry Pi B+ 及更高版本。<br/>* 所有树莓派 Compute Module 接口 (CMIO) 板。 | * 树莓派 Zero 系列。<br/>* 树莓派 Keyboard 电脑。 | * Raspberry Pi 5 及更高版本。<br/>* 所有树莓派 Compute Module 接口 (CMIO) 板。 |
+| **10 英寸** | * Raspberry Pi CM4IO 板及更早版本。<br/><br/>只能使用 `DISP1` 端口连接到 IO 板。 | * Raspberry Pi 4B 及更早版本。<br/>* 树莓派 Zero 系列。<br/>* 树莓派 Keyboard 电脑。 | * Raspberry Pi 5 及更高版本。<br/>* Raspberry Pi CM5IO 板及更高版本。 |
+| | * Raspberry Pi 5 及更高版本。<br/>* Raspberry Pi CM5IO 板及更高版本。<br/><br/>可使用任意 `DISP` 端口连接到 IO 板。 | | |
 
-不兼容 Raspberry Pi Zero 系列或 Raspberry Pi Keyboard 电脑，因为它们没有 DSI 连接器。
-
-Raspberry Pi 5 和 Raspberry Pi Compute Module 原生支持连接最多两个触摸显示屏 2。
-
-您可以将树莓派 SBC 外形尺寸的设备直接安装到触摸显示屏 2 背面。
+您可以将任何 SBC 外形尺寸的树莓派直接安装到触摸显示屏 2 背面。
 
 ## 自动检测
 
@@ -43,9 +43,10 @@ Raspberry Pi Compute Module 不会自动检测 DSI 显示屏，因为它们专�
 
 触摸显示屏 2 具有以下功能：
 
-- **720 x 1280 像素分辨率。** 高清输出效果。
+- **720 x 1280 像素分辨率。** 5 英寸和 7 英寸型号的高清输出效果。
+- **1200 x 1920 像素分辨率。** 10 英寸型号的高清输出效果。
 - **24 位 RGB 显示。** 可呈现超过 1600 万种色彩。
-- **多点触控。** 支持同时响应五个触控点。
+- **多点触控。** 5 英寸和 7 英寸型号支持五指触控，10 英寸型号支持十指触控。
 - **鼠标等效功能。** 无需实体鼠标即可实现完整桌面控制，例如选择、拖拽、滚动及长按调出菜单。
 - **屏幕键盘。** 支持使用屏幕键盘替代物理键盘。
 - **集成供电。** 由主机树莓派设备直接供电，无需独立电源。
@@ -54,42 +55,42 @@ Raspberry Pi Compute Module 不会自动检测 DSI 显示屏，因为它们专�
 
 触摸显示屏 2 具有以下尺寸：
 
-|  | 厚度 | 外形尺寸 | 显示区域 | 有效区域 |
+| 触摸显示屏 2 | 厚度 | 外形尺寸 | 显示区域 | 有效区域 |
 | --- | --- | --- | --- | --- |
-| 5英寸显示屏 | 16 毫米 | 143.5 x 91.5 毫米 | 111.5 x 63 毫米 | 110.5 x 62 毫米 |
-| 7英寸显示屏 | 15 毫米 | 189.5 x 120 毫米 | 155.5 x 88 毫米 | 154.5 x 87 毫米 |
+| **5 英寸** | 16 毫米 | 91.5 x 143.5 毫米 | 63 x 111.5 毫米 | 62 x 110.5 毫米 |
+| **7 英寸** | 15 毫米 | 120 x 189.5 毫米 | 88 x 155.5 毫米 | 87 x 154.5 毫米 |
+| **10 英寸** | 16 毫米 | 161.8 x 247.3 毫米 | 136.4 x 217.6 毫米 | 135.4 x 216.6 毫米 |
 
 ### 硬件
 
 触摸显示屏 2 包装盒内含以下物品：
 
-- 一块触摸显示屏 2
-- 八颗 M2.5 螺丝
-- 一条 15 路转 15 路扁平柔性线缆，用于连接 Raspberry Pi 4 及更早版本
-- 一条 22 路转 15 路扁平柔性线缆，用于连接 Raspberry Pi 5
-- 一条 GPIO 电源线
+| 触摸显示屏 2 | 螺丝 | 扁平柔性线缆 | GPIO 电源线 |
+| --- | --- | --- | --- |
+| **5 英寸** / **7 英寸** | 八颗 M2.5 螺丝 | * 15 路转 15 路（Raspberry Pi 4 及更早版本）<br/>* 22 路转 15 路 **Standard – Mini**（Raspberry Pi 5） | GPIO 电源线 |
+| **10 英寸** | | * 22 路转 22 路 **Mini – Mini**（Raspberry Pi 5） | |
 
-<img src="/img/accessories/touch-display-2/touch-display-2-whats-in-the-box.jpg" alt="触摸显示屏 2 包装盒中包含的部件" width="100%" />
-*触摸显示屏 2 包装盒中包含的部件*
+<img src="/img/accessories/touch-display-2/touch-display-2-whats-in-the-box.jpg" alt="5 英寸和 7 英寸触摸显示屏 2 包装盒中包含的部件" width="100%" />
+*5 英寸和 7 英寸触摸显示屏 2 包装盒中包含的部件*
 
 ### 连接方式
 
-触摸显示屏 2 通过以下方式连接至树莓派设备：
-
-- **DSI 连接器。** 连接适当的扁平柔性线缆 (FFC) 以传输视频和触摸数据。
-  - Raspberry Pi 5 使用随附的 22 路转 15 路 FFC。
-  - Raspberry Pi 4 及更早版本使用随附的 15 路转 15 路 FFC。
-  - Raspberry Pi Compute Module IO 板使用 Raspberry Pi Standard-Mini FFC。此线缆[需另购](https://www.raspberrypi.com/products/display-cable/)。
-
-- **GPIO 排针。** 随附的 GPIO 电源线将树莓派 GPIO 排针的电力传输到显示屏。
+| 触摸显示屏 2 | **DSI 连接器**（传输视频和触摸数据） | **GPIO 排针**（传输电力） |
+| --- | --- | --- |
+| **5 英寸**和**7 英寸** | * Raspberry Pi 5 及更高版本，以及所有 CMIO 板：随附 **Standard – Mini** 22 路转 15 路 FFC<br/>* Raspberry Pi 4 及更早版本：随附 15 路转 15 路 FFC | 随附的 GPIO 电源线将树莓派 GPIO 排针的电力传输到显示屏。 |
+| **10 英寸** | * Raspberry Pi 5 及更高版本，以及所有 CMIO 板：随附 **Mini – Mini** 22 路转 22 路 FFC | |
 
 ## 连接到树莓派设备
 
-请根据您的设备选择相应的操作步骤。
+请根据您的触摸显示屏 2 版本选择相应的操作步骤。
 
-连接设备到显示屏不需要特殊工具，但需要准备好正确的 FFC 线缆。此外还需要您的设备、启动介质和电源。
+连接设备到显示屏不需要特殊工具，但需要准备好正确的 FFC 线缆。如果您不想将设备安装到显示屏上，可能需要更长的 FFC 线缆。
 
-如果您想将设备安装到显示屏上，需要一把适合显示屏随附 M2.5 螺丝的十字螺丝刀。如果您不想将设备安装到显示屏上，可能需要更长的 FFC 线缆。
+此外还需要您的设备、启动介质和电源。
+
+如果您想将设备安装到显示屏上，需要一把适合显示屏随附 M2.5 螺丝的十字螺丝刀。
+
+### 连接 5 英寸或 7 英寸触摸显示屏 2
 
 <Tabs>
 
@@ -97,9 +98,9 @@ Raspberry Pi Compute Module 不会自动检测 DSI 显示屏，因为它们专�
 
 ### 树莓派 B+ 及更高版本
 
-::::warning[警告]
+:::::warning[警告]
 开始步骤 1 之前，请断开树莓派电源。
-::::
+:::::
 
 #### 步骤 1. 将 FFC 连接到触摸显示屏 2
 
@@ -122,12 +123,12 @@ Raspberry Pi Compute Module 不会自动检测 DSI 显示屏，因为它们专�
 
 #### 步骤 2. 将 FFC 连接到树莓派
 
-::::caution[注意]
+:::::caution[注意]
 此步骤中请注意不要夹到 FFC 线缆。
-::::
+:::::
 
 1. 从树莓派上 FFC 连接器的两侧向上滑动固定夹。在 Raspberry Pi 4B 及更早版本上，此端口标有 `DISPLAY`。
-2. 将 FFC 的另一端连接到树莓派上的端口，然后将固定夹推回原位以固定线缆。
+2. 将 FFC 的另一端连接到连接器，然后将固定夹推回原位以固定线缆。
 
     金属触点必须朝向以太网和 USB-A 端口。
 
@@ -136,9 +137,9 @@ Raspberry Pi Compute Module 不会自动检测 DSI 显示屏，因为它们专�
 
 #### 步骤 3. 在设备和显示屏之间连接 GPIO 电源线
 
-::::warning[警告]
+:::::warning[警告]
 错误连接电源线可能导致显示屏损坏。
-::::
+:::::
 
 1. 将 GPIO 电源线较小的一端插入触摸显示屏 2 的 `J1` 端口。
 2. 将 GPIO 电源线的三针端连接到您的[树莓派 GPIO](../computers/raspberry-pi.mdx#gpio)。
@@ -177,9 +178,9 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2。
 
 您必须通过向 `config.txt` 中添加叠加条目来配置 Compute Module 以适配所连接的设备。默认连接端口标有 `1`，但您也可以使用标有 `0` 的端口。
 
-::::note
+:::::note
 如果您使用的 Raspberry Pi Compute Module 具有 eMMC 存储，请确保编辑的是**用于启动设备的配置文件**：可以是存储在 eMMC 上的文件，也可以是重新配置启动顺序后存储在外部启动介质上的文件。参见 [rpiboot](../computers/compute-module.mdx#flash-compute-module-emmc)。
-::::
+:::::
 
 要启用触摸显示屏 2：
 
@@ -201,9 +202,9 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2。
 
 #### 步骤 2. 将 FFC 连接到触摸显示屏 2
 
-::::important[重要]
+:::::important[重要]
 如果您尚未执行此操作，请在继续之前断开 Raspberry Pi Compute Module 的电源。
-::::
+:::::
 
 将 FFC 连接到显示屏：
 
@@ -231,9 +232,9 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2。
 
 #### 步骤 4. 在设备和显示屏之间连接 GPIO 电源线
 
-::::warning[警告]
+:::::warning[警告]
 错误连接电源线可能导致显示屏损坏。
-::::
+:::::
 
 将 GPIO 电源线（随显示屏提供）连接到 Raspberry Pi Compute Module 4 IO 板及更高版本：
 
@@ -261,10 +262,180 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2。
 
 </Tabs>
 
+### 连接 10 英寸触摸显示屏 2
+
+<Tabs>
+
+<TabItem value="rpi5-sbc" label="Raspberry Pi 5 及更高版本">
+
+### Raspberry Pi 5 及更高版本
+
+#### 步骤 1. 更新树莓派设备的软件和引导程序
+
+1. 在命令行中运行以下命令来更新设备的操作系统：
+
+    ```bash
+    sudo apt update && sudo apt full-upgrade
+    ```
+
+2. 在命令行中运行以下命令来更新设备的 EEPROM 引导程序：
+
+    ```bash
+    sudo rpi-eeprom-update -a
+    ```
+
+#### 步骤 2. 将 FFC 连接到触摸显示屏 2
+
+:::::warning[警告]
+开始步骤 2 之前，请断开树莓派设备电源。
+:::::
+
+连接 **Mini – Mini** 22 路转 22 路 FFC：
+
+1. 向外滑动触摸显示屏 2 上 FFC 连接器两侧的固定夹。
+2. 将 FFC 插入触摸显示屏 2 的 FFC 连接器，然后将固定夹推回原位以固定线缆。
+
+    金属触点必须朝上，远离触摸显示屏 2。
+
+<img src="/img/accessories/touch-display-2/touch-display-2-10-ffc.png" alt="正确连接到 10 英寸触摸显示屏 2 的扁平柔性线缆" width="100%" />
+*正确连接到 10 英寸触摸显示屏 2 的扁平柔性线缆*
+
+#### 步骤 3. 将 FFC 连接到树莓派
+
+:::::caution[注意]
+此步骤中请注意不要夹到 FFC 线缆。
+:::::
+
+1. 从树莓派上 FFC 连接器的两侧向上滑动固定夹。
+2. 将 FFC 的另一端连接到连接器，然后将固定夹推回原位以固定线缆。
+
+    金属触点必须朝向以太网和 USB-A 端口。
+
+#### 步骤 4. 在设备和显示屏之间连接 GPIO 电源线
+
+:::::warning[警告]
+错误连接电源线可能导致显示屏损坏。
+:::::
+
+1. 将 GPIO 电源线较小的一端插入触摸显示屏 2 的 `J1` 端口。
+2. 将 GPIO 电源线的三针端连接到您的[树莓派 GPIO](../computers/raspberry-pi.mdx#gpio)。
+
+    USB 和以太网端口朝下时，电源线必须垂直连接到 GPIO 排针的右上方。这意味着红色 5V 电源线位于针脚块的右上角。
+
+    这样一来，红色线缆连接到第 2 脚（右上角），黑色线缆（接地）连接到第 6 脚。
+
+<img src="/img/accessories/touch-display-2/touch-display-2-gpio-connection.png" alt="GPIO 线缆以正确位置和方向连接，红色 5V 线缆位于排针右上角" width="40%" />
+*触摸显示屏 2 的 GPIO 线缆连接到树莓派设备 GPIO 排针的右上方*
+
+3. （可选）要将树莓派物理安装到触摸显示屏 2 上，将设备与触摸显示屏 2 上的四个角支座对齐，然后将四颗 M2.5 螺丝（随附）插入支座并拧紧，直到树莓派牢固固定。
+
+#### 步骤 5. 启动树莓派
+
+将树莓派连接到触摸显示屏 2 后，即可开机。
+
+1. 将启动介质连接到树莓派。
+2. 将树莓派连接到电源。
+
+    触摸显示屏 2 在设备启动时打开，但树莓派操作系统可能需要最多一分钟时间才能在屏幕上显示输出。
+
+3. 要放大 UI 元素以便于查看，选择**首选项 > 控制中心**，然后选择**默认值 > 适用于大屏幕：> 设置默认值**。
+
+</TabItem>
+
+<TabItem value="rpi-cm-10" label="树莓派 Compute Module">
+
+### 树莓派 Compute Module
+
+本节假设您已熟悉您的 Compute Module。更多信息请参见[树莓派 Compute Module](../computers/compute-module.mdx)。
+
+您可以将触摸显示屏 2 连接到安装了 IO 板的 Raspberry Pi Compute Module。为此，请使用随附的 **Mini – Mini** FFC。
+
+:::::note
+10 英寸显示屏需要四通道 DSI 数据。在 CM5 板及更高版本上，您可以使用任意 `DISP` 端口。在 CM4 板及更早版本上，仅 `DISP1` 端口支持此功能。
+:::::
+
+#### 步骤 1. 在 `config.txt` 中指定显示屏
+
+Raspberry Pi Compute Module 不会自动检测触摸显示屏 2 设备。
+
+您必须通过向 `config.txt` 中添加叠加条目来配置 Compute Module 以适配所连接的设备。默认连接端口标有 `1`，但您也可以使用标有 `0` 的端口。
+
+:::::note
+如果您使用的 Raspberry Pi Compute Module 具有 eMMC 存储，请确保编辑的是**用于启动设备的配置文件**：可以是存储在 eMMC 上的文件，也可以是重新配置启动顺序后存储在外部启动介质上的文件。参见 [rpiboot](../computers/compute-module.mdx#flash-compute-module-emmc)。
+:::::
+
+要启用触摸显示屏 2：
+
+1. 启动您的 Raspberry Pi Compute Module，然后打开 `/boot/firmware/config.txt`。
+
+    如果您使用的是无头设置，可以在另一台电脑上打开启动介质，或通过 Raspberry Pi Connect 或 SSH 远程连接到设备。
+
+2. 编辑 `config.txt` 文件，**添加**以下内容：
+
+    - `dtoverlay=vc4-kms-dsi-ili79600-10-1inch`
+
+#### 步骤 2. 将 FFC 连接到触摸显示屏 2
+
+:::::important[重要]
+如果您尚未执行此操作，请在继续之前断开 Raspberry Pi Compute Module 的电源。
+:::::
+
+将 FFC 连接到显示屏：
+
+1. 向外滑动触摸显示屏 2 上 `DISP1` FFC 连接器两侧的固定夹。
+2. 将 FFC 最宽的一端插入连接器，然后将固定夹推回原位以固定线缆。
+
+    金属触点必须朝上，远离触摸显示屏 2。
+
+3. 如果连接到 Raspberry Pi Compute Module 5 IO 板，请添加两根跳线到 `J6`。
+
+<img src="/img/accessories/touch-display-2/touch-display-2-10-ffc.png" alt="正确连接到 10 英寸触摸显示屏 2 的扁平柔性线缆" width="100%" />
+*正确连接到 10 英寸触摸显示屏 2 的扁平柔性线缆*
+
+#### 步骤 3. 将 FFC 连接到 Raspberry Pi Compute Module IO 板
+
+1. 打开 Raspberry Pi Compute Module IO 板上 FFC 连接器的固定夹。确保选择的是步骤 1 中在配置文件中设置的连接器（`CAM/DISP 1` 或 `CAM/DISP 0`）。
+2. 将 FFC 的另一端插入连接器端口，然后合上固定夹以固定线缆。
+
+    金属触点必须朝下。
+
+#### 步骤 4. 在设备和显示屏之间连接 GPIO 电源线
+
+:::::warning[警告]
+错误连接电源线可能导致显示屏损坏。
+:::::
+
+将 GPIO 电源线（随显示屏提供）连接到 Raspberry Pi Compute Module 4 IO 板及更高版本：
+
+1. 将 GPIO 电源线较小的一端插入触摸显示屏 2 的 `J1` 端口。
+2. 将 Compute Module IO 板摆放好，使 USB 和 HDMI 端口朝左。
+3. 将 GPIO 电源线的三针端连接到 GPIO 排针的右上方（丝印标有 `Raspberry Pi HAT`）。
+
+<img src="/img/accessories/touch-display-2/touch-display-power.jpg" alt="GPIO 电源线正确安装在 Raspberry Pi Compute Module IO 板上的图示" width="100%" />
+*连接到 Raspberry Pi Compute Module IO 板 GPIO 排针的 GPIO 电源线*
+
+#### 步骤 5. 启动 Compute Module
+
+<img src="/img/accessories/touch-display-2/touch-display-2-10-mounted.png" alt="安装并连接到 10 英寸触摸显示屏 2 的 Raspberry Pi Compute Module IO 板" width="100%" />
+*安装并连接到 10 英寸触摸显示屏 2 的 Raspberry Pi Compute Module IO 板*
+
+将 Raspberry Pi Compute Module 连接到触摸显示屏 2 后，即可启动 Compute Module。
+
+1. 将启动介质连接到树莓派设备——如果从 eMMC 启动，请跳过此步骤。
+2. 将树莓派设备连接到电源。
+3. 如果您的 IO 板有电源按钮，请按下并松开**电源**按钮。
+
+    触摸显示屏 2 在设备启动时打开，但树莓派操作系统可能需要最多一分钟时间才能在屏幕上显示输出。
+
+</TabItem>
+
+</Tabs>
+
 ## 故障排除
 
 您的显示屏现在可以使用了，但如果它没有打开或没有显示任何内容，请检查以下几点：
 
+- **软件更新。** 确保您运行的是最新版本的 Raspberry Pi OS，并已安装最新的 EEPROM 引导程序固件。参见[更新软件和引导程序](#步骤-1-更新树莓派设备的软件和引导程序)。
 - **DSI 连接。** 检查 FFC 线缆两端是否插入正确，金属触点是否朝向正确的连接方向，以及是否连接到正确的 DSI 连接器。
 - **GPIO 连接。** 显示屏通过设备的 GPIO 线缆供电，因此请确保线缆两端插入正确，并且三针端连接到了 GPIO 排针的正确引脚。
 - **电源。** 检查设备是否已开机并连接了启动介质（如果需要）。如果您使用带电源开关的 Compute Module，请确认已按下开关。
@@ -338,14 +509,15 @@ Raspberry Pi OS _Bookworm_ 及更高版本已内置 **Squeekboard 屏幕键盘**
 
 ## 自定义触摸屏设置
 
-::::note
+:::::note
 这些设置仅适用于在非桌面环境下旋转显示屏并使用触摸输入的情况。
-::::
+:::::
 
 使用设备树叠加层告知树莓派操作系统如何在启动时配置触摸显示屏 2。
 
 - 对于 5 英寸显示屏，叠加层名为 `vc4-kms-dsi-ili9881-5inch`。
 - 对于 7 英寸显示屏，叠加层名为 `vc4-kms-dsi-ili9881-7inch`。
+- 对于 10 英寸显示屏，叠加层名为 `vc4-kms-dsi-ili79600-10-1inch`。
 
 要修改启动配置中的设备树叠加层：
 
@@ -356,8 +528,8 @@ Raspberry Pi OS _Bookworm_ 及更高版本已内置 **Squeekboard 屏幕键盘**
 
 | 参数 | 操作 |
 | -- | -- |
-| `sizex` | 设置触摸水平分辨率（默认值为 720） |
-| `sizey` | 设置触摸垂直分辨率（默认值为 1280） |
+| `sizex` | 设置触摸水平分辨率（5 英寸和 7 英寸型号默认值为 720，10 英寸型号默认值为 1200） |
+| `sizey` | 设置触摸垂直分辨率（5 英寸和 7 英寸型号默认值为 1280，10 英寸型号默认值为 1920） |
 | `invx` | 反转触摸 X 轴（左右方向） |
 | `invy` | 反转触摸 Y 轴（上下方向） |
 | `swapxy` | 交换触摸 X 轴和 Y 轴（逻辑上旋转 90°） |
