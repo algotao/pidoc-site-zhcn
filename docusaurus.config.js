@@ -92,7 +92,7 @@ const config = {
           { to: '/gpiozero/', label: 'GPIO Zero', position: 'left' },
           { to: '/docs/pidoc/install_monitor/', label: '免费远程', position: 'left', className: 'nav-free-link' },
           { to: 'https://edatec.taobao.com/', label: '树莓派官方授权店', position: 'left', className: 'nav-shop-link' },
-          { to: 'https://edatec.cn/', label: '工业树莓派制造商・上海晶珩', position: 'left', className: 'nav-shop-link' },
+          { to: 'https://edatec.cn/zh', label: '工业树莓派制造商・上海晶珩', position: 'left', className: 'nav-shop-link' },
           {
             href: 'https://github.com/algotao/pidoc-site-zhcn',
             label: 'GitHub',
