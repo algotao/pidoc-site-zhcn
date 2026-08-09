@@ -5,7 +5,7 @@ title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等
 description: 本文详细介绍了如何在不连接显示器、键盘和鼠标的情况下远程访问和控制树莓派。涵盖了通过本地网络和互联网进行远程控制的方法，包括SSH、VNC、Raspberry Pi Connect等工具的使用。还提供了查找树莓派IP地址的多种方法，以及通过SCP、rsync、NFS、Samba等协议共享文件和文件夹的详细步骤。此外，文章还介绍了如何设置网络文件系统、Apache网络服务器以及通过网络启动树莓派的方法。
 keywords: [远程访问, 树莓派, SSH, VNC, Raspberry Pi Connect, IP地址, 文件共享, SCP, rsync, NFS, Samba, 网络文件系统, Apache, 网络启动, IPv6, 本地网络, 互联网]
 last_update: 
-  date: 2026-06-13
+  date: 2026-08-09
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -401,6 +401,32 @@ chmod 644 .ssh/authorized_keys
 ```
 
 现在无需输入密码即可连接到 Raspberry Pi。
+
+### 限制哪些用户可以连接
+
+如果您想限制 SSH 访问到特定的用户账户，请编辑 SSH 服务器配置：
+
+```sh
+sudo nano /etc/ssh/sshd_config
+```
+
+找到 `AllowUsers` 指令并添加您希望允许的用户名。如果该行不存在，请将其添加到文件末尾：
+
+```bash
+AllowUsers alice bob
+```
+
+您还可以使用 `DenyUsers` 显式阻止特定用户登录：
+
+```bash
+DenyUsers jane john
+```
+
+保存文件并重启 SSH 服务以应用更改：
+
+```sh
+sudo systemctl restart ssh
+```
 
 ## 使用 VNC 共享屏幕 {#使用-vnc-共享屏幕}
 

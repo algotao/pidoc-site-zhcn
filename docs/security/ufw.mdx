@@ -1,0 +1,137 @@
+---
+title: "UFW 防火墙"
+title_meta: 树莓派UFW防火墙配置教程 — 端口管理、流量控制与高级网络规则设置
+sidebar_position: 5
+draft: false
+description: "使用 Uncomplicated Firewall (UFW) 在树莓派上配置防火墙 — 安装、启用、allow/deny 规则、高级规则和规则管理。"
+keywords: [UFW, Uncomplicated Firewall, 防火墙, iptables, netfilter, 网络安全, 端口管理, 速率限制, 树莓派安全]
+last_update:
+  date: 2026-08-09
+---
+
+# UFW 防火墙
+
+防火墙是一种网络安全系统，它根据一组定义好的安全规则，监视和控制传入与传出的网络流量。本页面介绍 **Uncomplicated Firewall (UFW)**，一种通过 [`iptables`](https://www.netfilter.org/projects/iptables/index.html) 简化 Linux 系统防火墙配置的防火墙工具。
+
+UFW 也有一些图形用户界面 (GUI) 前端可用，如 GUFW，但 `ufw` 命令通常在命令行上运行。本页面提供 UFW 命令行界面的概述和基本操作说明。
+
+## Uncomplicated Firewall (UFW)
+
+网络流量通过端口号进行组织，端口号是用于将数据引导到特定应用程序的数字标签。防火墙通过打开和关闭特定端口来控制流量，以允许或阻止某些类型的通信。
+
+在 Linux 系统中，网络流量通过内核的防火墙子系统 **netfilter** 进行过滤。Netfilter 实现数据包过滤：它根据数据包的源 IP 地址、目标 IP 地址、端口号、协议和方向等因素，阻止或允许数据包通过系统。
+
+系统管理员使用 [`iptables`](https://www.netfilter.org/projects/iptables/index.html) 配置 netfilter，这是定义数据包过滤规则的传统命令行工具。然而 `iptables` 可能较为复杂。[UFW (Uncomplicated Firewall)](https://www.linux.com/learn/introduction-uncomplicated-firewall-ufw) 是 Ubuntu 使用的防火墙工具，它简化了防火墙的配置和管理。它相当于 `iptables` 的封装，允许系统管理员在无需处理原始 `iptables` 命令复杂性的情况下设置防火墙规则。
+
+## UFW 命令
+
+UFW 是一个用于定义防火墙访问规则的命令行程序。ufw 命令的典型语法为：`sudo ufw [--dry-run] <command> [rule]`。
+
+* 所有 `ufw` 命令都需要超级用户权限，因此必须以 `sudo` 开头。
+* 可选地，您可以添加 `--dry-run` 来模拟执行 `ufw` 命令而不实际做出更改。
+* `<command>` 是您想执行的主要操作，例如 `allow`。
+* 根据命令的不同，您可以选择指定一个 `rule` 来应用于该命令，例如 `allow 22`。
+
+例如，`sudo ufw --dry-run allow 22` 会显示允许 22 端口流量的预期结果，包括如果做出更改后的完整规则集合。
+
+## 安装并启用 UFW
+
+要使用 UFW，您必须先将其安装到树莓派设备上。安装后，UFW 已存在但处于禁用状态，这意味着它尚未阻止任何流量。这样可以让您在不被锁定的情况下配置默认访问规则。如果您正通过 SSH（或任何远程方式）连接到树莓派设备，这一点尤其重要：为避免被锁定，您必须在启用 UFW 之前允许远程访问。
+
+如果您通过 SSH 连接，建议的操作流程如下：
+
+| 步骤 | 说明 | 命令 |
+|------|------|------|
+| 1 | 更新软件包列表。 | `sudo apt-get update` |
+| 2 | 安装 UFW。启用之前，输出会显示 UFW 处于非活动状态。 | `sudo apt install ufw` |
+| 3 | 通过检查状态来验证安装。关于此命令的更多信息，请参阅 [规则管理](#规则管理)。 | `sudo ufw status` |
+| 4 | 可选（但推荐）：配置默认策略，例如拒绝所有入站流量。默认策略会全局生效。 | `sudo ufw default deny incoming` |
+| 5 | 为保持远程访问，在启用 UFW 之前允许 SSH，可以通过服务名（ssh）或默认端口（22/tcp）指定。 | `sudo ufw allow ssh` 或 `sudo ufw allow 22/tcp` |
+| 6 | 可选：如果您正在运行 Web 服务器，允许 HTTP 和 HTTPS 流量，可通过服务名（http 和 https）或对应默认端口（80/tcp 和 443/tcp）指定。 | `sudo ufw allow http` 和 `sudo ufw allow https`，或 `sudo ufw allow 80/tcp` 和 `sudo ufw allow 443/tcp` |
+| 7 | 启用 UFW 以激活防火墙，并配置其开机自启。 | `sudo ufw enable` |
+| 8 | 验证防火墙状态并查看已配置的规则。关于此命令的更多信息，请参阅 [规则管理](#规则管理)。 | `sudo ufw status verbose` |
+
+您可以随时禁用 UFW，这会阻止它开机自启。使用以下命令禁用 UFW 防火墙：
+
+```sh
+$ sudo ufw disable
+```
+
+## 使用 allow 和 deny 规则
+
+本节列出了通过指定服务名和端口来允许和拒绝流量的基本命令。`allow` 和 `deny` 命令的通用 `ufw` 语法如下：
+
+* 允许访问特定端口或服务：`sudo ufw allow [rule]`
+* 拒绝访问特定端口或服务：`sudo ufw deny [rule]`
+
+下表提供了具体示例。
+
+| 命令 | 说明 |
+|------|------|
+| `sudo ufw allow 22` | 允许通过防火墙访问端口 **22**。这会为所有协议（TCP 和 UDP）开放该端口。 |
+| `sudo ufw allow 22/tcp` | 仅在端口 **22** 上允许 **TCP**。 |
+| `sudo ufw allow ssh` | 允许 **SSH** 服务而无需指定端口（SSH 通常为 `22/tcp`）。 |
+| `sudo ufw deny 22` | 拒绝通过防火墙访问端口 **22**。这会为所有协议（TCP 和 UDP）关闭该端口。 |
+| `sudo ufw deny 22/tcp` | 仅在端口 **22** 上拒绝 **TCP**。 |
+| `sudo ufw deny ssh` | 拒绝 **SSH** 服务而无需指定端口（SSH 通常为 `22/tcp`）。 |
+
+## UFW 高级规则
+
+UFW 不仅能做基本的 allow 和 deny 规则。它还可以：
+
+* [允许或阻止特定 IP 地址](#允许或阻止特定-ip-地址) 从特定端口访问。
+* [指定流量方向](#指定流量方向)（入站与出站）。
+* [限制连接尝试速率](#限制连接尝试速率) 以帮助防御暴力破解或 DDoS 攻击。
+* [指定网络接口](#指定网络接口)，使规则仅适用于有线或无线网络。
+
+关于这些选项的更多信息，请运行命令 `man ufw`。这会在终端中显示 UFW 手册页，其中包含关于 UFW 语法、选项、规则格式及示例的文档。
+
+### 允许或阻止特定 IP 地址
+
+您可以允许或拒绝特定 IP 地址访问特定端口。这在您想阻止可疑主机或只允许可信主机时很有用。例如，以下命令拒绝 IP 地址 192.168.2.1 访问端口 30：
+
+```sh
+$ sudo ufw deny from 192.168.2.1 to any port 30
+```
+
+### 指定流量方向
+
+要控制系统如何发送或接收网络流量，例如阻止对系统的威胁（入站）或保护系统资源（出站），您可以阻止单向或双向流量。具体来说，您可以在下列命令之一后添加 `out`（出站流量）或 `in`（入站流量）：
+
+* `allow`：允许流量在指定方向上流动。
+* `deny`：静默丢弃在指定方向上流动的流量。
+* `reject`：主动拒绝在指定方向上流动的流量。
+
+例如，以下命令阻止所有通过 SMTP 端口（通常为 25/TCP）的出站流量：
+
+```sh
+$ sudo ufw reject out smtp
+```
+
+### 限制连接尝试速率
+
+为防御暴力破解和 DDoS 攻击，`limit` 命令会临时阻止在短时间内尝试建立过多连接的 IP 地址（大约 30 秒内 6 次或更多）。例如，以下命令会监视 IP 地址尝试打开新的 SSH 连接（通常为端口 `22/tcp`）的频率，并应用速率限制：
+
+```sh
+$ sudo ufw limit ssh/tcp
+```
+
+### 指定网络接口
+
+您可以设置只应用于特定网络连接的防火墙规则（有线网络为 `eth0`，Wi-Fi 为 `wlan0`）。例如，以下命令仅在 `eth0` 网络接口上允许对端口 80 的入站 TCP 流量：
+
+```sh
+$ sudo ufw allow in on eth0 to any port 80 proto tcp
+```
+
+## 规则管理
+
+UFW 按顺序处理规则，因此较早的规则优先于较晚的规则。下表列出了一些有用的命令，帮助您检查当前的防火墙配置并在必要时删除规则。
+
+| 命令 | 说明 |
+|------|------|
+| `sudo ufw status` | 显示 UFW 是否处于活动状态，并列出防火墙当前的所有设置（允许或拒绝了哪些端口和服务）。 |
+| `sudo ufw status verbose` | 显示更多细节，例如默认策略和日志设置。 |
+| `sudo ufw show added` | 仅显示用户添加的规则（不包括内部和系统规则）。这在您想查看变更或跨系统对比配置时很有用。 |
+| `sudo ufw status numbered` | 显示带有分配索引号的规则。这在您想删除特定规则时很有用。 |
+| `sudo ufw delete <number>` | 根据分配的索引号删除您指定的规则。UFW 随后会重新编号剩余条目。您可以再次运行 `sudo ufw status numbered` 来确认规则已被删除。 |

@@ -4,7 +4,7 @@ draft: false
 description: 树莓派触摸显示屏 2 是一款触摸屏 LCD，提供 5 英寸、7 英寸和 10 英寸三种尺寸，专为平板电脑、娱乐系统和信息仪表盘等交互式使用场景设计。该显示屏兼容 Raspberry Pi B+ 及更高版本，通过 DSI 连接器和 GPIO 排针连接，支持自动检测。5 英寸和 7 英寸型号具备 720×1280 像素分辨率、五指多点触控；10 英寸型号具备 1200×1920 像素分辨率、十指多点触控。支持鼠标等效功能、屏幕键盘和集成供电。附带 FFC 线缆、GPIO 电源线和安装螺丝，可安装到树莓派背面。
 keywords: [树莓派触摸显示屏 2, 触摸显示屏, 5英寸, 7英寸, 10英寸, 多点触控, 屏幕键盘, DSI连接器, GPIO排针, FFC, 树莓派兼容性, 720×1280分辨率, 1200×1920分辨率, 24位RGB, 亮度调节]
 last_update: 
-  date: 2026-08-02
+  date: 2026-08-09
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -25,7 +25,7 @@ import TabItem from '@theme/TabItem';
 | --- | --- | --- | --- |
 | **5 英寸**和**7 英寸** | * Raspberry Pi B+ 及更高版本。<br/>* 所有树莓派 Compute Module 接口 (CMIO) 板。 | * 树莓派 Zero 系列。<br/>* 树莓派 Keyboard 电脑。 | * Raspberry Pi 5 及更高版本。<br/>* 所有树莓派 Compute Module 接口 (CMIO) 板。 |
 | **10 英寸** | * Raspberry Pi CM4IO 板及更早版本。<br/><br/>只能使用 `DISP1` 端口连接到 IO 板。 | * Raspberry Pi 4B 及更早版本。<br/>* 树莓派 Zero 系列。<br/>* 树莓派 Keyboard 电脑。 | * Raspberry Pi 5 及更高版本。<br/>* Raspberry Pi CM5IO 板及更高版本。 |
-| | * Raspberry Pi 5 及更高版本。<br/>* Raspberry Pi CM5IO 板及更高版本。<br/><br/>可使用任意 `DISP` 端口连接到 IO 板。 | | |
+| | * Raspberry Pi 5 及更高版本。<br/>* Raspberry Pi CM5IO 板及更高版本。<br/><br/>可使用 `DISP0` 或 `DISP1` 端口连接到 IO 板。 | | |
 
 您可以将任何 SBC 外形尺寸的树莓派直接安装到触摸显示屏 2 背面。
 
@@ -59,7 +59,7 @@ Raspberry Pi Compute Module 不会自动检测 DSI 显示屏，因为它们专�
 | --- | --- | --- | --- | --- |
 | **5 英寸** | 16 毫米 | 91.5 x 143.5 毫米 | 63 x 111.5 毫米 | 62 x 110.5 毫米 |
 | **7 英寸** | 15 毫米 | 120 x 189.5 毫米 | 88 x 155.5 毫米 | 87 x 154.5 毫米 |
-| **10 英寸** | 16 毫米 | 161.8 x 247.3 毫米 | 136.4 x 217.6 毫米 | 135.4 x 216.6 毫米 |
+| **10 英寸** | 16 毫米 | 168.9 x 248.1 毫米 | 136.4 x 217.6 毫米 | 135.4 x 216.6 毫米 |
 
 ### 硬件
 
@@ -215,7 +215,7 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2。
 
 3. 根据需要添加两根跳线到 `J6`：
    - 在 Raspberry Pi Compute Module 5 IO 板上连接 `CAM/DISP 1` 时需要。
-   - 在 Raspberry Pi Compute Module 4 IO 板上连接 `DSIO` 接口时需要。
+   - 在 Raspberry Pi Compute Module 4 IO 板上连接 `DISP0` 接口时需要。
 
 <img src="/img/accessories/touch-display-2/touch-display-2-ffc.jpg" alt="正确连接到触摸显示屏 2 的扁平柔性线缆" width="100%" />
 *连接到触摸显示屏 2 的 FFC 线缆*
@@ -351,7 +351,7 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2。
 您可以将触摸显示屏 2 连接到安装了 IO 板的 Raspberry Pi Compute Module。为此，请使用随附的 **Mini – Mini** FFC。
 
 :::::note
-10 英寸显示屏需要四通道 DSI 数据。在 CM5 板及更高版本上，您可以使用任意 `DISP` 端口。在 CM4 板及更早版本上，仅 `DISP1` 端口支持此功能。
+10 英寸显示屏需要四通道 DSI 数据。在 CM5 板及更高版本上，您可以使用 `DISP0` 或 `DISP1` 端口。在 CM4 板及更早版本上，仅 `DISP1` 端口支持此功能。
 :::::
 
 #### 步骤 1. 在 `config.txt` 中指定显示屏
@@ -374,6 +374,10 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2 设备。
 
     - `dtoverlay=vc4-kms-dsi-ili79600-10-1inch`
 
+3. 如果使用 Compute Module 5 的 `DISP0` 端口，还需**添加**以下内容：
+
+    - `dtoverlay=vc4-kms-dsi-ili79600-10-1inch,dsi0`
+
 #### 步骤 2. 将 FFC 连接到触摸显示屏 2
 
 :::::important[重要]
@@ -382,12 +386,10 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2 设备。
 
 将 FFC 连接到显示屏：
 
-1. 向外滑动触摸显示屏 2 上 `DISP1` FFC 连接器两侧的固定夹。
+1. 向外滑动触摸显示屏 2 上 FFC 连接器两侧的固定夹。
 2. 将 FFC 最宽的一端插入连接器，然后将固定夹推回原位以固定线缆。
 
     金属触点必须朝上，远离触摸显示屏 2。
-
-3. 如果连接到 Raspberry Pi Compute Module 5 IO 板，请添加两根跳线到 `J6`。
 
 <img src="/img/accessories/touch-display-2/touch-display-2-10-ffc.png" alt="正确连接到 10 英寸触摸显示屏 2 的扁平柔性线缆" width="100%" />
 *正确连接到 10 英寸触摸显示屏 2 的扁平柔性线缆*
@@ -398,6 +400,7 @@ Raspberry Pi Compute Module 不会自动检测触摸显示屏 2 设备。
 2. 将 FFC 的另一端插入连接器端口，然后合上固定夹以固定线缆。
 
     金属触点必须朝下。
+3. 如果连接到 Raspberry Pi Compute Module 5 IO 板的 `DISP1`，请添加两根跳线到 `J6`。
 
 #### 步骤 4. 在设备和显示屏之间连接 GPIO 电源线
 
@@ -547,3 +550,4 @@ dtoverlay=vc4-kms-dsi-ili9881-7inch,invx,invy
 ```
 
 <Normal />
+

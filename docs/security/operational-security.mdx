@@ -1,0 +1,106 @@
+---
+title: "运维安全"
+title_meta: 树莓派运维安全指南 — 用户账户保护、SSH加固与Fail2Ban防暴力破解
+sidebar_position: 4
+draft: false
+description: "提高树莓派运维安全 (OpSec) 的实用方法 — 安全用户账户、系统更新、防火墙、SSH 安全和 Fail2Ban 防护。"
+keywords: [运维安全, OpSec, SSH安全, Fail2Ban, 用户账户, 防火墙, 系统更新, 暴力破解防护, 树莓派安全]
+last_update:
+  date: 2026-08-09
+---
+
+# 运维安全
+
+运维安全 (OpSec) 是指通过减少攻击者获取访问权限或利用漏洞的机会来保护您的设备的实践。本页面涵盖了提高树莓派运维安全性的实用方法。
+
+## 保护用户账户
+
+为防止未经授权的访问并最小化对系统的意外或恶意更改的影响，您可以通过以下实践保护您的树莓派：
+
+* 要求从启动时就需要密码。
+* 管理用户权限。
+* 要求超级用户 (`sudo`) 命令需要密码（在设置过程中默认启用）。
+
+有关说明以及用户账户管理的更多信息，请参阅 [用户访问和管理](../computers/configuration.mdx#用户访问与管理)。
+
+## 更新 Raspberry Pi OS
+
+为确保您的系统拥有最新的安全功能，我们建议您及时更新软件。更多信息请参阅 **Raspberry Pi OS** 页面中的 [更新当前的树莓派软件](../computers/os.mdx#升级软件)。
+
+只有 Raspberry Pi OS 的最新主版本才包含所有最新的安全修复。因此，当新的主版本发布后（例如从 Bookworm 升级到 Trixie），我们也建议您升级到最新主版本。关于升级操作系统的说明，请参阅 [升级到新的主版本](../computers/os.mdx#upgrade)。
+
+*升级* 到最新主版本与 *更新* 您的 Raspberry Pi OS 是不同的：
+
+* 更新会在您 **当前** 版本内安装最新的软件包和安全修复，而不切换到新的主版本。
+* 升级会将您的树莓派迁移到一个 **新的** Raspberry Pi OS 主版本。
+
+## 使用防火墙
+
+防火墙通过控制哪些网络连接被允许或阻止来帮助保护您的树莓派。对于大多数用户，我们建议使用 **Uncomplicated Firewall (UFW)** 来配置防火墙规则、限制对服务的访问并保护面向互联网的系统。
+
+有关安装、配置和管理 UFW 的说明，请参阅 [使用 Uncomplicated Firewall (UFW)](./ufw.mdx)。
+
+## 提高 SSH 安全性
+
+SSH 是远程访问树莓派的常用方法。默认情况下，SSH 需要用户名和密码。要提高 SSH 安全性，请使用基于密钥的身份验证。更多信息请参阅 [配置无密码登录 SSH](../computers/remote-access.mdx#配置无密码登录-ssh)。
+
+您还可以通过修改 `sshd` 配置来 **允许** 或 **拒绝** 特定用户。更多信息请参阅 [限制哪些用户可以连接](../computers/remote-access.mdx#限制哪些用户可以连接)。
+
+## 使用 Fail2Ban 阻止可疑活动
+
+将树莓派用作服务器时，您必须在防火墙上开辟漏洞以允许服务器流量通过。[Fail2Ban](http://www.fail2ban.org) 可以帮助确保服务器安全。Fail2Ban 会检查日志文件并查找可疑活动，如多次暴力登录尝试。这意味着您无需手动检查日志文件中的入侵尝试，然后更新防火墙（通过 `iptables`）来阻止它们。
+
+要安装 Fail2Ban，请运行以下命令：
+
+```sh
+$ sudo apt install fail2ban
+```
+
+安装时，Fail2Ban 会创建 `/etc/fail2ban/jail.conf`。要启用 Fail2Ban，请将 `jail.conf` 复制到 `jail.local`：
+
+```sh
+$ sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+```
+
+此配置文件包含一组默认选项，以及用于检查特定服务异常的选项。要检查用于 `ssh` 的规则，请在编辑器中打开 `jail.local`：
+
+```sh
+$ sudo nano /etc/fail2ban/jail.local
+```
+
+如果尚不存在，请创建 `[ssh]` 部分，然后在该部分中添加以下行：
+
+```ini
+[ssh]
+enabled   true
+port      ssh
+filter    sshd
+backend   systemd
+maxretry  6
+```
+
+这将启用 Fail2Ban 检查可疑的 `ssh` 活动，包括系统日志检查，并允许在阻止活动前重试六次。
+
+同一文件中的 `[default]` 部分定义了默认禁止操作 `iptables-multiport`，当达到检测阈值时，该操作将运行 `/etc/fail2ban/action.d/iptables-multiport.conf` 文件：
+
+```ini
+# 默认禁止操作（如 iptables、iptables-new、
+# iptables-multiport, shorewall, etc) 用于定义
+# action_* 变量。可全局或每个节
+# 在 jail.local 文件中覆盖
+banaction  iptables-multiport
+```
+
+多端口禁止所有端口的所有访问。`action.d` 文件夹包含替代的操作配置文件，您可以用它们来自定义服务器对可疑活动的响应。
+
+例如，要在尝试三次失败后永久禁止一个 IP 地址，可将 `[ssh]` 部分中的 `maxretry` 值改为 `3`，并将 `bantime` 设为负数：
+
+```ini
+[ssh]
+enabled   true
+port      ssh
+filter    sshd
+backend   systemd
+maxretry  3
+bantime   -1
+```
