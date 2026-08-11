@@ -71,9 +71,44 @@ const config = {
       },
     ],
   ],
+  themes: [
+    [
+      require.resolve('docusaurus-theme-search-typesense'),
+      /** @type {import('@docusaurus/types').ThemeConfig} */
+      ({}),
+    ],
+  ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      typesense: {
+        typesenseServerConfig: {
+          nodes: [
+            {
+              host: 'pidoc.cn',
+              port: 443,
+              protocol: 'https',
+              // 通过 nginx /search-api/ 反代 typesense，同源请求规避浏览器 CORS 限制
+              path: '/search-api',
+            },
+          ],
+          // 只读 search-only key，仅授权 documents:search + collections:["pidoc"]
+          apiKey: 'v4R6LIeRsWicH63vVh9MwPzGlc9LUC5R',
+          connectionTimeoutSeconds: 5,
+        },
+        // 对应 docsearch-scraper 生成的 alias "pidoc"
+        typesenseCollectionName: 'pidoc',
+        // 搜索参数：中文分词优化（标题权重 > 正文，容错、部分匹配、长句召回）
+        typesenseSearchParameters: {
+          query_by: 'hierarchy.lvl1,content,hierarchy.lvl2,hierarchy.lvl3,hierarchy.lvl4',
+          query_by_weights: '4,2,2,1,1',
+          num_typos: 2,
+          infix: 'always',
+          drop_tokens_threshold: 2,
+        },
+        // 搜索页路径（true 默认 'search'）
+        searchPagePath: 'search',
+      },
       image: 'img/favicon.png',
       navbar: {
         title: '树莓派文档',
