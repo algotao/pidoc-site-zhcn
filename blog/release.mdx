@@ -2,9 +2,10 @@
 title: Pidoc更新记录
 authors: [algotao]
 tags: [Raspberry-Pi, 中文文档]
-date: 2026-08-09T10:00
+date: 2026-08-19T10:00
 ---
 
+- 2026年08月19日：更新到 master 分支的 [be7cb6ed](https://github.com/raspberrypi/documentation/commit/be7cb6ed)。主要变更：**Connect 远程更新重大重构**（新增"托管更新工件""部署更新工件""监控部署"通用章节，个人账户部署改为两步式流程，A/B 启动更新章节相应简化）；组织版新增"部署远程更新"章节及管理 API"显示设备""更新设备"端点，所有删除类 API 响应从 204 改为 200+JSON 详情；安全启动配置工具大版本修订（CM4S 连接章节、客户端设备表重构、安全级别表调整、术语统一为"客户端设备/设备唯一机密"）；安全架构文档术语更新（SoC、磁盘特定密码短语、Fail2Ban 组件）；ramdisk 最大尺寸更新（Pi 4+ 为 180 MB）；摄像头软件新增 5 款 ST 传感器（VD55G1/VD55G4/VD56G3/VD65G4/VD66GY）；全文移除 `sudo -E` 参数。
 - 2026年08月09日：更新到 master 分支的 [a286140a](https://github.com/raspberrypi/documentation/commit/a286140a)。主要变更：**全新安全专区**（安全概览、安全架构、安全启动配置工具、运维安全、UFW 防火墙 5 篇新文档）；系统配置页移除旧安全章节；触摸显示屏 2 规格更新（10 英寸外形尺寸修正、DSIO→DISP0 命名、新增 DISP0 端口 overlay 参数）；SSH 文档新增限制用户连接章节。
 - 2026年08月02日：更新到 master 分支的 [5aec951e](https://github.com/raspberrypi/documentation/commit/5aec951e)。主要变更：触摸显示屏 2 新增 10 英寸型号支持（1200×1920 分辨率、十指触控、新 overlay `vc4-kms-dsi-ili79600-10-1inch`）；键盘电脑 Vial 按键重映射章节重构；UART 接口文档新增 UART10 调试 UART 及 Pi 5 主 UART 路由说明；删除"使用代理服务器"章节；Debug Probe 固件更新至 v2.3.1；Pico W 系列无线连接文档链接标题更新；Connect 服务远程更新权限描述更新；RP2350 最小可行开发板设计文件拆分为 RP2350A/RP2350B 两项；多篇文档链接及版本号更新。
 - 2026年07月13日：更新到 master 分支的 [5c71a7c5a3f8c8546bd3f778b86f8a14cd68e790](https://github.com/raspberrypi/documentation/commit/5c71a7c5a3f8c8546bd3f778b86f8a14cd68e790)。新增树莓派 2 Model B Rev 1.2 设备树值。Pico SDK API 参考文档更新至 [v2.3.0](https://github.com/raspberrypi/pico-sdk/tree/98a542c1a62fb549ffb5d66a3e5892b06276b670)（新增 hardware_psram、hardware_rosc、pico_low_power、pico_usb_reset 等模块，更新大量 API 文档）。

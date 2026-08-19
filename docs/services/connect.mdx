@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update: 
-  date: 2026-08-02
+  date: 2026-08-19
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -414,11 +414,76 @@ Raspberry Pi Connect 具备远程推送更新至树莓派设备的能力。
 
 远程更新适用于更新防火墙后的设备、离线设备（将在下次登录 Connect 时接收更新）以及地理位置偏远或难以接触的设备。
 
+Connect 支持两种类型的更新工件：
+
+* [脚本工件](#脚本工件)：由 `otamaker` 创建，在设备上以 root 权限运行 shell 脚本。它可在标准 Raspberry Pi OS 安装上运行，适合升级软件包等维护任务。
+* [A/B 启动更新](#a-b-启动更新)：由 `rpi-image-gen` 创建，替换整个操作系统，并在更新失败时自动回退到之前的版本。它需要先为设备写入 A/B 启动布局的镜像。
+
+无论你构建哪种类型的工件，都需要自行托管它，然后从 Raspberry Pi Connect 网站进行部署。这两种类型的这两个步骤是相同的，具体说明见[托管更新工件](#托管更新工件)和[部署更新工件](#部署更新工件)。
+
+如果你的设备属于 [Connect for Organisations](./connect-for-organisations.mdx) 账户，部署方式会略有不同。更多信息请参阅[在组织中部署远程更新](./connect-for-organisations.mdx#部署远程更新)。
+
+### 托管更新工件 {#托管更新工件}
+
+Raspberry Pi Connect 不会存储你的更新工件。相反，你需要自行托管每个工件，并将其位置告知 Connect，Connect 会把该位置传递给接收设备，以便设备直接下载工件。
+
+你可以在接收设备可访问的任何位置托管工件：你自己的 Web 服务器、S3 存储桶、FTP 或 SFTP 服务器，或者使用 `file://` URI 指向接收设备本身上的路径。远程更新支持 HTTP、HTTPS、FTP、SFTP 和 File URI。
+
+该位置必须可供接收设备访问，但无需对 Raspberry Pi Connect 服务器或整个互联网开放。从与接收设备位于同一本地网络的另一台计算机上提供工件是一种很好的做法。
+
+以下是示例 URI：http://192.168.0.1:8080/path/to/update.tar.zst
+
+其中包含以下必要信息：
+
+* 主机 IP：192.168.0.1
+* 端口：8080
+* 路径：/path/to/update.tar.zst
+
+你还需要工件的 SHA-256 校验和，Connect 会将其传递给设备，以便设备检查工件在传输过程中是否损坏或被篡改。`otamaker` 在构建脚本工件时会输出校验和；否则，请使用 `sha256sum` 计算：
+
+```sh
+sha256sum update.tar.zst
+```
+
+复制下 URI 和校验和；下一节中你会用到这两项。
+
+### 部署更新工件 {#部署更新工件}
+
+当你使用 `otamaker` 或 `rpi-image-gen` 构建并托管工件后，使用 Raspberry Pi Connect 网站将其部署到设备。
+
 :::note
-在 [Connect for Organisations](./connect-for-organisations.mdx) 账户中，只有管理员可以部署远程更新和管理更新构件；成员无法执行这些操作。此限制不适用于个人账户。
+如果接收设备属于某个组织，请改按[在组织中部署远程更新](./connect-for-organisations.mdx#部署远程更新)中所述的方式进行部署。
 :::
 
-如果你是管理设备团队的用户，Connect for Organisations 的管理员还可以使用[管理 API](#组织版-connect) 自动管理更新构件和部署。
+部署始终从你要更新的设备开始，因此在继续之前，请确保接收设备已注册到你的个人账户：
+
+1. 登录 Raspberry Pi Connect。
+2. 使用右上角的账户切换器选择*个人*账户。
+3. 前往*设备*选项卡，然后在接收设备旁选择*部署*。*部署*仅对已启用远程更新的设备显示。
+
+这将打开*新建部署*表单，该表单分两个步骤为部署创建新工件。
+
+在*步骤 1：创建工件*中，描述你托管的工件：
+
+1. 输入工件的*名称*。名称无需唯一，因此可以使用有助于你日后识别该部署的内容，例如版本号。
+2. 粘贴你在[托管更新工件](#托管更新工件)中复制下来的 *URI* 和 *SHA-256 校验和*。
+3. 选择*下一步*。
+
+![新建部署表单的步骤 1，显示名称、URI 和 SHA-256 校验和字段。](/img/services/connect/new-deployment-personal-step-1.png)
+
+在*步骤 2：部署到设备*中，检查详细信息，然后选择*部署*。如果发现错误，选择*返回*进行修正。
+
+![新建部署表单的步骤 2，显示工件的详细信息以供确认。](/img/services/connect/new-deployment-personal-step-2.png)
+
+#### 监控部署 {#监控部署}
+
+当部署处于*待处理*或*进行中*状态时，部署历史记录会自动更新。*部署历史记录*标题旁会出现一个旋转图标，表示页面正在自动刷新。部署完成后，旋转图标消失，历史记录停止更新。
+
+如果部署显示*失败*，选择它以查看错误消息，然后参阅[远程更新失败](#远程更新失败)。
+
+你可以通过选择部署并选择*取消*来取消*待处理*的部署。当另一个部署排队时，待处理的部署也会自动取消。
+
+部署成功后，按照与你所部署工件类型相适应的方式进行验证。脚本工件请参阅[脚本工件](#脚本工件)，A/B 启动更新请参阅[A/B 启动更新](#a-b-启动更新)。
 
 ### A/B 启动更新 {#a-b-启动更新}
 
@@ -428,13 +493,15 @@ A/B 启动更新可防止失败或错误的更新导致设备停止工作。
 
 配置 A/B 启动需要能够物理接触设备，因为必须使用适当的 A/B 启动布局对设备进行镜像。但配置完成后，即可通过 Raspberry Pi Connect 进行远程更新。
 
-使用 [rpi-image-gen](https://github.com/raspberrypi/rpi-image-gen) 创建 A/B 启动配置（`.img` 文件）和更新构件（`.tar.zst` 文件）。使用 [Raspberry Pi Imager](https://www.raspberrypi.com/software/) 配置 `.img` 文件并将其写入存储设备，以便传输到接收更新的树莓派。
+使用 EEPROM 引导的 Raspberry Pi 5 及更高版本设备也可以配置为使用 A/B 启动更新。参见 [A/B bootloader 更新](../computers/raspberry-pi.mdx#a-b-bootloader-更新)。
+
+使用 [rpi-image-gen](https://github.com/raspberrypi/rpi-image-gen) 创建 A/B 启动配置（`.img` 文件）和更新工件（`.tar.zst` 文件）。使用 [Raspberry Pi Imager](https://www.raspberrypi.com/software/) 配置 `.img` 文件并将其写入存储设备，以便传输到接收更新的树莓派。
 
 #### 前提条件
 
 使用远程更新和 A/B 启动配置需要满足以下条件：
 
-##### 创建 A/B 启动配置和更新构件（使用 rpi-image-gen）需要：
+##### 创建 A/B 启动配置和更新工件（使用 rpi-image-gen）需要：
 
 一台已安装以下软件的树莓派设备：
 
@@ -449,31 +516,27 @@ A/B 启动更新可防止失败或错误的更新导致设备停止工作。
   
   至少需要 16 GB 空间，但具体所需磁盘空间需根据启动分区（固件、内核、设备树文件以及可能的 initramfs）和系统分区（内核模块及系统级软件，如标准 Linux 命令行工具）的未来需求决定。
 
-##### 托管构件进行远程部署需要：
+##### 托管工件进行远程部署需要：
 
-* 一台可从接收设备访问的 Web 服务器。
-  
-  远程更新支持 HTTP、HTTPS、FTP、SFTP 和文件 URI。
-  
-  该位置无需对互联网开放，但必须可从接收更新信号的树莓派设备访问。
+* 一个托管工件的位置，接收设备能够从中下载工件。关于 Connect 支持的托管选项，请参阅[托管更新工件](#托管更新工件)。
 
-##### 接收更新构件的设备需要：
+##### 接收更新工件的设备需要：
 
 * Raspberry Pi 4 或更高版本，需满足：
   * 已连接互联网。
-  * 已开启 OTA 更新。
-  * 已在 Connect 中注册，并带有已关联的远程更新构件。
+  * 已选择加入远程更新。
+  * 已注册并登录你的 Raspberry Pi Connect 账户。
 
 #### 实施 A/B 启动并远程更新首个镜像
 
 按照以下四个阶段实施 A/B 配置并使用 Raspberry Pi Connect 发送更新：
 
 1. 第一阶段：为接收设备（Raspberry Pi 4 及更高版本）准备远程更新，创建 A/B 启动文件，然后部署到设备。
-2. 第二阶段：创建用于部署到接收设备的更新构件文件。
-3. 第三阶段：托管更新构件并在 Raspberry Pi Connect 网站上注册。
-4. 第四阶段：使用 Raspberry Pi Connect 的远程更新功能选择接收设备，然后将更新构件部署到该设备。
+2. 第二阶段：创建用于部署到接收设备的更新工件文件。
+3. 第三阶段：托管更新工件，使接收设备能够下载。
+4. 第四阶段：使用 Raspberry Pi Connect 的远程更新功能部署更新工件到接收设备，然后验证更新。
 
-#### 第一阶段：创建 A/B 启动 .img 文件
+#### 第一阶段：创建 A/B 启动配置
 
 标准 Raspberry Pi OS 安装不包含 A/B 启动配置。本阶段介绍如何使用 [rpi-image-gen](https://github.com/raspberrypi/rpi-image-gen) 和 [Raspberry Pi Imager](https://www.raspberrypi.com/software/) 创建 A/B 启动配置。
 
@@ -485,7 +548,11 @@ rpi-image-gen 输出一个包含 A/B 启动镜像的 `.img` 文件。
 
 在第3步中，你将生成一个授权密钥，以便接收设备关联到 Raspberry Pi Connect 网站。此授权密钥与单个接收设备绑定，因此请为每个要更新的接收设备创建新的密钥。
 
-注意：你必须使用运行最新版 Raspberry Pi OS (Trixie) 的树莓派设备来创建更新。接收设备必须为 Raspberry Pi 4 或更高版本。
+:::note
+你必须使用运行最新版 Raspberry Pi OS (Trixie) 的树莓派设备来创建更新。接收设备必须为 Raspberry Pi 4 或更高版本。
+:::
+
+要使用 A/B 启动配置更新接收设备：
 
 ##### 步骤 1：安装 rpi-image-gen
 
@@ -504,7 +571,9 @@ sudo ./install_deps.sh
 
 ##### 步骤 2：准备并配置镜像
 
-提示：rpi-image-gen 包含一个示例应用程序，带有层和配置，可构建与远程更新兼容的镜像。
+:::tip
+rpi-image-gen 包含一个示例应用程序，带有层和配置，可构建与远程更新兼容的镜像。
+:::
 
 有关 `.yaml` 文件元数据的说明，请参阅 [X 环境元数据](https://raspberrypi.github.io/rpi-image-gen/layer/index.html#_x_env_metadata) 和 [层](https://raspberrypi.github.io/rpi-image-gen/layer/index.html)。
 
@@ -519,7 +588,7 @@ sudo ./install_deps.sh
    - X-Env-Layer-Reqs。
 4. 打开 `examples/ota/config/ota.yaml`。
 5. 设置以下环境变量：
-   - Version。用于确定启动镜像版本。现在设置一个起始版本号，以后每次创建更新构件时相应递增。如不指定版本号，默认为 1.0.0。
+   - Version。用于确定启动镜像版本。现在设置一个起始版本号，以后每次创建更新工件时相应递增。如不指定版本号，默认为 1.0.0。
    - Device hostname。用于此设备创建的所有镜像。必须唯一。如不指定设备主机名，每次构建将默认创建值 `ota-device-1`。
 6. （可选）打开 `examples/ota/config/ota.yaml` 并：
    - 定义构建时要安装的额外软件包。更多信息请参阅[软件包](https://raspberrypi.github.io/rpi-image-gen/config/index.html#_packages)。
@@ -537,7 +606,7 @@ sudo ./install_deps.sh
 
 1. 登录 Raspberry Pi Connect。
 2. 从右上角的账户切换器中选择你的组织或*个人*账户。
-3. 前往*配置*选项卡（组织）或*设置*选项卡（个人），然后在授权密钥部分选择*新建*（组织）或*创建新授权密钥*（个人）。
+3. 前往 *Provisioning* 选项卡（组织）或*设置*选项卡（个人），然后在授权密钥部分选择*新建*（组织）或*创建新授权密钥*（个人）。
 4. 填写表单，然后选择*创建授权密钥*。
 5. 复制下密钥。
 
@@ -577,7 +646,9 @@ Raspberry Pi 4：
 
 接下来，使用 Raspberry Pi Imager 创建操作系统配置并保存到存储设备。
 
-警告：以下示例目标 (`/dev/mmcblk0`) 仅在你从其他设备（如 NVMe SSD）启动时使用。注意不要覆盖操作系统。
+:::warning
+以下示例目标 (`/dev/mmcblk0`) 仅在你从其他设备（如 NVMe SSD）启动时使用。注意不要覆盖操作系统。
+:::
 
 写入镜像：
 
@@ -632,15 +703,15 @@ Generated using rpi-image-gen e3828f885c860f15991468883d3b8484b0eaf9d8 on 2025-1
 Artefact version: 1.0.0
 ```
 
-#### 第二阶段：创建更新构件
+#### 第二阶段：创建更新工件
 
-现在设备已配置好 A/B 启动，可以使用 Raspberry Pi Connect 向其交付更新构件。
+现在设备已配置好 A/B 启动，可以使用 Raspberry Pi Connect 向其交付更新工件。
 
-更新构件由 rpi-image-gen 创建，为 `.tar.zst` 文件。这些文件比你在第一阶段创建的 `.img` 文件小得多，将在第四阶段由 Raspberry Pi Connect 部署到接收设备。
+更新工件由 rpi-image-gen 创建，为 `.tar.zst` 文件。这些文件比你在第一阶段创建的 `.img` 文件小得多，将在第四阶段由 Raspberry Pi Connect 部署到接收设备。
 
 为便于说明，这里继续使用第一阶段的示例更新。请根据你自己的更新 `.yaml` 文件路径和命名调整这些步骤。
 
-构建更新构件：
+构建更新工件：
 
 ##### 步骤 1：更新 `ota.yaml` 配置
 
@@ -658,39 +729,23 @@ ${EDITOR:-vi} ./examples/ota/config/ota.yaml
 ./rpi-image-gen build -S ./examples/ota/ -c ota.yaml
 ```
 
-#### 第三阶段：托管更新构件 {#托管更新工件}
+#### 第三阶段：托管更新工件
 
-现在你已创建了要通过 Raspberry Pi Connect 部署的更新构件，可以将其托管在 FTP/SFTP 服务器上、使用 `file://` URI 本地保存、放在公共 Web 服务器、S3 存储桶或接收设备可通过 HTTP 下载的任何其他网站上。
+现在你已创建了要通过 Raspberry Pi Connect 部署的更新工件，将其托管在接收设备能够下载的位置。关于 Connect 支持的托管选项以及需要收集的信息，请参阅[托管更新工件](#托管更新工件)。
 
-接下来，在 Raspberry Pi Connect 中注册 URI 和 SHA-256 校验和。这样 Connect 就能告诉在第四阶段中选择的设备在哪里找到更新文件。
+以下步骤演示如何从与树莓派接收设备位于同一网络的树莓派主机上提供更新工件。
 
-你提供的 URI 用于查找更新构件并将其推送至接收设备。因此，该位置必须可供接收设备访问，但无需对 Raspberry Pi Connect 服务器开放。
-
-示例 URI：http://192.168.0.1:8080/path/to/update.tar.zst
-
-其中包含以下必要信息：
-
-* 主机 IP：192.168.0.1
-* 端口：8080
-* 路径：/path/to/update.tar.zst
-
-以下步骤演示如何从与树莓派接收设备位于同一网络的树莓派主机上提供更新构件。
-
-托管更新构件：
+托管更新工件：
 
 ##### 步骤 1：在主机设备上运行 HTTP 服务器
 
-1. 在终端中运行以下命令创建服务器并托管更新构件（相应更改构件镜像目录）：
+1. 在终端中运行以下命令创建服务器并托管更新工件（相应更改工件镜像目录）：
 
 ```sh
 python -m http.server 8080 --directory ./work/image-myapp-1.1.0
 ```
 
 ##### 步骤 2：计算更新文件的 SHA-256 校验和
-
-接下来，提供构件的 SHA-256 校验和以确保其未被损坏或篡改，同时提供主机 IP 地址以便在第四阶段发送到接收设备。
-
-查找校验和和 IP 地址：
 
 1. 在终端中运行以下命令：
 
@@ -702,7 +757,7 @@ sha256sum ./work/image-myapp-1.1.0/update.tar.zst
 
 ##### 步骤 3：查找主机在本地网络上的 IP 地址
 
-你必须提供更新构件的 URI，其中包含主机 IP 地址。
+你必须提供更新工件的 URI，其中包含主机 IP 地址。
 
 查找 IP 地址：
 
@@ -714,61 +769,17 @@ hostname -I
 
 2. 复制下 IP 地址。
 
-##### 步骤 4：在 Raspberry Pi Connect 网站上注册构件
-
-现在你已经托管了更新构件，并复制了 IP 地址和校验和，在 [Raspberry Pi Connect 网站](https://connect.raspberrypi.com/) 上注册这些详细信息。
-
-要注册更新构件，请按照以下步骤操作，或者如果你想一次性完成注册和选择接收设备，请直接跳转到[第四阶段步骤 1](#步骤-1选择接收设备并部署构件)。
-
-对于个人设备：
-
-1. 登录 Raspberry Pi Connect。
-2. 从右上角的账户切换器中选择你的组织或*个人*账户。
-3. 前往*远程更新*选项卡，然后选择*新建*。
-4. 输入构件名称，然后粘贴 URI 和 SHA-256（来自步骤 2 和步骤 3）。
-
-<img src="/img/services/connect/create-deployment-artefact.png" alt="创建部署构件界面，显示必填字段：名称、URI 和 SHA-256 校验和。" width="100%" />
-
 #### 第四阶段：远程更新 {#远程更新}
 
-使用 Raspberry Pi Connect 将更新构件部署到接收的树莓派设备。
+使用 Raspberry Pi Connect 将更新工件部署到接收的树莓派设备。
 
-使用 Raspberry Pi Connect 网站选择将更新构件部署到哪台设备，因此在继续之前，请确保接收设备已注册到你的个人或组织账户。
+##### 步骤 1：将工件部署到接收设备
 
-注意：构件一旦部署或尝试部署后便无法删除。这是为了在账户遭到入侵时提供可追溯性。
-
-##### 步骤 1：选择接收设备并部署构件
-
-1. 登录 Raspberry Pi Connect。
-2. 使用右上角的账户切换器，选择接收设备注册的个人或组织账户。
-3. 前往*设备*选项卡，然后选择接收设备。
-
-<img src="/img/services/connect/devices-deploy-button.png" alt="Raspberry Pi Connect 设备界面，显示设备列表，其中一台设备旁边有部署按钮。" width="100%" />
-
-4. 选择*部署*。
-5. 如果你的*远程更新*选项卡中已有注册的更新构件，选择以下选项之一，否则选择*新建*：
-   - *现有*：从下拉列表中选择部署构件，然后选择*部署*。
-   - *新建*：按照上述第三阶段的步骤创建新的更新构件，然后选择*创建并部署*。
-
-   刷新浏览器以查看部署更新。进度依次为*待处理*、*进行中*，最终为*成功*。
-
-   如果部署显示*失败*，选择它以查看错误消息，然后参阅[远程更新失败故障排除](#远程更新失败)。
-
-<img src="/img/services/connect/new-deployment-view.png" alt="选择部署后的新建部署界面，提供选择现有部署或创建新部署的选项。" width="100%" />
-
-注意：待处理的部署可以通过选择部署然后选择*取消*来取消。当另一个部署排队时，待处理的部署也会自动取消。
+使用第三阶段中记录的 URI 和校验和，从 [Raspberry Pi Connect 网站](https://connect.raspberrypi.com/) 部署工件，具体步骤参阅[部署更新工件](#部署更新工件)。
 
 ##### 步骤 2：验证更新
 
-当部署显示为*成功*时，验证更新。
-
-验证更新：
-
-1. 登录 Raspberry Pi Connect。
-2. 从右上角的账户切换器中选择你的组织或*个人*账户。
-3. 选择*设备*选项卡。
-4. 找到你刚刚更新的接收设备，然后选择*连接*。
-5. 在命令行中输入：
+当部署显示为 **Succeeded** 时，使用 Raspberry Pi Connect 连接到接收设备，并按照第一阶段步骤 7 的方式确认部署的版本：
 
 ```sh
 cat /etc/rpi-issue
@@ -789,7 +800,7 @@ Artefact version: 1.1.0
 
 使用 [otamaker](https://github.com/raspberrypi/utils/tree/master/otamaker) 来创建脚本工件。
 
-#### 前置条件
+#### 前提条件
 
 创建和部署脚本工件需要满足以下条件：
 
@@ -823,11 +834,7 @@ rpi-connect ota on
 
 ##### 对于托管工件以供远程部署到接收设备：
 
-* 一个接收设备可访问的 Web 服务器。
-+
-远程更新支持 HTTP、HTTPS、FTP、SFTP 和 File URI。
-+
-该位置不必对互联网开放，但必须从接收方树莓派设备可以访问。
+* 一个托管工件的位置，接收设备能够从中下载工件。关于 Connect 支持的托管选项，请参阅[托管更新工件](#托管更新工件)。
 
 #### 第 1 步：创建脚本
 
@@ -895,14 +902,14 @@ otamaker aptupgrade.yaml
 
 这会创建一个 Zstandard 压缩的更新工件（`.tar.zst` 文件），其中包含清单和脚本，并输出工件的 SHA-256 校验和。
 
-记下校验和：在 Raspberry Pi Connect 网站上注册工件时需要用到。
+记下校验和：从 Raspberry Pi Connect 网站部署工件时需要用到。
 
-#### 第 4 步：托管、注册和部署工件
+#### 第 4 步：托管并部署工件
 
-部署脚本工件的方式与 A/B 启动更新工件相同：
+部署脚本工件的方式与其他更新工件相同：
 
-. 将 `.tar.zst` 文件托管在接收设备可以下载的位置，然后在 Raspberry Pi Connect 网站上注册其 URI 和 SHA-256 校验和，如[托管更新工件](#托管更新工件)中所述。您可以跳过计算校验和的步骤：`otamaker` 在构建工件时已经输出了校验和。
-. 选择接收设备并将工件部署到该设备，如[远程更新](#远程更新)中所述。跳过最后的验证步骤，该步骤仅适用于 A/B 启动更新：按照下方第 5 步所述验证脚本工件。
+1. 按[托管更新工件](#托管更新工件)所述，将 `.tar.zst` 文件托管在接收设备可以下载的位置。你可以跳过计算校验和的步骤：`otamaker` 在构建工件时已经输出了校验和。
+2. 按[部署更新工件](#部署更新工件)所述，选择接收设备并将工件部署到该设备。
 
 #### 第 5 步：验证更新
 
@@ -947,16 +954,6 @@ sudo apt install --only-upgrade rpi-connect-lite
 ```
 Replacing globally-enabled rpi-connect services with user-enabled ones...
 ```
-
-### 远程更新失败
-
-如果 A/B 启动配置或远程更新过程失败，请参阅以下常见故障及修复方案列表：
-
-| 错误 | 建议修复方案 |
-| --- | --- |
-| `下载无法连接到服务器（重试中）。` | 接收设备必须能够找到更新文件。打开到接收设备的远程 shell 连接，然后使用 curl 检查设备是否能访问注册更新构件时提供的 URI 中的 IP 地址：`curl -I http://192.168.0.1:8080` |
-| `更新文件被拒绝。` | 确保注册更新构件时提供的 URI 包含 `.tar.zst` 更新文件的 URL，而不是 `.img` 完整镜像文件。 |
-| Raspberry Pi Connect 中设备旁边未显示部署选项 | 使用以下命令启用 OTA 选择加入，然后刷新浏览器：`rpi-connect ota on` |
 
 ### 常见问题
 
@@ -1058,6 +1055,26 @@ Screen sharing is supported by this version of rpi-connect
   * `turn1.raspberrypi.com`
   * `turn2.raspberrypi.com`
   * `turn3.raspberrypi.com`
+
+#### 远程更新失败
+
+如果 A/B 启动配置或远程更新过程失败，请参阅以下常见故障及修复方案列表。
+
+你也可以参阅 [rpi-image-gen 文档](https://github.com/raspberrypi/rpi-image-gen/blob/master/docs/execution/index.adoc)，或访问[树莓派故障排除论坛](https://forums.raspberrypi.com/viewforum.php?f=28&sid=376757fde13953b7bfdcc0b1061edeca)。
+
+:::tip
+如果看到错误，可以使用 Raspberry Pi Connect 的远程 shell 访问查看 `systemd` 日志以获取更多信息：
+
+```sh
+journalctl
+```
+:::
+
+| 错误 | 建议修复方案 |
+| --- | --- |
+| `Download could not connect to server (retry).`（下载无法连接到服务器（重试中）。） | 接收设备必须能够找到更新文件。打开到接收设备的远程 shell 连接，然后使用 curl 检查设备是否能访问创建部署时提供的 URI 中的 IP 地址：`curl -I http://192.168.0.1:8080` |
+| `update file rejected.`（更新文件被拒绝。） | 确保创建部署时提供的 URI 包含 `.tar.zst` 更新文件的 URL，而不是 `.img` 完整镜像文件。 |
+| Raspberry Pi Connect 中设备旁边未显示*部署*选项 | 使用以下命令启用 OTA 选择加入，然后刷新浏览器：`rpi-connect ota on` |
 
 ### 查看连接状态
 

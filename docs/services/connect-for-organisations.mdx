@@ -4,7 +4,7 @@ draft: false
 description: Connect for Organisations 是树莓派官方提供的企业级远程设备管理解决方案。支持多用户共享设备访问、屏幕共享、远程 Shell、设备转移、设备标记、双因素认证、审计日志、管理API、设备身份、远程更新等功能。
 keywords: [Raspberry Pi Connect, Connect for Organisations, 远程管理, 设备管理, 企业版, 组织版, 团队协作, 双因素认证, 审计日志, 管理API, 设备身份, 批量配置]
 last_update: 
-  date: 2026-08-02
+  date: 2026-08-19
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -198,6 +198,37 @@ import Normal from "../_normal.mdx";
 :::tip
 在列表中任何设备上选择标签可快速将其添加为筛选。
 :::
+
+## 部署远程更新 {#部署远程更新}
+
+您可以使用 Connect 的[远程更新](./connect.mdx#远程更新你的树莓派设备)功能向组织中的设备推送更新。仅管理员可部署远程更新并管理更新工件；成员无法执行这些操作。
+
+首先，请构建更新工件，并将其托管在接收设备可以下载的位置，具体方法请参阅[托管更新工件](./connect.mdx#托管更新工件)。
+
+与个人账户不同，组织会维护一个工件库，您可以多次部署其中的工件。这些工件列在**远程更新**选项卡下。
+
+要预先注册工件，请前往**远程更新**选项卡并选择**新建**，然后输入名称、URI 和 SHA-256 校验和。工件名称在组织内必须唯一。
+
+<img src="/img/services/connect-for-organisations/create-deployment-artefact.png" alt="创建部署工件界面，显示必填字段：名称、URI 和 SHA-256 校验和" width="100%" />
+
+要部署工件，请前往**设备**选项卡，然后在接收设备旁选择**部署**。**部署**按钮仅对已启用远程更新的设备显示。
+
+<img src="/img/services/connect-for-organisations/devices-deploy-button.png" alt="设备列表为启用远程更新的设备显示部署按钮" width="100%" />
+
+然后，在**新建部署**界面上，选择以下选项之一：
+
+* **现有**：从下拉列表中选择工件，然后选择**部署**。
+* **新建**：输入名称、URI 和 SHA-256 校验和，然后选择**创建并部署**。此操作可一次性完成工件的注册和部署。
+
+<img src="/img/services/connect-for-organisations/new-deployment-view.png" alt="选择部署后，新建部署界面可选择现有部署或创建新部署" width="100%" />
+
+:::note
+工件一旦被部署或尝试部署后便无法删除。这是为了在您的账户遭到入侵时提供可追溯性。
+:::
+
+请按照[监控部署](./connect.mdx#监控部署)中所述跟踪部署进度。
+
+您也可以使用[管理 API](#管理api) 自动管理更新工件和部署。
 
 ## 设置订阅服务
 
@@ -629,15 +660,29 @@ curl --request DELETE --header 'Authorization: Bearer rporg_accesstokenhere' htt
 
 如果设备身份已被交换为设备，关联的设备也将被删除并从 Raspberry Pi Connect 中退出。
 
-若成功，将返回 **204 No Content** 响应，响应体为空。
+若成功，将返回 **200 OK** 响应，其中包含已删除设备身份的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "096ce472-2cbd-412a-8295-6c03a1a07ba4",
+    "description": "my-device-identity",
+    "device_name": "pi5-001",
+    "tags": [],
+    "created_at": "2026-02-25T16:09:52Z",
+    "public_key": "-----BEGIN PUBLIC KEY-----..."
+}
+```
 
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
 
 若在组织中未找到该设备身份，将返回 **404 Not Found** 响应。
 
-### 列出构件
+### 列出工件
 
-如需列出组织中的所有远程更新构件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+如需列出组织中的所有远程更新工件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
 
 请替换下方代码中的参数：
 
@@ -663,7 +708,7 @@ curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.
 
 </Tabs>
 
-若成功，将返回 **200 OK** 响应，其中包含最多 100 个按名称字母顺序排列的组织构件，采用 JSON 格式。例如：
+若成功，将返回 **200 OK** 响应，其中包含最多 100 个按名称字母顺序排列的组织工件，采用 JSON 格式。例如：
 
 ```http
 HTTP/2 200
@@ -687,7 +732,7 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
-如需按名称筛选返回的构件，请在查询字符串中使用 `name` 参数。这会执行大小写不敏感的前缀匹配：
+如需按名称筛选返回的工件，请在查询字符串中使用 `name` 参数。这会执行大小写不敏感的前缀匹配：
 
 <Tabs>
 <TabItem value="http" label="HTTP">
@@ -713,16 +758,16 @@ curl --header 'Authorization: Bearer rporg_accesstokenhere' --get --data-urlenco
 
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
 
-### 创建构件
+### 创建工件
 
-如需为组织创建远程更新构件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+如需为组织创建远程更新工件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
 
 请替换下方代码中的参数：
 
 * `rporg_accesstokenhere`：您的管理 API 访问令牌。
-* `kiosk-v1.0`：构件在组织中的唯一名称。
-* `https://example.com/kiosk-v1.0.tar.zst`：设备下载构件的 URI。
-* `d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6`：构件的十六进制 SHA-256 校验和。
+* `kiosk-v1.0`：工件在组织中的唯一名称。
+* `https://example.com/kiosk-v1.0.tar.zst`：设备下载工件的 URI。
+* `d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6`：工件的十六进制 SHA-256 校验和。
 
 <Tabs>
 <TabItem value="json" label="JSON">
@@ -751,7 +796,7 @@ curl --header 'Authorization: Bearer rporg_accesstokenhere' --data-urlencode 'na
 
 </Tabs>
 
-若成功，将返回 **201 Created** 响应，其中包含构件的详细信息，采用 JSON 格式。例如：
+若成功，将返回 **201 Created** 响应，其中包含工件的详细信息，采用 JSON 格式。例如：
 
 ```http
 HTTP/2 201
@@ -767,7 +812,7 @@ Content-Type: application/json; charset=utf-8
 
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
 
-若构件无法创建，将返回 **422 Unprocessable Content** 响应，其中包含无法创建的原因：
+若工件无法创建，将返回 **422 Unprocessable Content** 响应，其中包含无法创建的原因：
 
 ```http
 HTTP/2 422
@@ -776,14 +821,14 @@ Content-Type: application/json; charset=utf-8
 {"message":"Validation failed: Name can't be blank"}
 ```
 
-### 删除构件
+### 删除工件
 
-如需删除组织中的构件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+如需删除组织中的工件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
 
 请替换下方代码中的参数：
 
 * `rporg_accesstokenhere`：您的管理 API 访问令牌。
-* `artefact-id`：构件的 `id`（由[创建构件](#创建构件)返回）。
+* `artefact-id`：工件的 `id`（由[创建工件](#创建工件)返回）。
 
 <Tabs>
 <TabItem value="http" label="HTTP">
@@ -805,13 +850,25 @@ curl --request DELETE --header 'Authorization: Bearer rporg_accesstokenhere' htt
 
 </Tabs>
 
-若成功，将返回 **204 No Content** 响应，响应体为空。
+若成功，将返回 **200 OK** 响应，其中包含已删除工件的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
+    "name": "kiosk-v1.0",
+    "uri": "https://example.com/kiosk-v1.0.tar.zst",
+    "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6"
+}
+```
 
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
 
-若在组织中未找到给定的构件 ID，将返回 **404 Not Found** 响应。
+若在组织中未找到给定的工件 ID，将返回 **404 Not Found** 响应。
 
-若该构件已被部署到设备，将返回 **422 Unprocessable Content** 响应，其中包含无法删除的原因：
+若该工件已被部署到设备，将返回 **422 Unprocessable Content** 响应，其中包含无法删除的原因：
 
 ```http
 HTTP/2 422
@@ -962,13 +1019,13 @@ Content-Type: application/json; charset=utf-8
 
 ### 创建部署
 
-如需将构件部署到设备，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。新部署将取代该设备上已排队的任何待处理部署。
+如需将工件部署到设备，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。新部署将取代该设备上已排队的任何待处理部署。
 
 请替换下方代码中的参数：
 
 * `rporg_accesstokenhere`：您的管理 API 访问令牌。
 * `device-id`：接收设备的唯一标识符。
-* `artefact-id`：构件的 `id`（由[创建构件](#创建构件)返回）。
+* `artefact-id`：工件的 `id`（由[创建工件](#创建工件)返回）。
 
 <Tabs>
 <TabItem value="json" label="JSON">
@@ -1016,7 +1073,7 @@ Content-Type: application/json; charset=utf-8
 
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
 
-若在组织中未找到该设备或构件，将返回 **404 Not Found** 响应。
+若在组织中未找到该设备或工件，将返回 **404 Not Found** 响应。
 
 若组织的免费试用已结束且尚未设置计费，将返回 **403 Forbidden** 响应：
 
@@ -1417,7 +1474,22 @@ curl --request DELETE --header 'Authorization: Bearer rporg_accesstokenhere' htt
 
 您可以删除任何授权密钥，包括已过期或已交换的密钥。删除已交换的授权密钥不会影响已关联的设备。
 
-若成功，将返回 **204 No Content** 响应，响应体为空。
+若成功，将返回 **200 OK** 响应，其中包含已删除授权密钥的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "096ce472-2cbd-412a-8295-6c03a1a07ba4",
+    "description": "my-auth-key",
+    "device_name": "pi5-001",
+    "tags": ["production", "kiosk"],
+    "expires_at": "2026-02-26T16:09:52Z",
+    "exchanged_at": null,
+    "created_at": "2026-02-25T16:09:52Z"
+}
+```
 
 否则，您会收到以下响应之一：
 
@@ -1541,6 +1613,153 @@ curl --header 'Authorization: Bearer rporg_accesstokenhere' 'https://api.connect
 </TabItem>
 </Tabs>
 
+### 显示设备
+
+如需显示组织中的单个设备，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `device-id`：设备的唯一标识符。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/devices/device-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/devices/device-id
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含设备的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "69739b44-ebb2-468e-9e24-08126dec4925",
+    "name": "raspberrypi5",
+    "serial_number": "ea636879c4d47a37",
+    "tags": ["production", "kiosk"],
+    "board": {
+        "model": "Raspberry Pi 5",
+        "revision": "1.0",
+        "memory": "8 GB"
+    },
+    "os": {
+        "name": "Raspberry Pi OS",
+        "version": "13 (Trixie)"
+    },
+    "kernel_architecture": "aarch64",
+    "filters": {
+        "model": "5",
+        "memory": "8gb",
+        "os": "raspios-13"
+    }
+}
+```
+
+响应包含的字段与[列出设备](#列出设备)返回的 `devices` 列表中每个项目的字段相同。`board`、`os`、`kernel_architecture` 和 `filters` 字段仅在设备运行 Connect 客户端 2.9.0 及更高版本时才会填充。
+
+否则，您会收到以下响应之一：
+
+| 响应 | 说明 |
+|------|------|
+| **401 Unauthorized** | 管理 API 访问令牌无效。 |
+| **404 Not Found** | 在组织中未找到给定的设备 ID。 |
+
+### 更新设备
+
+如需更新组织中设备的名称或标签，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+这两个字段均为可选：请求正文中省略的任何字段将保持不变。
+
+`tags` 字段会替换设备的现有标签，因此请包含所有希望保留的标签。标签名称不得超过 30 个字符，且只能包含小写字母、数字、连字符和下划线。每台设备最多支持 10 个标签。
+
+要移除所有标签，请传入空列表（`"tags": []`）。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `device-id`：设备的唯一标识符。
+* `raspberrypi5`：设备的新名称（可选）。
+* `production`、`kiosk`：设备的新标签（可选）。
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```http
+PATCH /organisation/devices/device-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+Content-Type: application/json
+
+{
+    "name": "raspberrypi5",
+    "tags": ["production", "kiosk"]
+}
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --request PATCH --header 'Authorization: Bearer rporg_accesstokenhere' --header 'Content-Type: application/json' --data '{"name":"raspberrypi5","tags":["production","kiosk"]}' https://api.connect.raspberrypi.com/organisation/devices/device-id
+```
+
+</TabItem>
+
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含更新后的设备，采用 JSON 格式：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "69739b44-ebb2-468e-9e24-08126dec4925",
+    "name": "raspberrypi5",
+    "serial_number": "ea636879c4d47a37",
+    "tags": ["production", "kiosk"],
+    "board": {
+        "model": "Raspberry Pi 5",
+        "revision": "1.0",
+        "memory": "8 GB"
+    },
+    "os": {
+        "name": "Raspberry Pi OS",
+        "version": "13 (Trixie)"
+    },
+    "kernel_architecture": "aarch64",
+    "filters": {
+        "model": "5",
+        "memory": "8gb",
+        "os": "raspios-13"
+    }
+}
+```
+
+否则，您会收到以下响应之一：
+
+| 响应 | 说明 | 示例 |
+|------|------|------|
+| **401 Unauthorized** | 管理 API 访问令牌无效。 | |
+| **404 Not Found** | 在组织中未找到给定的设备 ID。 | |
+| **422 Unprocessable Content** | 设备无法更新。 | `{"message":"Validation failed: Name can't be blank"}` |
+
 ### 删除设备
 
 若需删除组织中的设备并将其从Raspberry Pi Connect注销，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
@@ -1570,7 +1789,34 @@ curl --request DELETE --header 'Authorization: Bearer rporg_accesstokenhere' htt
 
 </Tabs>
 
-若成功，将返回 **204 No Content** 响应，响应体为空。
+若成功，将返回 **200 OK** 响应，其中包含已删除设备的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "69739b44-ebb2-468e-9e24-08126dec4925",
+    "name": "raspberrypi5",
+    "serial_number": "ea636879c4d47a37",
+    "tags": ["production", "kiosk"],
+    "board": {
+        "model": "Raspberry Pi 5",
+        "revision": "1.0",
+        "memory": "8 GB"
+    },
+    "os": {
+        "name": "Raspberry Pi OS",
+        "version": "13 (Trixie)"
+    },
+    "kernel_architecture": "aarch64",
+    "filters": {
+        "model": "5",
+        "memory": "8gb",
+        "os": "raspios-13"
+    }
+}
+```
 
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
 

@@ -4,8 +4,8 @@ draft: false
 title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓派资料
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
-last_update: 
-  date: 2026-08-02
+last_update:
+  date: 2026-08-19
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -874,13 +874,11 @@ rpi-eeprom-config pieeprom.bin
 以下命令将当前 bootloader 配置加载到文本编辑器中。当编辑器关闭时，`rpi-eeprom-config` 将更新的配置应用到最新可用的 bootloader 版本，并用于 `rpi-eeprom-update` 在系统重新启动时安排更新：
 
 ```sh
-sudo -E rpi-eeprom-config --edit
+sudo rpi-eeprom-config --edit
 sudo reboot
 ```
 
 如果更新后的配置无更改或为空，则不进行任何更改。
-
-编辑器是通过 `EDITOR` 环境变量选择的。
 
 #### 应用已保存的配置
 
@@ -944,7 +942,7 @@ sudo rpi-eeprom-update -d -f pieeprom.bin
 rpi-eeprom-update -h
 ```
 
-#### A/B bootloader 更新
+#### A/B bootloader 更新 {#a-b-bootloader-更新}
 
 A/B EEPROM bootloader 更新可防止树莓派设备在更新中断后无法启动——即使设备在更新过程中断电，也能保护设备。
 
@@ -1820,7 +1818,7 @@ rpi-eeprom-config
 
 要编辑它并将更新应用到最新的EEPROM版本，运行以下命令：
 ```sh
-sudo -E rpi-eeprom-config --edit
+sudo rpi-eeprom-config --edit
 ```
 
 有EEPROM更新过程的更多信息，请参阅[启动EEPROM](#树莓派启动eeprom)页面。
@@ -3485,7 +3483,7 @@ USB 规范要求 USB 设备不得向上游设备提供电流。如果 USB 设备
 1. 编辑引导程序配置。
  
 ```sh
-sudo -E rpi-eeprom-config --edit
+sudo rpi-eeprom-config --edit
 ```
 
 2. 添加以下两行。

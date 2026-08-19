@@ -4,8 +4,8 @@ draft: false
 title_meta: 树莓派系统软件配置工具详解
 description: 全面掌握树莓派系统配置！本文详细介绍如何使用raspi-config工具进行系统设置，包括网络、音频、显示、接口、性能、本地化和高级选项。通过config.txt文件，您可以自定义启动参数、优化性能、调整显示设置，并管理设备树。本文还涵盖了系统安全性、网络配置、用户管理等实用技巧，助您高效定制和优化树莓派系统。
 keywords: [树莓派系统配置, raspi-config, config.txt, 网络设置, 音频配置, 显示选项, 接口选项, 性能优化, 本地化设置, 用户管理, 系统安全性, 网络代理, 启动顺序, 设备树]
-last_update: 
-  date: 2026-08-09
+last_update:
+  date: 2026-08-19
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -491,7 +491,7 @@ sudo nmcli connection modify "Pi Towers" connection.autoconnect-priority 10
 
 
 ```
-http://<proxy_ip_address>:<proxy_port>`
+http://<proxy_ip_address>:<proxy_port>
 ```
 
 如果您的代理需要用户名和密码，请按以下格式添加，并将 `<username>` 和 `<password>` 替换为您用于代理身份验证的用户名和密码。
@@ -1839,12 +1839,12 @@ rpi-eeprom-config pieeprom.bin
 ```
 
 #### 编辑引导加载程序配置
-以下命令会将当前引导加载程序配置加载到文本编辑器中。文本编辑器由 `EDITOR` 环境变量选定。
+以下命令会将当前引导加载程序配置加载到文本编辑器中。
 
 关闭编辑器后，`rpi-eeprom-config` 会将更新后的配置应用到最新可用的引导加载程序发布版本，并使用 `rpi-eeprom-update` 计划在系统重启时更新：
 
 ```sh
-sudo -E rpi-eeprom-config --edit
+sudo rpi-eeprom-config --edit
 sudo reboot
 ```
 
