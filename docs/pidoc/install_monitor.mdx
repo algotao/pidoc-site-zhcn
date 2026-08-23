@@ -19,7 +19,16 @@ import Normal from "../_normal.mdx";
 
 ## 在设备安装 PiDOC
 
-将以下命令复制到设备的bash窗口执行即可：
+推荐使用「安装令牌」一键安装。先在 [管理网站](https://ops.pidoc.cn/) 的 **密钥管理 → 安装令牌** 中创建一个安装令牌，再将下面的命令复制到设备的 bash 窗口，把 `<令牌>` 与 `<账号>` 替换为实际值后执行：
+
+```sh
+curl -fsSL https://dl.pidoc.cn/pidoc/install.sh | bash -s -- --customtoken '<令牌>' --username '<账号>'
+```
+
+该命令会自动完成下载、安装、兑换登录密钥并注册设备。
+
+如果你已经有设备的登录密钥（seed），也可以直接执行纯安装命令，稍后按提示输入密钥：
+
 ```sh
 curl -fsSL https://dl.pidoc.cn/pidoc/install.sh | bash
 ```
@@ -31,7 +40,7 @@ pidoc version
 
 如安装正常，则会显示出pidoc的版本号，例如：
 ```
-Pidoc Endpoint v2.0.12
+PiDOC v2.0.13 (pidoc.cn)
 ```
 
 ### 安装特定版本
@@ -49,7 +58,6 @@ PIDOC_VERSION=2.0.11 bash <(curl -sSL https://dl.pidoc.cn/pidoc/install.sh)
 * **实时监控**：`CPU负载`、`网络`、`磁盘`、`温度` 等监测
 * **网页终端**：在世界任何地方安全访问您的设备
 * **堡垒SSH**：提供双层防护，以SSH Proxy 的方式提供堡垒SSH
-* **本地转发**：将远程设备的端口映射到本地，实现 `VNC连接`、`我的世界` 游戏连接等
 
 ### 带宽规则
 
@@ -127,11 +135,11 @@ curl http://127.0.0.1:11434/v1/chat/completions \
 
 ## 接入新设备
 
-登录 [Pidoc远程管理网站](https://ops.pidoc.cn/) ，在 **设备管理** 页面点击 **增加** 按钮。
+登录 [Pidoc远程管理网站](https://ops.pidoc.cn/) ，在 **设备管理** 页面点击 **增加** 按钮，选择安装令牌后生成安装命令。
 <img src="/img/pidoc/add_dev.png" width="80%" alt="接入新设备" />
 
-复制命令行并在安装好Pidoc程序的设备上执行。
-<img src="/img/pidoc/add_cmd.png" width="80%" alt="安装命令" />
+复制生成的安装命令，在设备的 bash 窗口中执行即可完成安装与注册。
+<img src="/img/pidoc/add_cmd.png" width="50%" alt="安装命令" />
 
 如果一切正常，您将会在 **设备管理** 页面看到新接入的设备。
 <img src="/img/pidoc/add_list.png" width="80%" alt="设备已接入" />
@@ -344,81 +352,6 @@ VSCode 远程开发需要安装 [Remote SSH](https://marketplace.visualstudio.co
 <img src="/img/pidoc/vscode_remote_ssh.png" width="50%" alt="VSCode 远程开发" />
 
 
-## 本地转发
-
-本地转发功能可以将远程设备的端口映射到本地，实现 VNC 连接、我的世界 游戏连接等。该功能需要PidocDesktop 客户端支持。
-
-下载：[PidocDesktop Win64 V0.1.2](https://dl.pidoc.cn/pidoc/pidocdesktop-0.1.2-windows-amd64.zip)
-
-:::warning
-PidocDesktop 在Beta阶段，如遇问题请入群反馈。
-:::
-
-### 客户端登录
-
-登录 PidocDesktop 客户端需要在 [Pidoc远程管理网站](https://ops.pidoc.cn/) 中生成 Agent Token。然后将 Token 填写到 Pidoc Desktop 客户端的登录信息中。
-
-#### 生成 Token
-<img src="/img/pidoc/create_agent_token.png" width="80%" alt="生成 Agent Token" />
-
-#### 登录 PidocDesktop
-
-在 Windows 中打开 Pidoc Desktop 客户端，填入 Token 登录。
-
-<img src="/img/pidoc/agent_login.png" width="30%" alt="登录 PidocDesktop，填入 Token" />
-<p />
-
-登录成功后将显示设备列表。
-<img src="/img/pidoc/agent_dev_list.png" width="30%" alt="PidocDesktop，填入显示设备列表" />
-
-
-### VNC 连接
-
-在端口转发功能中添加新的转发规则。
-<img src="/img/pidoc/forward.png" width="30%" alt="端口转发" />
-<p />
-
-设备的 VNC 端口默认为 5900，所以这里我们填入 5900。
-<img src="/img/pidoc/forward_add_vnc.png" width="30%" alt="添加VNC端口转发" />
-<p />
-
-点击 右箭头，运行转发规则。
-<img src="/img/pidoc/forward_run_vnc.png" width="30%" alt="运行VNC端口转发" />
-<p />
-
-转发规则运行中。
-<img src="/img/pidoc/forward_running_vnc.png" width="30%" alt="VNC端口转发运行中" />
-
-<p />
-
-:::tip
-现在就可以通过 VNC 客户端连接到您的设备了，地址为 `localhost:5900`。
-:::
-
-### SSH 连接
-
-在端口转发功能中添加新的转发规则。
-<img src="/img/pidoc/forward.png" width="30%" alt="端口转发" />
-<p />
-
-由于 SSH 端口的编号较小，在某些情况下本地可能已被占用或是没有权限，所以这里我们源端口填入 60022 以避免冲突。
-设备的 SSH 端口默认为 22，所以这里我们目标端口填入 22。
-<img src="/img/pidoc/forward_add_ssh.png" width="30%" alt="添加SSH端口转发" />
-<p />
-
-点击 右箭头，运行转发规则。
-<img src="/img/pidoc/forward_run_ssh.png" width="30%" alt="运行SSH端口转发" />
-<p />
-
-转发规则运行中。
-<img src="/img/pidoc/forward_running_ssh.png" width="30%" alt="SSH端口转发运行中" />
-
-<p />
-
-:::tip
-现在就可以通过 SSH 客户端连接到设备了，地址为 `localhost:22`。
-:::
-
 ## 网站转发
 
 如果您有OpenClaw、Home Assistant等需要通过网站访问的应用，则可以使用网站转发功能。
@@ -447,7 +380,7 @@ PiDoc的增强功能需要手工编辑配置文件开启，完整的字段及功
 
 | 字段名 | 类型 | 描述 | 支持的版本 |
 | --- | --- | --- | --- |
-| private_key | string | 私钥，用于加密通信。该密钥在管理界面的 `设备管理`--`增加` 中生成。 | 2.0.0 |
+| private_key | string | 私钥，用于加密通信。设备安装时通过安装令牌兑换生成，自动写入配置文件。 | 2.0.0 |
 | server_addr | string | 堡垒机服务器地址。当前仅有 `ops.pidoc.cn:3322` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
 | websocket | boolean | 是否启用 WebSocket。在一些网络环境中，需要启用 WebSocket 穿越防火墙。 | 2.0.6 |
 | websocket_url | string | WebSocket 地址穿越服务URL。当前仅有 `wss://ops.pidoc.cn/ws` 可用，可不填写。未来会提供更多服务器地址以分担压力。 | 2.0.7 |
@@ -531,7 +464,7 @@ Pidoc 及其组件是一个三层SSH隧道架构的内网穿透和远程访问�
 
 1. Pidoc(客户端) - 安装在您的设备上
 2. Pidoc Proxy(跳板服务器) - 部署在公网的中转服务器
-3. 用户SSH终端 - 您用来访问设备的工具(SSH客户端、浏览器WebSSH 或 Pidoc Desktop)
+3. 用户SSH终端 - 您用来访问设备的工具(SSH客户端 或 浏览器WebSSH)
 
 ### 三重加密保护
 + 第一层：Pidoc ↔ Proxy (Ed25519公钥认证 + SSH加密)
