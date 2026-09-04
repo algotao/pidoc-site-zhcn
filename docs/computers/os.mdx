@@ -5,7 +5,7 @@ title_meta: 在树莓派OS上使用音视频播放软件、安装Python
 description: 全面解析树莓派官方操作系统Raspberry Pi OS！基于Debian优化，支持35,000+软件包，提供软件管理（APT命令）、固件升级（rpi-update）、多媒体播放（VLC工具）、硬件控制（GPIO/VC命令）等核心功能，附Python开发指南与无障碍工具，助您高效开发与个性化配置树莓派设备。
 keywords: [Raspberry Pi OS, 树莓派操作系统, Debian系统, APT软件管理, 树莓派固件升级, VLC媒体播放, 树莓派GPIO控制, Python编程树莓派, 树莓派无障碍工具, 树莓派多媒体工具]
 last_update: 
-  date: 2026-05-03
+  date: 2026-09-04
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -21,7 +21,7 @@ Raspberry Pi OS 基于 **Debian** Linux 发行版，支持超过 69,000 个 Debi
 
 ## 操作系统安装
 
-Raspberry Pi OS 通过 Raspberry Pi Imager 安装，Imager 可在 Windows、Mac 和 Linux 上使用。相关说明请参阅 [使用 Imager 安装](./getting-started.mdx#使用-imager-安装)。您也可以直接从 [我们的网站](http://raspberrypi.com/software/operating-systems) 下载 Raspberry Pi OS 的磁盘镜像（开箱即用的文件），然后将其写入 SD 卡开始使用您的树莓派。
+Raspberry Pi OS 通过 Raspberry Pi Imager 安装，Imager 可在 Windows、Mac 和 Linux 上使用。相关说明请参阅 [使用 Imager 安装](./getting-started.mdx#使用-imager-安装)。您也可以直接从 [我们的网站](https://raspberrypi.com/software/operating-systems) 下载 Raspberry Pi OS 的磁盘镜像（开箱即用的文件），然后将其写入 SD 卡开始使用您的树莓派。
 
 如果您正在运行旧版 **Raspberry Pi OS**，想要使用最新主版本，请不要执行就地更新（在不重新安装的情况下更新当前系统）。而应通过安装 Raspberry Pi OS 的新镜像重新开始。相关说明请参阅 [使用 Imager 安装](./getting-started.mdx#使用-imager-安装)。
 
@@ -339,7 +339,7 @@ cvlc --play-and-exit -A alsa --alsa-audio-device <alsa-device> computer-startup-
 
 | ALSA设备 | 描述 |
 | -- | -- |
-| `sysdefault:CARD=Headphones` | 耳机插孔 |
+| `sysdefault:CARD=Headphones` | Raspberry Pi 4 及更早机型上的耳机插孔 |
 | `sysdefault:CARD=vc4hdmi` |  带有单 HDMI 端口的设备上的 HDMI 输出（Zero 型号、CM4S、CM4 之前的计算模块和 Raspberry Pi 4 之前的旗舰型号） |
 | `sysdefault:CARD=vc4hdmi0` | 自 Raspberry Pi 4B 开始的旗舰机型、自 CM4 开始的计算模块以及键盘机型上的 HDMI0 输出端 |
 | `sysdefault:CARD=vc4hdmi1` | 自 Raspberry Pi 4B 开始的旗舰机型、自 CM4 开始的计算模块以及键盘机型上的 HDMI1 输出端 |
@@ -371,7 +371,11 @@ cvlc --play-and-exit --drm-vout-display <drm-device> big-buck-bunny-1080p.mp4
 
 
 :::tip
-使用以下命令获取 Raspberry Pi 上所有 DRM 设备的列表：
+使用以下命令获取 Raspberry Pi 上所有 DRM 设备的列表。
+
+::::::note
+不带参数使用 `kmsprint` 只会查询找到的第一张 card。因此，在 Raspberry Pi 5 及后续机型上，这可能无法列出所有已连接的显示器。请参阅 [kmsprint](#kmsprint)。
+::::::
 
 ```sh
 kmsprint | grep Connector
@@ -398,7 +402,21 @@ ffmpeg -r 30 -i video.h264 -c:v copy video.mp4
 树莓派OS中预装了几个有用的命令行实用程序。
 
 ### kmsprint
-`kmsprint`工具可用于列出树莓派所连接的显示器支持的显示模式。使用`kmsprint`查看连接到树莓派的显示器的详细信息，`kmsprint -m`查看每个显示器支持的所有显示模式的列表。您可以在[Github](https://github.com/tomba/kmsxx)上找到`kmsprint`的源代码。
+`kmsprint` 工具可用于列出连接到树莓派的显示器所支持的显示模式。
+
+使用 `kmsprint` 查看连接到树莓派的所有显示器的状态，使用 `kmsprint -m` 列出每个显示器支持的显示模式。
+
+#### kmsprint {#kmsprint-multiple-drm-cards}
+
+在 Raspberry Pi 5 及后续机型上，显示接口（例如 HDMI、DSI、DPI 和 VEC）会分布在多个独立的 DRM card（`/dev/dri/cardX`）上，而不是像 Raspberry Pi 4 及更早机型那样集中在单个统一的 card 上。
+
+要在 Raspberry Pi 5 上查询特定接口，您可能需要使用 `--device`（或 `-d`）选项指定设备节点：
+
+```sh
+$ kmsprint --device=/dev/dri/card1
+```
+
+card 编号在启动时动态分配，并且可能会根据所连接的硬件在重启后发生变化。
 
 ### vclog
 `vclog` 可从 Arm 上运行的 Linux 中显示来自 VideoCore GPU 的日志信息。它需要以 root 用户身份运行。
@@ -499,13 +517,21 @@ vcgencmd get_config total_mem
 
 有视觉障碍的 Raspberry Pi 操作系统用户可以在**推荐软件**菜单中找到有用的工具。
 
-我们提供[Orca屏幕阅读器](https://help.gnome.org/users/orca/stable/introduction.html.en)以方便 Raspberry Pi 桌面的导航。此外，我们还提供屏幕放大镜，以提高用户界面和屏幕元素的可读性。
+我们提供 [Orca 屏幕阅读器](https://help.gnome.org/users/orca/stable/introduction.html.en) 以方便 Raspberry Pi 桌面的导航，并提供屏幕放大镜以提高 UI 和屏幕元素的可读性。您也可以在**控制中心**中配置 UI 元素的大小。
 
 #### Orca屏幕阅读器
 
 您可以从树莓派主菜单的**推荐软件**入口安装Orca屏幕阅读器。或者按**Ctrl** + **Alt** + **Space**自动安装 Orca。
 
 安装新映像后首次启动树莓派操作系统时，在30秒后将播放自动语音提醒。此提醒将提供有关如何安装Orca的说明。
+
+#### 屏幕放大镜 {#屏幕放大镜}
+
+要放大屏幕，请按 **Ctrl** + **Alt** + **M**。这会放大所显示桌面的尺寸，因此屏幕上只能看到其中一部分。移动鼠标光标即可查看放大后桌面的不同区域。要关闭屏幕放大，请再次按 **Ctrl** + **Alt** + **M**。
+
+#### 放大 UI 元素 {#放大-ui-元素}
+
+要放大 UI 元素以便于查看，请选择 **首选项 > 控制中心**，然后打开 **默认值** 选项卡。在该选项卡上，您可以针对不同尺寸的屏幕选择 **设置默认值**。您选择 **设置默认值** 时对应的屏幕尺寸越大，UI 文本、图标和其他元素就显示得越大。
 
 ## 在树莓派上使用 Python
 

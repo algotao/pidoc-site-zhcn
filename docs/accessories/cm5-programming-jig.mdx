@@ -1,0 +1,470 @@
+---
+title: "CM5 编程夹具"
+title_meta: 树莓派 CM5 编程夹具 — 自动完成安全启动、全盘加密与操作系统烧录
+sidebar_position: 18
+draft: false
+description: "树莓派计算模块 5 编程夹具 (Compute Module 5 Programming Jig) 是一次为一台 CM5 完成配置 (Provisioning) 的系统，可直接为计算模块写入操作系统与安全配置，无需额外 IO 板。夹具内置安全启动配置工具 (rpi-sb-provisioner)，自动完成安全启动、全盘加密与系统安装。本文涵盖规格参数、接口说明、夹具设置、CM5 烧录与取出、制造数据库、弹簧针更换、LED 指示灯行为、故障排除与安全警告。"
+keywords: [CM5 编程夹具, 计算模块 5, CM5, 树莓派配件, 安全启动配置工具, rpi-sb-provisioner, 安全启动, 全盘加密, 弹簧针, pogo pin, 批量烧录, Raspberry Pi Imager, RPIBOOT, Magic-Wormhole, 制造数据库, LED 指示灯]
+last_update: 
+  date: 2026-09-04
+---
+import Normal from "../_normal.mdx";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# CM5 编程夹具
+
+[计算模块 5 编程夹具 (Compute Module 5 Programming Jig)](https://www.raspberrypi.com/products/cm5-programming-jig) 是一套配置 (Provisioning) 系统，一次为一个计算模块 5 (CM5) 写入操作系统 (OS) 和安全配置。夹具直接与每个 CM5 连接，因此在配置过程中不再需要单独的 IO 板。
+
+夹具运行[安全启动配置工具 (Secure Boot Provisioner, `rpi-sb-provisioner`)](../security/secure-boot-provisioner.mdx) 来自动化配置 (Provisioning) 工作流。当您将 CM5 装入并固定到夹具中时，夹具会自动执行所有配置步骤，包括安全启动实施、全盘加密以及操作系统安装。
+
+<img src="/img/accessories/cm5-programming-jig/hero.jpg" alt="计算模块 5 编程夹具" width="100%" />
+
+*计算模块 5 编程夹具*
+
+## 规格
+
+本节介绍计算模块 5 编程夹具的物理特性与能力，包括规格、功能特性和硬件。
+
+**通用规格**
+
+| 规格 | 说明 |
+| --- | --- |
+| 兼容设备 | 树莓派计算模块 5 (CM5) |
+| 配置 (Provisioning) 容量 | 单设备配置；夹具一次仅配置一个 CM5 |
+| 夹具网络接口 (*JIG ETH*) | 以太网 (10/100/1000) 或 Wi-Fi（2.4 GHz 与 5.0 GHz IEEE 802.11 b/g/n/ac） |
+| CM5 网络接口 (*DUT ETH*) | 以太网 (10/100/1000) |
+| 尺寸（含天线） | 170 × 181.5 × 153 mm |
+| 重量 | 1800 g |
+
+### 功能特性
+
+* **机械夹持。** 夹具在编程过程中将 CM5 固定到位。
+* **无需载板即可配置。** 夹具使用带弹簧的 pogo pin（弹簧针）直接与 CM5 对接，无需载板 (IO 板)，并减少对高密度引脚连接器的磨损。
+* **LED 状态指示灯。** 夹具通过专用 LED 显示其当前状态和配置进度。有关这些 LED 的更多信息，请参阅 [LED 指示灯行为](#led-indicators)。
+* **双网络连接。** 夹具通过以太网 (*JIG ETH*) 或 Wi-Fi® 连接到配置 (Provisioning) 网络，另有第二个以太网端口 (*DUT ETH*) 为正在编程的 CM5 提供加速的软件传输。
+* **自动化配置。** 夹具自动完成配置工作流程，包括操作系统安装、全盘加密以及安全启动配置（取决于您选择的安全级别）。
+* **三级安全级别。** 您可以选择将夹具配置为以下三种安全级别之一来编程 CM5：完全安全 (`secure-boot`)、加密存储与设备唯一密钥 (`fde-only`)，以及仅操作系统 (`naked`)。更多信息请参阅[安全级别](../security/secure-boot-provisioner.mdx#安全级别)。
+* **用户可自行维护。** 夹具附带镊子和备用弹簧针，便于您取出并更换任何损坏的弹簧针。更多信息请参阅[更换弹簧针](#replace-pogo-pins)。
+
+::::warning
+请勿触碰弹簧针，因为它们很尖锐并且可能带电；否则您可能损坏弹簧针、夹具或伤到自己。
+::::
+
+### 硬件
+
+计算模块 5 编程夹具包装盒内含以下部件：
+
+* 一个计算模块 5 编程夹具。
+* 一个全球适用电源，交流输入 110 V 至 240 V，直流输出 12 V、2 A (24 W)。
+* 一根 Wi-Fi 天线。
+* 两根 RJ45 网线。
+* 五根备用弹簧针。
+* 一把镊子。
+
+在使用过程中，您会接触到计算模块 5 编程夹具的接口和模块槽。此外还有一个安全按钮，您无需直接操作它。
+
+#### 接口
+
+<img src="/img/accessories/cm5-programming-jig/back.jpg" alt="Wi-Fi 天线接口、DUT 与 JIG 的 LED 指示灯，以及以下输入端口：12 V 电源、USB-C、DUT 以太网和 JIG 以太网。" width="100%" />
+
+*CM5 编程夹具背面的接口*
+
+计算模块 5 编程夹具背面提供以下外部接口：
+
+**计算模块 5 编程夹具背面的外部接口**
+
+| 标签 | 说明 |
+| --- | --- |
+| *WiFI/BT* | 随附天线的连接位置。 |
+| *12 V IN* | 圆形电源插孔，接受随附电源提供的 12 V、2 A (24 W) 直流输入。 |
+| *USB BOOT* | USB-C 端口，用于在使用 Raspberry Pi Imager 写入夹具操作系统时将夹具连接到计算机（参见[步骤 2：将操作系统写入夹具](#setup-step-write-os)）。 |
+| *JIG ETH* | RJ45 以太网端口，用于将夹具连接到配置网络，以进行配置、管理和软件更新。 |
+| *DUT ETH* | RJ45 以太网端口，用于将已装入的 CM5 连接到配置网络，以在配置期间加速数据传输。 |
+
+作为 *JIG ETH* 端口的替代方案，您也可以通过 Wi-Fi 将夹具无线连接到配置网络。
+
+#### 模块槽
+
+计算模块 5 编程夹具顶部的模块槽用于放置正在编程的 CM5。
+
+CM5 应紧密贴合在模块槽内，且 CM5 上的 Raspberry Pi 标志朝上，方向与夹具上的 Raspberry Pi 标志一致。模块槽前部的金属卡扣用于将模块槽保持闭合。
+
+#### 安全按钮
+
+夹具顶部、模块槽后方有一个无标识的安全按钮。配置 (Provisioning) 软件使用该按钮来检测夹具是否已闭合。
+
+::::warning
+请勿手动按下此按钮，否则可能会中断正在进行的配置操作。
+::::
+
+## 设置夹具 {#set-up-the-jig}
+
+首次设置夹具时，您需要准备以下物品：
+
+* 一台树莓派计算模块 5 编程夹具。
+* 随附的 12 V、2 A (24 W) 电源。
+* 一根 USB-C 线缆。
+* 一台已安装 [Raspberry Pi Imager](https://www.raspberrypi.com/software/) 2.0.11 或更高版本的计算机。
+* 可访问[树莓派计算模块 5 编程夹具清单文件](https://downloads.raspberrypi.com/cm5-jig/cm5-jig.rpi-imager-manifest)。
+* 可访问配置网络（以太网或 Wi-Fi）。
+
+### 步骤 1：配置 Raspberry Pi Imager {#setup-step-configure-imager}
+
+您必须先将 Raspberry Pi Imager 配置为使用计算模块 5 编程夹具清单文件，并启用 RPIBOOT 支持。
+
+#### 配置清单文件
+
+您可以自动或手动配置计算模块 5 编程夹具清单文件。
+
+<Tabs>
+<TabItem value="automatic" label="自动配置">
+
+在网页浏览器中输入以下 URL，即可打开已配置自定义仓库的 Raspberry Pi Imager：`rpi-imager://open?repo=https://downloads.raspberrypi.com/cm5-jig/cm5-jig.rpi-imager-manifest`。
+
+</TabItem>
+<TabItem value="manual" label="手动配置">
+
+若要手动配置仓库，请打开 Raspberry Pi Imager 并完成以下步骤：
+
+1. 从底部左侧选择 **App Options**。
+1. 在 **Content Repository** 旁边选择 **Edit**，将打开 **Content Repository** 窗口。
+1. 选择 **Use custom URL**。
+1. 在显示的字段中输入清单文件 URL（`https://downloads.raspberrypi.com/cm5-jig/cm5-jig.rpi-imager-manifest`）。
+1. 选择 **Apply & Restart**。
+
+</TabItem>
+</Tabs>
+
+#### 启用 RPIBOOT 支持
+
+若要将 Raspberry Pi Imager 配置为支持 RPIBOOT，请完成以下步骤：
+
+1. 打开 **Debug Options**：
+   * 在 Windows 或 Linux 上，键入 **Ctrl + Alt + S**。
+   * 在 macOS 上，键入 **Cmd + Option + S**。
+1. 滚动到 **Advanced Features**。
+1. 使用开关选择 **Enable Rpiboot/Fastboot Support**。
+1. 选择 **Apply** 保存更改并退出 **Debug Options** 对话框。
+
+如果您要使用 Raspberry Pi Imager 设置多台夹具，则只需启用一次 RPIBOOT 支持；Imager 会保存此设置，供后续写入时使用。
+
+### 步骤 2：将操作系统写入夹具 {#setup-step-write-os}
+
+将 Imager 配置为使用自定义内容仓库后，您现在可以将操作系统写入夹具。
+
+1. 将 USB-C 线缆从您的计算机连接到夹具的 *USB BOOT* 端口。
+
+1. 为夹具接通电源。
+
+   夹具启动进入 USB 大容量存储模式。您的计算机会将夹具的内部存储识别为一个可移动驱动器。
+
+1. 在计算机上打开 Raspberry Pi Imager。
+
+1. 在 **Device** 选项卡上，选择 **Raspberry Pi Compute Module 5 Programming Jig**。选择 **Next**。
+
+1. 在 **OS** 选项卡上，选择 **Compute Module 5 Programming Jig** 作为操作系统镜像。选择 **Next**。
+
+1. 在 **Storage** 选项卡上，选择夹具的内部存储作为目标，它显示为 **Raspberry Pi Compute Module 5 Lite**。选择 **Next**。
+
+1. 在随后的 **Customisation** 选项卡上配置操作系统：
+
+   1. 为夹具设置主机名。
+   1. 选择您所在的首府城市以设置本地化选项。
+   1. 创建用户时，您必须指定用户名 `jig`。您可以为该账户设置任意密码。
+   1. 可选：如果您计划通过 Wi-Fi 连接夹具，请配置您的无线网络凭据。
+   1. 可选：启用 SSH 以便远程访问。
+   1. 将夹具与您的 Raspberry Pi Connect 账户关联，以便远程管理。
+
+1. 在 **Writing** 选项卡上检查您的设置，确认无误后选择 **Write**。
+
+1. Raspberry Pi Imager 写入完成后，断开 USB-C 线缆，并通过拔下并重新插入电源线来重启夹具。
+
+### 步骤 3：连接到配置网络 {#setup-step-connect-network}
+
+使用以下方法之一将夹具连接到您的配置网络：
+
+* （推荐）[以太网](#setup-step-ethernet)
+* [Wi-Fi](#setup-step-wifi)
+
+夹具使用与配置网络的连接来实现：
+
+* 提供 Raspberry Pi Connect 屏幕共享和 SSH 访问。
+* 下载软件更新。
+* 将操作系统镜像传输到夹具。
+
+::::warning
+配置网络始终可以直接访问夹具。如果您还将 *DUT ETH* 端口连接到配置网络（参见[步骤 4：连接 DUT ETH 端口（可选）](#setup-step-connect-dut)），则该网络在编程期间也能直接访问设备。请将该网络的设计纳入您的威胁模型加以考虑。确保只有经过授权的系统和人员才能访问配置网络。
+::::
+
+#### 通过以太网连接（推荐） {#setup-step-ethernet}
+
+若要通过以太网将夹具连接到配置网络：
+
+1. 拔下电源线，确保夹具已断电。
+1. 将一根以太网线缆从您的配置网络连接到夹具的 *JIG ETH* 端口。
+1. 插上电源线，为夹具通电。
+
+夹具会通过 DHCP 自动获取网络地址。
+
+#### 通过 Wi-Fi 连接 {#setup-step-wifi}
+
+如果您在 Raspberry Pi Imager 中配置了 Wi-Fi 凭据，夹具会在启动时自动连接到您的无线网络。
+
+1. 拔下电源线，确保夹具已断电。
+1. 确保 Wi-Fi 天线已安装到夹具背面。
+1. 如果夹具的 *JIG ETH* 端口上连接了以太网线缆，请将其从夹具上拔下。
+1. 插上电源线，为夹具通电。
+
+夹具将连接到已配置的无线网络。
+
+### 步骤 4：连接 DUT ETH 端口（可选） {#setup-step-connect-dut}
+
+若要在配置期间加速数据传输，请将一根以太网线缆从配置网络连接到夹具的 *DUT ETH* 端口。这将为正在编程的 CM5 提供一个直接的以太网接口。
+
+### 步骤 5：访问安全启动配置工具 Web 界面 {#setup-step-use-provisioner}
+
+安全启动配置工具 (`rpi-sb-provisioner`) 的 Web 界面仅在 [`localhost`](http://localhost:3142) 上可用。这是一项安全措施，用于强制对夹具进行身份验证。要访问该 Web 界面，请使用 Raspberry Pi Connect 屏幕共享远程访问夹具的桌面。
+
+1. 登录 [Raspberry Pi Connect](https://connect.raspberrypi.com)。
+1. 从设备列表中选择您的夹具。
+1. 选择 **Connect** 按钮并选择 **Screen Sharing**，启动屏幕共享会话。
+
+如果夹具桌面上尚未打开安全启动配置工具 Web 界面，请在夹具桌面上打开 Chromium 并访问 `http://localhost:3142`。
+
+### 步骤 6：将客户端操作系统镜像传输到夹具 {#setup-step-wormhole}
+
+在开始配置 (Provisioning) 之前，您必须先将要安装到 CM5 设备上的操作系统镜像传输到夹具。
+
+该镜像必须是使用 [`rpi-image-gen`](https://github.com/raspberrypi/rpi-image-gen) 创建的未压缩 `.img` 文件。
+
+我们建议使用 Magic-Wormhole 将镜像从您的计算机传输到夹具。`magic-wormhole` 提供两台计算机之间安全的一次性文件传输。要使用此方法，两台计算机都必须能够访问互联网。
+
+1. 在您的计算机上安装 `magic-wormhole`。更多信息请参阅 [Magic-Wormhole](https://magic-wormhole.readthedocs.io/en/latest/)。
+1. 在您的计算机上，使用以下命令发送镜像文件：
+
+   ```bash
+   wormhole send <path-to-image-file>
+   ```
+
+   `magic-wormhole` 会显示一个接收码。请记下该代码，以便在夹具上使用。
+
+1. 通过 SSH 连接到夹具，或在 Raspberry Pi Connect 屏幕共享会话中使用终端。
+1. 在夹具上，使用以下命令安装 `magic-wormhole`：
+
+   ```bash
+   sudo apt install -y magic-wormhole
+   ```
+
+1. 在夹具上，使用以下命令接收镜像文件，将 `<code>` 替换为您从计算机发送镜像文件时获得的接收码：
+
+   ```bash
+   wormhole receive <code>
+   ```
+
+### 步骤 7：配置安全启动配置工具 {#setup-step-configure-provisioner}
+
+1. 按照[步骤 5：访问安全启动配置工具 Web 界面](#setup-step-use-provisioner)所述，打开安全启动配置工具 Web 界面。
+1. 在 **Options** 选项卡上配置以下选项：
+   1. 在 **OS Image** 部分，选择 **Upload New Image**，然后选择或浏览到您已传输到夹具的操作系统镜像。
+   1. 在 **Device & Firmware** 部分，将 **Device family** 选择为 **Raspberry Pi 5**。
+   1. 在 **Device & Firmware** 部分，将 **Storage Type** 选择为 **eMMC**。
+   1. 在 **Security Configuration** 部分，为 **Provisioning Style** 选择安全级别。更多信息请参阅[安全级别](../security/secure-boot-provisioner.mdx#安全级别)。
+   1. 签名密钥：对于 `secure-boot` 模式，请提供签名密钥。Web 界面会引导您创建一个。
+
+有关配置选项的更多信息，请参阅[安全启动配置工具配置参考](https://github.com/raspberrypi/rpi-sb-provisioner/blob/main/docs/config_vars.md)。
+
+## 编程计算模块 5 {#program-cm5}
+
+使用计算模块 5 编程夹具为计算模块 5 (CM5) 配置操作系统镜像。
+
+开始之前，请确保夹具：
+
+* 已通电，且 *JIG* 和 *STATUS* LED 显示为绿色。
+* 已连接到配置网络。更多信息请参阅*设置夹具*说明中的[步骤 3：连接到配置网络](#setup-step-connect-network)。
+* 已配置操作系统镜像和配置 (Provisioning) 选项。更多信息请参阅*设置夹具*说明中的[步骤 7：配置安全启动配置工具](#setup-step-configure-provisioner)。
+
+### 步骤 1：将 CM5 装入夹具 {#program-step-load}
+
+1. 向后按压卡扣顶部以释放夹持机构，让盖板向上滑动，然后将盖板向后翻转直至停止。
+
+   <img src="/img/accessories/cm5-programming-jig/latch-open.jpg" alt="夹持机构前部的金属卡扣用于将其保持闭合。" width="80%" />
+
+1. 将计算模块 5 放入模块槽，使 CM5 上的 Raspberry Pi 标志朝上，且方向与夹具上的 Raspberry Pi 标志一致。将计算模块 5 四角的孔与模块凹槽四角的通孔螺柱对齐，螺柱应穿过 CM5 上的孔。
+
+   <img src="/img/accessories/cm5-programming-jig/open-tray-cm.jpg" alt="计算模块放置在模块凹槽内。" width="80%" />
+
+1. 向前翻转盖板使其与 CM5 平行，然后按压盖板使其向下滑动，从而闭合夹持机构。当盖板到达底部时，卡扣会啮合并将 CM5 固定到位。
+
+::::warning
+闭合盖板前，请确保通孔螺柱已穿过 CM5 上的四个角孔。对齐不正确可能导致配置失败或损坏弹簧针。
+::::
+
+### 步骤 2：监控配置进度 {#program-step-monitor}
+
+CM5 被夹持到位后，夹具会自动开始配置。如果配置未自动开始，请参阅[设备未被识别](#device-not-detected)。
+
+对于使用 `naked` 配置方式安装 2.6 GB 操作系统镜像的 CM5，典型的配置时间约为 1.5 分钟。实际时间会因操作系统镜像大小、存储类型、安全级别和网络速度而异。
+
+::::warning
+配置过程中请勿将 CM5 从夹具中取出。请勿按下夹具上无标识的按钮。这两种操作中的任何一种都可能导致 CM5 无法使用。
+::::
+
+通过监控夹具上的 *STATUS* LED 来跟踪各个配置阶段的进度：
+
+**配置期间的状态指示**
+
+| STATUS LED | 阶段 | 说明 |
+| --- | --- | --- |
+| 蓝色闪烁 | 配置中 | 夹具检测到 CM5 并加载一个临时的 Linux 环境。在 `secure-boot` 模式下，签名密钥哈希会被写入设备的 OTP 存储器（该操作不可逆）。<br />夹具会根据您在[步骤 7：配置安全启动配置工具](#setup-step-configure-provisioner)中选择的安全级别选择相应的配置服务。<br />夹具会创建加密密钥（如适用）、格式化存储并安装操作系统。 |
+| 绿色 | 成功 | 配置完成。可以取出 CM5。 |
+| 红色闪烁 | 配置失败 | 配置过程失败。更多信息请参阅[故障排除](#troubleshooting)。 |
+
+如需更详细的进度信息，您也可以使用安全启动配置工具 Web 界面。按照[步骤 5：访问安全启动配置工具 Web 界面](#setup-step-use-provisioner)所述访问 `http://localhost:3142`，然后：
+
+1. 选择 **Devices** 选项卡查看配置进度。
+1. 选择某个设备以查看关于它的详细日志。
+
+### 步骤 3：取出 CM5
+
+当 *STATUS* LED 变为绿色时，表示配置完成。您可以取出 CM5。
+
+1. 打开夹持机构。向后按压卡扣顶部以将其释放，让盖板向上滑动，然后将盖板向后翻转直至停止。
+1. 从模块槽中取出 CM5。
+
+CM5 现在已可投入使用。
+
+## 查看制造数据库
+
+如果您在安全启动配置工具中启用了制造数据库，夹具会在此数据库中记录每个已配置 CM5 的详细信息，包括：
+
+* 序列号
+* 板卡类型与版本
+* MAC 地址（以太网）
+* 配置日期和时间
+* 已安装的操作系统镜像
+* 安全设置
+
+您可以通过安全启动配置工具 Web 界面或使用命令行查看数据库中的信息。
+
+通过 Raspberry Pi Connect 连接到夹具，并将数据库导出为 CSV 文件：
+
+<Tabs>
+<TabItem value="web" label="使用 Web 界面">
+
+若要从 Web 界面将制造数据库导出为 CSV 文件：
+
+1. 按照[步骤 5：访问安全启动配置工具 Web 界面](#setup-step-use-provisioner)所述，在夹具上访问 `http://localhost:3142`。
+1. 转到 **Manufacturing Database** 选项卡。
+1. 选择 **Export as CSV** 以下载电子表格文件。
+
+</TabItem>
+<TabItem value="cli" label="使用命令行">
+
+运行以下命令将制造数据库导出为 CSV 文件：
+
+```bash
+sqlite3 ${RPI_SB_PROVISIONER_MANUFACTURING_DB} \
+  -cmd ".headers on" \
+  -cmd ".mode csv" \
+  -cmd ".output devices.csv" \
+  "SELECT * FROM rpi_sb_provisioner;"
+```
+
+</TabItem>
+</Tabs>
+
+## 更新夹具
+
+为了获得最新的安全功能，我们建议您保持夹具软件为最新状态。
+
+要更新夹具的操作系统及所有已安装的软件（包括安全启动配置工具），请通过 SSH 连接到夹具，或在 Raspberry Pi Connect 屏幕共享会话中使用终端，然后运行：
+
+```bash
+sudo apt update && sudo apt full-upgrade -y
+```
+
+## 更换弹簧针 {#replace-pogo-pins}
+
+计算模块 5 编程夹具的结构设计使您可以更换任何损坏的弹簧针。
+
+要完成此操作，您需要以下物品：
+
+* 备用弹簧针
+* 镊子
+* 3 mm 内六角扳手
+
+在此操作过程中，请避免用裸手触摸弹簧针；否则可能会将油脂和污垢转移到弹簧针上。
+
+要更换一根或多根弹簧针，请完成以下步骤：
+
+1. 确保夹具已断开电源。
+1. 向后按压卡扣顶部以释放夹持机构，让盖板向上滑动，然后将盖板向后翻转直至停止。
+1. 使用内六角扳手拧下模块槽两条短边中间各一颗螺栓。请保留这些螺栓以便重新组装。
+1. 将模块槽垂直向上抬起，使其远离夹具中的弹簧针。四角的导向柱可确保此操作不会碰到弹簧针。请保留模块槽以便重新组装。
+1. 用镊子夹住要更换的弹簧针，将其垂直向上拔出套筒。
+1. 用镊子将备用弹簧针插入套筒。确保带孔的较大直径一端先插入套筒，较小直径的一端朝上。
+1. 用镊子的平面轻轻向下按压弹簧针，确保其在压缩时与套筒齐平。
+1. 更换完所有需要更换的弹簧针后，装回模块槽。
+   1. 放置时使 Raspberry Pi 标志和文字朝上，并让印有文字的那条边缘最靠近夹具前部。
+   1. 将模块槽四角的导向柱与夹具上相应的孔对齐。
+   1. 将模块槽向下滑动到位。导向柱可确保此操作不会碰到弹簧针。
+1. 重新插入先前取下的两颗螺栓并用内六角扳手拧紧，以固定模块槽。请勿过度拧紧这些螺栓。
+
+## LED 指示灯行为 {#led-indicators}
+
+夹具使用 LED 指示灯来传达其当前状态。下表描述了每个 LED 及其含义。
+
+夹具背面有两个 LED 指示灯 *JIG* 和 *DUT*，顶部有一个 LED *STATUS*。
+
+**计算模块 5 编程夹具上的 LED 指示灯**
+
+| LED | 状态 | 含义 |
+| --- | --- | --- |
+| JIG | 熄灭 | 夹具未通电。插上电源线以使夹具上线。 |
+| JIG | 绿色常亮 | 夹具已通电。 |
+| JIG | 绿色闪烁 | 夹具处于活动状态；正在进行数据传输。 |
+| JIG | 红色常亮 | 夹具已通电，但 CPU 未运行。 |
+| DUT | 熄灭 | 夹具未通电，或未装入 CM5。 |
+| DUT | 绿色常亮 | 已检测到 CM5 并已通电。 |
+| DUT | 绿色闪烁 | CM5 处于活动状态；正在进行数据传输。 |
+| DUT | 红色常亮 | 这可能表示 CM5 已损坏。如果更换多个不同模块后此灯仍为红色，则可能表示夹具存在问题。更多信息请参阅[故障排除](#troubleshooting)。 |
+| STATUS | 熄灭 | 夹具已断电。插上电源线以使夹具上线。 |
+| STATUS | 红色常亮 | 夹具已通电，但尚未准备好配置 CM5。 |
+| STATUS | 蓝色闪烁 | 配置进行中。在此阶段请勿取出 CM5。 |
+| STATUS | 绿色常亮 | 如果夹具中没有 CM5，则表示夹具已准备好开始配置。<br />如果夹具中有 CM5，则表示配置已成功完成，可以取出 CM5。 |
+| STATUS | 红色闪烁 | 配置失败。 |
+
+## 故障排除 {#troubleshooting}
+
+如果您在使用计算模块 5 编程夹具时遇到问题，请使用以下信息来诊断问题。
+
+* 如果将 CM5 夹持到夹具中后配置未开始，请尝试[设备未被识别](#device-not-detected)中的步骤来解决问题。
+* 对于其他问题，请参阅[安全启动配置工具故障排除信息](../security/secure-boot-provisioner.mdx#故障排除)。
+
+### 设备未被识别 {#device-not-detected}
+
+如果 CM5 已夹持在夹具中，但配置未开始，请尝试以下操作：
+
+1. 确保夹具已通电并已连接到网络。
+   1. 如果 *JIG* LED 指示灯未亮起，请确保电源线已插好。
+   1. 通过从另一台计算机连接到夹具来验证网络。
+1. 确保 CM5 已正确就位并与弹簧针对齐。
+   1. 打开夹持机构。
+   1. 重新放置 CM5，确保 Raspberry Pi 标志朝上且方向与夹具上的标志一致，并确保夹具上的通孔螺柱穿过 CM5 上的四个角孔。
+   1. 确保计算模块已稳固地嵌入模块槽凹槽中，并且在任何水平方向上都没有松动。
+   1. 再次闭合夹持机构。
+1. 检查弹簧针是否脏污或损坏。
+   1. 检查弹簧针是否有碎屑或损坏。
+   1. 如果弹簧针脏污，请使用蘸有异丙醇或专用清洁液的棉签轻轻清洁。
+
+## 安全警告
+
+* 进行任何维护之前，请先将夹具与电源断开。
+* 请勿触摸模块槽中的金属弹簧针。它们很尖锐并且可能带电；否则您可能损坏弹簧针、夹具或伤到自己。
+* 确保按照[步骤 1：将 CM5 装入夹具](#program-step-load)所述将 CM5 正确装入模块槽。装入不当可能损坏弹簧针。
+* 配置过程进行中（*STATUS* LED 蓝色闪烁）请勿将 CM5 从夹具中取出；这可能导致 CM5 无法使用。
+* 请勿按下夹具上无标识的按钮；这可能中断配置并使 CM5 无法使用。
+* 请勿将计算模块 4 装入计算模块 5 编程夹具。
+
+<Normal />

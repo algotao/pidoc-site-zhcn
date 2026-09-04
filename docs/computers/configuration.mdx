@@ -5,7 +5,7 @@ title_meta: 树莓派系统软件配置工具详解
 description: 全面掌握树莓派系统配置！本文详细介绍如何使用raspi-config工具进行系统设置，包括网络、音频、显示、接口、性能、本地化和高级选项。通过config.txt文件，您可以自定义启动参数、优化性能、调整显示设置，并管理设备树。本文还涵盖了系统安全性、网络配置、用户管理等实用技巧，助您高效定制和优化树莓派系统。
 keywords: [树莓派系统配置, raspi-config, config.txt, 网络设置, 音频配置, 显示选项, 接口选项, 性能优化, 本地化设置, 用户管理, 系统安全性, 网络代理, 启动顺序, 设备树]
 last_update:
-  date: 2026-08-19
+  date: 2026-09-04
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -1354,7 +1354,7 @@ UART（通用异步收发器）是一种用于串行通信的硬件通信协议�
 * **PL011**：功能完整、兼容 16550 的 UART，提供由硬件计时的串行通信。
 * **Mini UART**：轻量级 UART，提供简单而高效的串行接口。
 
-与 [PL011](https://developer.arm.com/documentation/ddi0183/g/) 不同，mini UART 没有断点检测、帧错误检测、奇偶校验位以及接收超时中断。mini UART 的 FIFO 也更小。加上缺少流控制，mini UART 在较高波特率下更容易丢失字符。此外，mini UART 通常能力也不如 PL011，主要是因为它的波特率与 VPU 时钟频率相关。更多关于 mini UART 的信息，请参阅 [SoC 外设文档](https://pip.raspberrypi.com/documents/RP-008249-DS)。
+与 [PL011](https://support.arm.com/documentation/ddi0183/g/) 不同，mini UART 没有断点检测、帧错误检测、奇偶校验位以及接收超时中断。mini UART 的 FIFO 也更小。加上缺少流控制，mini UART 在较高波特率下更容易丢失字符。此外，mini UART 通常能力也不如 PL011，主要是因为它的波特率与 VPU 时钟频率相关。更多关于 mini UART 的信息，请参阅 [SoC 外设文档](https://pip.raspberrypi.com/documents/RP-008249-DS)。
 
 mini UART 与 BCM2835 版本的 PL011 均不具备 DCD、DSR、DTR 和 RI 信号。
 

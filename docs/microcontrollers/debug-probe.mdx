@@ -4,7 +4,7 @@ draft: false
 description: 树莓派官方调试探针（Debug-Probe）是一款即插即用的USB调试工具，支持ARM SWD（串行线调试）和UART串口功能，兼容CMSIS-DAP标准，适用于Windows/macOS/Linux平台。它无需焊接即可调试树莓派Pico等RP2040芯片设备，提供3.3V I/O电压、5个状态LED（含电源和活动指示灯），并配备多种转接线缆（如JST-SH转0.1英寸接头）。通过OpenOCD和GDB可实现二进制文件上传、断点调试及串口通信（如UART0数据转发至CDC UART）。支持固件升级（UF2文件），并提供开源原理图与机械图纸。配套VS Code扩展简化开发流程，适用于嵌入式开发与故障排查。
 keywords: [树莓派调试探针, Raspberry Pi Debug Probe, SWD调试, UART串口, CMSIS-DAP, OpenOCD, GDB, RP2040, Pico调试, ARM调试, USB调试工具, 嵌入式开发, 固件升级, VS Code扩展, JST-SH线缆, 串口通信, CDC UART, 开源硬件]
 last_update: 
-  date: 2026-08-02
+  date: 2026-09-04
 ---
 import Normal from "../_normal.mdx";
 
@@ -13,9 +13,9 @@ import Normal from "../_normal.mdx";
 ## 关于调试探针
 <img src="/img/microcontrollers/debug-probe/debug-probe.jpg" alt="调试探针" />
 树莓派调试探针（Debug Probe）是一款 USB 设备，提供 UART 串行端口和标准 Arm 串行线调试 (SWD) 接口。该探针专为方便、无焊、即插即用的调试而设计。它具有以下功能：
-- USB 至 ARM [串行线调试](https://developer.arm.com/documentation/ihi0031/a/The-Serial-Wire-Debug-Port--SW-DP-/Introduction-to-the-ARM-Serial-Wire-Debug--SWD--protocol) (SWD) 端口
+- USB 至 ARM [串行线调试](https://support.arm.com/documentation/ihi0031/a/The-Serial-Wire-Debug-Port--SW-DP-/Introduction-to-the-ARM-Serial-Wire-Debug--SWD--protocol) (SWD) 端口
 - USB 至 UART 桥接器
-- 兼容 [CMSIS-DAP](https://developer.arm.com/documentation/101451/0100/About-CMSIS-DAP) 标准
+- 兼容 [CMSIS-DAP](https://support.arm.com/documentation/101451/0100/About-CMSIS-DAP) 标准
 - 可与 [OpenOCD](https://openocd.org/) 和其他支持 CMSIS-DAP 的工具配合使用
 - 开源、易于升级的固件
 
@@ -137,7 +137,7 @@ make -j4
 对于非树莓派计算机，需要使用能够调试 ARM 处理器的 GDB 变体。根据您的操作系统和设备，选择以下其中一种替代方案：
 
 * 在 Linux 设备上，使用 `gdb-multiarch`。
-* 在 macOS 和 Windows 设备上，使用来自 [Arm 官网](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) 工具链中的 `arm-none-eabi-gdb`。
+* 在 macOS 和 Windows 设备上，使用来自 [Arm 的 Gitlab 仓库](https://gitlab.arm.com/tooling/gnu-toolchains-for-arm) 的工具链中的 `arm-none-eabi-gdb`。
 :::
 
 要启动 OpenOCD 服务器，请运行以下命令：

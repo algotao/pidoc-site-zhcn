@@ -5,7 +5,7 @@ title_meta: 树莓派处理器介绍，包括BCM2835、BCM2836、BCM2837、BCM27
 description: 深入了解树莓派系列所使用的各类处理器，包括BCM2835、BCM2836、BCM2837、BCM2837B0、BCM2711、BCM2712和RP3A0等。本文详细介绍了这些处理器的架构、性能特点、内存与缓存配置、多媒体功能以及输入输出接口等关键信息，同时提及了BCM2712处理器的漏洞及缓解措施，为树莓派爱好者和开发者提供全面的处理器知识。
 keywords: [树莓派, 处理器, BCM2835, BCM2836, BCM2837, BCM2837B0, BCM2711, BCM2712, RP3A0, ARM架构, 多媒体功能, 漏洞缓解]
 last_update: 
-  date: 2026-03-15
+  date: 2026-09-04
 ---
 import Normal from "../_normal.mdx";
 
@@ -19,7 +19,7 @@ BCM2835 是用于树莓派1A、A+、B、B+、树莓派Zero、树莓派Zero W和 
 :::
 有关处理器的其他信息可在以下文档中找到；
 - [GPU文档](https://docs.broadcom.com/docs/12358545)和[开源驱动程序](https://docs.broadcom.com/docs/12358546)
-- [ARM1176JZF-S](https://developer.arm.com/documentation/ddi0301)
+- [ARM1176JZF-S](https://support.arm.com/documentation/ddi0301)
 
 ## BCM2836
 
@@ -27,7 +27,7 @@ BCM2835 是用于树莓派1A、A+、B、B+、树莓派Zero、树莓派Zero W和 
 
 请参阅
 - [BCM2836 ARM 本地外设](https://pip.raspberrypi.com/documents/RP-008250-DS)
-- [Cortex-A7 MPcore 处理器参考手册](https://developer.arm.com/documentation/ddi0464/f/)
+- [Cortex-A7 MPcore 处理器参考手册](https://support.arm.com/documentation/ddi0464/f/)
 
 :::important[重要]
 此系统级芯片（SoC）已停产。后续版本的树莓派2 Model B采用不同型号的SoC。更多信息请参阅[树莓派2B产品变更说明](https://pip.raspberrypi.com/documents/RP-004577-PC)。
@@ -41,7 +41,7 @@ BCM2835 是用于树莓派1A、A+、B、B+、树莓派Zero、树莓派Zero W和 
 
 有关Arm外围设备规范的详细信息，请参阅以下 BCM2836 文档，该文档也适用于 BCM2837。
 - [BCM2836 Arm 本地外设](https://pip.raspberrypi.com/documents/RP-008250-DS)
-- [Cortex-A53 MPCore 处理器技术参考手册](https://developer.arm.com/documentation/ddi0500/latest/)
+- [Cortex-A53 MPCore 处理器技术参考手册](https://support.arm.com/documentation/ddi0500/latest/)
 
 :::important[重要]
 此系统级芯片（SoC）已停产。搭载该芯片的树莓派设备均已停产或采用其他SoC。更多信息请参阅：[树莓派3B产品变更通知](https://pip.raspberrypi.com/documents/RP-001029-PC)， [树莓派2B Revision1.1和1.2停产通知1](https://pip.raspberrypi.com/documents/RP-009284-PC)，以及 [树莓派CM3及CM3 Lite停产通知2](https://pip.raspberrypi.com/documents/RP-009286-PC)。
@@ -120,7 +120,7 @@ Vulnerability Spectre v2:             Mitigation; CSV2, BHB
 上述列表截至 2025 年 4 月是正确的，但可能已被取代。您应在 Raspberry Pi 上使用 `lscpu` 获取最新信息。在使用第三方操作系统时，这一点尤为重要，因为这些操作系统的 Linux 内核构建中可能不包含所有最新的缓解措施。Raspberry Pi Ltd 使用的 Arm 处理器不使用微码，因此所有缓解措施都在内核级别。
 :::
 
-`lscpu` 报告的漏洞信息基于当前执行的内核检测方案。它可能无法准确反映硬件的真实漏洞状态，尤其是在操作系统缺乏最新内核更新的情况下。有关 CPU 供应商公告的更多漏洞信息，可参考 `lscpu` 报告的供应商 ID 和型号名称，从 https://developer.arm.com/Arm%20Security%20Center/Speculative%20Processor%20Vulnerability 获取。
+`lscpu` 报告的漏洞信息基于当前执行的内核检测方案。它可能无法准确反映硬件的真实漏洞状态，尤其是在操作系统缺乏最新内核更新的情况下。有关 CPU 供应商公告的更多漏洞信息，可参考 `lscpu` 报告的供应商 ID 和型号名称，从 [Arm 支持](https://support.arm.com/documentation/#cf-navigationhierarchiesproducts=Arm%20Security%20Center,CPU%20Product%20Security) 获取。
 
 
 ## RP3A0
@@ -134,7 +134,7 @@ RP3A0 是一款四核 64 位 Arm Cortex A53 CPU，主频为 1 GHz，不过如果
 
 有关 ARM 外围设备规范的详细信息，请参阅以下 BCM2836 文档，该文档也适用于 BCM2837 和 RP3A0。
 - [BCM2836 Arm 本地外设](https://pip.raspberrypi.com/documents/RP-008250-DS)
-- [Cortex-A53 MPCore 处理器技术参考手册](https://developer.arm.com/documentation/ddi0500/latest/)
+- [Cortex-A53 MPCore 处理器技术参考手册](https://support.arm.com/documentation/ddi0500/latest/)
 
 :::note[注意]
 原始[树莓派 Zero](./raspberry-pi.mdx#树莓派zero)使用封装上封装 (PoP) DRAM，其中 DRAM 直接焊接在 [BCM2835](#bcm2835) 芯片顶部。

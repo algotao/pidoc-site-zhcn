@@ -5,8 +5,10 @@ title_meta: 从源码构建自定义树莓派Linux内核
 description: 深入了解树莓派Linux内核的构建、配置与贡献流程。本文详细介绍了内核的托管、升级、本地与交叉编译方法，以及如何通过menuconfig进行配置和打补丁。此外，还阐述了如何安装内核头文件、贡献代码至Raspberry Pi内核和上游Linux内核，助力开发者深入定制和优化树莓派系统。
 keywords: [树莓派, Linux内核, 内核构建, 交叉编译, 内核配置, menuconfig, 内核补丁, 内核头文件, 内核贡献, Raspberry Pi内核, 上游Linux内核]
 last_update: 
-  date: 2025-09-27
+  date: 2026-09-04
 ---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import Normal from "../_normal.mdx";
 
 # Linux内核
@@ -74,130 +76,62 @@ sudo apt install bc bison flex libssl-dev make
 - [启用和禁用内核功能](#配置内核)
 - [应用其他来源的补丁](#内核补丁)
 
-要准备默认配置，请根据您的 Raspberry Pi 型号运行下表中的相应命令。
+要准备默认配置，请根据架构和 Raspberry Pi 型号运行以下各节中的相应命令。
 
-<table>
-    <tr>
-        <td>架构</td>
-        <td>型号</td>
-        <td>命令</td>
-    </tr>
-    <tr>
-        <td rowspan="12">64位</td>
-        <td>Raspberry Pi 3</td>
-        <td rowspan="9">
+##### 64 位架构 {#原生构建-64-位架构}
+
+<Tabs>
+<TabItem value="pi3-64" label="Raspberry Pi 3, 3+, CM3, CM3+, Zero 2 W, 4, 400, CM4, CM4S">
+
 ```sh
 cd linux
 KERNEL=kernel8
 make bcm2711_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 3</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 3+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 3+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi Zero 2 W</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 4</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 400</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 4</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 4S</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 5</td>
-        <td rowspan="3">
+
+</TabItem>
+<TabItem value="pi5-64" label="Raspberry Pi 5, 500, 500+, CM5">
+
 ```sh
 cd linux
 KERNEL=kernel_2712
 make bcm2712_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 500/500+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 5</td>
-    </tr>
-    <tr>
-        <td rowspan="14">32位</td>
-        <td>Raspberry Pi 1</td>
-        <td rowspan="4">
+
+</TabItem>
+</Tabs>
+
+##### 32 位架构 {#原生构建-32-位架构}
+
+<Tabs>
+<TabItem value="pi1-32" label="Raspberry Pi 1, CM1, Zero, Zero W">
+
 ```sh
 cd linux
 KERNEL=kernel
 make bcmrpi_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 1</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi Zero</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi Zero W</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 2</td>
-        <td rowspan="6">
+
+</TabItem>
+<TabItem value="pi2-32" label="Raspberry Pi 2, 3, 3+, CM3, CM3+, Zero 2 W">
+
 ```sh
 cd linux
 KERNEL=kernel7
 make bcm2709_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 2</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 3</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 3</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 3+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 3+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 4</td>
-        <td rowspan="4">
+
+</TabItem>
+<TabItem value="pi4-32" label="Raspberry Pi 4, 400, CM4, CM4S">
+
 ```sh
 cd linux
 KERNEL=kernel7l
 make bcm2711_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 400</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 4</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 4S</td>
-    </tr>
-</table>
+
+</TabItem>
+</Tabs>
 
 
 :::note[注意]
@@ -335,133 +269,65 @@ sudo apt install crossbuild-essential-armhf
 
 本节介绍如何在构建内核时应用默认配置。你也可以通过以下方式配置内核：
 
-- [启用和禁用内核特性](#构建内核)
+- [启用和禁用内核特性](#配置内核)
 - [应用来自其他源的补丁](#内核补丁)
 
-输入以下命令来构建源代码和设备树文件：
+要构建源代码和设备树文件，请根据架构和 Raspberry Pi 型号运行以下各节中的相应命令。
 
-<table>
-    <tr>
-        <td >架构</td>
-        <td>型号</td>
-        <td>命令</td>
-    </tr>
-    <tr>
-        <td rowspan="12">64位</td>
-        <td>Raspberry Pi 3</td>
-        <td rowspan="9">
+##### 64 位架构 {#交叉编译-64-位架构}
+
+<Tabs>
+<TabItem value="xpi3-64" label="Raspberry Pi 3, 3+, CM3, CM3+, Zero 2 W, 4, 400, CM4, CM4S">
+
 ```sh
 cd linux
 KERNEL=kernel8
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2711_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 3</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 3+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 3+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi Zero 2 W</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 4</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 400</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 4</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 4S</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 5</td>
-        <td rowspan="3">
+
+</TabItem>
+<TabItem value="xpi5-64" label="Raspberry Pi 5, 500, 500+, CM5">
+
 ```sh
 cd linux
 KERNEL=kernel_2712
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2712_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 500/500+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 5</td>
-    </tr>
-    <tr>
-        <td rowspan="14">32位</td>
-        <td>Raspberry Pi 1</td>
-        <td rowspan="4">
+
+</TabItem>
+</Tabs>
+
+##### 32 位架构 {#交叉编译-32-位架构}
+
+<Tabs>
+<TabItem value="xpi1-32" label="Raspberry Pi 1, CM1, Zero, Zero W">
+
 ```sh
 cd linux
 KERNEL=kernel
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcmrpi_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 1</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi Zero</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi Zero W</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 2</td>
-        <td rowspan="6">
+
+</TabItem>
+<TabItem value="xpi2-32" label="Raspberry Pi 2, 3, 3+, CM3, CM3+, Zero 2 W">
+
 ```sh
 cd linux
 KERNEL=kernel7
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2709_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 2</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 3</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 3</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 3+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 3+</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 4</td>
-        <td rowspan="4">
+
+</TabItem>
+<TabItem value="xpi4-32" label="Raspberry Pi 4, 400, CM4, CM4S">
+
 ```sh
 cd linux
 KERNEL=kernel7l
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2711_defconfig
 ```
-        </td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi 400</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 4</td>
-    </tr>
-    <tr>
-        <td>Raspberry Pi CM 4S</td>
-    </tr>
-</table>
+
+</TabItem>
+</Tabs>
 
 #### 使用 LOCALVERSION 自定义内核版本
 
@@ -482,12 +348,12 @@ CONFIG_LOCALVERSION="-v7l-MY_CUSTOM_KERNEL"
 - 运行以下命令构建 64 位内核：
 
 ```sh
-make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 映像模块 dtbs
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
 ```
 
 - 运行以下命令构建 32 位内核：
 ```sh
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage 模块 dtbs
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage modules dtbs
 ```
 
 #### 安装内核
@@ -609,7 +475,7 @@ Linux 内核是高度可配置的。高级用户可能希望修改默认配置�
 sudo apt install libncurses5-dev
 ```
 
-接下来，[下载内核源代码](#下载内核源代码)。尤其要确保你已经安装了 [默认本地配置](#原生构建内核) 或 [默认交叉编译配置](#交叉编译内核)。
+接下来，[下载内核源代码](#下载内核源代码)。尤其要确保你已经安装了 [默认本地配置](#构建配置) 或 [默认交叉编译配置](#编译配置)。
 
 ### menuconfig
 
@@ -665,7 +531,7 @@ uname -r
 在打补丁之前，请务必检查内核版本。在内核源代码目录下，运行以下命令查看内核版本：
 
 ```sh
-head Makefile -n n
+head Makefile -n 4
 ```
 
 你应该会看到类似下面的输出：
@@ -673,11 +539,11 @@ head Makefile -n n
 ```
 # SPDX-License-Identifier: GPL-2.0
 VERSION = 6
-PATCHLEVEL = 1
-SUBLEVEL = 38
+PATCHLEVEL = 18
+SUBLEVEL = 37
 ```
 
-在这个例子中，源代码是 6.1.38 内核的。
+在这个例子中，源代码是 6.18.37 内核的。
 
 ### 应用补丁
 
@@ -686,9 +552,9 @@ SUBLEVEL = 38
 开发者会以单个文件的形式发布大多数补丁。使用 `patch` 工具来打补丁。以下命令将下载、解压缩并使用实时内核补丁为我们的示例内核版本打上补丁：
 
 ```sh
-wget https://www.kernel.org/pub/linux/kernel/projects/rt/6.1/patch-6.1.38-rt13-rc1.patch.gz
-gunzip patch-6.1.38-rt13-rc1.patch.gz
-cat patch-6.1.38-rt13-rc1.patch | patch -p1
+wget https://www.kernel.org/pub/linux/kernel/projects/rt/6.18/patch-6.18.37-rt6.patch.gz
+gunzip patch-6.18.37-rt6.patch.gz
+cat patch-6.18.37-rt6.patch | patch -p1
 ```
 
 有些开发者会以 **邮箱格式** 发布补丁，即一个包含多个补丁文件的文件夹。使用 Git 可以打上这些补丁。

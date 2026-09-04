@@ -5,7 +5,7 @@ title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等
 description: 本文详细介绍了如何在不连接显示器、键盘和鼠标的情况下远程访问和控制树莓派。涵盖了通过本地网络和互联网进行远程控制的方法，包括SSH、VNC、Raspberry Pi Connect等工具的使用。还提供了查找树莓派IP地址的多种方法，以及通过SCP、rsync、NFS、Samba等协议共享文件和文件夹的详细步骤。此外，文章还介绍了如何设置网络文件系统、Apache网络服务器以及通过网络启动树莓派的方法。
 keywords: [远程访问, 树莓派, SSH, VNC, Raspberry Pi Connect, IP地址, 文件共享, SCP, rsync, NFS, Samba, 网络文件系统, Apache, 网络启动, IPv6, 本地网络, 互联网]
 last_update: 
-  date: 2026-08-09
+  date: 2026-09-04
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -35,7 +35,7 @@ SSH (**S**ecure **SH**ell)可安全访问 Raspberry Pi 上的终端会话。VNC�
 
 要从任何连接到互联网的设备上远程控制 Raspberry Pi，你可以
 
-- 通过开放的互联网、VPN 或使用外部服务（如 RealVNC 的云 [VNC Viewer](https://www.realvnc.com/download/viewer/)）在 Raspberry Pi 上显示 [SSH](#使用-ssh-访问远程终端)或 vnc[VNC](#使用-vnc-共享屏幕)。
+- 通过开放的互联网、VPN 或使用外部服务（如 RealVNC 的云 [VNC Viewer](https://www.realvnc.com/en/connect/download/viewer/)）在 Raspberry Pi 上显示 [SSH](#使用-ssh-访问远程终端)或 [VNC](#使用-vnc-共享屏幕)。
 - 使用由 Raspberry Pi 提供的免费屏幕共享及远程SSH服务 [Raspberry Pi Connect](#使用-raspberry-pi-connect-远程访问)。
 
 ## 如何查找IP地址

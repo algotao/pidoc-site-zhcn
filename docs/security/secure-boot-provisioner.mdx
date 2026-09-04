@@ -6,8 +6,10 @@ draft: false
 description: "使用树莓派安全启动配置工具 (Secure Boot Provisioner, rpi-sb-provisioner) 自动配置安全启动和磁盘加密，支持批量部署多台设备。"
 keywords: [安全启动, Secure Boot Provisioner, rpi-sb-provisioner, 磁盘加密, LUKS, OTP, RSA, 启动配置, CM5, CM4, RPIBOOT]
 last_update:
-  date: 2026-08-19
+  date: 2026-09-04
 ---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # 安全启动配置
 
@@ -344,3 +346,83 @@ RPIBOOT 模式是 USB 设备模式的工程标签，它使配置服务器能够�
 * 在启动时使用存储在 OTP 中的公钥验证已签名的启动加载器。
 * 仅启动由您可信私钥签名的镜像。
 * 如果您还配置了全盘加密（推荐），在加载操作系统之前使用设备唯一机密在启动时解密其存储。
+
+## 故障排除 {#故障排除}
+
+如果您在使用安全启动配置工具配置设备时遇到问题，请使用本节中的信息来解决或诊断问题。
+
+* 检查您是否遇到了常见问题（请参阅 [常见问题](#常见问题)）。
+* 检查日志中的错误消息（请参阅 [查看日志](#查看日志)）。
+* 清除缓存（请参阅 [清除缓存](#清除缓存)）。
+* 如果您无法解决问题，请联系我们报告该问题（请参阅 [获取帮助](#获取帮助)）。
+
+### 常见问题 {#常见问题}
+
+本节描述了您在使用安全启动配置工具时可能遇到的常见问题，并提供了相应的解决方法。
+
+#### 配置过程停止或从未完成
+
+如果配置过程开始但中途停止或始终无法完成，请尝试以下操作：
+
+1. 检查日志中的错误消息（请参阅 [查看日志](#查看日志)）。
+2. 清除缓存（请参阅 [清除缓存](#清除缓存)）。
+3. 检查配置服务器是否至少有 32 GB 的可用存储空间。
+4. 尝试配置另一台客户端设备，以确定问题是否与特定设备相关。
+
+#### 错误："Already signed"
+
+如果错误日志报告客户端设备已签名或已处于安全状态，则说明该客户端设备之前已被写入签名密钥。此操作是永久性的，无法撤销。不过，对于此 CM5，仍可执行以下操作：
+
+* 要跳过签名步骤，请为此设备设置 **Skip EEPROM Update** 标志。
+  1. 在 `http://localhost:3142` 打开安全启动配置工具的 Web 界面。
+  2. 转到 **Devices** 选项卡并选择您正在编程的设备。
+  3. 在设备专属页面的 **Special Flags** 部分，将 **Skip EEPROM Update** 设置为 **One-time**。
+
+* 要使用相同的密钥完全重新配置该设备，请为此设备设置 **Re-provision Device** 标志。
+  1. 在 `http://localhost:3142` 打开安全启动配置工具的 Web 界面。
+  2. 转到 **Devices** 选项卡并选择您正在编程的设备。
+  3. 在设备专属页面的 **Special Flags** 部分，将 **Re-provision Device** 设置为 **One-time**。
+
+### 查看日志 {#查看日志}
+
+如果配置尝试失败，您可以查看日志中的错误详情。
+
+<Tabs>
+<TabItem value="使用 Web 界面" label="使用 Web 界面">
+
+1. 在 `http://localhost:3142` 打开安全启动配置工具的 Web 界面。
+2. 选择 **Services** 选项卡。
+3. 在 **System Services** 表格中找到您的 CM5。
+4. 选择 **View logs** 查看其详细日志。
+
+</TabItem>
+<TabItem value="使用命令行" label="使用命令行">
+
+运行以下命令，将 `<serial>` 替换为设备序列号：
+
+```bash
+tail -f /var/log/rpi-sb-provisioner/<serial>/provisioner.log
+```
+
+如需更详细的日志，运行以下命令，将 `<serial>` 替换为设备序列号：
+
+```bash
+journalctl -xeu rpi-sb-provisioner@<serial> -f
+```
+
+</TabItem>
+</Tabs>
+
+### 清除缓存 {#清除缓存}
+
+如果旧文件导致问题，您可以清除配置缓存。清除配置缓存会导致下一次配置操作耗时更长。
+
+1. 在 `http://localhost:3142` 打开安全启动配置工具的 Web 界面。
+2. 选择 **Options** 选项卡和 **OS Image** 部分。
+3. 选择要从配置缓存中清除的操作系统镜像。
+4. 选择 **Clear cached files**。
+5. 在确认窗口中，选择 **OK** 以确认该操作。
+
+### 获取帮助 {#获取帮助}
+
+如果您遇到的问题未包含在本节中，请在 [rpi-sb-provisioner 问题追踪器](https://github.com/raspberrypi/rpi-sb-provisioner/issues) 上报告。请一并附上您尝试配置的设备类型、错误消息以及 [日志文件](#查看日志)。

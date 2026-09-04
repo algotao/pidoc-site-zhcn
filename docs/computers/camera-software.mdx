@@ -5,7 +5,7 @@ title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照�
 description: 全面掌握树莓派摄像头应用！本文详细介绍如何使用rpicam-apps软件套件进行图像捕捉、视频录制、对象检测、图像分割等，支持多种摄像头模块（如HQ、GS、AI摄像头）。提供命令行选项、后处理框架（含TensorFlow Lite集成）、多摄像头同步及网络流媒体传输方法，助您实现高效的树莓派视觉应用开发。
 keywords: [树莓派摄像头应用, rpicam-apps, 图像捕捉, 视频录制, 对象检测, 图像分割, TensorFlow Lite, 多摄像头同步, 网络流媒体, 后处理框架, 树莓派视觉开发]
 last_update:
-  date: 2026-08-19
+  date: 2026-09-04
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -24,21 +24,21 @@ Raspberry Pi 生产多种官方摄像头模块，包括
 * 160 万像素 [全局快门摄像头](https://www.raspberrypi.com/products/raspberry-pi-global-shutter-camera/)，用于快速动态摄影
 * 1200 万像素的 [AI摄像头](https://www.raspberrypi.com/products/ai-camera/)，使用索尼IMX500成像传感器，为任何摄像头应用提供低延迟、高性能的AI功能
 
-有关摄像机硬件的更多信息，请参阅[摄像头硬件文档](../accessories/camera.mdx#关于摄像头模块)。
+有关摄像头硬件的更多信息，请参阅[摄像头硬件文档](../accessories/camera.mdx#关于摄像头模块)。
 
 首先，[安装摄像头模块](../accessories/camera.mdx#安装树莓派摄像头)。然后，按照本节中的指南使用你的摄像头模块。
 
 :::warning
-本指南不再涵盖在 _Bullseye_ 和早期 Raspberry Pi OS 版本中可用的*传统相机栈*。传统的相机栈使用 `raspivid`、`raspistill` 等应用程序和原始的 `Picamera`（*而不是* `Picamera2`）Python 库，多年来已被弃用，现在已不再支持。如果您使用的是传统的相机栈，它将只支持 摄像头模块 1、摄像头模块 2 和 高质量摄像头，而不会支持任何更新的相机模块。
+本指南不再涵盖在 _Bullseye_ 和早期 Raspberry Pi OS 版本中可用的*传统摄像头栈*。传统的摄像头栈使用 `raspivid`、`raspistill` 等应用程序和原始的 `Picamera`（*而不是* `Picamera2`）Python 库，多年来已被弃用，现在已不再支持。如果您使用的是传统的摄像头栈，它将只支持 摄像头模块 1、摄像头模块 2 和 高质量摄像头，而不会支持任何更新的摄像头模块。
 :::
 
 ## rpicam-apps
 
 :::tip[提示]
-从 Raspberry Pi OS *Bookworm* 版本开始，相机捕获应用程序的名称均为 `rpicam-*`。
+从 Raspberry Pi OS *Bookworm* 版本开始，摄像头捕获应用程序的名称均为 `rpicam-*`。
 :::
 
-Raspberry Pi 提供了一组简短的 `rpicam-apps` 示例。这些基于 `libcamera` 构建的命令行应用程序，可从相机捕获图像和视频。
+Raspberry Pi 提供了一组简短的 `rpicam-apps` 示例。这些基于 `libcamera` 构建的命令行应用程序，可从摄像头捕获图像和视频。
 
 这些应用程序包括：
 
@@ -182,7 +182,7 @@ rpicam-still --raw --output test.jpg
 
 `rpicam-still` 以 DNG（Adobe Digital Negative，Adobe 数字负片）格式保存原始图像。要确定原始图像的文件名，`rpicam-still` 使用与输出文件相同的名称，但扩展名改为`.dng`。要处理 DNG 图像，请使用 [Dcraw](https://en.wikipedia.org/wiki/Dcraw) 或 [RawTherapee](https://en.wikipedia.org/wiki/RawTherapee) 等应用程序。
 
-DNG 文件包含图像拍摄的元数据，包括黑电平、白平衡信息和 ISP 用于生成 JPEG 的色彩矩阵。使用 [ExifTool](https://exiftool.org/) 查看 DNG 元数据。以下输出显示了存储在 Raspberry Pi 使用 HQ 摄像机拍摄的原始图像中的典型元数据：
+DNG 文件包含图像拍摄的元数据，包括黑电平、白平衡信息和 ISP 用于生成 JPEG 的色彩矩阵。使用 [ExifTool](https://exiftool.org/) 查看 DNG 元数据。以下输出显示了存储在 Raspberry Pi 使用 HQ 摄像头拍摄的原始图像中的典型元数据：
 
 ```
 File Name                       : test.dng
@@ -452,7 +452,7 @@ rpicam-raw -t 2000 -o test.raw
 rpicam-raw -t 2000 --segment 1 -o test%05d.raw
 ```
 
-如果使用快速存储设备，`rpicam-raw` 能以 10fps 的速度将 18MB 的 1200 万像素 HQ 相机帧写入磁盘。`rpicam-raw` 无法将输出帧格式化为 DNG 文件；如需该功能，请使用 [`rpicam-still`](#rpicam-still)。使用低于 Class10 的 [`framerate`](#framerate) 选项可避免丢帧：
+如果使用快速存储设备，`rpicam-raw` 能以 10fps 的速度将 18MB 的 1200 万像素 HQ 摄像头帧写入磁盘。`rpicam-raw` 无法将输出帧格式化为 DNG 文件；如需该功能，请使用 [`rpicam-still`](#rpicam-still)。使用低于 Class10 的 [`framerate`](#framerate) 选项可避免丢帧：
 
 ```sh
 rpicam-raw -t 5000 --width 4056 --height 3040 -o test.raw --framerate 8
@@ -502,7 +502,7 @@ Raspberry Pi OS 可在 `/boot/firmware/config.txt` 中识别以下覆盖层。
 
 #### 使用调谐文件调整摄像头行为
 
-Raspberry Pi 的 `libcamera` 实现为每个摄像头都包含一个**调谐文件**。该文件控制算法和硬件，以生成最佳图像质量。`libcamera` 只能确定使用的传感器，而不能确定模块。因此，某些模块需要覆盖调校文件。[`tuning-file`](#tuning-file) 选项指定覆盖。您也可以复制和更改现有的调谐文件来定制摄像机的行为。
+Raspberry Pi 的 `libcamera` 实现为每个摄像头都包含一个**调谐文件**。该文件控制算法和硬件，以生成最佳图像质量。`libcamera` 只能确定使用的传感器，而不能确定模块。因此，某些模块需要覆盖调校文件。[`tuning-file`](#tuning-file) 选项指定覆盖。您也可以复制和更改现有的调谐文件来定制摄像头的行为。
 
 例如，无红外滤镜（NoIR）版本的传感器使用的自动白平衡（AWB）设置与标准版本不同。在 Raspberry Pi 5 或更高版本上，您可以使用以下命令为 IMX219 传感器指定 NoIR 调谐文件：
 
@@ -516,18 +516,18 @@ Raspberry Pi 5 之前的 Raspberry Pi 型号使用不同的调谐文件。在这
 
 `libcamera` 为许多摄像头（包括第三方型号）维护调谐文件。例如，您可以在 `se327m12.json` 中找到 Soho Enterprises SE327M12 的调谐文件。
 
-### 使用多台摄像机
+### 使用多台摄像头
 
 `rpicam-apps` 具有对多摄像头的基本支持。您可以通过以下方式将多个摄像头连接到 Raspberry Pi：
 
 * 对于 Raspberry Pi 计算模块，您可以将两个摄像头直接连接到 Raspberry Pi 计算模块的 I/O 板上。有关详细信息，请参阅 [计算模块文档](../computers/compute-module.mdx#连接摄像头模块)。使用这种方法，您可以_同时使用两个摄像头_。
 * 对于 Raspberry Pi 5，您可以使用双 MIPI 接口将两个摄像头直接连接到电路板上。
-* 对于其他带有摄像头端口的 Raspberry Pi 设备，您可以使用视频多路复用器板（如 [此第三方产品](https://www.arducam.com/product/multi-camera-v2-1-adapter-raspberry-pi/)）连接两台或多台摄像头。由于两个摄像头都连接到一个 Unicam 端口，因此_每次只能使用一个摄像头_。
+* 对于其他带有摄像头端口的 Raspberry Pi 设备，您可以使用视频多路复用器板（如 [此第三方产品](https://www.arducam.com/multi-camera-v2-1-adapter-raspberry-pi.html)）连接两台或多台摄像头。由于两个摄像头都连接到一个 Unicam 端口，因此_每次只能使用一个摄像头_。
 
-要列出平台上所有可用的摄像头，请使用 [`list-cameras`](#list-cameras) 选项。要选择使用哪台摄像机，请向 [`camera`](#camera) 选项传递所请求摄像机的索引值。
+要列出平台上所有可用的摄像头，请使用 [`list-cameras`](#list-cameras) 选项。要选择使用哪台摄像头，请向 [`camera`](#camera) 选项传递所请求摄像头的索引值。
 
 :::tip[注意]
-`libcamera` 尚不支持立体摄像机。同时运行两台摄像机时，它们必须在不同的进程中运行，这意味着无法在它们之间同步 3A 操作。 作为一种变通方法，您可以通过 HQ (IMX477) 摄像机的外部同步信号来同步摄像机，或者使用下面介绍的软件摄像机同步支持，必要时将 3A 切换为手动模式。
+`libcamera` 尚不支持立体摄像头。同时运行两台摄像头时，它们必须在不同的进程中运行，这意味着无法在它们之间同步 3A 操作。 作为一种变通方法，您可以通过 HQ (IMX477) 摄像头的外部同步信号来同步摄像头，或者使用下面介绍的软件摄像头同步支持，必要时将 3A 切换为手动模式。
 :::
 
 
@@ -543,27 +543,27 @@ Raspberry Pi 的 `libcamera` 实现能够仅使用软件同步不同摄像头的
 
 客户端和服务器需要以相同的标称帧率（如 30fps）运行。请注意，客户端与服务器之间没有后向通道。完全由客户端负责及时启动和运行，以与服务器保持一致，服务器完全不知道客户端是否已成功同步，或者是否存在任何客户端。
 
-在正常运行情况下，在同一台 Raspberry Pi 上运行同一型号的摄像头，我们希望摄像头图像的帧开始时间能在 "几十微秒 "内匹配。当摄像机型号不同时，这个范围可能会大得多，因为摄像机的帧频可能无法完全匹配，因此会不断偏离（每一条定时信息都会使其重合）。
+在正常运行情况下，在同一台 Raspberry Pi 上运行同一型号的摄像头，我们希望摄像头图像的帧开始时间能在 "几十微秒 "内匹配。当摄像头型号不同时，这个范围可能会大得多，因为摄像头的帧频可能无法完全匹配，因此会不断偏离（每一条定时信息都会使其重合）。
 
-当摄像机安装在不同的设备上时，应使用 NTP（Raspberry Pi OS 默认情况下通常使用 NTP）来同步系统时钟，如果不够精确，也可以使用 PTP 等其他协议。系统时钟之间的任何差异都会直接导致帧开始时间的额外误差，尽管帧上的广告时间戳不会告诉你。
+当摄像头安装在不同的设备上时，应使用 NTP（Raspberry Pi OS 默认情况下通常使用 NTP）来同步系统时钟，如果不够精确，也可以使用 PTP 等其他协议。系统时钟之间的任何差异都会直接导致帧开始时间的额外误差，尽管帧上的广告时间戳不会告诉你。
 
 **服务器**
 
-如前所述，服务器向网络广播定时信息，默认情况下每秒一次。服务器将运行固定帧数（默认为 100 帧），然后通知设备上的摄像机应用程序已达到 **同步点**。此时，应用程序将开始使用帧，因此在使用 `rpicam-vid` 的情况下，将开始对帧进行编码和记录。请注意，客户端的行为甚至存在与此无关。
+如前所述，服务器向网络广播定时信息，默认情况下每秒一次。服务器将运行固定帧数（默认为 100 帧），然后通知设备上的摄像头应用程序已达到 **同步点**。此时，应用程序将开始使用帧，因此在使用 `rpicam-vid` 的情况下，将开始对帧进行编码和记录。请注意，客户端的行为甚至存在与此无关。
 
 如果需要，同一网络上可以有多个服务器，只要它们向不同的网络地址广播定时信息即可。当然，客户端必须配置为监听正确的地址。
 
 **客户端**
 
-客户端会侦听服务器的定时信息，收到信息后会按要求缩短或延长摄像机帧的持续时间，以便后续帧尽可能与服务器帧在同一时刻开始。
+客户端会侦听服务器的定时信息，收到信息后会按要求缩短或延长摄像头帧的持续时间，以便后续帧尽可能与服务器帧在同一时刻开始。
 
-客户端从服务器的信息中了解到正确的 **同步点**，并像服务器一样，在同一时刻向摄像机应用程序发出信号，提示它开始使用帧。因此，在使用 `rpicam-vid` 的情况下，这也是开始记录帧的时刻。
+客户端从服务器的信息中了解到正确的 **同步点**，并像服务器一样，在同一时刻向摄像头应用程序发出信号，提示它开始使用帧。因此，在使用 `rpicam-vid` 的情况下，这也是开始记录帧的时刻。
 
 通常情况下，先于服务器启动客户端是合理的，因为客户端只需等待（**同步点**尚未到达），直到看到服务器向网络广播。这显然可以避免服务器在所有客户端都启动之前就到达 **同步点** 的时间问题！
 
 **在 `rpicam-vid` 中的应用**
 
-我们可以使用软件摄像机同步与 `rpicam-vid` 来录制逐帧同步的视频。我们假设连接了两台摄像机，将摄像机 0 用作服务器，摄像机 1 用作客户端。`rpicam-vid` 默认为每秒 30 帧，可以按如下操作。
+我们可以使用软件摄像头同步与 `rpicam-vid` 来录制逐帧同步的视频。我们假设连接了两台摄像头，将摄像头 0 用作服务器，摄像头 1 用作客户端。`rpicam-vid` 默认为每秒 30 帧，可以按如下操作。
 
 首先，我们应该启动客户端：
 ```sh
@@ -579,12 +579,12 @@ rpicam-vid -n -t 20s --camera 0 --codec libav -o server.mp4 --sync server
 
 这也将录制 20 秒，从到达同步点开始计时，然后开始录像。按照默认的同步设置（100 帧，30fps），这意味着客户端只需 3 秒钟多一点的时间就能完成同步。
 
-服务器的广播地址和端口、定时信息的频率以及等待客户端同步的帧数都可以在摄像机调整文件中更改。客户端只需注意广播地址，该地址应与服务器地址一致；其他信息将被忽略。更多信息请参阅 [Raspberry Pi 摄像机调谐指南](https://pip.raspberrypi.com/documents/RP-009070-TC)。
+服务器的广播地址和端口、定时信息的频率以及等待客户端同步的帧数都可以在摄像头调整文件中更改。客户端只需注意广播地址，该地址应与服务器地址一致；其他信息将被忽略。更多信息请参阅 [Raspberry Pi 摄像头调谐指南](https://pip.raspberrypi.com/documents/RP-009070-TC)。
 
 在实际操作中，最后有几点需要注意：
 
-* 固定帧频必须低于摄像机可运行的最大帧频（在使用的摄像机模式下）。这是因为同步算法可能需要缩短摄像机帧，以便客户端能赶上服务器，如果服务器已经以最快速度运行，同步算法就会失败。
-* 虽然摄像机帧应正确同步，但在帧频较高或系统负载较大的情况下，客户端或服务器上的帧都有可能丢失。在这种情况下，帧时间戳会帮助应用程序找出发生了什么，不过通常更简单的方法是尽量避免丢帧--也许可以通过降低帧频、增加分配给摄像机队列的缓冲区数量（参见 [`--buffer-count`选项](#buffer-count)）或减少系统负载来避免。
+* 固定帧频必须低于摄像头可运行的最大帧频（在使用的摄像头模式下）。这是因为同步算法可能需要缩短摄像头帧，以便客户端能赶上服务器，如果服务器已经以最快速度运行，同步算法就会失败。
+* 虽然摄像头帧应正确同步，但在帧频较高或系统负载较大的情况下，客户端或服务器上的帧都有可能丢失。在这种情况下，帧时间戳会帮助应用程序找出发生了什么，不过通常更简单的方法是尽量避免丢帧--也许可以通过降低帧频、增加分配给摄像头队列的缓冲区数量（参见 [`--buffer-count`选项](#buffer-count)）或减少系统负载来避免。
 
 ### 安装 libcamera 和 rpicam-apps
 
@@ -784,7 +784,7 @@ paths:
     sourceOnDemand: yes
 ```
 
-请查阅原始的 `mediamtx.yml` 以获取更多配置参数，这些参数可让您选择图像大小、摄像机模式、比特率等。通过在文件中搜索 `rpi` 来找到相关设置。
+请查阅原始的 `mediamtx.yml` 以获取更多配置参数，这些参数可让您选择图像大小、摄像头模式、比特率等。通过在文件中搜索 `rpi` 来找到相关设置。
 
 或者，您可以在 MediaMTX 外部运行 `rpicam-vid`，方法是按如下方式设置 `mediamtx.yml`：
 ```yml
@@ -989,7 +989,7 @@ Available cameras
 
 #### camera
 
-选择要使用的摄像机。从 [可用摄像机列表](#list-cameras)中指定一个索引。
+选择要使用的摄像头。从 [可用摄像头列表](#list-cameras)中指定一个索引。
 
 #### config
 
@@ -1036,7 +1036,7 @@ rpicam-hello --config example_configuration.txt
 
 别名：`-p
 
-设置桌面或 DRM 预览窗口的位置（x、y 坐标）和大小（w、h 尺寸）。不会影响从摄像机请求的图像的分辨率或宽高比。缩放图像大小并调整图像宽高比，使其适合预览窗口。
+设置桌面或 DRM 预览窗口的位置（x、y 坐标）和大小（w、h 尺寸）。不会影响从摄像头请求的图像的分辨率或宽高比。缩放图像大小并调整图像宽高比，使其适合预览窗口。
 
 以下列逗号分隔的形式传递预览窗口尺寸： `x,y,w,h`。
 
@@ -1087,7 +1087,7 @@ rpicam-hello --config example_configuration.txt
 
 对于 `rpicam-still`、`rpicam-jpeg` 和 `rpicam-vid`，指定输出分辨率。
 
-对于 `rpicam-raw`，指定原始帧的分辨率。对于采用 2×2 分档读出模式的摄像机，指定等于或小于分档模式的分辨率可捕获 2×2 分档的原始图像。
+对于 `rpicam-raw`，指定原始帧的分辨率。对于采用 2×2 分档读出模式的摄像头，指定等于或小于分档模式的分辨率可捕获 2×2 分档的原始图像。
 
 对于 `rpicam-hello` 没有影响。
 
@@ -1095,7 +1095,7 @@ rpicam-hello --config example_configuration.txt
 
 - `rpicam-vid -o test.h264 --width 1920 --height 1080` 捕捉 1080p 视频。
 
-- `rpicam-still -r -o test.jpg --width 2028 --height 1520` 捕捉分辨率为 2028×1520 的 JPEG 文件。如果与 HQ 摄像机一起使用，则使用 2×2 分档模式，因此原始文件 (`test.dng`)包含 2028×1520 的原始拜尔图像。
+- `rpicam-still -r -o test.jpg --width 2028 --height 1520` 捕捉分辨率为 2028×1520 的 JPEG 文件。如果与 HQ 摄像头一起使用，则使用 2×2 分档模式，因此原始文件 (`test.dng`)包含 2028×1520 的原始拜尔图像。
 
 #### viewfinder-width 和 viewfinder-height
 
@@ -1103,7 +1103,7 @@ rpicam-hello --config example_configuration.txt
 
 #### mode
 
-允许以下列以冒号分隔的格式指定摄像机模式： `<宽度>:<高度>:<位深>:<包装>`。如果所提供的值不完全匹配，系统会为传感器选择最接近的可用选项。您可以使用打包 (`P`) 或未打包 (`U`) 的打包格式。影响存储视频和照片的格式，但不影响传递到预览窗口的帧格式。
+允许以下列以冒号分隔的格式指定摄像头模式： `<宽度>:<高度>:<位深>:<包装>`。如果所提供的值不完全匹配，系统会为传感器选择最接近的可用选项。您可以使用打包 (`P`) 或未打包 (`U`) 的打包格式。影响存储视频和照片的格式，但不影响传递到预览窗口的帧格式。
 
 比特深度和打包是可选的。
 比特深度默认为 12。
@@ -1124,8 +1124,8 @@ rpicam-hello --config example_configuration.txt
 
 **在 Raspberry Pi 4 和更早的设备上**，打包格式使用 MIPI CSI-2 标准打包像素。这意味着
 
-- 10 位相机模式将 4 个像素打包成 5 个字节。前 4 个字节包含每个像素的 8 个最有效位（MSB），最后一个字节包含 4 对最小有效位（LSB）。
-- 12 位摄像机模式将 2 个像素打包成 3 个字节。前 2 个字节包含每个像素的 8 个最有效位 (MSB)，最后一个字节包含两个像素的 4 个最小有效位 (LSB)。
+- 10 位摄像头模式将 4 个像素打包成 5 个字节。前 4 个字节包含每个像素的 8 个最有效位（MSB），最后一个字节包含 4 对最小有效位（LSB）。
+- 12 位摄像头模式将 2 个像素打包成 3 个字节。前 2 个字节包含每个像素的 8 个最有效位 (MSB)，最后一个字节包含两个像素的 4 个最小有效位 (LSB)。
 
 **在 Raspberry Pi 5 及更高版本的设备上**，打包格式通过视觉无损压缩方案将像素值压缩为每个像素 8 位（1 个字节）。
 
@@ -1135,7 +1135,7 @@ rpicam-hello --config example_configuration.txt
 
 在所有设备上，未打包格式每个像素使用 2 个字节。
 
-**在 Raspberry Pi 4 和更早的设备上**，应用程序会在*最显著端*应用零填充。在未打包格式中，10 位相机模式的像素值不能超过 1023。
+**在 Raspberry Pi 4 和更早的设备上**，应用程序会在*最显著端*应用零填充。在未打包格式中，10 位摄像头模式的像素值不能超过 1023。
 
 **在 Raspberry Pi 5 及更早的设备上**，应用程序会在*最不显著端*应用零填充，因此图像会使用传感器提供的像素深度的完整 16 位动态范围。
 
@@ -1145,7 +1145,7 @@ rpicam-hello --config example_configuration.txt
 
 #### lores-width 和 lores-height 选项
 
-从摄像机传输第二个较低分辨率的图像流，缩放到指定的尺寸。
+从摄像头传输第二个较低分辨率的图像流，缩放到指定的尺寸。
 
 每种模式都接受以像素为单位定义低分辨率图像流尺寸的单个数字。
 
@@ -1187,7 +1187,7 @@ rpicam-hello --config example_configuration.txt
 
 默认值：`off`
 
-以 HDR 模式运行摄像机。如果传递时没有输入值，则假定为 `auto`。接受以下值之一：
+以 HDR 模式运行摄像头。如果传递时没有输入值，则假定为 `auto`。接受以下值之一：
 
 - `off` - 禁用 HDR。
 - `auto` - 在支持的设备上启用 HDR。如果可用，则使用传感器的内置 HDR 模式。如果传感器没有内置 HDR 模式，则使用可用的板载 HDR 模式。
@@ -1197,9 +1197,9 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 要检查传感器是否有内置 HDR 模式，除了 [`list-cameras`](#list-cameras) 之外，还需通过此选项。
 
-### 相机控制选项
+### 摄像头控制选项
 
-以下选项可控制影响相机图像质量的图像处理和算法。
+以下选项可控制影响摄像头图像质量的图像处理和算法。
 
 #### sharpness
 
@@ -1249,9 +1249,9 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 #### shutter
 
-使用快门指定曝光时间，单位为_微秒_。使用此选项时，增益仍可能发生变化。如果摄像机的帧频太快，无法达到指定的曝光时间（例如，帧频为 1fps，曝光时间为 10000 微秒），传感器将使用帧频所允许的最长曝光时间。
+使用快门指定曝光时间，单位为_微秒_。使用此选项时，增益仍可能发生变化。如果摄像头的帧频太快，无法达到指定的曝光时间（例如，帧频为 1fps，曝光时间为 10000 微秒），传感器将使用帧频所允许的最长曝光时间。
 
-有关正式相机的最小和最大快门时间列表，请参阅 [相机硬件文档](../accessories/camera.mdx#硬件规格)。超过最大值会导致未定义的行为。
+有关正式摄像头的最小和最大快门时间列表，请参阅 [摄像头硬件文档](../accessories/camera.mdx#硬件规格)。超过最大值会导致未定义的行为。
 
 #### gain
 
@@ -1259,7 +1259,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 设置模拟和数字综合增益。当传感器驱动程序可以提供所需的增益时，只使用模拟增益。当模拟增益达到最大值时，ISP 将使用数字增益。接受数值。
 
-有关正式摄像机的模拟增益限制列表，请参阅 [摄像机硬件文档](../accessories/camera.mdx#硬件规格)。
+有关正式摄像头的模拟增益限制列表，请参阅 [摄像头硬件文档](../accessories/camera.mdx#硬件规格)。
 
 有时，即使没有超过模拟增益限制，数字增益也会超过 1.0。这种情况可能发生在以下情况：
 
@@ -1275,9 +1275,9 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 - `centre` – 中央加权测光
 - `spot` – 点测光
 - `average` – 平均或整幅测光
-- `custom` – 在相机调谐文件中定义的自定义测光模式
+- `custom` – 在摄像头调谐文件中定义的自定义测光模式
 
-有关定义自定义测光模式和调整现有测光模式中区域权重的详细信息，请参阅 [Raspberry Pi 相机和 libcamera 的调校指南](https://pip.raspberrypi.com/documents/RP-009070-TC)。
+有关定义自定义测光模式和调整现有测光模式中区域权重的详细信息，请参阅 [Raspberry Pi 摄像头和 libcamera 的调校指南](https://pip.raspberrypi.com/documents/RP-009070-TC)。
 
 #### exposure
 
@@ -1287,7 +1287,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 - `normal`：正常曝光，正常增益
 - `long`：长时间曝光，较小增益
 
-您可以使用调谐文件编辑曝光配置文件。更多信息，请参阅 [Raspberry Pi 相机和 libcamera 的调整指南](https://pip.raspberrypi.com/documents/RP-009070-TC)。
+您可以使用调谐文件编辑曝光配置文件。更多信息，请参阅 [Raspberry Pi 摄像头和 libcamera 的调整指南](https://pip.raspberrypi.com/documents/RP-009070-TC)。
 
 #### awb
 
@@ -1304,7 +1304,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 | `cloudy` (阴天) | 7000K 至 8500K |
 | `custom` (自定义) | 自定义范围必须在摄像头调谐文件中定义 |
 
-这些数值仅为近似值：数值可能因相机调校而异。
+这些数值仅为近似值：数值可能因摄像头调校而异。
 
 没有任何模式可以完全禁用 AWB。相反，您可以使用 [`awbgains`](#awbgains)来固定色彩增益。
 
@@ -1340,12 +1340,12 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 指定自动对焦模式。接受以下值：
 
-* `default`: 使摄像机进入连续自动对焦模式，除非 [`lens-position`](#lens-position) 或 [`autofocus-on-capture`](#autofocus-on-capture) 将该模式覆盖为手动模式。
+* `default`: 使摄像头进入连续自动对焦模式，除非 [`lens-position`](#lens-position) 或 [`autofocus-on-capture`](#autofocus-on-capture) 将该模式覆盖为手动模式。
 * `manual`：完全不移动镜头，除非使用 [`lens-position`](#lens-position) 进行手动配置。
-* `auto`: 仅在摄像机启动时或拍摄前移动镜头进行自动对焦扫描，如果同时使用了 [`autofocus-on-capture`](#autofocus-on-capture)
+* `auto`: 仅在摄像头启动时或拍摄前移动镜头进行自动对焦扫描，如果同时使用了 [`autofocus-on-capture`](#autofocus-on-capture)
 * `continuous`：根据场景变化自动调整镜头位置
 
-只有某些相机模块支持此选项。
+只有某些摄像头模块支持此选项。
 
 #### autofocus-window
 
@@ -1354,10 +1354,10 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 指定自动对焦范围。接受以下值：
 
 * `normal`：对焦范围从合理距离到无限远
-* `macro`：仅对近距离物体对焦，包括相机支持的最近焦距
+* `macro`：仅对近距离物体对焦，包括摄像头支持的最近焦距
 * `full`：对整个范围对焦，从最近的物体到无穷远
 
-此选项仅支持某些相机模块。
+此选项仅支持某些摄像头模块。
 
 #### autofocus-speed
 
@@ -1368,7 +1368,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 * `normal`：以正常速度改变镜头位置
 * `fast`：快速改变镜头位置
 
-此选项仅支持某些相机模块。 
+此选项仅支持某些摄像头模块。 
 
 #### autofocus-range
 
@@ -1388,7 +1388,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 - `rpicam-hello --autofocus-window 0.25,0.25,0.5,0.5` 精确选择从图像中心裁剪的像素总数的一半（跳过 X 坐标的前 25%，跳过 Y 坐标的前 25%，使用图像总宽度的 50%，使用图像总高度的 50%）。
 - `rpicam-hello --autofocus-window 0,0,0.25,0.25` 精确选择从图像左上方裁剪的像素总数的四分之一（跳过 X 坐标的前 0%，跳过 Y 坐标的前 0%，使用图像宽度的 25%，使用图像高度的 25%）。
 
-此选项仅支持某些相机模块。
+此选项仅支持某些摄像头模块。
 
 #### lens-position
 
@@ -1400,7 +1400,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 - 任何其他 `数字`：将镜头移动到 1 / `数字` 位置。例如，数值 `2.0` 将对焦在大约 0.5 米处
 - `default`：将镜头移动到与镜头超焦距位置相对应的默认位置
 
-镜头校准并不完美，因此同一型号的不同相机模块可能会有所不同。
+镜头校准并不完美，因此同一型号的不同摄像头模块可能会有所不同。
 
 #### verbose
 
@@ -1442,7 +1442,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 #### post-process-file
 
-指定一个 JSON 文件，用于配置成像管道应用的后处理。这适用于相机图像到达应用程序之前。其工作原理与传统的 `raspicam` **图像特效** 类似。接受文件名路径作为输入。
+指定一个 JSON 文件，用于配置成像管道应用的后处理。这适用于摄像头图像到达应用程序之前。其工作原理与传统的 `raspicam` **图像特效** 类似。接受文件名路径作为输入。
 
 后处理是一个大课题，需要使用 OpenCV 和 TensorFlowLite 等第三方软件来分析和处理图像。更多信息，请参阅 [后处理](#使用-rpicam-apps-做后处理)。 
 
@@ -1456,7 +1456,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 #### metadata
 
-将捕获的图像元数据保存到文件中，或使用 `-` 输出到标准输出。元数据输出中的字段将根据所使用的相机型号而定。
+将捕获的图像元数据保存到文件中，或使用 `-` 输出到标准输出。元数据输出中的字段将根据所使用的摄像头型号而定。
 
 参见 `metadata-format`。
 
@@ -1496,7 +1496,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 在 JPEG 输出文件中保存额外的 EXIF 标记。仅适用于 JPEG 输出。由于 `libexif` 库的限制，许多标签目前（错误地）格式化为 ASCII，并在终端中打印警告。
 
-要添加某些与相机设置相关的 EXIF 标记，必须使用此选项。您可以使用 [ExifTool](https://exiftool.org/)，在拍摄后向输出 JPEG 添加与相机设置无关的标记。
+要添加某些与摄像头设置相关的 EXIF 标记，必须使用此选项。您可以使用 [ExifTool](https://exiftool.org/)，在拍摄后向输出 JPEG 添加与摄像头设置无关的标记。
 
 示例：`rpicam-still -o test.jpg --exif IDO0.Artist=Someone`
 
@@ -1599,7 +1599,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 不需要值，但可以通过 `1` 启用，通过 `0` 关闭。不传递值等同于传递 `1`。
 
-只有某些相机模块（如 *Raspberry Pi Camera Module 3*）支持该选项。
+只有某些摄像头模块（如 *Raspberry Pi Camera Module 3*）支持该选项。
 
 ### 视频选项
 
@@ -1741,7 +1741,7 @@ mkvmerge -o test.mkv --timecodes 0:timestamps.txt test.h264
 
 #### sync
 
-在软件同步模式下运行摄像机，即多台摄像机将帧同步到同一时刻。同步模式可设置为 `client`（客户端） 或 `server`（服务端）。有关详细信息，请参阅 [软件同步工作原理](#软件摄像头同步)的详细说明。
+在软件同步模式下运行摄像头，即多台摄像头将帧同步到同一时刻。同步模式可设置为 `client`（客户端） 或 `server`（服务端）。有关详细信息，请参阅 [软件同步工作原理](#软件摄像头同步)的详细说明。
 
 ### libav 选项
 
@@ -1826,7 +1826,7 @@ Name: alsa_input.usb-GN_Netcom_A_S_Jabra_EVOLVE_LINK_000736B1214E0A-00.mono-fall
 
 ## 使用 rpicam-apps 做后处理
 
-`rpicam-apps` 共享一个共同的后处理框架。这样，它们就可以将从相机系统接收到的图像通过许多自定义图像处理和图像分析例程进行处理。每个此类例程都被称为_stage_ (阶段)。要运行后处理阶段，需要提供一个 JSON 文件，指示应用程序应用哪些阶段和选项。您可以在 [`rpicam-apps`资源库的`assets`文件夹](https://github.com/raspberrypi/rpicam-apps/tree/main/assets) 中找到使用内置后处理阶段的 JSON 文件示例。
+`rpicam-apps` 共享一个共同的后处理框架。这样，它们就可以将从摄像头系统接收到的图像通过许多自定义图像处理和图像分析例程进行处理。每个此类例程都被称为_stage_ (阶段)。要运行后处理阶段，需要提供一个 JSON 文件，指示应用程序应用哪些阶段和选项。您可以在 [`rpicam-apps`资源库的`assets`文件夹](https://github.com/raspberrypi/rpicam-apps/tree/main/assets) 中找到使用内置后处理阶段的 JSON 文件示例。
 
 例如，**negate** 阶段会将浅色像素变暗，将深色像素变亮。因为negate阶段是基本的，不需要任何配置，所以`negate.json`只是为该阶段命名：
 ```json
@@ -2142,8 +2142,8 @@ rpicam-hello --lores-width 128 --lores-height 96 --post-process-file motion_dete
 
 示例：
 
-<img src="/img/computers/camera-software/annotate.jpg" alt="用注释将相机和日期信息写入图像" />
-*用注释将相机和日期信息写入图像*
+<img src="/img/computers/camera-software/annotate.jpg" alt="用注释将摄像头和日期信息写入图像" />
+*用注释将摄像头和日期信息写入图像*
 
 ### 使用TensorFlow Lite进行后处理
 
@@ -2339,7 +2339,7 @@ rpicam-hello --post-process-file object_detect_tf.json --lores-width 400 --lores
 }
 ```
 
-本示例将相机图像缩小到 258×258 像素大小。这一阶段甚至可以在不裁剪的情况下压缩非正方形图像。此示例启用了右下角的分割图。
+本示例将摄像头图像缩小到 258×258 像素大小。这一阶段甚至可以在不裁剪的情况下压缩非正方形图像。此示例启用了右下角的分割图。
 
 运行以下命令，在 `rpicam-hello` 中使用此阶段文件：
 
@@ -2363,7 +2363,7 @@ rpicam-hello --post-process-file segmentation_tf.json --lores-width 258 --lores-
 | -- | -- |
 | `char const *Name() const` | 返回阶段名称。与 JSON 后处理配置文件中列出的阶段匹配。 |
 | `void Read(boost::property_tree::ptree const &params)` | 从提供的 JSON 文件中读取 stage 的配置参数。 |
-| `void AdjustConfig(std::string const &use_case, StreamConfiguration *config)` | 为 stage 提供影响摄像头配置的机会。对于不需要配置摄像机的 stage ，通常为空。 |
+| `void AdjustConfig(std::string const &use_case, StreamConfiguration *config)` | 为 stage 提供影响摄像头配置的机会。对于不需要配置摄像头的 stage ，通常为空。 |
 | `void Configure()` | 在摄像头配置完成后调用，以分配资源并检查 stage 是否能访问必要的数据流。 |
 | `void Start()` | 摄像头启动时调用。对于不需要配置摄像头的 stage ，通常为空。 |
 | `bool Process(CompletedRequest &completed_request)` | 显示已完成的摄像头请求，以便进行后处理。这是您执行像素处理和图像分析的地方。如果后处理框架不应***将此请求传送给应用程序，则返回 `true`。 |
@@ -2389,7 +2389,7 @@ rpicam-hello --post-process-file segmentation_tf.json --lores-width 258 --lores-
 #### TensorFlow Lite阶段
 
 对于使用 TensorFlow Lite (TFLite) 的 stage，可从 `TfStage` 类派生一个新类。
-该类将模型执行委托给单独的线程，以防止相机卡顿。
+该类将模型执行委托给单独的线程，以防止摄像头卡顿。
 
 `TfStage` 类实现了后处理阶段通常必须实现的所有 `PostProcessingStage` 成员函数，但 `Name` 除外。
 所有源于 `TfStage` 的舞台都必须实现 `Name` 函数，并应实现以下部分或全部虚拟成员函数：
@@ -2657,11 +2657,11 @@ sudo ninja install
 
 ### 编写自己的 rpicam 应用程序
 
-`rpicam-apps` 并不提供任何人都可能需要的所有相机相关功能。相反，这些应用程序小巧灵活。需要不同行为的用户可以自己实现。
+`rpicam-apps` 并不提供任何人都可能需要的所有摄像头相关功能。相反，这些应用程序小巧灵活。需要不同行为的用户可以自己实现。
 
-所有的 `rpicam-apps` 都使用一个事件循环，当一组新的帧从摄像机系统到达时，它就会接收信息。这组帧称为 `CompletedRequest`。包含：
-- 从该单个摄像机帧衍生出的所有图像：通常是低分辨率图像和全尺寸输出图像
-- 来自摄像机和后处理系统的元数据
+所有的 `rpicam-apps` 都使用一个事件循环，当一组新的帧从摄像头系统到达时，它就会接收信息。这组帧称为 `CompletedRequest`。包含：
+- 从该单个摄像头帧衍生出的所有图像：通常是低分辨率图像和全尺寸输出图像
+- 来自摄像头和后处理系统的元数据
 
 #### rpicam-hello
 `rpicam-hello` 是最小的应用程序，也是了解 `rpicam-apps` 设计的最佳起点。它从消息中提取 `CompletedRequestPtr`（指向 `CompletedRequest` 的共享指针），并将其转发到预览窗口：
@@ -2671,7 +2671,7 @@ CompletedRequestPtr &completed_request = std::get<CompletedRequestPtr>(msg.paylo
 app.ShowPreview(completed_request, app.ViewfinderStream());
 ```
 
-每个 `CompletedRequest` 都必须回收到摄像机系统，以便缓冲区可以重复使用。否则，摄像机就会耗尽缓冲区来存储新的摄像机帧。当使用 C++ 的 _shared pointer_（共享指针）和 _custom deleter_（自定义删除）机制后，当没有对 `CompletedRequest` 的引用时，这个回收过程就会自动发生。
+每个 `CompletedRequest` 都必须回收到摄像头系统，以便缓冲区可以重复使用。否则，摄像头就会耗尽缓冲区来存储新的摄像头帧。当使用 C++ 的 _shared pointer_（共享指针）和 _custom deleter_（自定义删除）机制后，当没有对 `CompletedRequest` 的引用时，这个回收过程就会自动发生。
 
 因此，`rpicam-hello` 必须完成以下操作才能回收缓冲空间：
 
@@ -2711,7 +2711,7 @@ app.ShowPreview(completed_request, app.ViewfinderStream());
 
 ### 将 libcamera 与 Qt 结合使用
 
-Qt 是一种流行的应用程序框架和图形用户界面工具包。`rpicam-apps` 包含一个使用 Qt 的相机预览窗口选项。
+Qt 是一种流行的应用程序框架和图形用户界面工具包。`rpicam-apps` 包含一个使用 Qt 的摄像头预览窗口选项。
 
 遗憾的是，Qt 将某些符号（如 `slot` 和 `emit`）定义为全局命名空间中的宏。这导致在包含 `libcamera` 文件时出现错误。这个问题在所有同时使用 Qt 和 `libcamera` 的平台上都存在。请尝试以下变通方法来避免这些错误：
 
@@ -2994,7 +2994,7 @@ ccp2  |             |
 
 这是通过 Unicam 接口的推荐方法。
 
-在开发新设备的驱动程序时，如果打算与 `bcm2835-unicam` 模块一起使用，则需要驱动程序和相应的设备树覆盖。理想情况下，驱动程序应提交到 [linux-media](https://vger.kernel.org/vger-lists.html#linux-media) 邮件列表进行代码审查并合并到主线，然后移动到 [Raspberry Pi 内核树](https://github.com/raspberrypi/linux)；但也有例外情况，驱动程序可直接审查并合并到 Raspberry Pi 内核。
+在开发新设备的驱动程序时，如果打算与 `bcm2835-unicam` 模块一起使用，则需要驱动程序和相应的设备树覆盖。理想情况下，驱动程序应提交到 [linux-media](https://subspace.kernel.org/vger.kernel.org.html#linux-media) 邮件列表进行代码审查并合并到主线，然后移动到 [Raspberry Pi 内核树](https://github.com/raspberrypi/linux)；但也有例外情况，驱动程序可直接审查并合并到 Raspberry Pi 内核。
 
 :::warning
 所有内核驱动程序均采用 GPLv2 许可，因此必须提供源代码。仅提供二进制模块违反了 Linux 内核所遵循的 GPLv2 许可。
@@ -3058,7 +3058,7 @@ Analog Devices ADV728x(A)-M 模拟视频至 CSI2 桥接芯片可将复合 S-vide
 
 不支持接收隔行扫描视频，因此 ADV7281(A)-M 版本的芯片用途有限，因为它没有必要的 I2P 去隔行扫描块。在选择设备时，请确保指定 -M 选项。否则，您将得到一条并行输出总线，无法与 Raspberry Pi 连接。
 
-目前还没有使用这些芯片的商用电路板，但已通过 Analog Devices [EVAL-ADV7282-M 评估板](https://www.analog.com/en/design-center/evaluation-hardware-and-software/evaluation-boards-kits/EVAL-ADV7282A-M.html)对该驱动程序进行了测试。
+目前还没有使用这些芯片的商用电路板，但已通过 Analog Devices [EVAL-ADV7282-M 评估板](https://www.analog.com/en/resources/evaluation-hardware-and-software/evaluation-boards-kits/EVAL-ADV7282A-M.html)对该驱动程序进行了测试。
 
 如果使用的是 `ADV7282-M` 芯片变体，可以使用 `config.txt` dtoverlay `adv7282m` 加载该驱动程序；如果使用的是其他变体，则可以使用 `adv7280m=1`、`adv7281m=1` 或 `adv7281ma=1` 的参数加载 `adv728x-m`
 ```ini
@@ -3115,12 +3115,12 @@ HDMI 通过接收设备公布其可支持的所有模式的 [EDID](https://en.wi
 - `rpicam-apps` 删除了 [`rotation`](#rotation) 选项对 90° 和 270° 旋转的支持。
 - `raspicam` 将测光和曝光混为一谈；`rpicam-apps` 则将这些选项分开。
 - 要禁用 `rpicam-apps` 中的自动白平衡 (AWB)，请使用 [`awbgains`](#awbgains) 设置一对色彩增益（例如 `1.0,1.0`）。
-- `rpicam-apps` 无法将 NoIR 相机模块的自动白平衡 (AWB) 设置为灰度模式。取而代之的是通过 [`tuning-file`](#tuning-file) 选项传递一个 NoIR 专用的调整文件，如 `imx219_noir.json`。
+- `rpicam-apps` 无法将 NoIR 摄像头模块的自动白平衡 (AWB) 设置为灰度模式。取而代之的是通过 [`tuning-file`](#tuning-file) 选项传递一个 NoIR 专用的调整文件，如 `imx219_noir.json`。
 * `rpicam-apps` 不提供明确的数字增益控制。相反，[`gain`](#gain) 选项会对其进行隐式设置。
 * `rpicam-apps` 删除了 `--ISO` 选项。取而代之的是计算与所需 ISO 值相对应的增益。供应商可以提供增益与 ISO 值的映射。
 * `rpicam-apps` 不支持设置闪烁周期。
 * `rpicam-still` 不支持连拍。相反，可以考虑在 MJPEG 模式下使用 `rpicam-vid` 和 `--segment 1` 来强制将每一帧都放入一个单独的文件。
-* `rpicam-apps` 使用适用于所有图像传感器的开源驱动程序，因此启用或禁用传感器缺陷像素校正（DPC）的机制各不相同。Raspberry Pi HQ Camera 上的 imx477 驱动程序默认启用传感器上 DPC。要在 HQ 相机上禁用传感器上的 DPC，请运行以下命令：
+* `rpicam-apps` 使用适用于所有图像传感器的开源驱动程序，因此启用或禁用传感器缺陷像素校正（DPC）的机制各不相同。Raspberry Pi HQ Camera 上的 imx477 驱动程序默认启用传感器上 DPC。要在 HQ 摄像头上禁用传感器上的 DPC，请运行以下命令：
 
 ```sh
 sudo echo 0 > /sys/module/imx477/parameters/dpc_enable
@@ -3128,14 +3128,14 @@ sudo echo 0 > /sys/module/imx477/parameters/dpc_enable
 
 ## 故障排除
 
-如果你的相机模块不能像你期望的那样工作，请尝试以下修复方法：
+如果你的摄像头模块不能像你期望的那样工作，请尝试以下修复方法：
 
 - 在 Raspberry Pi 3 及更早的设备上，图形硬件只能支持最大 2048×2048 像素的图像，这就限制了可在预览窗口中调整大小的摄像头图像。因此，视频编码时如果图像宽度大于 2048 像素，预览图像就会损坏或丢失。
 - 在 Raspberry Pi 4 上，图形硬件只能支持最大 4096×4096 像素的图像，这就限制了可在预览窗口中调整大小的摄像头图像。因此，视频编码时如果图像宽度大于 4096 像素，预览图像就会损坏或丢失。
 - 在桌面环境中，预览窗口可能会出现显示撕裂。这是一个已知的、无法修复的问题。
 - 检查 FFC（扁平柔性线缆）是否牢固就位、完全插入，以及触点是否朝向正确方向。FFC 应均匀插入，不得倾斜。
 - 如果在摄像头和 Raspberry Pi 之间使用连接器，请检查连接器上的端口是否牢固就位、完全插入，以及触点是否朝向正确方向。
-- 检查并确保 FFC（扁平软电缆）连接到 CSI（摄像头串行接口），而不是 DSI（显示器串行接口）。连接器可以插入任何一个端口，但只有 CSI 端口可以供电和控制摄像机。请查看端口附近电路板上印有的 "CSI "标签。
+- 检查并确保 FFC（扁平软电缆）连接到 CSI（摄像头串行接口），而不是 DSI（显示器串行接口）。连接器可以插入任何一个端口，但只有 CSI 端口可以供电和控制摄像头。请查看端口附近电路板上印有的 "CSI "标签。
 - 运行 `sudo apt update` 和 `sudo apt full-upgrade`，确保运行的是最新软件。
 - 尝试使用不同的电源。摄像头模块会增加 Raspberry Pi 约 200-250mA 的电力需求。如果电源质量较差，Raspberry Pi 可能无法为摄像头模块供电。
 - 如果您已经检查了上述所有问题，但摄像头模块仍然无法像您期望的那样工作，请尝试在我们的论坛上发帖寻求更多帮助。
@@ -3151,6 +3151,6 @@ sudo echo 0 > /sys/module/imx477/parameters/dpc_enable
 - 报告您的 Raspberry Pi 型号，包括内存大小。
 - 包括应用程序控制台输出的任何相关摘录。
 
-如果相机软件存在特定问题（如崩溃），请考虑 [在 `rpicam-apps` GitHub 存储库中创建一个问题](https://github.com/raspberrypi/rpicam-apps)，包括上述相同的详细信息。
+如果摄像头软件存在特定问题（如崩溃），请考虑 [在 `rpicam-apps` GitHub 存储库中创建一个问题](https://github.com/raspberrypi/rpicam-apps)，包括上述相同的详细信息。
 
 <Normal />
