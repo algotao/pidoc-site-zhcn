@@ -4,8 +4,10 @@ draft: false
 description: 树莓派音频板（Raspberry Pi Audio HAT）提供四种高保真音频解决方案，适配40引脚GPIO的树莓派设备。包括DAC PRO（支持192kHz全高清音频与平衡输出）、DAC+（24位192kHz音频）、DigiAMP+（35W功率放大，需外接电源）及Codec Zero（96kHz音频，集成麦克风，适合小型项目）。功能涵盖线路/平衡输出、扬声器驱动、耳机放大、辅助输入输出及麦克风接口。支持即插即用配置，可通过EEPROM自动识别，或手动修改config.txt优化兼容性。提供详细接线指南、软件设置（如AlsaMixer、MPD音量控制）及项目案例（如编程玩具聊天盒）。适用于HiFi音响、智能音箱、对讲机等场景。
 keywords: [树莓派音频板, Raspberry Pi HAT, DAC PRO, DAC+, DigiAMP+, Codec Zero, 高保真音频, 192kHz音频, 平衡输出, 耳机放大器, 立体声扬声器, 辅助输入输出, 麦克风接口, EEPROM配置, AlsaMixer, MPD音量控制, HiFi音响, 智能音箱, 树莓派项目]
 last_update: 
-  date: 2026-05-03
+  date: 2026-10-11
 ---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import Normal from "../_normal.mdx";
 
 # 树莓派音频
@@ -157,166 +159,245 @@ Codec Zero 包括一个 EEPROM，必要时可用于自动配置 Linux 环境。�
 <img src="/img/accessories/audio/CODEC_ZERO_ZOOMED_IN_DIAGRAM.jpg" width="80%" alt="编解码器零放大图" />
 Codec Zero 是对讲机、智能门铃、古董收音机或智能扬声器等小型项目的理想设计起点。
 
-## 配置
-所有树莓派音频板都包含一个预编程 EEPROM。树莓派音频板设计为即插即用；树莓派OS 能够自动检测和配置。在树莓派OS中，右键单击屏幕右上角的音频设置，可以在板载音频设置和 HAT 音频设置之间进行切换：
+## 连接、装配与配置
 
-<img src="/img/accessories/audio/gui.png"alt="用户界面" />
+树莓派音频板带有预编程 EEPROM，因此设计为可与运行 [Raspberry Pi OS](../computers/os.mdx) 的树莓派设备即插即用。它们属于称为 HAT（Hardware Attached on Top，顶部硬件附加）的设备系列。
 
-有许多适用于树莓派的第三方音频软件应用程序支持我们音频板的即插即用功能。这些软件通常是无显示器使用。它们可以通过 PC 或 Mac 应用程序进行控制，也可以通过安装在树莓派上的网络服务器进行控制，并通过网页进行交互。
+它们也可以用于[无显示器（远程）设置](../computers/getting-started.mdx#无显示器设置)。
 
-如果您需要自己配置树莓派操作系统，也许您正在运行自己的无显示器系统，而且没有通过图形用户界面进行控制的选项，那么您需要将树莓派音频板作为树莓派操作系统中的主音频设备，禁用树莓派的板载音频设备。这可以通过编辑 [/boot/firmware/config.txt](../computers/config-txt.mdx#什么是configtxt) 文件来实现。使用通过 SSH 连接到树莓派的终端会话，运行以下命令编辑文件：
+### 连接音频板
 
-```sh
-sudo nano /boot/firmware/config.txt
-```
+树莓派音频板连接到 40 针 GPIO 排针，设计为使用随附的电路板支柱和螺钉进行支撑。所有必要的安装硬件（包括垫片、螺钉和连接器）均已提供。
 
-找到文件中的 `dtparam=audio=on` 行，在该行开头加上 `#` 号，将其注释掉。程序将忽略在 # 符号之后写入的任何内容。现在，你的 `/boot/firmware/config.txt` 文件应该包含以下条目：
+正常操作无需焊接；但如果您想硬接线某些特定连接器（例如 DAC Pro 上的外部线路回传连接），则可能需要焊接。
 
-```ini
-#dtparam=audio=on
-```
+要连接音频板：
 
-先按 `CTRL+X`、再按 `Y`，然后 **Enter** 保存，最后重启设备使设置生效。
+1. 将 PCB 垫片用手拧紧到您的树莓派设备上。
+2. 将音频板装到 40 针 GPIO 排针上。
+3. 从电路板上方拧入剩余的螺钉。
 
-```sh
-sudo reboot
-```
+### 检查硬件版本
 
-或者，也可以直接在插入电脑的树莓派microSD 卡上编辑 `/boot/firmware/config.txt` 文件。使用默认的文件管理器，打开卡上的 `/boot/firmware/` 卷，使用适当的文本编辑器编辑 `config.txt` 文件，然后保存文件，弹出 microSD 卡并重新插入树莓派。
+树莓派音频板有多个版本。具体版本决定了配置所需的操作。
 
-### 连接HAT
-树莓派音频板可连接到树莓派的 40 针接头。它们设计为使用随附的电路板支座和螺钉支撑在树莓派上。树莓派音频板无需焊接即可正常工作，除非您使用硬接线连接特定连接器，如 DAC Pro 上的 XLR（外部线路回传）连接。
+较旧的 IQaudIO 品牌板采用黑色 PCB。较新的树莓派品牌板采用绿色 PCB。这些电路板在电气上等效，但 EEPROM 内容不同。
 
-我们提供了所有必要的安装硬件，包括垫片、螺钉和连接器。在添加音频板之前，应将 PCB 垫片拧紧到树莓派上。然后将剩余的螺丝从上方拧入垫片。
+要检查音频板的版本：
 
-### 硬件版本
+1. 将音频板连接到您的树莓派并通电。
+2. 检查音频板上的电源 LED 是否亮起（如果有的话）。例如，Codec Zero 有一个标有 `PWR` 的 LED。
+3. 在树莓派设备上，使用终端输入以下命令：
 
-音频卡有多个版本。具体版本决定了配置所需的操作。较旧的 IQaudIO 品牌板的 PCB 板为黑色。较新的树莓派品牌板采用绿色印刷电路板。这些电路板的电气性能相当，但 EEPROM 内容不同。
+   ```sh
+   grep -a . /proc/device-tree/hat/*
+   ```
 
-连接 HAT 并接通电源后，检查音频卡上的电源 LED 是否亮起（如果有的话）。例如，Codec Zero 有一个标有 "PWR"的 LED。
+   终端会返回以下字符串之一：
 
-确定音频卡有电后，使用以下命令检查电路板的版本：
+<Tabs>
+<TabItem value="Raspberry Pi Ltd." label="Raspberry Pi Ltd.">
 
-```sh
-grep -a . /proc/device-tree/hat/*
-```
+无需进一步操作（但请参阅下文的[额外的 Codec Zero 配置](#额外的codec-zero配置)）。
 
-如果供应商字符串显示 "Raspberry Pi Ltd."，则无需采取进一步行动（但请参阅下文了解额外的 Codec Zero 配置）。如果显示 "IQaudIO Limited www.iqaudio.com"，则需要进行下文概述的额外 config.txt 设置。如果显示 "No such file or directory（无此类文件或目录）"，则表示 HAT 未被检测到，但这些 config.txt 设置仍可使其正常工作。
+</TabItem>
+<TabItem value="IQaudIO Limited." label="IQaudIO Limited.">
 
-```ini
-# 一些防止加载正常 HAT 覆盖层的神奇设置
-dtoverlay=
-# 然后根据机型选择以下设置之一：
-dtoverlay=rpi-codeczero
-dtoverlay=rpi-dacplus
-dtoverlay=rpi-dacpro
-dtoverlay=rpi-digiampplus
-```
+无需进一步操作（但请参阅下文的[额外的 Codec Zero 配置](#额外的codec-zero配置)）。
+
+</TabItem>
+<TabItem value="No such file or directory" label="No such file or directory">
+
+未检测到 HAT。请执行以下操作：
+
+1. 关闭设备电源。
+2. 检查 HAT 与树莓派设备之间的物理连接。
+3. 为设备通电，然后重复上一节的步骤 3。
+4. 如果仍返回相同的字符串，请在您的树莓派设备上打开 [`config.txt`](../computers/config-txt.mdx)。
+5. 添加以下行，以取消加载默认 HAT 覆盖层并应用正确的设备树覆盖层：
+
+   ```ini
+   # 取消默认 HAT 覆盖层：
+   dtoverlay=
+   # 添加以下之一：
+   dtoverlay=rpi-codeczero
+   dtoverlay=rpi-dacplus
+   dtoverlay=rpi-dacpro
+   dtoverlay=rpi-digiampplus
+   ```
+
+6. 保存并关闭文件。
+7. 重启您的树莓派，使更改生效。
+
+</TabItem>
+</Tabs>
+
+### 配置音频板
+
+将音频板连接并装到您的树莓派设备上之后，您可以在音频板与板载设备之间切换音频播放：
+
+1. 右键单击屏幕右上角的音频设置。
+2. 在板载音频设置与 HAT 音频设置之间切换。
+
+<img src="/img/accessories/audio/gui.png" alt="用户界面" />
+
+您也可以禁用板载音频设备，这会使树莓派音频板成为 Raspberry Pi OS 中的主音频设备。
+
+如果您运行的是无显示器设置（或 Raspberry Pi OS Lite），无法通过 Raspberry Pi OS 图形桌面界面控制音频板，那么下面介绍的命令行方法会很有用。
+
+要通过 SSH 禁用板载音频设备：
+
+1. 使用 [SSH](../computers/remote-access.mdx#使用-ssh-访问远程终端) 连接到您的树莓派设备。
+2. 运行以下命令编辑文件：
+
+   ```sh
+   sudo nano /boot/firmware/config.txt
+   ```
+
+3. 找到文件中的 `dtparam=audio=on` 行，并在该行开头加上 `#` 符号将其注释掉。
+
+   程序会忽略任意一行中 `#` 符号之后写入的内容。此时您的 `/boot/firmware/config.txt` 文件包含以下条目：
+
+   ```ini
+   #dtparam=audio=on
+   ```
+
+4. 按 *Ctrl+X*，然后 *Y*，然后 *Enter* 保存。
+5. 重启您的树莓派使设置生效：
+
+   ```sh
+   sudo reboot
+   ```
 
 ### 额外的Codec Zero配置
-树莓派Codec Zero 板使用 Dialog Semiconductor DA7212 编解码器。它可以通过内置 MEMS 麦克风、立体声唱机插座（AUX IN）或两个单声道外置驻极体麦克风录制音频。播放则通过立体声唱机插座（AUX OUT）或单声道扬声器连接器进行。
 
-每个输入和输出设备都有自己的混音器，可以独立调节音频电平和音量。编解码器本身还有其他混音器和开关，可将输出混合为单声道，用于单扬声器输出。信号还可以反转；有一个五段均衡器可以调整某些频段。这些设置可以使用 AlsaMixer 进行交互式控制，也可以通过编程进行控制。
+树莓派 Codec Zero 使用 Dialog Semiconductor DA7212 编解码器。
 
-AUX IN 和 AUX OUT 均为 1V RMS。可能需要调整 AUX IN 的混频器，以确保输入信号不会使 ADC 饱和。同样，也可以调整输出混频器，以获得最佳输出。
+它可以通过内置 MEMS 麦克风、立体声排针（AUX IN）或两个单声道外置驻极体麦克风录制音频。播放则通过立体声排针（AUX OUT）或单声道扬声器连接器进行。
 
-[GitHub](https://github.com/raspberrypi/Pi-Codec) 上提供预配置脚本（可加载 ALSA 设置），包括
-- 单声道 MEMS 麦克风录音、单声道扬声器回放
-- 单声道 MEMS 麦克风录音、单声道 AUX 输出回放
-- 立体声 AUX IN 录音、立体声 AUX OUT 回放
-- 立体声 MIC1/MIC2 录音，立体声 AUX 输出回放
+每个输入和输出设备都有自己的混音器，可以独立调节音频电平和音量。编解码器本身还有其他混音器和开关，可将输出混合为单声道，用于单扬声器输出。信号还可以反转；有一个五段均衡器可以调整某些频段。您可以使用 AlsaMixer 以交互方式控制这些设置，也可以通过编程进行控制。
 
-每次树莓派开机时，Codec Zero 都需要知道正在使用这些输入和输出设置中的哪一个。使用树莓派上的终端会话，运行以下命令下载脚本：
-```sh
-git clone https://github.com/raspberrypi/Pi-Codec.git
-```
+AUX IN 和 AUX OUT 均为 1 V RMS。您可能需要调整 AUX IN 的混音器，以确保输入信号不会使 ADC 饱和。同样，也可以调整输出混音器，以获得最佳输出。
 
-如果未安装 git，运行以下命令进行安装：
+预配置脚本（可加载 ALSA 设置）[可在 GitHub 上获取](https://github.com/raspberrypi/Pi-Codec)，提供以下配置：
 
-```sh
-sudo apt install git
-```
+* 单声道 MEMS 麦克风录音，单声道扬声器回放。
+* 单声道 MEMS 麦克风录音，单声道 AUX OUT 回放。
+* 立体声 AUX IN 录音，立体声 AUX OUT 回放。
+* 立体声 MIC1/MIC2 录音，立体声 AUX OUT 回放。
 
-以下命令将设置设备使用板载 MEMS 麦克风和扬声器播放输出：
+每次树莓派开机时，Codec Zero 都需要知道使用的是这些输入和输出设置中的哪一个。
 
-```sh
-sudo alsactl restore -f /home/<username>/Pi-Codec/Codec_Zero_OnboardMIC_record_and_SPK_playback.state
-```
+要为编解码器提供输入和输出设置：
 
-该命令可能会导致错误信息，包括以下内容：
+1. 如果尚未安装 `git`，请打开终端并运行以下命令：
 
-* 导入 hw 失败
-* 卡没有状态
+   ```sh
+   sudo apt install git
+   ```
 
-在大多数情况下，这些警告是无害的，可以放心地忽略它们。
+2. 在终端会话中，运行以下命令克隆脚本：
 
-不过，以下警告可能表示硬件故障：
+   ```sh
+   git clone https://github.com/raspberrypi/Pi-Codec.git
+   ```
 
-* 远程 I/O 错误
+3. 运行以下命令，将设备设置为使用板载 MEMS 麦克风输入、扬声器回放输出，将 `<username>` 替换为您的用户名：
 
-在 Linux 中，以下警告表示内核无法与 I2C 设备通信：
+   ```sh
+   sudo alsactl restore -f /home/<username>/Pi-Codec/Codec_Zero_OnboardMIC_record_and_SPK_playback.state
+   ```
 
-* 远程 I/O 错误 (`REMOTEIO`)
+   此命令可能会产生无害的警告，包括：
 
-为了使项目在开机时以所需设置运行，请编辑 `/etc/rc.local` 文件。该文件的内容在每次启动过程结束时运行，因此非常适合用于此目的。编辑文件
+   * "failed to import hw" 或 "snd_use_case_mgr_open"
+   * "No state is present for card"
 
-```sh
-sudo nano /etc/rc.local
-```
+   在大多数情况下，您可以安全地忽略这些警告。
 
-在 exit 0 行上方添加选定的脚本命令，然后按 Ctrl X、Y 和 Enter 保存。根据你选择的设置，文件现在应该类似于下面的样子：
+   不过，以下警告可能表示硬件故障：
 
-```sh
-#!/bin/sh
-#
-# rc.local
-#
-# This script is executed at the end of each multiuser runlevel.
-# Make sure that the script will "exit 0" on success or any other
-# value on error.
-#
-# In order to enable or disable this script just change the execution
-# bits.
-#
-# By default this script does nothing.
+   * "Remote I/O error"
 
-sudo alsactl restore -f /home/<username>/PiCodec/Codec_Zero_OnboardMIC_record_and_SPK_playback.state
+4. 为确保下次启动树莓派设备时保留您的设置，请编辑 `/etc/rc.local` 文件：
 
-exit 0
-```
+   ```sh
+   sudo nano /etc/rc.local
+   ```
 
-先按 `Ctrl X`、再按 `Y`，然后 **Enter** 保存，最后重启设备使设置生效：
-```sh
-sudo reboot
-```
+5. 在 `exit 0` 行上方添加所选的脚本命令。
 
-如果您在无显示器环境中使用树莓派和 Codec Zero，还需要最后一步才能将 Codec Zero 设置为默认音频设备，而无需访问桌面上的图形用户界面音频设置。我们需要在主文件夹中创建一个小文件：
-```sh
-sudo nano .asoundrc
-```
+   文件内容类似如下：
 
-在文件中添加以下内容：
-```
-pcm.!default {
-        type hw
-        card Zero
-}
-```
-按住 Ctrl X、Y 和 Enter 保存，然后再次重启以完成配置：
+   ```sh
+   #!/bin/sh
+   #
+   # rc.local
+   #
+   # This script is executed at the end of each multiuser runlevel.
+   # Make sure that the script will "exit 0" on success or any other
+   # value on error.
+   #
+   # In order to enable or disable this script just change the execution
+   # bits.
+   #
+   # By default this script does nothing.
 
-Raspberry Pi OS 等现代 Linux 发行版通常使用 PulseAudio 或 PipeWire 进行音频控制。这些框架能够混合和切换多个音源的音频。它们为音频应用程序提供了高级 API。许多音频应用程序默认使用这些框架。
+   sudo alsactl restore -f /home/<username>/Pi-Codec/Codec_Zero_OnboardMIC_record_and_SPK_playback.state
 
-只有在音频应用程序需要时才创建 `~/.asoundrc` ：
+   exit 0
+   ```
 
-* 直接与 ALSA 通信
-* 在没有 PulseAudio 或 PipeWire 的环境中运行
+6. 按 *Ctrl+X*，然后 *Y*，然后 *Enter* 保存。重启设备使设置生效：
 
-该文件会干扰用户界面对底层音频资源的查看。因此，我们不建议在运行 Raspberry Pi OS 桌面时创建 `~/.asoundrc`。
-如果该文件存在，用户界面可能会自动清理并删除。
+   ```sh
+   sudo reboot
+   ```
 
-```sh
-sudo reboot
-```
+如果您在无显示器或命令行环境中使用树莓派：
+
+1. 在您的主文件夹中创建以下文件：
+
+   ```sh
+   nano ~/.asoundrc
+   ```
+
+2. 在文件中添加以下内容，通过 ALSA `plug` 插件路由默认播放和采集，以实现格式和通道的自动转换：
+
+   ```
+   pcm.!default {
+           type plug
+           slave.pcm {
+                   type hw
+                   card Zero
+           }
+   }
+
+   ctl.!default {
+           type hw
+           card Zero
+   }
+   ```
+
+3. 按 *Ctrl+X*，然后 *Y*，然后 *Enter* 保存。
+4. 再次重启以完成配置：
+
+   ```sh
+   sudo reboot
+   ```
+
+### 音频框架
+
+与其他现代 Linux 发行版一样，[Raspberry Pi OS](../computers/os.mdx) 默认使用 PulseAudio 或 PipeWire 进行音频控制。
+
+这些框架可以混合和切换来自多个音源的音频，并为音频应用程序提供高级 API。许多音频应用程序默认使用这些框架。
+
+仅在音频应用程序需要以下情况时才创建 `~/.asoundrc`：
+
+* 直接与 ALSA 通信。
+* 在没有 PulseAudio 或 PipeWire 的环境中运行。
+
+此文件可能会干扰界面对底层音频资源的显示。我们不建议在运行 Raspberry Pi OS 桌面环境时创建 `~/.asoundrc`。界面可能会自动移除该文件（如果存在）。
 
 ### 使DigiAMP+静音和解除静音
 DigiAMP+ 的静音状态由树莓派上的 GPIO22 切换。最新的音频设备树通过附加参数支持取消 DigiAMP+ 静音。
@@ -359,6 +440,17 @@ sudo sh -c "echo 1 >/sys/class/gpio/gpio22/value"
 sudo sh -c "echo 0 >/sys/class/gpio/gpio22/value"
 ```
 
+### 控制数字音量
+
+如果您使用 Raspberry Pi OS 桌面环境，可以使用系统托盘中的音量滑块。
+
+要在无显示器设置下调节音频板的音频输出音量，请使用 AlsaMixer：
+
+```sh
+alsamixer
+```
+
+使用左右方向键选择要调节的音量通道，然后使用上下方向键调节音量。按 *Esc* 退出 AlsaMixer。
 ## 开始
 
 ### 创建一个玩具聊天框

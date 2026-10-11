@@ -3,8 +3,8 @@ sidebar_position: 2
 draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
-last_update: 
-  date: 2026-08-19
+last_update:
+  date: 2026-10-11
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -18,316 +18,422 @@ import Normal from "../_normal.mdx";
 本站提供了同类远程管理工具 [PiDoc](../pidoc/install_monitor.mdx)，具有更丰富的功能。服务器位于国内，提供更稳定的连接，更高的传输带宽。欢迎免费使用！
 :::
 
-通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的 Raspberry Pi。
 <img src="/img/services/connect/hero.png" alt="Connect 使用示例" width="100%" />
 
-在 Raspberry Pi OS Desktop 和 Raspberry Pi OS Full（带推荐软件的桌面版）中，Connect 默认已安装。而在 Raspberry Pi OS Lite 中，默认安装的是 Connect 的另一个 *Lite* 版本，该版本仅支持远程 shell 访问，不支持屏幕共享。
+通过 Raspberry Pi Connect，您可以从世界任何地方安全地访问您的树莓派。它的工作原理是将您的设备与 Connect 账户关联。
 
-使用 Connect 时，请参阅 [将设备与 Connect 账户关联](#将-raspberry-pi-设备与-connect-账户连接起来)。访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)，即可在浏览器窗口中访问运行于树莓派上的桌面环境或 shell 终端。
+在 Raspberry Pi OS Desktop 和 Raspberry Pi OS Full（带推荐软件的桌面版）中，Connect 默认已安装。
 
-个人 Connect 账户仅供单一用户使用。如需与多位用户共享设备访问权限（例如团队或企业场景），请升级至 Connect for Organisations。创建首个组织即可自动开始为期四周的免费试用。
+而在 Raspberry Pi OS Lite 中，默认安装的是另一个 **Lite** 变体，该版本仅支持远程 shell 访问，不支持屏幕共享。
 
-Connect 使用安全的加密连接。默认情况下，Connect 会在 Raspberry Pi 和浏览器之间直接通信。但是，当 Connect 无法在 Raspberry Pi 和浏览器之间建立直接连接时，我们会使用中继服务器。在这种情况下，Raspberry Pi 只保留操作 Connect 所需的元数据。
-
-:::tip
-要使用 Connect，您的树莓派必须运行 [Raspberry Pi OS Bookworm](https://www.raspberrypi.com/news/bookworm-the-new-version-of-raspberry-pi-os/) 或更高版本。
+:::note
+要使用 Connect，您的树莓派必须运行 Raspberry Pi OS _Bookworm_ 或更高版本。
 :::
 
-## 手动启动和停止 Connect
+### Connect 服务功能
 
-您可以在桌面或命令行中开启或关闭 Connect：
+将树莓派设备关联到 Connect 账户后，您可以通过以下方式与它们交互：
 
-<Tabs>
-<TabItem value="桌面">
+* [屏幕共享界面](#屏幕共享界面)
+* [远程shell](#远程shell)
+* [远程更新](#远程更新你的设备)
 
-要开启 Connect：
+### Connect 菜单
 
-从菜单栏中的 Connect 图标中，选择 **开启 Raspberry Pi Connect**。
+Connect 菜单允许您开启和关闭 Connect、登录和注销，以及启用或禁用两种远程访问方式（shell 和屏幕共享）。
 
-如果您尚未使用 Raspberry Pi ID 登录，系统将自动打开浏览器并提示您立即登录。登录后，您的 Raspberry Pi 便会与您的 Connect 账户关联。
+<img src="/img/services/connect/turn-on-connect.png" alt="Connect 菜单允许您开启、管理和关闭该服务。" width="80%" />
 
-<img src="/img/services/connect/turn-on-connect.png" alt="Connect 界面，显示‘开启 Raspberry Pi Connect’下拉菜单选项。" width="80%" />
+### 安全与数据存储
 
-要关闭 Connect：
+Connect 使用安全的加密连接。
 
-从菜单栏中的 Connect 图标中，选择 **关闭 Raspberry Pi Connect**。
+默认情况下，Connect 会在您的树莓派和浏览器之间直接通信。但是，当 Connect 无法在您的树莓派和浏览器之间建立直接连接时，我们会使用中继服务器。在这种情况下，Raspberry Pi 只保留运行 Connect 所需的元数据。
 
-这将停止 Connect 的运行。
+### Connect 账户类型
 
-<img src="/img/services/connect/turn-off-connect.png" alt="Connect 界面，显示'关闭 Raspberry Pi Connect'下拉菜单选项。" width="80%" />
+Connect 账户有两种类型：个人账户和组织账户。
 
-</TabItem>
-<TabItem value="命令行">
+个人账户为单一用户提供其 Connect 账户下所有已关联设备的视图。该账户类型免费。
 
-要开启 Connect，请运行以下命令：
+组织账户允许多个用户查看关联到共享 Connect 账户的设备。该账户类型按月计费。更多信息请参阅 [Connect for Organisations](./connect-for-organisations.mdx)。
 
-```sh
-rpi-connect on
-```
+## 开始使用
 
-要停止 Connect，请运行以下命令：
+开始使用 Connect 需要三个步骤：
 
-```
-rpi-connect off
-```
+1. 使用您的 Raspberry Pi ID 登录 [connect.raspberrypi.com](https://connect.raspberrypi.com)。更多信息请参阅 [创建 Raspberry Pi ID](./id.mdx#创建一个-raspberry-pi-id)。
+2. 在您的树莓派设备上[开启](#开启-connect-服务并关联设备) Connect 服务，然后将其[关联](#开启-connect-服务并关联设备)到您的 Connect 账户。
+3. 在您的 PC、Mac 或其他设备上访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)，在网页浏览器中远程访问已关联的设备。
 
-</TabItem>
+### 开启 Connect 服务并关联设备 {#开启-connect-服务并关联设备}
 
-</Tabs>
+完整版 Raspberry Pi OS 已包含 Connect，但该服务默认处于禁用状态。因此您必须在首次使用前将其开启。
 
-## 将 Raspberry Pi 设备与 Connect 账户连接起来
+您可以通过桌面、命令行或授权密钥开启 Connect 并将其关联到您的树莓派设备。
 
-在树莓派设备上启动 Connect 后，您必须将设备与 Connect 账户关联。
-
-若您使用树莓派映像工具在设备上安装树莓派操作系统，则可能已完成设备与 Connect 账户的绑定。更多信息请参阅 [使用映像工具安装](../computers/getting-started.mdx#使用-imager-安装)。
-
-
-<Tabs>
-<TabItem value="desktop" label="桌面">
-
-从菜单栏的"连接"图标中，选择**开启树莓派连接**。这将打开您的浏览器，系统会提示您使用树莓派ID登录：
-
-<img src="/img/services/connect/browser-sign-in.png" alt="Connect页面会提示您使用 Raspberry Pi ID 登录 Connect。" width="80%" />
-
-若您已开启Connect功能，请从下拉菜单中选择**登录...**：
-<img src="/img/services/connect/sign-in.png" alt="Connect页面，显示从 Raspberry Pi Connect 下拉菜单中选中的 登录 选项" width="80%" />
-
-若您尚未拥有树莓派ID，请选择*免费创建*以[创建一个](./id.mdx#创建一个-raspberry-pi-id)。
-
-</TabItem>
-<TabItem value="cli" label="终端">
-
-使用以下命令生成一个链接，将设备连接到 Connect 帐户：
-
-```sh
-rpi-connect signin
-```
-
-此命令将输出类似以下内容：
-
-```
-Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
-```
-
-要将您的设备与Connect账户关联，请在任意设备上访问验证网址，并使用您的树莓派ID登录。
-
-</TabItem>
-
-<TabItem value="authkey" label="使用授权密钥">
-授权密钥是一种一次性临时令牌，可让您自动将设备与Connect账户关联（无需使用网页界面）。个人授权密钥在创建后6小时过期；组织授权密钥在创建后1至90天过期（默认1天）。
-
-创建和使用授权密钥最便捷的方式是通过 Imager 中的自定义选项实现。您也可通过个人或组织Connect账户的**设置**页面手动创建授权密钥，组织管理员还可使用[管理API](./connect-for-organisations.mdx#管理api)创建授权密钥。
-
-:::tip
-个人账户每次仅能激活一个授权密钥；组织账户可同时激活多个授权密钥。每台设备需使用独立的授权密钥。
+:::note
+Connect 使用设备序列号对通信进行签名。在设备之间移动 SD 卡会导致您退出 Connect。
 :::
 
-::::tip
-要使用授权密钥，请确保在树莓派 Connect 网站显示的到期时间之前启动树莓派并连接网络。
-::::
+<Tabs>
+<TabItem value="桌面" label="桌面">
 
-创建授权密钥后，可通过 `rpi-connect signin` 命令提供给设备，或将其写入用户主目录的文件中。
+要启用 Connect 并关联您的设备：
 
-若以字符串形式提供密钥，请执行以下命令：
+1. 为您的树莓派设备通电。
+2. 从系统托盘中的 Connect 图标，选择 **开启 Raspberry Pi Connect**。
+
+   <img src="/img/services/connect/turn-on-connect.png" alt="Connect 界面，显示“开启 Raspberry Pi Connect”下拉菜单选项。" width="80%" />
+
+   如果这是您首次开启 Connect 服务，或者您尚未使用 Raspberry Pi ID 登录，浏览器将会打开。
+
+   <img src="/img/services/connect/browser-sign-in.png" alt="Connect 页面提示您使用 Raspberry Pi ID 登录 Connect。" width="80%" />
+
+3. 输入您的 Raspberry Pi ID 邮箱和密码，然后选择 **登录**。
+4. 按照屏幕提示为您的树莓派设备命名，并选择要关联到哪个 Connect 账户。
+
+   <img src="/img/services/connect/new-device.png" alt="Connect 页面邀请您创建新设备并登录。" width="80%" />
+
+   如果您是[组织](./connect-for-organisations.mdx)的管理员，请选择是将此设备添加到您的个人账户还是特定组织。
+
+   <img src="/img/services/connect/new-organisation-device.png" alt="Connect 页面，显示新设备账户选择界面。" width="80%" />
+
+5. 选择 **创建设备并登录**。
+
+完成这些步骤后，树莓派设备系统托盘中的 Connect 图标将变为蓝色，表示它已登录 Connect 服务。
+
+系统还会向您的注册邮箱发送通知，告知有新设备已关联到您的 Connect 账户。
+
+<img src="/img/services/connect/sign-in-email.png" alt="Connect 页面，显示账户登录通知界面。" width="70%" />
+
+</TabItem>
+<TabItem value="命令行" label="命令行">
+
+1. 运行以下命令开启 Connect：
+
+   ```sh
+   rpi-connect on
+   ```
+
+   这会开启 Connect 服务，但不会让您登录。
+
+2. 运行以下命令登录：
+
+   ```sh
+   rpi-connect signin
+   ```
+
+   此命令将输出类似以下内容：
+
+   ```
+   Complete sign in by visiting https://connect.raspberrypi.com/verify/XXXX-XXXX
+   ```
+
+3. 在任意设备上访问该验证网址，并使用您的 Raspberry Pi ID 登录，以完成关联过程。
+
+完成这些步骤后，树莓派设备系统托盘中的 Connect 图标将变为蓝色，表示它已登录 Connect 服务。系统还会向您的注册邮箱发送通知，告知有新设备已关联到您的 Connect 账户。
+
+您也可以在命令行输入 `rpi-connect status` 来检查连接状态。
+
+<img src="/img/services/connect/sign-in-email.png" alt="Connect 页面，显示账户登录通知界面。" width="70%" />
+
+</TabItem>
+<TabItem value="授权密钥" label="授权密钥">
+
+授权密钥是一种一次性临时令牌，可让您自动将设备与 Connect 账户关联（无需使用网页界面）。个人授权密钥在创建后 6 小时过期；组织授权密钥在创建后 1 至 90 天过期（默认 1 天）。
+
+创建和使用授权密钥最便捷的方式是使用 Imager 中的[自定义选项](../computers/getting-started.mdx#使用-imager-安装)。您也可以在个人或组织 Connect 账户的 **设置** 页面手动创建授权密钥，组织管理员还可以使用[管理 API](./connect-for-organisations.mdx#管理api) 创建授权密钥。
+
+:::note
+个人账户每次仅能激活一个授权密钥；组织账户可同时激活多个授权密钥。每台设备都需要一个唯一的授权密钥。
+:::
+
+:::tip
+要使用授权密钥，请确保在 Raspberry Pi Connect 网站显示的到期时间之前启动您的树莓派并连接网络。
+:::
+
+创建授权密钥后，可通过 `rpi-connect signin` 命令提供给设备，或将其写入用户主目录下的文件中。
+
+或者，将其保存到用户主目录下的 `.config/com.raspberrypi.connect/auth.key`，这样 Connect 会自动检测到它。
+
+以字符串形式提供授权密钥，请运行以下命令：
+
 ```sh
 rpi-connect signin --auth-key=rpuak_123456
 ```
 
-若将密钥保存至文件，可通过在路径前添加 `@` 符号传递完整路径：
+如果您已将授权密钥保存到文件，可以在路径前加上 `@` 将其完整路径传给该命令：
 
 ```sh
 rpi-connect signin --auth-key=@/home/alice/auth.key
 ```
 
-若将授权密钥保存至用户主目录下的 `.config/com.raspberrypi.connect/auth.key`，Connect 将自动检测到该文件。
+完成这些步骤后，树莓派设备系统托盘中的 Connect 图标将变为蓝色，表示它已登录 Connect 服务。
+
+系统还会向您的注册邮箱发送通知，告知有新设备已关联到您的 Connect 账户。
+
+<img src="/img/services/connect/sign-in-email.png" alt="Connect 页面，显示账户登录通知界面。" width="70%" />
 
 </TabItem>
 </Tabs>
 
-### 完成连接您的 Raspberry Pi
+### 安全最佳实践
 
-完成身份验证后，为您的设备命名。请选择一个能唯一标识该设备的名称。
+如果您收到关于不认识的设备的通知邮件：
 
-<img src="/img/services/connect/new-device.png" alt="Connect页面邀请您创建新设备并登录。" width="80%" />
+1. 立即更改您的 Raspberry Pi ID 密码。
+2. 按照[从 Connect 移除设备](#管理设备)中的说明操作，永久解除该设备与您账户的关联。
+3. 考虑[启用双因素身份验证](./id.mdx#启用双因素身份验证)以保障账户安全。
 
-若您是 [组织](#组织版-connect) 的管理员，请选择将此设备添加至个人账户或特定组织。
+### 查看已关联的设备
 
-<img src="/img/services/connect/new-organisation-device.png" alt="Connect页面，显示新设备账户选择界面。" width="80%" />
+Connect 会在 **设备** 选项卡中列出所有已关联的设备。
 
-点击**创建设备并登录**按钮继续。
+要查看您的设备：
 
-您现在可以远程连接至您的设备。菜单栏中的 **Connect** 图标将变为蓝色，表示您的设备已登录 **Connect** 服务。您应收到一封电子邮件通知，告知有新设备已关联至您的Connect账户。
+1. 在任意设备上登录 [connect.raspberrypi.com](https://connect.raspberrypi.com)。
+2. 选择 **设备** 选项卡。Connect 将显示已关联设备的列表。
 
-<img src="/img/services/connect/sign-in-email.png" alt="Connect页面，显示账户登录通知界面" width="70%" />
+   <img src="/img/services/connect/devices.png" alt="Connect 页面，显示已关联设备界面。" width="80%" />
 
-:::warning
-若收到邮件提示有未知设备登录Connect，请立即更改树莓派ID密码。请按照 [从Connect移除设备](#管理设备) 中的说明操作，永久解除该设备与您账户的关联。建议启用 [启用双因素身份验证](./id.mdx#启用双因素身份验证) 以保障账户安全。
-:::
-
-通过选择菜单栏中的 **Connect** 图标打开 **Connect** 菜单。该菜单允许您开启或关闭 **Connect** 功能、进行登录或注销操作，以及允许或禁止远程访问方式。
-
-:::tip
-Connect 使用设备序列号登录通信。在设备之间移动 SD 卡将会退出 Connect。
-:::
+如果您拥有组织账户，您可以[搜索和筛选](./connect-for-organisations.mdx#search-filter-devices)此列表，并为设备添加[标签](./connect-for-organisations.mdx#tag-devices)。
 
 ## 访问你的 Raspberry Pi 设备
 
-现在，您的设备已显示在 Connect 控制面板上，您只需使用浏览器即可随时随地访问您的设备。Connect 提供多种远程与设备交互的方式。
+将您的树莓派设备关联到 Connect 账户后，您只需使用网页浏览器即可从任何地方访问它。
 
-### 查看设备
+您可以通过以下任一方式实现：
 
-Connect 在**设备**选项卡上列出所有关联的设备。对于组织用户，您可以按设备名称搜索此列表，或按设备特征进行过滤。
+* 屏幕共享
+* 远程 shell
 
-登录 [connect.raspberrypi.com](https://connect.raspberrypi.com) 并转到**设备**选项卡。Connect 将显示关联设备的列表。
-
-<img src="/img/services/connect/devices.png" alt="Connect页面，显示已连接设备界面" width="80%" />
-
-（仅限组织版 Connect）要按设备名称搜索，请在**搜索**字段中输入文本。Connect 会在您输入时匹配结果。
-
-（仅限组织版 Connect）要过滤设备列表，请选择**过滤器**并从可用的过滤选项中进行选择。您可以按设备型号、内存容量或已安装的操作系统过滤设备。
-
-<img src="/img/services/connect/filters.png" alt="Connect页面，显示应用了过滤器的已连接设备屏幕。" width="80%" />
-
-此功能仅适用于运行客户端版本 2.9.0 或更高版本的设备。要更新设备上的 Connect，请参阅[更新](#更新)。
-
-每个设备可用的连接方式显示为设备名称下方的灰色徽章。您可以通过以下方式连接到设备：
-
-* [屏幕共享](#屏幕共享)
-* [远程 shell](#远程shell)
-
-### 屏幕共享
-
-Connect 包括在浏览器中共享设备屏幕的功能。使用以下说明共享设备屏幕。
-
-:::tip
-屏幕共享需要**Wayland**窗口服务器。Raspberry Pi OS _Bookworm_ 及其后续版本默认使用 Wayland。屏幕共享与 Raspberry Pi OS Lite 或使用 X 窗口服务器的系统**不兼容**。
+:::note
+屏幕共享需要 **Wayland** 窗口服务器。Raspberry Pi OS _Bookworm_ 及更高版本默认使用 Wayland。屏幕共享与 Raspberry Pi OS Lite 或使用 X 窗口服务器的系统不兼容。
 :::
 
-在任何电脑上访问 [connect.raspberrypi.com](https://connect.raspberrypi.com)。
-
-Connect 会将您重定向到 Raspberry Pi ID 服务以登录。登录后，Connect 会显示链接设备的列表。可进行屏幕共享的设备名称下方会显示一个灰色的**Screen sharing**徽章。
-<img src="/img/services/connect/devices.png" alt="Connect页面，显示已列为可进行屏幕共享的设备" width="80%" />
-
-选择您要访问的设备右侧的**Connect via**按钮。从菜单中选择**Screen sharing**选项。这将打开一个浏览器窗口，显示您设备的桌面。
-<img src="/img/services/connect/waiting-for-screen-sharing.png" alt="打开了一个浏览器窗口，其中显示一条消息，提示正在等待树莓派设备的响应。" width="80%" />
-
-现在你可以像在本地一样使用设备了。有关连接的更多信息，请将鼠标悬停在**Disconnect**按钮右侧的挂锁图标上。
-<img src="/img/services/connect/screen-sharing.png" alt="Connect页面，显示树莓派的下拉菜单。" width="80%" />
-
-:::tip
-使用桌面上方的**Copy from remote**和**Paste to remote**按钮，在本地和远程剪贴板之间传输文本。
+:::note
+无论您的树莓派与浏览器处于同一网络还是不同网络，屏幕共享和远程 shell 都能工作。但是，直接的本地连接比通过互联网或中继服务器的连接更快、响应也更及时。
 :::
 
-连接后，连接仪表板中的**Screen sharing**徽章旁边会出现一个绿点。这表示正在进行屏幕共享会话。鼠标悬停可查看当前屏幕共享会话的数量。
-<img src="/img/services/connect/screen-sharing-in-progress.png" alt="屏幕共享进行中" width="80%" />
-
-系统托盘中的 **Connect** 图标在屏幕共享会话进行时会旋转。每次屏幕共享会话开始时，都会出现桌面通知。
-<img src="/img/services/connect/screen-sharing-notification.png" alt="屏幕共享通知" width="80%" />
-
-#### 屏幕共享界面
+### 屏幕共享界面
 
 Connect 的屏幕共享界面适用于桌面和移动设备。
 
-<img src="/img/services/connect/screen-sharing.png" alt="Raspberry Pi Connect 的屏幕共享界面在浏览器窗口左下角提供了快捷键。" width="100%" />
+<img src="/img/services/connect/screen-sharing.png" alt="Raspberry Pi Connect 的屏幕共享界面在界面左下角提供了常用键盘功能切换与按键。" width="80%" />
 
 您可以通过界面左下角的按钮模拟常见的键盘功能：
 
-* 键盘。切换屏幕键盘。仅在移动设备上显示。
-* Ctrl。模拟物理键盘上长按此键。
-* Super 键。模拟物理键盘上长按此键。
-* Alt。模拟物理键盘上长按此键。
-* Esc。模拟此键的单击操作（按下后松开）。
-* Tab。模拟此键的单击操作（按下后松开）。
+* **键盘**。切换屏幕键盘。仅在移动设备上显示。
+* **Ctrl**。模拟在物理键盘上按住此键。
+* **Super 键**。模拟在物理键盘上按住此键。
+* **Alt**。模拟在物理键盘上按住此键。
+* **Esc**。模拟单击此键（按下后松开）。
+* **Tab**。模拟单击此键（按下后松开）。
 
-#### 禁止屏幕共享
+您还可以使用浏览器窗口顶部的按钮完成其他实用操作：
 
-要关闭屏幕共享会话，请选择桌面上方的**Disconnect**按钮。
-<img src="/img/services/connect/screen-sharing-ended.png" alt="结束屏幕共享" width="80%" />
+* **从远程复制**。将设备远程剪贴板中的文本传输到您的本地剪贴板。
+* **粘贴到远程**。将您本地剪贴板中的文本传输到设备的远程剪贴板。
+* **进入全屏**。将浏览器窗口展开至全屏。
+* **断开连接**。终止共享会话。
 
-#### 禁止屏幕共享
+<img src="/img/services/connect/screen-sharing.png" alt="Connect 页面，显示树莓派的下拉菜单。" width="80%" />
 
-要关闭屏幕共享功能，请在菜单栏中选择 Connect 图标，然后取消勾选 **允许屏幕共享**。您的设备仍保持登录 Connect 的状态，但无法通过 Connect 控制面板创建屏幕共享会话。
+#### 开始屏幕共享
 
-<img src="/img/services/connect/disallow-screen-sharing.png" alt="禁止屏幕共享" width="80%" />
+要开始屏幕共享会话：
 
-您也可以使用以下命令禁止屏幕共享：
+1. 确保您的树莓派设备已关联到 Connect 账户、已通电，并且 Raspberry Pi OS 已启动。
+2. 在您的 PC、Mac 或其他设备上登录 [connect.raspberrypi.com](https://connect.raspberrypi.com)。
 
-```sh
-rpi-connect vnc off
-```
+   如果您的浏览器或操作系统请求在本地网络上查找或连接设备的权限，请允许。如果您拒绝，Connect 仍然可用，但与本地网络设备的会话无法使用本地路由。
 
-在连接仪表板中，**Screen sharing**徽章和**Connect via**连接菜单中的**Screen sharing**选项将被划掉。
-<img src="/img/services/connect/screen-sharing-disabled.png" alt="已禁用屏幕共享" width="80%" />
+3. 选择 **设备** 选项卡。
 
-要重新启用屏幕共享，请执行以下操作之一：
+   可进行屏幕共享的设备会在名称下方显示灰色的 **Screen sharing** 徽章。
 
-- 在菜单栏中选择 Connect 图标，然后选择**允许屏幕共享**
-- 运行以下命令
+   <img src="/img/services/connect/devices.png" alt="Connect 页面，显示已列为可进行屏幕共享的设备。" width="80%" />
 
-```sh
-rpi-connect vnc on
-```
+4. 选择您要访问的设备右侧的 **Connect via** 按钮。
+5. 从菜单中选择 **Screen sharing** 选项。
+
+此时会打开一个浏览器窗口，显示您设备的桌面，您现在可以像使用本地设备一样使用它。
+
+<img src="/img/services/connect/waiting-for-screen-sharing.png" alt="打开了一个浏览器窗口，其中显示一条消息，提示正在等待树莓派设备的响应。" width="80%" />
+
+屏幕共享开始后，Connect 控制面板中 **Screen sharing** 徽章旁边会出现一个绿点。这表示存在活动的屏幕共享会话。将鼠标悬停在绿点上可查看当前屏幕共享会话的数量。
+
+<img src="/img/services/connect/screen-sharing-in-progress.png" alt="屏幕共享进行中。" width="80%" />
+
+屏幕共享会话进行期间，系统托盘中的 Connect 图标会旋转。每次屏幕共享会话开始时，都会出现桌面通知。
+
+<img src="/img/services/connect/screen-sharing-notification.png" alt="屏幕共享通知。" width="80%" />
+
+#### 停止屏幕共享
+
+要停止屏幕共享：
+
+1. 选择显示屏幕共享的浏览器窗口。
+2. 选择左上角的 **Disconnect** 按钮。
+
+<img src="/img/services/connect/screen-sharing-ended.png" alt="屏幕共享界面显示会话已结束的消息。" width="80%" />
+
+#### 禁止和重新允许屏幕共享
+
+您可以通过界面或命令行在树莓派设备上禁止屏幕共享。
+
+:::warning
+如果您通过 shell 或屏幕共享会话同时禁止了 shell 访问*和*屏幕共享，则必须使用 SSH 等其他常见的远程访问方案，才能在无需亲临现场的情况下访问该设备。
+:::
+
+<Tabs>
+<TabItem value="界面" label="界面">
+
+要禁止屏幕共享：
+
+1. 在您的树莓派设备上，选择系统托盘中的 Connect 图标，然后取消勾选 **Allow Screen Sharing**。
+
+   您的设备仍保持登录 Connect 的状态，但屏幕共享现已被禁止。
+
+2. （可选）验证屏幕共享已被禁止：
+   1. 在您的 PC、Mac 或其他设备上登录 [connect.raspberrypi.com](https://connect.raspberrypi.com)。
+   2. 选择 **设备** 选项卡并在列表中找到该树莓派设备：**Screen sharing** 徽章与 **Connect via** 菜单中的 **Screen sharing** 选项现已划掉。
+
+</TabItem>
+<TabItem value="命令行" label="命令行">
+
+要禁止屏幕共享：
+
+1. 在您的树莓派设备上，打开终端。
+2. 输入以下命令：
+
+   ```sh
+   rpi-connect vnc off
+   ```
+
+   您的设备仍保持登录 Connect 的状态，但屏幕共享现已被禁止。
+
+3. （可选）验证屏幕共享已被禁止：
+   1. 在您的 PC、Mac 或其他设备上登录 [connect.raspberrypi.com](https://connect.raspberrypi.com)。
+   2. 选择 **设备** 选项卡并在列表中找到该树莓派设备：**Screen sharing** 徽章与 **Connect via** 菜单中的 **Screen sharing** 选项现已划掉。
+
+要重新允许屏幕共享：
+
+1. 在您的树莓派设备上，打开终端。
+2. 输入以下命令：
+
+   ```sh
+   rpi-connect vnc on
+   ```
+
+</TabItem>
+</Tabs>
 
 ### 远程shell
 
-Connect 包括从浏览器启动在设备上运行的 shell 的功能。使用以下说明访问远程 shell。
+要访问远程 shell：
 
-登录 [connect.raspberrypi.com](https://connect.raspberrypi.com) 并转到**设备**选项卡。
+1. 在您的 PC、Mac 或其他设备上登录 [connect.raspberrypi.com](https://connect.raspberrypi.com)。
 
-可用于远程 shell 访问的设备会在设备名称下方显示一个灰色的 **Remote shell** 徽标。
-<img src="/img/services/connect/devices.png" alt="列出设备" width="80%" />
+   如果您的浏览器或操作系统请求在本地网络上查找或连接设备的权限，请允许。如果您拒绝，Connect 仍然可用，但与本地网络设备的会话无法使用本地路由。
 
-选择要访问的设备右侧的 **Connect via** 按钮。从菜单中选择 **Remote shell** 选项。这将在设备上打开一个 shell 会话。
-<img src="/img/services/connect/waiting-for-remote-shell.png" alt="等待远程shell连接" width="80%" />
+2. 选择 **设备** 选项卡，并在列表中找到您的树莓派设备。
 
-现在您可以像在本地一样使用设备了。
-<img src="/img/services/connect/remote-shell.png" alt="远程shell" width="80%" />
+   可进行远程 shell 访问的设备会在名称下方显示灰色的 **Remote shell** 徽章。
+
+   <img src="/img/services/connect/devices.png" alt="Connect 界面，显示设备列表。" width="80%" />
+
+3. 选择您要访问的设备右侧的 **Connect via** 按钮。
+4. 从菜单中选择 **Remote shell** 选项。这将在您的设备上打开一个 shell 会话。
+
+   <img src="/img/services/connect/waiting-for-remote-shell.png" alt="连接期间显示的等待界面。" width="80%" />
+
+您现在可以像使用本地设备一样使用它。
+
+<img src="/img/services/connect/remote-shell.png" alt="显示使用远程 shell 建立连接后的窗口。" width="80%" />
 
 :::tip
-在某些操作系统上，浏览器会拦截**Ctrl+Shift+C**和**Ctrl+C**等组合键。相反，您可以使用右键菜单或**Ctrl+Insert**来复制，**Shift+Insert**来粘贴。
+在某些操作系统上，浏览器会拦截 **Ctrl+Shift+C** 和 **Ctrl+C** 等组合键。您可以改用右键菜单，或使用 **Ctrl+Insert** 复制、**Shift+Insert** 粘贴。
 :::
 
-连接后，连接仪表板中的**Remote shell**徽章旁边会出现一个绿点。这表示远程 shell 会话处于活动状态。鼠标悬停可查看当前远程 shell 会话的数量。
-<img src="/img/services/connect/remote-shell-in-progress.png" alt="远程shell激活" width="80%" />
+每次远程 shell 会话开始时都会出现桌面通知。连接期间，Connect 控制面板中 **Remote shell** 徽章旁边会出现一个绿点，表示远程 shell 会话处于活动状态。将鼠标悬停在绿点上可查看当前远程 shell 会话的数量。
+
+<img src="/img/services/connect/remote-shell-in-progress.png" alt="Connect 界面，显示设备列表中带有绿点的 Remote shell 图标。这表示远程 shell 会话正在进行中。" width="80%" />
 
 :::tip
-每个远程 shell 连接都会创建一个全新的连接，就像 SSH 一样。要在多个会话中持续执行后台命令和配置，请使用 `screen` 或 `tmux`。
+每个远程 shell 连接都会创建一个全新的连接，就像 SSH 一样。要在多个会话之间保持后台命令和配置，请使用 `screen` 或 `tmux`。
 :::
 
-菜单栏中的 **Connect** 图标在远程shell会话进行时会旋转。每次启动远程shell会话时，都会出现桌面通知。
-<img src="/img/services/connect/remote-shell-notification.png" alt="远程shell提示" width="80%" />
-
 :::tip
-`CONNECT_TTY` 环境变量表示会话使用 Connect 提供的远程 shell。
+`CONNECT_TTY` 环境变量表示会话使用的是 Connect 提供的远程 shell。
 :::
 
 #### 结束远程shell会话
 
-要关闭远程 shell 会话，请运行 `exit` 命令或关闭窗口。
-<img src="/img/services/connect/remote-shell-ended.png" alt="结束远程shell" width="80%" />
+要关闭远程 shell 会话，请在命令行中运行 `exit` 命令，或关闭浏览器窗口。
 
-#### 禁止远程shell访问
-要关闭远程shell访问功能，请在菜单栏中选择 Connect 图标，然后取消勾选**允许远程shell访问**选项。您的设备仍将保持登录Connect的状态，但无法通过Connect控制面板创建远程shell会话。
-<img src="/img/services/connect/disallow-remote-shell.png" alt="禁用远程shell" width="80%" />
+<img src="/img/services/connect/remote-shell-ended.png" alt="窗口显示远程 shell 连接已结束，现在可以关闭该窗口。" width="80%" />
 
-或者，也可以使用以下命令禁止远程 shell 访问：
+#### 禁止和重新允许远程shell访问
 
-```sh
-rpi-connect shell off
-```
+您可以通过界面或命令行禁止 shell 访问。
 
-在 Connect 面板中，**Remote shell** 徽标和**Connect via** 菜单中的**Remote shell** 选项将被划掉。
-<img src="/img/services/connect/remote-shell-disabled.png" alt="已禁用远程shell" width="80%" />
+:::warning
+如果您通过 shell 或屏幕共享会话同时禁止了 shell 访问*和*屏幕共享，则必须使用 SSH 等其他常见的远程访问方案，才能在无需亲临现场的情况下访问该设备。
+:::
 
-要重新启用远程 shell 访问，请执行以下操作之一
+<Tabs>
+<TabItem value="界面" label="界面">
 
-- 单击 "连接 "系统托盘图标并选择**Allow Remote Shell Access**
-- 运行以下命令
+要禁止远程 shell 访问：
 
-```sh
-rpi-connect shell on
-```
+1. 在您的树莓派设备上，选择系统托盘中的 Connect 图标。
+2. 取消勾选 **Allow Remote Shell Access**。
 
+   您的设备仍保持登录 Connect 的状态，但您无法通过 Connect 控制面板创建远程 shell 会话。
+
+   <img src="/img/services/connect/disallow-screen-sharing.png" alt="Connect 界面，显示包含允许屏幕共享选项的下拉菜单。" width="80%" />
+
+</TabItem>
+<TabItem value="命令行" label="命令行">
+
+要禁止远程 shell 访问：
+
+1. 在您的树莓派设备上，打开终端。
+2. 输入以下命令：
+
+   ```sh
+   rpi-connect shell off
+   ```
+
+在 Connect 控制面板中，**Remote shell** 徽章与 **Connect via** 菜单中的 **Remote shell** 选项会显示为划掉状态。
+
+<img src="/img/services/connect/remote-shell-disabled.png" alt="Connect 界面，显示设备选项卡中的 Connect via 下拉菜单。" width="80%" />
+
+</TabItem>
+</Tabs>
+
+要重新允许远程 shell 访问：
+
+<Tabs>
+<TabItem value="界面" label="界面">
+
+1. 在您的树莓派设备上，选择系统托盘中的 Connect 图标。
+2. 选择 **Allow Remote Shell Access**。
+
+</TabItem>
+<TabItem value="命令行" label="命令行">
+
+1. 在您的树莓派设备上，打开终端。
+2. 输入以下命令：
+
+   ```sh
+   rpi-connect shell on
+   ```
+
+</TabItem>
+</Tabs>
 ## 始终启用远程shell
 
 Connect 以用户级服务而非 root 运行。因此，只有当你的用户账户当前登录设备时，Connect 才能工作。如果在禁用自动登录的情况下重启，这可能会导致无法访问设备。要在未登录设备时继续运行 Connect，请启用**user-lingering**。从您的用户账户运行以下命令启用用户登录：
@@ -408,72 +514,53 @@ sudo apt remove --purge rpi-connect
 
 要切断设备和 Connect 账号之间的联系，请从 Connect 面板的设备列表中删除设备。 
 
-## 远程更新你的树莓派设备
+## 远程更新你的设备
 
-Raspberry Pi Connect 具备远程推送更新至树莓派设备的能力。
+Connect 具备通过远程推送更新来更新树莓派设备的能力。
 
-远程更新适用于更新防火墙后的设备、离线设备（将在下次登录 Connect 时接收更新）以及地理位置偏远或难以接触的设备。
+远程更新适用于更新防火墙后的设备，以及地理位置偏远或难以接触的设备。
 
 Connect 支持两种类型的更新工件：
 
 * [脚本工件](#脚本工件)：由 `otamaker` 创建，在设备上以 root 权限运行 shell 脚本。它可在标准 Raspberry Pi OS 安装上运行，适合升级软件包等维护任务。
 * [A/B 启动更新](#a-b-启动更新)：由 `rpi-image-gen` 创建，替换整个操作系统，并在更新失败时自动回退到之前的版本。它需要先为设备写入 A/B 启动布局的镜像。
 
-无论你构建哪种类型的工件，都需要自行托管它，然后从 Raspberry Pi Connect 网站进行部署。这两种类型的这两个步骤是相同的，具体说明见[托管更新工件](#托管更新工件)和[部署更新工件](#部署更新工件)。
+无论你构建哪种类型的工件，都可以从 Raspberry Pi Connect 网站进行部署，具体说明见[部署更新工件](#部署更新工件)。你在部署过程中上传工件，Connect 会将其传递给接收设备。
 
 如果你的设备属于 [Connect for Organisations](./connect-for-organisations.mdx) 账户，部署方式会略有不同。更多信息请参阅[在组织中部署远程更新](./connect-for-organisations.mdx#部署远程更新)。
 
-### 托管更新工件 {#托管更新工件}
-
-Raspberry Pi Connect 不会存储你的更新工件。相反，你需要自行托管每个工件，并将其位置告知 Connect，Connect 会把该位置传递给接收设备，以便设备直接下载工件。
-
-你可以在接收设备可访问的任何位置托管工件：你自己的 Web 服务器、S3 存储桶、FTP 或 SFTP 服务器，或者使用 `file://` URI 指向接收设备本身上的路径。远程更新支持 HTTP、HTTPS、FTP、SFTP 和 File URI。
-
-该位置必须可供接收设备访问，但无需对 Raspberry Pi Connect 服务器或整个互联网开放。从与接收设备位于同一本地网络的另一台计算机上提供工件是一种很好的做法。
-
-以下是示例 URI：http://192.168.0.1:8080/path/to/update.tar.zst
-
-其中包含以下必要信息：
-
-* 主机 IP：192.168.0.1
-* 端口：8080
-* 路径：/path/to/update.tar.zst
-
-你还需要工件的 SHA-256 校验和，Connect 会将其传递给设备，以便设备检查工件在传输过程中是否损坏或被篡改。`otamaker` 在构建脚本工件时会输出校验和；否则，请使用 `sha256sum` 计算：
-
-```sh
-sha256sum update.tar.zst
-```
-
-复制下 URI 和校验和；下一节中你会用到这两项。
-
 ### 部署更新工件 {#部署更新工件}
 
-当你使用 `otamaker` 或 `rpi-image-gen` 构建并托管工件后，使用 Raspberry Pi Connect 网站将其部署到设备。
+当你使用 `otamaker` 或 `rpi-image-gen` 构建工件后，使用 Raspberry Pi Connect 网站将其部署到设备。
 
 :::note
-如果接收设备属于某个组织，请改按[在组织中部署远程更新](./connect-for-organisations.mdx#部署远程更新)中所述的方式进行部署。
+如果接收设备属于某个组织，请从[在组织中部署远程更新](./connect-for-organisations.mdx#部署远程更新)开始，该页描述了组织可用的额外选项。
 :::
 
-部署始终从你要更新的设备开始，因此在继续之前，请确保接收设备已注册到你的个人账户：
+部署始终从你要更新的设备开始，因此在继续之前，请确保接收设备已注册到你的个人账户，并且处于在线状态：
 
 1. 登录 Raspberry Pi Connect。
 2. 使用右上角的账户切换器选择*个人*账户。
-3. 前往*设备*选项卡，然后在接收设备旁选择*部署*。*部署*仅对已启用远程更新的设备显示。
+3. 前往*设备*选项卡，然后在接收设备旁选择*部署*。*部署*仅对已启用远程更新且当前在线的设备显示。
 
 这将打开*新建部署*表单，该表单分两个步骤为部署创建新工件。
 
-在*步骤 1：创建工件*中，描述你托管的工件：
+在*步骤 1：上传工件*中，上传你构建的工件：
 
 1. 输入工件的*名称*。名称无需唯一，因此可以使用有助于你日后识别该部署的内容，例如版本号。
-2. 粘贴你在[托管更新工件](#托管更新工件)中复制下来的 *URI* 和 *SHA-256 校验和*。
-3. 选择*下一步*。
+2. 将工件拖到*文件*区域，或选择*浏览*来选择它。该文件必须是 2 GB 或更小的 Zstandard 压缩 tar 归档文件（`.tar.zst` 文件）。
+3. 等待*校验和*和*上传*都显示为 *Complete*（完成）。
 
-![新建部署表单的步骤 1，显示名称、URI 和 SHA-256 校验和字段。](/img/services/connect/new-deployment-personal-step-1.png)
+   要选择其他文件，请选择 *Remove*（移除）。要放弃仍在上传的文件，请选择 *Cancel*（取消）。
+4. 选择*下一步*。
 
-在*步骤 2：部署到设备*中，检查详细信息，然后选择*部署*。如果发现错误，选择*返回*进行修正。
+   ![新建部署表单的步骤 1，显示已填写的名称字段和已上传的工件文件，其校验和与上传均已完成。](/img/services/connect/new-deployment-personal-step-1.png)
 
-![新建部署表单的步骤 2，显示工件的详细信息以供确认。](/img/services/connect/new-deployment-personal-step-2.png)
+在*步骤 2：检查并部署*中，检查名称、文件和 SHA-256 校验和，然后选择*部署*。如果发现错误，请选择*返回*进行修正。
+
+![新建部署表单的步骤 2，显示要部署工件的名称、文件和校验和，以及部署按钮。](/img/services/connect/new-deployment-personal-step-2.png)
+
+Connect 会保留你上传的工件两小时，然后将其删除。在其工件被删除时尚未开始的部署会被标记为 *Invalidated*（已失效）。要再次部署该工件，请重新上传。
 
 #### 监控部署 {#监控部署}
 
@@ -483,7 +570,9 @@ sha256sum update.tar.zst
 
 你可以通过选择部署并选择*取消*来取消*待处理*的部署。当另一个部署排队时，待处理的部署也会自动取消。
 
-部署成功后，按照与你所部署工件类型相适应的方式进行验证。脚本工件请参阅[脚本工件](#脚本工件)，A/B 启动更新请参阅[A/B 启动更新](#a-b-启动更新)。
+#### 验证部署 {#验证部署}
+
+要验证部署，脚本工件请参阅[脚本工件](#脚本工件)，A/B 启动更新请参阅 [A/B 启动更新](#a-b-启动更新)。
 
 ### A/B 启动更新 {#a-b-启动更新}
 
@@ -516,10 +605,6 @@ A/B 启动更新可防止失败或错误的更新导致设备停止工作。
   
   至少需要 16 GB 空间，但具体所需磁盘空间需根据启动分区（固件、内核、设备树文件以及可能的 initramfs）和系统分区（内核模块及系统级软件，如标准 Linux 命令行工具）的未来需求决定。
 
-##### 托管工件进行远程部署需要：
-
-* 一个托管工件的位置，接收设备能够从中下载工件。关于 Connect 支持的托管选项，请参阅[托管更新工件](#托管更新工件)。
-
 ##### 接收更新工件的设备需要：
 
 * Raspberry Pi 4 或更高版本，需满足：
@@ -529,12 +614,11 @@ A/B 启动更新可防止失败或错误的更新导致设备停止工作。
 
 #### 实施 A/B 启动并远程更新首个镜像
 
-按照以下四个阶段实施 A/B 配置并使用 Raspberry Pi Connect 发送更新：
+按照以下三个阶段实施 A/B 配置并使用 Raspberry Pi Connect 发送更新：
 
 1. 第一阶段：为接收设备（Raspberry Pi 4 及更高版本）准备远程更新，创建 A/B 启动文件，然后部署到设备。
 2. 第二阶段：创建用于部署到接收设备的更新工件文件。
-3. 第三阶段：托管更新工件，使接收设备能够下载。
-4. 第四阶段：使用 Raspberry Pi Connect 的远程更新功能部署更新工件到接收设备，然后验证更新。
+3. 第三阶段：使用 Raspberry Pi Connect 的远程更新功能将更新工件部署到接收设备，然后验证更新。
 
 #### 第一阶段：创建 A/B 启动配置
 
@@ -707,7 +791,7 @@ Artefact version: 1.0.0
 
 现在设备已配置好 A/B 启动，可以使用 Raspberry Pi Connect 向其交付更新工件。
 
-更新工件由 rpi-image-gen 创建，为 `.tar.zst` 文件。这些文件比你在第一阶段创建的 `.img` 文件小得多，将在第四阶段由 Raspberry Pi Connect 部署到接收设备。
+更新工件由 rpi-image-gen 创建，为 `.tar.zst` 文件。这些文件比你在第一阶段创建的 `.img` 文件小得多，将在第三阶段由 Raspberry Pi Connect 部署到接收设备。
 
 为便于说明，这里继续使用第一阶段的示例更新。请根据你自己的更新 `.yaml` 文件路径和命名调整这些步骤。
 
@@ -729,53 +813,15 @@ ${EDITOR:-vi} ./examples/ota/config/ota.yaml
 ./rpi-image-gen build -S ./examples/ota/ -c ota.yaml
 ```
 
-#### 第三阶段：托管更新工件
-
-现在你已创建了要通过 Raspberry Pi Connect 部署的更新工件，将其托管在接收设备能够下载的位置。关于 Connect 支持的托管选项以及需要收集的信息，请参阅[托管更新工件](#托管更新工件)。
-
-以下步骤演示如何从与树莓派接收设备位于同一网络的树莓派主机上提供更新工件。
-
-托管更新工件：
-
-##### 步骤 1：在主机设备上运行 HTTP 服务器
-
-1. 在终端中运行以下命令创建服务器并托管更新工件（相应更改工件镜像目录）：
-
-```sh
-python -m http.server 8080 --directory ./work/image-myapp-1.1.0
-```
-
-##### 步骤 2：计算更新文件的 SHA-256 校验和
-
-1. 在终端中运行以下命令：
-
-```sh
-sha256sum ./work/image-myapp-1.1.0/update.tar.zst
-```
-
-2. 复制下校验和。
-
-##### 步骤 3：查找主机在本地网络上的 IP 地址
-
-你必须提供更新工件的 URI，其中包含主机 IP 地址。
-
-查找 IP 地址：
-
-1. 在终端中运行以下命令：
-
-```sh
-hostname -I
-```
-
-2. 复制下 IP 地址。
-
-#### 第四阶段：远程更新 {#远程更新}
+#### 第三阶段：远程更新
 
 使用 Raspberry Pi Connect 将更新工件部署到接收的树莓派设备。
 
 ##### 步骤 1：将工件部署到接收设备
 
-使用第三阶段中记录的 URI 和校验和，从 [Raspberry Pi Connect 网站](https://connect.raspberrypi.com/) 部署工件，具体步骤参阅[部署更新工件](#部署更新工件)。
+上传你在第二阶段构建的 `.tar.zst` 文件，从 [Raspberry Pi Connect 网站](https://connect.raspberrypi.com/) 部署工件，具体步骤参阅[部署更新工件](#部署更新工件)。
+
+如果接收设备属于组织，请先托管工件，然后使用其 URI 和校验和进行部署，具体说明见[在组织中部署远程更新](./connect-for-organisations.mdx#部署远程更新)。
 
 ##### 步骤 2：验证更新
 
@@ -831,10 +877,6 @@ rpi-connect ota on
 :::tip
 要在树莓派以外的计算机上构建工件，请从 GitHub 上的 [utils 仓库](https://github.com/raspberrypi/utils)下载 `otamaker`。
 :::
-
-##### 对于托管工件以供远程部署到接收设备：
-
-* 一个托管工件的位置，接收设备能够从中下载工件。关于 Connect 支持的托管选项，请参阅[托管更新工件](#托管更新工件)。
 
 #### 第 1 步：创建脚本
 
@@ -904,12 +946,11 @@ otamaker aptupgrade.yaml
 
 记下校验和：从 Raspberry Pi Connect 网站部署工件时需要用到。
 
-#### 第 4 步：托管并部署工件
+#### 第 4 步：部署工件
 
-部署脚本工件的方式与其他更新工件相同：
+部署脚本工件的方式与其他任何更新工件相同：选择接收设备并将 `.tar.zst` 文件上传到该设备，具体说明见[部署更新工件](#部署更新工件)。
 
-1. 按[托管更新工件](#托管更新工件)所述，将 `.tar.zst` 文件托管在接收设备可以下载的位置。你可以跳过计算校验和的步骤：`otamaker` 在构建工件时已经输出了校验和。
-2. 按[部署更新工件](#部署更新工件)所述，选择接收设备并将工件部署到该设备。
+如果接收设备属于组织，请先托管工件，然后使用其 URI 和校验和进行部署，具体说明见[在组织中部署远程更新](./connect-for-organisations.mdx#部署远程更新)。你可以跳过计算校验和的步骤：`otamaker` 在构建工件时已经输出了校验和。
 
 #### 第 5 步：验证更新
 
@@ -1169,21 +1210,69 @@ journalctl --follow --user-unit rpi-connect.service --user-unit rpi-connect-wayv
 
 ## 安全性
 
-树莓派设备与用户浏览器之间的所有连接均采用[WebRTC](https://webrtc.org)协议：这与Zoom、Microsoft Teams和Google Meet所使用的实时通信技术相同。
+树莓派设备与用户浏览器之间的所有连接均采用 [WebRTC](https://webrtc.org)：这与 Zoom、Microsoft Teams 和 Google Meet 所使用的实时通信技术相同。
 
-这意味着所有屏幕共享和远程shell访问流量均通过[DTLS](https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security)在树莓派设备与用户浏览器端进行加密。我们不会（也无法）解密这些流量，确保您的数据始终保持私密性。
+### 端到端加密 {#端到端加密}
 
-此外，流量主要采用点对点传输模式，即加密数据不会经过我们的基础设施。加密流量直接在您的树莓派设备与浏览器之间传输，使我们无法进行监视。
+树莓派设备与用户浏览器之间的所有屏幕共享和远程 shell 访问流量均使用 [DTLS](https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security) 加密。我们不会（也无法）解密这些流量，从而确保您的数据保持私密。
 
-当直接点对点连接不可行时（例如网络故障），加密数据将通过我们的[TURN](https://en.wikipedia.org/wiki/Traversal_Using_Relays_around_NAT)服务器中转。这些服务器部署于伦敦和加利福尼亚，您的流量将被路由至距离最近的中继节点。我们既不持有解密密钥，也不会记录或存储这些数据。
+每次屏幕共享和远程 shell 会话都会使用一个新的 WebRTC 对等连接。对于每个连接，树莓派设备上的 Connect 客户端会在内存中生成一对全新的公钥和私钥，您的浏览器也会生成自己的一对密钥。设备绝不会将其私钥写入磁盘或发送到任何地方，并会在会话结束时丢弃该私钥。设备与浏览器交换公钥，并在二者之间直接进行的握手中派生出用于加密会话的密钥，因此我们的服务器无法派生出这些密钥。经过我们 API 的唯一与密钥相关的信息是每个公共证书的指纹，而该指纹无法用于解密。
 
-树莓派连接API会临时存储建立点对点连接所需的IP地址和端口。所有访问该API的流量均通过[HTTP over TLS](https://en.wikipedia.org/wiki/HTTPS)加密传输，出于安全考虑仅支持TLS 1.2及更高版本协议。这确保连接信息绝不会以明文形式发送。此类元数据最多安全存储1分钟，并在连接建立后立即删除。
+会话中的所有内容都通过这一条加密通道传输：屏幕帧、键盘和鼠标输入、剪贴板数据、远程 shell 的输入输出，以及您在会话期间输入的任何凭据。这些内容都不会经过我们的 API。API 只交换建立连接所需的信息，并接收设备状态，例如设备是否在线、是否启用了屏幕共享以及活动会话的数量。
 
-树莓派连接及其API与软件组件已通过[Cure53](https://cure53.de)的安全渗透测试与安全分析师评估。您可以在 Cure53 网站上阅读[完整报告](https://cure53.de/pentest-report_raspberry-web.pdf)。
+此外，流量大多是点对点的，这意味着加密流量不经过我们的基础设施，而是直接在您的树莓派设备与浏览器之间传输。这使我们无法观测这些流量。
 
-有关WebRTC安全的更多细节，请参阅[《WebRTC安全研究》](https://webrtc-security.github.io/)。
+### 中继服务器 {#中继服务器}
 
-针对 [**Connect for Organisations**](./connect-for-organisations.mdx) 客户，我们提供可追溯过去90天活动的[审计日志](./connect-for-organisations.mdx#查看审计日志)。为保护隐私，通过IP地址进行地理定位时，我们仅存储国家代码。
+在无法建立直接点对点连接的情况下（例如由于网络问题），只有加密数据会通过我们的某台 [TURN](https://en.wikipedia.org/wiki/Traversal_Using_Relays_around_NAT) 服务器中继。这些服务器托管在伦敦和加利福尼亚。只有您的设备和浏览器持有解密这些数据的密钥，且数据既不会被记录也不会被存储。
 
+Connect 会依据设备和浏览器各自 IP 地址所在的洲，分别为它们选择中继。位于欧洲和非洲的设备与浏览器使用伦敦的中继；位于美洲、亚洲和大洋洲的则使用加利福尼亚的中继。如果无法确定位置，则使用伦敦。如果您的设备和浏览器被分配到不同的中继，会话可以通过其中任一或两者进行中继。
+
+Connect 没有用于限制使用哪些中继或禁用中继的设置。如果您只要求直接的点对点连接，可以封禁[网络和防火墙问题](#网络和防火墙问题)中列出的 TURN 服务器的流量。此后，Connect 只能在能够彼此直接访问的设备和浏览器之间工作。
+
+### 连接建立 {#连接建立}
+
+树莓派 Connect API 会临时存储协商连接所需的 WebRTC offer 与 answer，其中包括您设备和浏览器的 IP 地址与端口。发往该 API 的所有流量均使用 [HTTP over TLS](https://en.wikipedia.org/wiki/HTTPS) 加密，出于安全考虑仅支持 TLS 1.2 及更高版本。这确保连接信息绝不会以明文形式发送。此类元数据最多安全存储 1 分钟。
+
+来自您浏览器的 offer 会按原样存储，绝不会被解析或改写。只有代表已登录用户运行的 Connect Web 应用程序才能创建 offer；设备不能。
+
+会话只能由满足以下条件的用户启动：该用户使用拥有该设备、或拥有该设备所属组织的 Raspberry Pi ID 登录，并且已在此前一小时内通过 Raspberry Pi ID 完成身份验证。
+
+### 数据保留 {#数据保留}
+
+Connect 只保留运行服务所需的元数据。
+
+| 数据 | 保留时间 |
+| --- | --- |
+| IP 地址 | 不存储。IP 地址仅在内存中用于选择最近的中继和进行速率限制，并在新设备关联时随通知邮件发送一次。审计日志事件仅存储由 IP 地址推导出的两位国家代码。 |
+| 连接建立信息（WebRTC offer 与 answer） | 最多 1 分钟 |
+| 设备心跳与状态 | 仅当前状态；不保留历史记录 |
+| 设备数据（序列号、型号、操作系统名称与版本、架构、Connect 版本、主机名和最后在线时间） | 只要设备关联到某个账户；随设备或账户一同删除 |
+| 账户数据（姓名和电子邮件地址） | 静态加密，在账户存续期间保留；随账户一同删除 |
+| 组织审计日志，包括每次屏幕共享和远程 shell 会话的开始及其时间戳、用户、设备和国家代码 | 90 天 |
+
+对于 [**Connect for Organisations**](./connect-for-organisations.mdx) 客户，我们提供[审计日志](./connect-for-organisations.mdx#查看审计日志)以查看过去 90 天的活动。个人账户没有连接日志。
+
+### 安全评估 {#安全评估}
+
+2025 年 1 月，[Cure53](https://cure53.de) 的渗透测试人员和安全分析师评估了 Raspberry Pi Connect Web 应用程序与基础设施、Raspberry Pi ID，以及 Connect 客户端软件的 2.2 至 2.3 版本。您可以在 Cure53 网站上阅读[完整报告](https://cure53.de/pentest-report_raspberry-web.pdf)。
+
+有关 WebRTC 安全性的更多细节，请参阅[《WebRTC 安全研究》](https://webrtc-security.github.io/)。
+
+### 子处理者 {#子处理者}
+
+Raspberry Pi Ltd 使用以下第三方处理个人数据，以便提供 Connect。它们都无法访问屏幕共享或远程 shell 会话的内容，因为这些内容在您的树莓派设备与浏览器之间是[端到端加密](#端到端加密)的。
+
+| 子处理者 | 用途 | 个人数据 | 位置 |
+| --- | --- | --- | --- |
+| [Mythic Beasts Ltd](https://www.mythic-beasts.com) | Connect 服务的托管，包括其数据库、电子邮件投递和 TURN 中继服务器 | Connect 持有的所有账户和设备数据、IP 地址，以及使用中继时的加密会话流量 | 英国。加利福尼亚的 TURN 中继位于美国，但它只转发加密会话流量，不存储任何内容。 |
+| [Cloudflare, Inc.](https://www.cloudflare.com) | Connect 网站静态资源（图像、样式表和脚本）的缓存与投递 | 静态资源请求的 IP 地址与浏览器信息 | 全球边缘网络 |
+| [Google LLC](https://cloud.google.com) | 分析数据仓库（Google Cloud）与产品分析（Google Analytics） | 账户与设备记录（姓名和电子邮件地址保持加密），以及包含设备与会话标识符的匿名化使用事件 | 欧盟（数据仓库）和美国（分析） |
+| [Functional Software, Inc. (Sentry)](https://sentry.io) | 错误监控 | 技术错误报告，其中可能包含设备和组织标识符 | 美国 |
+| [MaxMind, Inc.](https://www.maxmind.com) | 新设备登录时通知邮件中所示 IP 地址的地理定位 | IP 地址 | 美国 |
+| [Stripe](https://stripe.com) | Connect for Organisations 订阅的支付处理 | 账单联系人信息和支付信息 | 美国和爱尔兰 |
+| [Freshworks, Inc. (Freshdesk)](https://www.freshworks.com) | 客户支持 | 姓名、电子邮件地址以及支持请求的内容 | 美国 |
+
+此列表最后更新于 2026 年 9 月 15 日。
 
 <Normal />

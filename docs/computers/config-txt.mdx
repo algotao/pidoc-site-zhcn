@@ -5,7 +5,7 @@ title_meta: 树莓派硬件功能配置文件(config.txt)全功能详解
 description: 深入了解树莓派config.txt配置文件，它是树莓派启动过程中的关键组件，负责在GPU读取后初始化Arm CPU和Linux系统。本文详细介绍了config.txt的文件格式、高级功能、常用选项、属性配置、GPIO控制、超频选项以及监控和维护树莓派设备的方法，是树莓派用户优化和定制系统设置的必备指南。
 keywords: [树莓派, config.txt, GPU, Arm CPU, Linux, 启动过程, 文件格式, 高级功能, 常用选项, 属性配置, GPIO控制, 超频选项, 监控, 维护]
 last_update:
-  date: 2026-09-04
+  date: 2026-10-11
 ---
 import Normal from "../_normal.mdx";
 
@@ -72,36 +72,60 @@ dtoverlay=vc4-kms-v3d
 [条件筛选器](#条件筛选器)在条件部分有所介绍。
 
 ## autoboot.txt
-`autoboot.txt` 是一个可选配置文件，可用于指定 `boot_partition` 编号。
 
-它还可与 `tryboot` 功能结合使用，为操作系统升级实现 A/B 启动。
+`autoboot.txt` 是一个可选配置文件，放置在初始启动分区中，可用于指定 `boot_partition` 编号。
 
-`autoboot.txt` 的长度限制为 512 字节，支持 [`all`]、[`none`] 和 [`tryboot`] [条件](#条件筛选器)过滤器。
+该文件可与 `tryboot` 功能结合使用，为操作系统升级实现 A/B 启动。它是启动加载器和固件的原生能力，独立于第三方多启动管理器运行。
+
+:::note[注意]
+`autoboot.txt` 文件仅控制启动加载器选择哪个启动分区。构建一个有韧性、可用于生产的 A/B 更新系统，还需要专门的分区布局（例如冗余的启动和根文件系统）以及更新工具。如需自动化方案，请参阅 [A/B 启动更新](../services/connect.mdx#a-b-启动更新) 和 [rpi-image-gen](https://github.com/raspberrypi/rpi-image-gen) 工具。
+:::
+
+`autoboot.txt` 文件支持 [`all`]、[`none`] 和 [`tryboot`] [条件筛选器](#条件筛选器)。
 
 另请参阅 [TRYBOOT](./raspberry-pi.mdx#故障安全操作系统更新-tryboot) 启动流程。
 
 ### boot_partition
-指定用于启动的分区号，除非分区号已作为参数指定给 `reboot` 命令（如 `sudo reboot 2`）。
 
-分区号从 `1` 开始，MBR 分区为 `1` 至 `4`。 指定分区 `0` 意味着从`默认`分区（即第一个可启动的 FAT 分区）启动。
+指定用于启动的分区号，除非分区号已作为参数指定给 `reboot` 命令（例如 `sudo reboot 2`）。
 
-可启动分区必须格式化为 FAT12、FAT16 或 FAT32，并包含 `start.elf `文件（或树莓派5上的 `config.txt` 文件），才能被bootloader归类为可启动分区。
+分区号从 `1` 开始。指定分区 `0` 会指示启动加载器选择默认分区，该分区解析为第一个可启动的 FAT 分区（通常为分区 1）。
 
-### \[tryboot\]过滤器
-如果系统启动时设置了 `tryboot` 标志，则此过滤器通过。
-```sh
-sudo reboot "0 tryboot"
+可启动分区必须格式化为 FAT12、FAT16 或 FAT32，并包含 `start.elf` 文件（或树莓派 5 上的 `config.txt` 文件），启动加载器才会将其归类为可启动分区。
+
+### 与 `cmdline.txt` 及根文件系统选择的关系
+
+启动加载器只读取 `autoboot.txt` 来定位目标启动分区。除了将其参数传递给操作系统内核之外，它不会解析或处理 `cmdline.txt`。
+
+根分区的选择（`root=...`）由内核通过 `cmdline.txt` 处理。在双槽 A/B 系统中，每个启动分区通常包含自己独立的 `cmdline.txt` 文件，指向其对应的根分区。或者，如果每个启动分区使用相同的文件，您可以在 `config.txt` 中使用 `[boot_partition=N]` 条件筛选器来选择备用的 `cmdline.txt`：
+
+```ini
+[boot_partition=2]
+cmdline=cmdline_rootfs_a.txt
+
+[boot_partition=3]
+cmdline=cmdline_rootfs_b.txt
 ```
 
 ### tryboot_a_b
+
 将此属性设为 `1`，可在设置 `tryboot` 标志时加载正常的 `config.txt` 和 `boot.img` 文件，而不是 `tryboot.txt` 和 `tryboot.img`。
 
 这样就能在分区级而非文件级进行 `tryboot` 切换，而无需修改 A/B 分区中的配置文件。
 
-### A/B启动更新流程示例
-下面的伪代码展示了假设的操作系统`更新服务`如何使用 `tryboot` + `autoboot.txt` 来执行故障安全操作系统升级。
+### A/B 启动的更新流程示例
 
-初始 `autoboot.txt`
+考虑如下 A/B 分区布局：
+
+* **分区 1（FAT）：** 包含 `autoboot.txt` 的初始启动加载器分区。
+* **分区 2（FAT）：** 槽位 A 启动分区（`boot_partition=2`），包含固件、内核以及指向 Root A 的 `cmdline.txt`。
+* **分区 3（FAT）：** 槽位 B 启动分区（`boot_partition=3`），包含固件、内核以及指向 Root B 的 `cmdline.txt`。
+* **分区 4：** 槽位 A 根文件系统分区（Root A）。
+* **分区 5：** 槽位 B 根文件系统分区（Root B）。
+* **分区 6：** 可选的持久数据分区。
+
+初始 `autoboot.txt`：
+
 ```ini
 [all]
 tryboot_a_b=1
@@ -111,27 +135,28 @@ boot_partition=3
 ```
 
 #### 安装更新
-- 系统开机，默认启动到分区 2
-- `更新服务`将下一版本的操作系统下载到分区 3
-- 通过重启至 `tryboot` 模式 `reboot "0 tryboot"` 来测试更新，其中 `0` 表示默认分区
+
+系统默认启动到分区 2。随后，一个假设的更新服务：
+
+1. 将下一版本的操作系统安装到分区 3（及其对应的根分区）。
+2. 通过执行 tryboot 重启来测试更新：
+
+   ```sh
+   sudo reboot "0 tryboot"
+   ```
 
 #### 提交或取消更新
-- 系统从分区 3 启动，因为在 `tryboot模式` 下，`[tryboot]` 过滤器的值为 true
-- 如果 tryboot 处于活动状态（`/proc/device-tree/chosen/bootloader/tryboot == 1`）
-  - 如果当前启动分区（`/proc/device-tree/chosen/bootloader/partition`）与 autoboot.txt 中 `[tryboot]` 部分的 `boot_partition` 相匹配
-    - `更新服务`会验证系统是否更新成功
-    - 如果更新成功
-      - 替换 `autoboot.txt` 交换 `boot_partition` 配置
-      - 正常重启 - 分区 3 现在是默认启动分区
-    - 否则
-      - `更新服务`将更新标记为失败，例如删除更新文件。
-      - 正常重启 - 分区 2 仍是默认引导分区，因为 `tryboot` 标记已自动清除
-    - 结束如果
-  - 结束如果
-- 结束如果
 
+系统会从分区 3 启动，因为 `autoboot.txt` 中的 `[tryboot]` 筛选器求值为 true。
 
-更新的 `autoboot.txt`
+如果 `tryboot` 处于活动状态（`/proc/device-tree/chosen/bootloader/tryboot` 等于 `1`），并且我们已从 tryboot 分区启动（`/proc/device-tree/chosen/bootloader/partition` 与 `autoboot.txt` 的 `[tryboot]` 部分中设置的 `boot_partition` 相匹配）：
+
+* 该假设的更新服务随后会验证系统健康状况。
+  * **如果成功：** 更新 `autoboot.txt`，交换默认分区与 tryboot 分区，从而提交更新。
+  * **如果失败：** 在不更改 `autoboot.txt` 的情况下执行正常重启。`tryboot` 标志会自动清除，使系统回退到从分区 2 启动。
+
+提交后更新过的 `autoboot.txt`：
+
 ```ini
 [all]
 tryboot_a_b=1
@@ -139,8 +164,13 @@ boot_partition=3
 [tryboot]
 boot_partition=2
 ```
-:::note[注意]
-更新 `autoboot.txt` 后不一定要重新启动。不过，`更新服务` 必须小心避免覆盖当前分区，因为 `autoboot.txt` 已被修改以提交上次更新。有关详细信息，请参阅 [设备树参数](./configuration.mdx#设备树覆盖和参数)。
+
+:::tip[提示]
+位于 `/proc/device-tree/chosen/bootloader/` 下的属性（例如 `tryboot` 和 `partition`）以原始 32 位大端二进制整数形式存储。使用 `cat` 等工具查看它们会产生不可打印字符或显示为空。要在 shell 脚本中读取这些整数值，请使用：
+
+```bash
+printf "%d\n" "0x$(od /proc/device-tree/chosen/bootloader/tryboot -v -An -t x1 | tr -d ' ')"
+```
 :::
 
 ## 常用选项

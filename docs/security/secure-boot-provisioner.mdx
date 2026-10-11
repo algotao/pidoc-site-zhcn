@@ -6,7 +6,7 @@ draft: false
 description: "使用树莓派安全启动配置工具 (Secure Boot Provisioner, rpi-sb-provisioner) 自动配置安全启动和磁盘加密，支持批量部署多台设备。"
 keywords: [安全启动, Secure Boot Provisioner, rpi-sb-provisioner, 磁盘加密, LUKS, OTP, RSA, 启动配置, CM5, CM4, RPIBOOT]
 last_update:
-  date: 2026-09-04
+  date: 2026-10-11
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -347,9 +347,49 @@ RPIBOOT 模式是 USB 设备模式的工程标签，它使配置服务器能够�
 * 仅启动由您可信私钥签名的镜像。
 * 如果您还配置了全盘加密（推荐），在加载操作系统之前使用设备唯一机密在启动时解密其存储。
 
+## 查看制造数据库
+
+如果您在安全启动配置工具中启用了制造数据库，则可以在该数据库中找到每台已配置设备的以下详细信息：
+
+* 序列号
+* 板卡类型与版本
+* MAC 地址（以太网）
+* 配置日期与时间
+* 已安装的操作系统镜像
+* 安全设置
+
+您可以通过安全启动配置工具的 Web 界面或使用命令行查看数据库中的信息。
+
+在配置（主机）服务器上，将数据库导出为 CSV 文件：
+
+<Tabs>
+<TabItem value="使用 Web 界面" label="使用 Web 界面">
+
+通过 Web 界面将制造数据库导出为 CSV 文件：
+
+1. 在浏览器中访问 `http://localhost:3142`。
+2. 转到 **Manufacturing Database** 选项卡。
+3. 选择 **Export as CSV** 以下载电子表格文件。
+
+</TabItem>
+<TabItem value="使用命令行" label="使用命令行">
+
+运行以下命令将制造数据库导出为 CSV 文件：
+
+```bash
+sqlite3 ${RPI_SB_PROVISIONER_MANUFACTURING_DB} \
+  -cmd ".headers on" \
+  -cmd ".mode csv" \
+  -cmd ".output devices.csv" \
+  "SELECT * FROM rpi_sb_provisioner;"
+```
+
+</TabItem>
+</Tabs>
+
 ## 故障排除 {#故障排除}
 
-如果您在使用安全启动配置工具配置设备时遇到问题，请使用本节中的信息来解决或诊断问题。
+使用本节中的信息来诊断或解决尝试使用安全启动配置工具配置客户端设备时可能出现的问题。
 
 * 检查您是否遇到了常见问题（请参阅 [常见问题](#常见问题)）。
 * 检查日志中的错误消息（请参阅 [查看日志](#查看日志)）。
@@ -371,17 +411,22 @@ RPIBOOT 模式是 USB 设备模式的工程标签，它使配置服务器能够�
 
 #### 错误："Already signed"
 
-如果错误日志报告客户端设备已签名或已处于安全状态，则说明该客户端设备之前已被写入签名密钥。此操作是永久性的，无法撤销。不过，对于此 CM5，仍可执行以下操作：
+如果错误日志报告客户端设备已签名或已处于安全状态，则说明该客户端设备之前已被写入签名密钥。此操作是永久性的，无法撤销。不过，仍可执行以下操作：
 
-* 要跳过签名步骤，请为此设备设置 **Skip EEPROM Update** 标志。
-  1. 在 `http://localhost:3142` 打开安全启动配置工具的 Web 界面。
-  2. 转到 **Devices** 选项卡并选择您正在编程的设备。
-  3. 在设备专属页面的 **Special Flags** 部分，将 **Skip EEPROM Update** 设置为 **One-time**。
+* 为客户端设备设置 **Skip EEPROM Update** 标志以跳过签名步骤。
+* 为客户端设备设置 **Re-provision Device** 标志以使用相同的密钥完全重新配置该设备。
 
-* 要使用相同的密钥完全重新配置该设备，请为此设备设置 **Re-provision Device** 标志。
-  1. 在 `http://localhost:3142` 打开安全启动配置工具的 Web 界面。
-  2. 转到 **Devices** 选项卡并选择您正在编程的设备。
-  3. 在设备专属页面的 **Special Flags** 部分，将 **Re-provision Device** 设置为 **One-time**。
+要跳过签名步骤：
+
+1. 在 `http://localhost:3142` 打开安全启动配置工具的 Web 界面。
+2. 转到 **Devices** 选项卡并选择您正在编程的设备。
+3. 在设备专属页面的 **Special Flags** 部分，将 **Skip EEPROM Update** 设置为 **One-time**。
+
+要使用相同的密钥完全重新配置该客户端设备：
+
+1. 在 `http://localhost:3142` 打开安全启动配置工具的 Web 界面。
+2. 转到 **Devices** 选项卡并选择您正在编程的设备。
+3. 在设备专属页面的 **Special Flags** 部分，将 **Re-provision Device** 设置为 **One-time**。
 
 ### 查看日志 {#查看日志}
 

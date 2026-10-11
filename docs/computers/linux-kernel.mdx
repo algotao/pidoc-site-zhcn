@@ -5,7 +5,7 @@ title_meta: 从源码构建自定义树莓派Linux内核
 description: 深入了解树莓派Linux内核的构建、配置与贡献流程。本文详细介绍了内核的托管、升级、本地与交叉编译方法，以及如何通过menuconfig进行配置和打补丁。此外，还阐述了如何安装内核头文件、贡献代码至Raspberry Pi内核和上游Linux内核，助力开发者深入定制和优化树莓派系统。
 keywords: [树莓派, Linux内核, 内核构建, 交叉编译, 内核配置, menuconfig, 内核补丁, 内核头文件, 内核贡献, Raspberry Pi内核, 上游Linux内核]
 last_update: 
-  date: 2026-09-04
+  date: 2026-10-11
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -17,7 +17,7 @@ import Normal from "../_normal.mdx";
 
 Raspberry Pi 内核 [托管在 GitHub 上](https://github.com/raspberrypi/linux)；更新滞后于上游 [Linux内核](https://github.com/torvalds/linux)。上游内核会持续更新，而 Raspberry Pi 会将 Linux 内核的**长期版本**整合到 Raspberry Pi 内核中。我们在 [raspberrypi/firmware](https://github.com/raspberrypi/firmware/)中为每个长期发布的 Linux 内核生成一个 `next` 分支。经过广泛的测试和讨论后，我们会将每个 `next` 分支合并到版本库的主分支中。
 
-### 升级
+## 更新
 
 通常的 Raspberry Pi OS [更新进程](./os.mdx#update-software)会自动将内核更新到最新的稳定版本。如果你想尝试最新的不稳定测试内核，可以 [手动更新](./os.mdx#upgrade)。
 
@@ -81,7 +81,7 @@ sudo apt install bc bison flex libssl-dev make
 ##### 64 位架构 {#原生构建-64-位架构}
 
 <Tabs>
-<TabItem value="pi3-64" label="Raspberry Pi 3, 3+, CM3, CM3+, Zero 2 W, 4, 400, CM4, CM4S">
+<TabItem value="pi3-64" label="Raspberry Pi 3, 3+, CM3, CM3+, Zero 2 W, 4, 400, CM4, CM4S, 5, 500, 500+, and CM5">
 
 ```sh
 cd linux
@@ -90,7 +90,7 @@ make bcm2711_defconfig
 ```
 
 </TabItem>
-<TabItem value="pi5-64" label="Raspberry Pi 5, 500, 500+, CM5">
+<TabItem value="pi5-64" label="Raspberry Pi 5, 500, 500+, and CM5 (optimised)">
 
 ```sh
 cd linux
@@ -100,6 +100,10 @@ make bcm2712_defconfig
 
 </TabItem>
 </Tabs>
+
+:::note[注意]
+`bcm2712_defconfig` 构建的是 `kernel_2712.img`，针对 BCM2712 设备（Raspberry Pi 5、500、500+、CM5）进行了优化，并使用 16K 页大小。`bcm2711_defconfig` 构建的是 `kernel8.img`，它也可以在这些设备上运行，但使用 4K 页大小。在 BCM2712 设备上，固件会加载 `kernel_2712.img`（如果存在），否则回退到 `kernel8.img`。
+:::
 
 ##### 32 位架构 {#原生构建-32-位架构}
 
@@ -122,7 +126,7 @@ make bcm2709_defconfig
 ```
 
 </TabItem>
-<TabItem value="pi4-32" label="Raspberry Pi 4, 400, CM4, CM4S">
+<TabItem value="pi4-32" label="Raspberry Pi 4, 400, CM4, CM4S (kernels before 6.18)">
 
 ```sh
 cd linux
@@ -135,7 +139,7 @@ make bcm2711_defconfig
 
 
 :::note[注意]
-4 系列设备上的 32 位 Raspberry Pi OS 发行版使用 32 位用户态域，但使用 *64* 位内核。要构建 32 位内核，请设置 `ARCH=arm`。要启动 32 位内核，请在 `config.txt` 中设置 `arm_64bit=0`。
+BCM2711 设备上的 32 位 Raspberry Pi OS 发行版使用 32 位用户态域，但使用 *64* 位内核。从内核版本 6.18 起，BCM2711 设备（Raspberry Pi 4、400、CM4、CM4S）不再支持 32 位内核构建；请改用 64 位的 `kernel8` 构建。对于更早的内核版本，请设置 `ARCH=arm` 来构建 32 位内核，并在 `config.txt` 中设置 `arm_64bit=0` 来启动它。
 
 :::
 
@@ -231,13 +235,27 @@ sudo reboot
 ```
 
 :::tip
-或者，用不同的文件名复制内核（如 `kernel-myconfig.img`），而不是覆盖 `kernel.img` 文件。然后，编辑启动分区中的 `config.txt` 以选择内核：
+或者，用不同的文件名复制内核（如 `kernel-myconfig.img`），而不是覆盖 `$KERNEL.img` 文件。然后，编辑启动分区中的 `config.txt` 以选择内核：
 
 ```ini
 kernel=kernel-myconfig.img
 ```
 
+Raspberry Pi OS Bookworm 及更高版本默认包含 `initramfs`，通过在 `config.txt` 中使用 `auto_initramfs` 启用。
+
+当 `auto_initramfs` 设为 `1` 时，固件会要求 `initramfs` 的文件名与内核文件名相匹配，即把 `kernel` 前缀替换为 `initramfs`（并省略任何文件扩展名）。例如，`kernel-myconfig.img` 会查找 `initramfs-myconfig`。
+
+如果你没有提供匹配的文件名，则必须使用不带 `=` 号的显式 `initramfs` 指令来指定 ramdisk，例如：
+
+```ini
+initramfs <filename> followkernel
+```
+
 将此方法与自定义的 `LOCALVERSION` 结合使用，可将自定义内核与系统管理的现有内核映像分开。有了这种安排，当你的内核无法启动时，你就可以迅速恢复到库存内核。
+:::
+
+:::note[注意]
+构建和更新 `initramfs` 被视为一种高级技术，只有有经验的用户才会采用。Raspberry Pi 官方不支持该操作，因此我们不提供相关说明。
 :::
 
 ### 交叉编译内核
@@ -452,10 +470,20 @@ sudo umount mnt/root
 最后，将启动媒体连接到 Raspberry Pi 并接通电源，运行新编译的内核。
 
 :::tip
-或者，用不同的文件名复制内核（例如，`kernel-myconfig.img`），而不是覆盖`kernel.img`文件。然后，编辑启动分区中的 `config.txt` 以选择内核：
+或者，用不同的文件名复制内核（例如，`kernel-myconfig.img`），而不是覆盖 `$KERNEL.img` 文件。然后，编辑启动分区中的 `config.txt` 以选择内核：
 
 ```ini
 kernel=kernel-myconfig.img
+```
+
+Raspberry Pi OS Bookworm 及更高版本默认包含 `initramfs`，通过在 `config.txt` 中使用 `auto_initramfs` 启用。
+
+当 `auto_initramfs` 设为 `1` 时，固件会要求 `initramfs` 的文件名与内核文件名相匹配，即把 `kernel` 前缀替换为 `initramfs`（并省略任何文件扩展名）。例如，`kernel-myconfig.img` 会查找 `initramfs-myconfig`。
+
+如果你没有提供匹配的文件名，则必须使用不带 `=` 号的显式 `initramfs` 指令来指定 ramdisk，例如：
+
+```ini
+initramfs <filename> followkernel
 ```
 
 将此方法与自定义的 `LOCALVERSION` 结合使用，可将自定义内核与系统管理的现有内核映像分开。有了这种安排，当你的内核无法启动时，你就可以迅速恢复到库存内核。

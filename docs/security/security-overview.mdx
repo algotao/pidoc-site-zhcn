@@ -6,14 +6,12 @@ draft: false
 description: "树莓派安全概览 — 了解树莓派的安全架构、安全启动配置、运维安全和 UFW 防火墙。"
 keywords: [安全, 安全架构, 安全启动, 磁盘加密, UFW, 防火墙, Fail2Ban, SSH安全]
 last_update:
-  date: 2026-08-19
+  date: 2026-10-11
 ---
 
 # 安全
 
 本页面提供关于保护您的树莓派设备安全的概述，并附有更详细信息的链接。
-
-树莓派遵循结构化的漏洞报告和管理流程。作为该流程的一部分，我们定期跟踪并集成来自 Debian 的安全更新。树莓派官方公布安全漏洞披露、产品安全策略，以及关于用户维护树莓派设备安全的责任指南。
 
 ## 安全架构
 
@@ -47,3 +45,17 @@ last_update:
 在树莓派设备上使用 **Uncomplicated Firewall (UFW)** 配置数据包过滤防火墙有助于加固系统。它可以限制网络访问仅对必要的服务开放，并通过阻止不需要的或恶意的连接来缓解外部威胁。
 
 更多信息和操作指南请参阅 [使用 UFW 防火墙](./ufw.mdx)。
+
+## 一线安全披露
+
+树莓派遵循结构化的漏洞报告和管理流程。作为该流程的一部分，我们定期跟踪并集成来自 Debian 的安全更新。
+
+树莓派在我们的网站上列出官方安全漏洞披露。更多信息请参阅 [安全公告](https://www.raspberrypi.com/security#security-advisories) 和 [Raspberry Pi OS — CVE 报告](https://raspberrypi.github.io/cve-list/)。
+
+如需报告树莓派的安全问题，请发送电子邮件至 [security@raspberrypi.com](mailto:security@raspberrypi.com)。更多信息请参阅 [报告漏洞](https://www.raspberrypi.com/security/#reporting-a-vulnerability)。
+
+## 软件物料清单
+
+软件物料清单（SBOM）列出软件应用中的所有组件，并包含每个组件的元数据，例如名称、版本、供应商、许可证和唯一标识符。这些信息以开放标准、机器可读的格式提供。
+
+我们为每个版本的 Raspberry Pi OS 提供 SBOM。您可以从 [Raspberry Pi OS 下载页面](https://www.raspberrypi.com/software/operating-systems/) 下载 SBOM 文件。

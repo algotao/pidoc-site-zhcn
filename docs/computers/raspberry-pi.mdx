@@ -5,7 +5,7 @@ title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓
 description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
 keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
 last_update:
-  date: 2026-09-04
+  date: 2026-10-11
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -3560,12 +3560,42 @@ dtparam=rtc_bbat_vchg=3000000
 树莓派计算机配备了许多 [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus) 总线。SPI 可用来连接各种外设--显示器、网络控制器（以太网、CAN 总线）、UART 等。这些设备最好由内核设备驱动程序提供支持，但 `spidev` API 允许使用多种语言编写用户空间驱动程序。
 
 ### SPI硬件
-树莓派Zero、1、2 和 3 有三个 SPI 控制器：
-- `SPI0` 有两个硬件芯片选择，可在所有树莓派的插头上使用；还有一个仅在计算模块上使用的备用映射。
+
+#### 树莓派 1、2、3 和 Zero
+树莓派Zero、1、2 和 3 有三个 SPI 总线：
+- `SPI0` 有两个硬件芯片选择，可在所有树莓派设备的插头上使用；还有一个仅在计算模块上使用的备用映射。
 - `SPI1` 有三个硬件芯片选择，适用于除原始树莓派1A和B之外的所有树莓派型号。
 - `SPI2` 也有三个硬件芯片选择，但只适用于CM1、3 和 3+。
 
-在树莓派4、400 和CM4上，有四条额外的 SPI 总线： SPI3 至 SPI6，每条总线有 2 个硬件芯片选择。这些额外的 SPI 总线可通过某些 GPIO 引脚上的备用功能分配使用。有关详细信息，请参阅 [BCM2711 Arm 外围设备](https://pip.raspberrypi.com/documents/RP-008248-DS)数据表。
+#### 树莓派 4、400 和 CM4
+在树莓派4、400 和CM4上，有四条额外的 SPI 总线：
+
+* `SPI3`，有两个硬件芯片选择。
+* `SPI4`，有两个硬件芯片选择。
+* `SPI5`，有两个硬件芯片选择。
+* `SPI6`，有两个硬件芯片选择。
+
+这些 SPI 总线可通过某些 GPIO 引脚上的备用功能分配使用。有关详细信息，请参阅 [BCM2711 Arm 外围设备](https://pip.raspberrypi.com/documents/RP-008248-DS)数据表。
+
+#### 树莓派 5、500、500+ 和 CM5
+在树莓派5上，SPI 功能由 [RP1 I/O 控制器](./io-controllers.mdx) 提供，而非主应用处理器。
+
+RP1 包含九个同步串行接口（SSI）控制器。其中六个路由到 GPIO bank `0`。其余三个（`SPI6`、`SPI7` 和 `SPI8`）位于 RP1 内部，未路由到标准的 40 针 GPIO 排针。
+
+* `SPI0`，有四个硬件芯片选择。
+* `SPI1`，有三个硬件芯片选择。
+* `SPI2`，有两个硬件芯片选择。
+* `SPI3`，有两个硬件芯片选择。
+* `SPI4`，有一个硬件芯片选择。
+* `SPI5`，有两个硬件芯片选择。
+
+:::note[注意]
+RP1 的 SPI 控制器不支持 DDR（双倍数据速率）操作。
+:::
+
+:::note[注意]
+`SPI4` 和 `SPI7` 总线仅支持设备模式。
+:::
 
 [BCM2835 Arm 外围设备](https://pip.raspberrypi.com/documents/RP-008249-DS)数据表第 10 章介绍了主控制器。第 2.3 章介绍了辅助控制器。
 
@@ -3689,7 +3719,9 @@ SCLK : 核心时钟/CDIV
 
 ### SPI软件
 #### Linux驱动程序
-默认的 Linux 驱动程序是 `spi-bcm2835`。
+在树莓派4及更早的型号上，默认的 Linux 驱动程序是 `spi-bcm2835`。
+
+在树莓派5上，RP1 的 SPI 控制器使用 Designware SPI/SSI Linux 内核驱动程序 `spi_dw`。
 
 SPI0 默认禁用。要启用它，请使用 [raspi-config](./configuration.mdx#交互式-raspi-config-文本用户界面-tui)，或确保 [/boot/firmware/config.txt](./config-txt.mdx#什么是configtxt) 中的 `dtparam=spi=on` 一行未被注释。默认情况下，它使用 2 条芯片选择线，但可以使用 `dtoverlay=spi0-1cs` 将其减少到 1 条。`dtoverlay=spi0-2cs` 也存在，在不带任何参数的情况下，它等同于 `dtparam=spi=on`。
 

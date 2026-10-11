@@ -5,7 +5,7 @@ title_meta: 在树莓派OS上使用音视频播放软件、安装Python
 description: 全面解析树莓派官方操作系统Raspberry Pi OS！基于Debian优化，支持35,000+软件包，提供软件管理（APT命令）、固件升级（rpi-update）、多媒体播放（VLC工具）、硬件控制（GPIO/VC命令）等核心功能，附Python开发指南与无障碍工具，助您高效开发与个性化配置树莓派设备。
 keywords: [Raspberry Pi OS, 树莓派操作系统, Debian系统, APT软件管理, 树莓派固件升级, VLC媒体播放, 树莓派GPIO控制, Python编程树莓派, 树莓派无障碍工具, 树莓派多媒体工具]
 last_update: 
-  date: 2026-09-04
+  date: 2026-10-11
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -307,7 +307,7 @@ vlc --play-and-exit --fullscreen big-buck-bunny-1080p.mp4
 cvlc --play-and-exit big-buck-bunny-1080p.mp4
 ```
 
-#### 在 Raspberry Pi OS Lite 上播放音频和视频
+### 在 Raspberry Pi OS Lite 上播放音频和视频
 
 与完整版的 Raspberry Pi OS 不同，Raspberry Pi OS Lite 没有预装 VLC。要在 Raspberry Pi OS Lite 上使用 VLC 播放视频和音频，请安装所需的软件包，以便在没有桌面的情况下播放：
 
@@ -353,29 +353,32 @@ aplay -L | grep sysdefault
 
 ### 指定视频输出设备
 
-要强制将视频输出到特定设备，请使用 `--drm-vout-display` 选项指定视频输出设备：
+您可以使用 VLC 图形界面，或在控制台中使用 `--drm-vout-display` 来指定视频输出。
 
-```sh
-cvlc --play-and-exit --drm-vout-display <drm-device> big-buck-bunny-1080p.mp4
-```
+要在控制台中指定视频输出：
 
-用以下选项之一替换 `<drm-device>` 占位符：
+1. 将您的树莓派设备启动到[控制台](./configuration.mdx#console-or-desktop)。
+2. 添加 `--drm-vout-display` 选项：
 
-| DRM设备 | 描述 |
-| -- | -- |
-| `HDMI-A-1` | Raspberry Pi Zero 或 Raspberry Pi Model 1、2 或 3 上的 HDMI 输出；*或* Raspberry Pi 4、5 或 400 上的 HDMI0 输出 |
-| `HDMI-A-2` | 自 Raspberry Pi 4B 开始的旗舰机型、自 CM4 开始的计算模块（包括 CM4S）以及键盘机型上的 HDMI1 输出端 |
-| `DSI-1` | 树莓派触摸显示屏或树莓派触摸显示屏 2 |
-| `DSI-2` | 对于具有多个 DSI 端口的机型（Raspberry Pi 5 之后的旗舰机型和 CM5 之后的计算模块机型）的第二个 DSI 输出口 |
+   ```sh
+   cvlc --play-and-exit --drm-vout-display <drm-device> big-buck-bunny-1080p.mp4
+   ```
 
+3. 将 `<drm-device>` 占位符替换为以下选项之一：
 
+   | DRM 设备 | 描述 |
+   | --- | --- |
+   | `HDMI-A-1` | 树莓派 Zero 或树莓派 1、2、3 型上的 HDMI 输出；*或*树莓派 4B 及更高版本以及所有键盘机型上的 HDMI0 输出 |
+   | `HDMI-A-2` | 树莓派 4B 及更高版本、计算模块 CM4 及更高版本（不包括 CM4S）以及所有键盘机型上的 HDMI1 输出 |
+   | `DSI-1` | 树莓派触摸显示屏、树莓派触摸显示屏 2，或第三方 DSI 屏幕 |
+   | `DSI-2` | 具有多个 DSI 端口的机型的第二个 DSI 输出（树莓派 5 及之后的旗舰机型，以及所有计算模块机型） |
 
-:::tip
-使用以下命令获取 Raspberry Pi 上所有 DRM 设备的列表。
+:::tip[提示]
+使用以下命令可获取树莓派上所有 DRM 设备的列表。
 
-::::::note
-不带参数使用 `kmsprint` 只会查询找到的第一张 card。因此，在 Raspberry Pi 5 及后续机型上，这可能无法列出所有已连接的显示器。请参阅 [kmsprint](#kmsprint)。
-::::::
+:::note[注意]
+不带参数使用 `kmsprint` 只会查询找到的第一张卡。因此，在树莓派 5 及更高版本的机型上，这可能无法列出所有已连接的显示器。请参阅 [kmsprint](#kmsprint)。
+:::
 
 ```sh
 kmsprint | grep Connector

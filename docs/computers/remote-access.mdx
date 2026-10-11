@@ -5,7 +5,7 @@ title_meta:  树莓派远程访问配置，设置SSH、VNC、NFS、Samba等
 description: 本文详细介绍了如何在不连接显示器、键盘和鼠标的情况下远程访问和控制树莓派。涵盖了通过本地网络和互联网进行远程控制的方法，包括SSH、VNC、Raspberry Pi Connect等工具的使用。还提供了查找树莓派IP地址的多种方法，以及通过SCP、rsync、NFS、Samba等协议共享文件和文件夹的详细步骤。此外，文章还介绍了如何设置网络文件系统、Apache网络服务器以及通过网络启动树莓派的方法。
 keywords: [远程访问, 树莓派, SSH, VNC, Raspberry Pi Connect, IP地址, 文件共享, SCP, rsync, NFS, Samba, 网络文件系统, Apache, 网络启动, IPv6, 本地网络, 互联网]
 last_update: 
-  date: 2026-09-04
+  date: 2026-10-11
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -970,76 +970,13 @@ workgroup = <这里填你的工作组名>
 
 共享文件夹现在应该会出现在网络上的 Windows 或 macOS 设备上。输入 Raspberry Pi 用户名和密码挂载文件夹。
 
-## 设置Apache网络服务器
-Apache 是一种流行的网络服务器应用程序，你可以将它安装到树莓派上，让它为网页提供服务。
+## 设置 Apache 网络服务器
 
-Apache本身可以通过HTTP提供HTML文件，使用附加模块还可以使用脚本语言（如PHP）提供动态网页。
+Apache 是一款流行的 Web 服务器应用程序，您可以在树莓派上安装它，使其能够提供网页服务。
 
-### 安装Apache
-首先，在终端中输入以下命令更新可用软件包：
-```sh
-sudo apt update
-```
-然后，使用此命令安装 `apache2` 软件包：
-```sh
-sudo apt install apache2 -y
-```
+Apache 本身可以通过 HTTP 提供 HTML 文件，配合附加模块，还可以使用 PHP 等脚本语言提供动态网页。
 
-### 测试网络服务器
-默认情况下，Apache 会在 Web 文件夹中放置一个测试 HTML 文件。当你在树莓派上浏览 `http://localhost/` 或从网络上的另一台电脑浏览 `http://192.168.1.10`（无论树莓派的 IP 地址是什么）时，这个默认网页就会提供服务。要查找树莓派的 IP 地址，请在命令行中键入 `hostname -I`（或阅读有关查找 [IP地址](#如何查找ip地址) 的更多信息）。
-
-在树莓派上或网络上的另一台电脑上浏览默认网页，你应该会看到以下信息：
-
-<img src="/img/computers/remote-access/apache-it-works.png" alt="Apache 成功消息" />
-
-这说明 Apache 已经正常工作！
-
-#### 更改默认网页
-默认网页只是文件系统中的一个 HTML 文件。它位于 `/var/www/html/index.html`。
-
-在终端窗口中导航到该目录，看看里面有什么：
-```sh
-cd /var/www/html
-ls -al
-```
-将显示
-```sh
-total 12
-drwxr-xr-x  2 root root 4096 Jan  8 01:29 .
-drwxr-xr-x 12 root root 4096 Jan  8 01:28 ..
--rw-r--r--  1 root root  177 Jan  8 01:29 index.html
-```
-这表明默认情况下，在 `/var/www/html/` 中有一个名为 `index.html` 的文件，它归 `root` 用户所有（外层文件夹也是如此）。要编辑该文件，需要将其所有者更改为自己的用户名。使用以下命令更改文件的所有者，将 `<username>` 占位符替换为主用户账户的用户名：
-```sh
-sudo chown <username>: index.html
-```
-现在你可以尝试编辑该文件，然后刷新浏览器，看看网页的变化。如果你懂 HTML，就可以把自己的 HTML 文件和其他资产放到这个目录中，并在本地网络上作为网站提供服务。
-
-### 为Apache安装PHP
-要让 Apache 服务器处理 PHP 文件，需要安装最新版本的 PHP 和 Apache 的 PHP 模块。键入以下命令安装它们：
-```sh
-sudo apt install php libapache2-mod-php -y
-```
-现在删除 `index.html` 文件
-```sh
-sudo rm index.html
-```
-并创建文件 `index.php`
-```sh
-sudo nano index.php
-```
-放入一些 PHP 内容
-```php
-<?php echo "hello world"; ?>
-```
-现在保存并刷新浏览器。你应该会看到 "hello world"。这不是动态的，但仍由 PHP 提供。试试动态的：
-```php
-<?php echo date('Y-m-d H:i:s'); ?>
-```
-或显示 PHP 信息：
-```php
-<?php phpinfo(); ?>
-```
+要设置 Apache 网络服务器，请参阅官方 Apache 文档：https://httpd.apache.org/docs/。
 
 ## 通过网络启动你的树莓派
 你可以设置一个 DHCP/TFTP 服务器，让你从网络启动树莓派3或4。
@@ -1283,10 +1220,6 @@ echo "10.42.0.211:/tftpboot /boot/firmware/ nfs defaults,vers=3 0 0" | sudo tee 
 4. 内核启动系统的其他部分，通过 NFS 或其他机制加载根文件系统（rootfs）。
 
 bootloader和固件（第 1 至第 3 阶段）已得到增强，可支持通过 IPv6 启动。
-
-:::important[重要]
-IPv6 netboot 是一项**实验性的 alpha 功能**，根据反馈情况，我们可能需要更改其工作方式。该功能仅适用于 树莓派4 和 CM4。
-:::
 
 ### 工作原理
 要通过 IPv6 启动，您需要更新版本的固件（例如 `start4.elf`）和bootloader。使用最新版本的 树莓派OS和最新的稳定bootloader就足够了。

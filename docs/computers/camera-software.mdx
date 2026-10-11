@@ -5,7 +5,7 @@ title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照�
 description: 全面掌握树莓派摄像头应用！本文详细介绍如何使用rpicam-apps软件套件进行图像捕捉、视频录制、对象检测、图像分割等，支持多种摄像头模块（如HQ、GS、AI摄像头）。提供命令行选项、后处理框架（含TensorFlow Lite集成）、多摄像头同步及网络流媒体传输方法，助您实现高效的树莓派视觉应用开发。
 keywords: [树莓派摄像头应用, rpicam-apps, 图像捕捉, 视频录制, 对象检测, 图像分割, TensorFlow Lite, 多摄像头同步, 网络流媒体, 后处理框架, 树莓派视觉开发]
 last_update:
-  date: 2026-09-04
+  date: 2026-10-11
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -1053,6 +1053,12 @@ rpicam-hello --config example_configuration.txt
 #### qt-preview
 
 使用 Qt 预览窗口，它比其他方法消耗更多资源，但支持 X 窗口转发。与 [`fullscreen`](#fullscreen) 标志不兼容。不接受值。
+
+#### preview-backend
+
+强制使用特定的预览后端：`wayland-egl`、`egl`、`drm` 或 `qt`。如果未指定，应用程序会自动选择后端，在 Wayland 桌面会话中优先使用原生 Wayland（`wayland-egl`）预览。
+
+示例：`rpicam-hello --preview-backend wayland-egl`
 
 #### `nopreview`.
 
@@ -2956,24 +2962,8 @@ Unicam 的 V4L2 接口仅在使用 `libcamera` 时可用。
 
 Unicam 模块有一个完全开源的内核驱动程序；该内核模块名为 `bcm2835-unicam`，与 V4L2 子设备驱动程序连接，以传输原始帧。该 `bcm2835-unicam` 驱动程序可控制传感器并配置摄像头串行接口 2 (CSI-2) 接收器。外设将原始帧（Debayer 后）写入 SDRAM，由 V4L2 发送给应用程序。从摄像头传感器捕捉图像到 `bcm2835-unicam` 驱动程序将图像数据存入 SDRAM 之间，除了贝叶解包为 16 位/像素外，不进行任何图像处理。
 
-```
-|------------------------|
-|     bcm2835-unicam     |
-|------------------------|
-     ^             |
-     |      |-------------|
- img |      |  Subdevice  |
-     |      |-------------|
-     v   -SW/HW-   |
-|---------|   |-----------|
-| Unicam  |   | I2C or SPI|
-|---------|   |-----------|
-csi2/ ^             |
-ccp2  |             |
-    |-----------------|
-    |     sensor      |
-    |-----------------|
-```
+<img src="/img/computers/camera-software/bcm2835-unicam-diagram.png" alt="架构图，显示 bcm2835-unicam 内核模块、Unicam 硬件块、通过 I2C 或 SPI 连接的 V4L2 子设备驱动程序，以及通过 CSI-2 或 CCP2 连接的摄像头传感器之间的关系。" />
+*bcm2835-unicam 架构图*
 
 主线 Linux 包含一系列现有驱动程序。Raspberry Pi 内核树中有一些额外的驱动程序和设备树（Device Tree）覆盖层，可以对它们进行配置：
 

@@ -6,7 +6,7 @@ draft: false
 description: "树莓派计算模块 5 编程夹具 (Compute Module 5 Programming Jig) 是一次为一台 CM5 完成配置 (Provisioning) 的系统，可直接为计算模块写入操作系统与安全配置，无需额外 IO 板。夹具内置安全启动配置工具 (rpi-sb-provisioner)，自动完成安全启动、全盘加密与系统安装。本文涵盖规格参数、接口说明、夹具设置、CM5 烧录与取出、制造数据库、弹簧针更换、LED 指示灯行为、故障排除与安全警告。"
 keywords: [CM5 编程夹具, 计算模块 5, CM5, 树莓派配件, 安全启动配置工具, rpi-sb-provisioner, 安全启动, 全盘加密, 弹簧针, pogo pin, 批量烧录, Raspberry Pi Imager, RPIBOOT, Magic-Wormhole, 制造数据库, LED 指示灯]
 last_update: 
-  date: 2026-09-04
+  date: 2026-10-11
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -333,46 +333,6 @@ CM5 被夹持到位后，夹具会自动开始配置。如果配置未自动开�
 1. 从模块槽中取出 CM5。
 
 CM5 现在已可投入使用。
-
-## 查看制造数据库
-
-如果您在安全启动配置工具中启用了制造数据库，夹具会在此数据库中记录每个已配置 CM5 的详细信息，包括：
-
-* 序列号
-* 板卡类型与版本
-* MAC 地址（以太网）
-* 配置日期和时间
-* 已安装的操作系统镜像
-* 安全设置
-
-您可以通过安全启动配置工具 Web 界面或使用命令行查看数据库中的信息。
-
-通过 Raspberry Pi Connect 连接到夹具，并将数据库导出为 CSV 文件：
-
-<Tabs>
-<TabItem value="web" label="使用 Web 界面">
-
-若要从 Web 界面将制造数据库导出为 CSV 文件：
-
-1. 按照[步骤 5：访问安全启动配置工具 Web 界面](#setup-step-use-provisioner)所述，在夹具上访问 `http://localhost:3142`。
-1. 转到 **Manufacturing Database** 选项卡。
-1. 选择 **Export as CSV** 以下载电子表格文件。
-
-</TabItem>
-<TabItem value="cli" label="使用命令行">
-
-运行以下命令将制造数据库导出为 CSV 文件：
-
-```bash
-sqlite3 ${RPI_SB_PROVISIONER_MANUFACTURING_DB} \
-  -cmd ".headers on" \
-  -cmd ".mode csv" \
-  -cmd ".output devices.csv" \
-  "SELECT * FROM rpi_sb_provisioner;"
-```
-
-</TabItem>
-</Tabs>
 
 ## 更新夹具
 

@@ -16,24 +16,23 @@ const OSConfig = {
     osimages_content2: ' 是将操作系统安装到 microSD 卡上并与 Raspberry Pi 配套使用的快速简便方法。您也可以从以下操作系统中进行选择，下载并手动安装。',
     imager_url: { downloadurl: "/downloads", title: "Raspberry Pi Imager", showButton: false, },
     inner_url: [
-        { linkto: "#ubuntu-2604", title: "Ubuntu 26.04 *推荐*", showButton: false },
-        { linkto: "#ubuntu-2404-lts", title: "Ubuntu 24.04.4 LTS", showButton: false },
-        { linkto: "#ubuntu-2510", title: "Ubuntu 25.10", showButton: false },
+        { linkto: "#ubuntu-2604", title: "Ubuntu 26.04.1 *推荐*", showButton: false },
+        { linkto: "#ubuntu-2404-lts", title: "Ubuntu 24.04.5 LTS", showButton: false },
         { linkto: "#ubuntu-2204-lts", title: "Ubuntu 22.04.5 LTS", showButton: false },
         { linkto: "#ubuntu-core", title: "Ubuntu Core for IoT", showButton: false },
     ],
     os: [
         {
             id: "ubuntu-2604",
-            title: "Ubuntu 26.04 (推荐)",
+            title: "Ubuntu 26.04.1 (推荐)",
             desc: "Ubuntu 的最新 LTS 版本。LTS 代表长期支持，这意味着五年的免费安全和维护更新。",
             extos: [
                 {
-                    title: "Ubuntu 26.04 Desktop(桌面)",
-                    download_url: "https://dl.pidoc.cn/releases/resolute/release/ubuntu-26.04-preinstalled-desktop-arm64+raspi.img.xz",
-                    release_date: "2026-04-23",
+                    title: "Ubuntu 26.04.1 Desktop(桌面)",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/resolute/release/ubuntu-26.04.1-preinstalled-desktop-arm64+raspi.img.xz",
+                    release_date: "2026-08-27",
                     system: "64位",
-                    image_size: "3,062MB",
+                    image_size: "3,078MB",
                     compatible_list: [
                         { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
                         { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
@@ -45,11 +44,11 @@ const OSConfig = {
                     ],
                 },
                 {
-                    title: "Ubuntu 26.04 Server(64位)",
-                    download_url: "https://dl.pidoc.cn/releases/resolute/release/ubuntu-26.04-preinstalled-server-arm64+raspi.img.xz",
-                    release_date: "2026-04-23",
+                    title: "Ubuntu 26.04.1 Server(64位)",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/resolute/release/ubuntu-26.04.1-preinstalled-server-arm64+raspi.img.xz",
+                    release_date: "2026-08-26",
                     system: "64位",
-                    image_size: "1,509MB",
+                    image_size: "1,528MB",
                     compatible_list: [
                         { name: "3B", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" },
                         { name: "3B+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" },
@@ -70,15 +69,15 @@ const OSConfig = {
         },
         {
             id: "ubuntu-2404-lts",
-            title: "Ubuntu 24.04.4 LTS",
+            title: "Ubuntu 24.04.5 LTS",
             desc: "Ubuntu 的上一个 LTS 版本。LTS 代表长期支持，这意味着五年的免费安全和维护更新。",
             extos: [
                 {
-                    title: "Ubuntu 24.04.4 LTS Desktop(桌面)",
-                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.4-preinstalled-desktop-arm64+raspi.img.xz",
-                    release_date: "2026-02-12",
+                    title: "Ubuntu 24.04.5 LTS Desktop(桌面)",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/noble/release/ubuntu-24.04.5-preinstalled-desktop-arm64+raspi.img.xz",
+                    release_date: "2026-09-08",
                     system: "64位",
-                    image_size: "2,971MB",
+                    image_size: "3,292MB",
                     compatible_list: [
                         { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
                         { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
@@ -88,11 +87,11 @@ const OSConfig = {
                     ],
                 },
                 {
-                    title: "Ubuntu 24.04.4 LTS Server(64位)",
-                    download_url: "https://dl.pidoc.cn/releases/noble/release/ubuntu-24.04.4-preinstalled-server-arm64+raspi.img.xz",
-                    release_date: "2026-02-12",
+                    title: "Ubuntu 24.04.5 LTS Server(64位)",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/noble/release/ubuntu-24.04.5-preinstalled-server-arm64+raspi.img.xz",
+                    release_date: "2026-09-08",
                     system: "64位",
-                    image_size: "1,257MB",
+                    image_size: "1,369MB",
                     compatible_list: [
                         { name: "3B", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" },
                         { name: "3B+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" },
@@ -111,57 +110,13 @@ const OSConfig = {
             ],
         },
         {
-            id: "ubuntu-2510",
-            title: "Ubuntu 25.10",
-            desc: "Ubuntu 25.10 是 Ubuntu 操作系统的最新版本，提供九个月的安全和维护更新，直至 2026 年 7 月。",
-            extos: [
-                {
-                    title: "Ubuntu 25.10 Desktop(桌面)",
-                    download_url: "https://dl.pidoc.cn/releases/questing/release/ubuntu-25.10-preinstalled-desktop-arm64+raspi.img.xz",
-                    release_date: "2025-10-09",
-                    system: "64位",
-                    image_size: "2,763MB",
-                    compatible_list: [
-                        { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
-                        { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
-                        { name: "5", url: "https://www.raspberrypi.com/products/raspberry-pi-5/" },
-                        { name: "500", url: "https://www.raspberrypi.com/products/raspberry-pi-500/" },
-                        { name: "CM4", url: "https://www.raspberrypi.com/products/compute-module-4/" },
-                        { name: "CM4S", url: "https://www.raspberrypi.com/products/compute-module-4s/" },
-                        { name: "CM5", url: "https://www.raspberrypi.com/products/compute-module-5/" },
-                    ],
-                },
-                {
-                    title: "Ubuntu 25.10 Server(64位)",
-                    download_url: "https://dl.pidoc.cn/releases/questing/release/ubuntu-25.10-preinstalled-server-arm64+raspi.img.xz",
-                    release_date: "2025-10-09",
-                    system: "64位",
-                    image_size: "1,411MB",
-                    compatible_list: [
-                        { name: "3B", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" },
-                        { name: "3B+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" },
-                        { name: "3A+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-a-plus/" },
-                        { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
-                        { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
-                        { name: "5", url: "https://www.raspberrypi.com/products/raspberry-pi-5/" },
-                        { name: "500", url: "https://www.raspberrypi.com/products/raspberry-pi-500/" },
-                        { name: "CM3", url: "https://www.raspberrypi.com/products/compute-module-io-board-v3/" },
-                        { name: "CM3+", url: "https://www.raspberrypi.com/products/compute-module-3-plus/" },
-                        { name: "CM4", url: "https://www.raspberrypi.com/products/compute-module-4/" },
-                        { name: "CM4S", url: "https://www.raspberrypi.com/products/compute-module-4s/" },
-                        { name: "CM5", url: "https://www.raspberrypi.com/products/compute-module-5/" },
-                        { name: "Zero 2 W", url: "https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/" },                            ],
-                }
-            ],
-        },
-        {
             id: "ubuntu-2204-lts",
             title: "Ubuntu 22.04.5 LTS",
             desc: "",
             extos: [
                 {
                     title: "Ubuntu 22.04.5 LTS Desktop(桌面)",
-                    download_url: "https://dl.pidoc.cn/releases/jammy/release/ubuntu-22.04.5-preinstalled-desktop-arm64+raspi.img.xz",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/jammy/release/ubuntu-22.04.5-preinstalled-desktop-arm64+raspi.img.xz",
                     release_date: "2024-09-12",
                     system: "64位",
                     image_size: "2,361MB",
@@ -174,7 +129,7 @@ const OSConfig = {
                 },
                 {
                     title: "Ubuntu 22.04.5 LTS Server(64位)",
-                    download_url: "https://dl.pidoc.cn/releases/jammy/release/ubuntu-22.04.5-preinstalled-server-arm64+raspi.img.xz",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/jammy/release/ubuntu-22.04.5-preinstalled-server-arm64+raspi.img.xz",
                     release_date: "2024-09-12",
                     system: "64位",
                     image_size: "1,039MB",
@@ -192,7 +147,7 @@ const OSConfig = {
                 },
                 {
                     title: "Ubuntu 22.04.5 LTS Server(32位)",
-                    download_url: "https://dl.pidoc.cn/releases/jammy/release/ubuntu-22.04.5-preinstalled-server-armhf+raspi.img.xz",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/jammy/release/ubuntu-22.04.5-preinstalled-server-armhf+raspi.img.xz",
                     release_date: "2024-09-12",
                     system: "32位",
                     image_size: "997MB",
@@ -218,9 +173,9 @@ const OSConfig = {
                 {
                     title: "Ubuntu Core 26 (64位)",
                     download_url: "https://dl.pidoc.cn/ubuntu-core/26/stable/current/ubuntu-core-26-arm64+raspi.img.xz",
-                    release_date: "2024-06-05",
+                    release_date: "2026-06-05",
                     system: "64位",
-                    image_size: "395MB",
+                    image_size: "414MB",
                     compatible_list: [
                         { name: "3B", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" },
                         { name: "3B+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" },

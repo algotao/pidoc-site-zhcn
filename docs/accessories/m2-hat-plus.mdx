@@ -168,6 +168,14 @@ sudo rpi-eeprom-update -a
 ## 启动树莓派
 
 1. 连接树莓派电源；树莓派操作系统将自动检测M.2 HAT+或M.2 HAT+ Compact。若使用树莓派桌面系统，桌面将显示代表该驱动器的图标。若未使用桌面系统，可在`/dev/nvme0n1`路径下找到该驱动器。
+   * 如需验证硬件是否已被检测到，请打开终端并运行：
+
+     ```sh
+     ls -l /dev/nvme*
+     ```
+
+     若驱动器已被正确检测到，您将看到 `/dev/nvme0` 和 `/dev/nvme0n1`。
+   * 如果您打算从该驱动器启动，请参阅 [NVMe 启动](../computers/raspberry-pi.mdx#nvme-ssd-启动)。Raspberry Pi Imager 会在安装过程中自动对该驱动器进行分区和格式化。
 
 2. 若需使驱动器自动挂载以供文件访问，请参考 [自动挂载存储设备配置指南](../computers/configuration.mdx#自动挂载存储设备)。
 

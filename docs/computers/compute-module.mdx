@@ -5,7 +5,7 @@ title_meta: 在树莓派计算模块(CM)进行烧录、连接与启用外设
 description: 深入探索树莓派计算模块（CM）硬件系列，从CM1到最新的CM5，了解各型号的技术规格、内存配置、eMMC存储选项及专用IO板设计。本文详细介绍了CM5、CM4、CM4S、CM3+、CM1和CM0等计算模块的特点，以及与之配套的IO板、外壳、天线和散热器等配件，为工业和商业应用提供全面的硬件解决方案。
 keywords: [树莓派计算模块, CM5, CM4, CM4S, CM3+, CM1, CM0, eMMC存储, IO板, 外设连接, 树莓派硬件, 工业应用]
 last_update: 
-  date: 2026-05-30
+  date: 2026-10-11
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -279,8 +279,9 @@ CM5采用与**CM4**相同的规格，提供超越标准树莓派主板的输入/
 树莓派为CM5和CM5IO提供以下配件：
 
 * [CM5IO外壳](#cm5io-外壳)，CM5IO（及连接的CM5）的外壳。该外壳还可选配天线和散热器。
-* [天线（CM4和CM5）](#天线cm4和cm5)，支持2.4 GHz和5 GHz频段的天线，通过CM4或CM5实现无线连接。
+* [天线（CM4和CM5）](#天线)，支持2.4 GHz和5 GHz频段的天线，通过CM4或CM5实现无线连接。
 * [CM5散热器](#cm5散热器)，用于散发CM5热量的被动式散热片。
+* [智能显示模块](../accessories/smart-display-module.mdx)，一种用于将 CM5 装入支持 Intel® 智能显示模块（Intel® SDM）规范的显示系统的转接板。
 
 ### CM5IO 外壳
 
@@ -338,7 +339,7 @@ CM5IO外壳共有两个版本，区别在于预装风扇的位置：版本1与�
 1. **连接或拆卸风扇** 
    * 若使用预装风扇，请将风扇接口插入CM5IO上标注为**FAN (J14)**的四针风扇插座。
    * 若需拆卸风扇，请从机箱顶部底面卸下风扇四角的固定螺丝。
-1. **可选：安装外部天线** 如需安装天线，请参照本页[天线安装指南（CM4/CM5适用）](#天线cm4和cm5)操作。
+1. **可选：安装外部天线** 如需安装天线，请参照本页[天线安装指南（CM4/CM5适用）](#天线)操作。
 1. **可选：安装散热器** 如需安装散热器，请参照[CM5散热器安装指南](#cm5散热器)操作。若同时安装天线，请先连接天线的U.FL接口以方便后续操作。
 1. **可选：安装摄像头或显示屏** 若使用摄像头或显示屏，请将扁平电缆穿过机箱背部的插槽，并连接至CM5IO主板上的*CAM/DISP*接口。
 1. **可选：安装M.2固态硬盘** 若需安装M.2固态硬盘，请将其插入CM5IO右下角的M.2插槽，并用固定螺丝从对侧端面锁紧。
@@ -349,7 +350,7 @@ CM5IO外壳共有两个版本，区别在于预装风扇的位置：版本1与�
 SD卡槽采用推入式设计。插入SD卡时，请将卡面接触点朝下推入卡槽。取出时，先向卡槽内部推压卡体使其解锁，再向外拔出。
 :::
 
-### 天线（CM4和CM5）
+### 天线（CM4和CM5） {#天线}
 
 Raspberry Pi 天线套件提供经过认证的外部天线，可增强 CM4 或 CM5 的无线接收能力。
 
@@ -662,6 +663,10 @@ Raspberry Pi BCM283x 设备的启动过程分为三个阶段：
 
 [适用于 Raspberry Pi 的 Linux 设备树](./configuration.mdx#设备树覆盖和参数) 对连接到系统的硬件信息以及用于与该硬件通信的驱动程序进行编码。
 
+:::note[注意]
+树莓派计算模块 5 需要更新后的设备树支持和内核驱动程序。从 CM4 迁移到 CM5 时，请使用 Raspberry Pi OS Bookworm 或更高版本、内核 6.12.x 或更高版本，以及 2025 年 3 月 10 日或之后的固件。
+:::
+
 启动分区包含多个二进制设备树（`.dtb`）文件。设备树编译器使用人类可读的设备树描述 (`.dts`)创建这些二进制文件。
 
 启动分区包含两种不同类型的设备树文件。其中一个仅供 GPU 使用；其余的是标准的 Arm 设备树文件，适用于基于 BCM283x 的每种 Raspberry Pi 产品：
@@ -671,8 +676,12 @@ Raspberry Pi BCM283x 设备的启动过程分为三个阶段：
 * `bcm2708-rpi-b-plus.dtb` （用于 Raspberry Pi 1 Model B+ 和 A+）
 * `bcm2709-rpi-2-b.dtb` （用于 Raspberry Pi 2 Model B）
 * `bcm2710-rpi-3-b.dtb` （用于 Raspberry Pi 3 Model B）
+* `bcm2711-rpi-4-b.dtb` （用于 Raspberry Pi 4 Model B）
+* `bcm2712-rpi-5-b.dtb` （用于 Raspberry Pi 5）
 * `bcm2708-rpi-cm.dtb` （用于 Raspberry Pi CM 1）
 * `bcm2710-rpi-cm3.dtb` （用于 Raspberry Pi CM 3）
+* `bcm2711-rpi-cm4.dtb`（用于 Raspberry Pi 计算模块 4；如果找不到该文件，则改用 `bcm2711-rpi-4-b.dtb`）
+* `bcm2712-rpi-cm5.dtb`（用于 Raspberry Pi 计算模块 5。如果找不到 CM5 设备树文件，则改用树莓派 5 的设备树文件（`bcm2712-rpi-5-b.dtb`））
 
 
 在启动过程中，用户可以通过 `config.txt` 中的 `device_tree` 参数指定要使用的特定 Arm 设备树。例如，`config.txt` 中的 `device_tree=mydt.dtb` 行指定了名为 `mydt.dtb` 文件中的Arm设备树。
@@ -1046,6 +1055,11 @@ CM1、CM3、CM3+ 和 CM4S I/O 板没有为 `cam1_reg` 和 `cam0_reg` 提供 GPIO
 例如，要将引脚 42 用作 CAM1 的稳压器，请在 `/boot/firmware/config.txt` 中添加指令 `dtparam=cam1_reg_gpio=42`。
 
 这些指令仅适用于直接连接到 SoC 的 GPIO 引脚，不适用于 GPIO 扩展引脚。
+
+## 连接触摸显示屏 LCD 面板
+
+* 要连接到树莓派触摸显示屏，请参阅[触摸显示屏](../accessories/display.mdx)。
+* 要连接到树莓派触摸显示屏 2，请参阅[触摸显示屏 2](../accessories/touch-display-2.mdx#连接到树莓派设备)。
 
 ## 规格 {#规格}
 

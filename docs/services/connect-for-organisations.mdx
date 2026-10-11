@@ -4,7 +4,7 @@ draft: false
 description: Connect for Organisations 是树莓派官方提供的企业级远程设备管理解决方案。支持多用户共享设备访问、屏幕共享、远程 Shell、设备转移、设备标记、双因素认证、审计日志、管理API、设备身份、远程更新等功能。
 keywords: [Raspberry Pi Connect, Connect for Organisations, 远程管理, 设备管理, 企业版, 组织版, 团队协作, 双因素认证, 审计日志, 管理API, 设备身份, 批量配置]
 last_update: 
-  date: 2026-08-19
+  date: 2026-10-11
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -16,7 +16,7 @@ import Normal from "../_normal.mdx";
 
 **组织版 Connect** 支持多名用户共享设备访问权限。使用 [Raspberry Pi Connect](./connect.mdx) 实现。
 
-组织中的设备支持 Connect 的所有功能，包括[屏幕共享](./connect.mdx#屏幕共享)、[远程 Shell](./connect.mdx#远程shell) 访问和[远程更新](./connect.mdx#远程更新你的树莓派设备)。
+组织中的设备支持 Connect 的所有功能，包括[屏幕共享](./connect.mdx#屏幕共享界面)、[远程 Shell](./connect.mdx#远程shell) 访问和[远程更新](./connect.mdx#远程更新你的设备)。
 
 创建首个组织即可自动开始为期四周的免费试用。
 
@@ -115,7 +115,7 @@ import Normal from "../_normal.mdx";
 
 仅管理员可将设备关联至组织。操作步骤：
 
-* 若设备未关联Connect账户，请参阅 [将树莓派设备关联至Connect账户](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)。
+* 若设备未关联Connect账户，请参阅 [将树莓派设备关联至Connect账户](./connect.mdx#开启-connect-服务并关联设备)。
 
 * 若设备已关联Connect账户，请参阅 [转移设备](#转移设备)。
 
@@ -201,35 +201,102 @@ import Normal from "../_normal.mdx";
 
 ## 部署远程更新 {#部署远程更新}
 
-您可以使用 Connect 的[远程更新](./connect.mdx#远程更新你的树莓派设备)功能向组织中的设备推送更新。仅管理员可部署远程更新并管理更新工件；成员无法执行这些操作。
+您可以使用 Raspberry Pi Connect 的[远程更新](./connect.mdx#远程更新你的设备)功能向组织中的设备推送更新。向组织设备部署的方式与[向个人设备部署](./connect.mdx#部署更新工件)大致相同，但有以下区别：
 
-首先，请构建更新工件，并将其托管在接收设备可以下载的位置，具体方法请参阅[托管更新工件](./connect.mdx#托管更新工件)。
+* 组织会维护一个[工件库](#管理工件库)，您可以多次部署其中的工件。
+* 除了上传工件，您还可以[自行托管工件](#托管更新工件)。
+* 部署时设备无需在线；它们会在下次上线时更新。
+* 您可以使用[管理 API](#管理api) 管理工件和部署。
 
-与个人账户不同，组织会维护一个工件库，您可以多次部署其中的工件。这些工件列在**远程更新**选项卡下。
+:::note
+仅管理员可以部署远程更新并管理更新工件。
+:::
 
-要预先注册工件，请前往**远程更新**选项卡并选择**新建**，然后输入名称、URI 和 SHA-256 校验和。工件名称在组织内必须唯一。
+首先，请按[脚本工件](./connect.mdx#脚本工件)或 [A/B 启动更新](./connect.mdx#a-b-启动更新)中所述构建更新工件。
 
-<img src="/img/services/connect-for-organisations/create-deployment-artefact.png" alt="创建部署工件界面，显示必填字段：名称、URI 和 SHA-256 校验和" width="100%" />
+然后选择将其提供给 Raspberry Pi Connect 的方式：
 
-要部署工件，请前往**设备**选项卡，然后在接收设备旁选择**部署**。**部署**按钮仅对已启用远程更新的设备显示。
+* **上传工件**：Connect 会为您托管该文件。上传大小限制为 2 GB，并在上传两小时后过期。设备若未在此时间内接收部署，将无法收到该工件。
+* **自行托管工件**：您将文件托管在接收设备可以下载的位置，并提供其位置，具体说明见[托管更新工件](#托管更新工件)。自行托管的工件不会过期，因此对于可能离线超过两小时的设备，或者需要在一段时间内向多台设备部署同一工件的情况，请选择此方式。
 
-<img src="/img/services/connect-for-organisations/devices-deploy-button.png" alt="设备列表为启用远程更新的设备显示部署按钮" width="100%" />
+### 托管更新工件 {#托管更新工件}
 
-然后，在**新建部署**界面上，选择以下选项之一：
+当您自行托管工件时，Raspberry Pi Connect 不会存储该文件。相反，您向 Connect 提供其位置，Connect 会将该位置传递给接收设备，以便设备直接下载文件。
 
-* **现有**：从下拉列表中选择工件，然后选择**部署**。
-* **新建**：输入名称、URI 和 SHA-256 校验和，然后选择**创建并部署**。此操作可一次性完成工件的注册和部署。
+您可以将工件托管在接收设备能够访问的任何位置：您自己的 Web 服务器、S3 存储桶、FTP 或 SFTP 服务器，或者使用 `file://` URI 指向接收设备本身上的路径。远程更新支持 HTTP、HTTPS、FTP、SFTP 和 File URI。
 
-<img src="/img/services/connect-for-organisations/new-deployment-view.png" alt="选择部署后，新建部署界面可选择现有部署或创建新部署" width="100%" />
+该位置必须可供接收设备访问，但无需对 Raspberry Pi Connect 服务器或整个互联网开放。从与接收设备位于同一本地网络的另一台计算机上提供工件是一种很好的做法。
+
+以下是一个示例 URI：`http://192.168.0.1:8080/path/to/app.update.tar.zst`
+
+它包含以下必需信息：
+
+* 主机 IP：`192.168.0.1`
+* 端口：`8080`
+* 路径：`/path/to/app.update.tar.zst`
+
+您还需要工件的 SHA-256 校验和，Connect 会将其传递给设备，以便设备检查工件在传输过程中是否损坏或被篡改。`otamaker` 在构建脚本工件时会输出校验和；否则，请使用 `sha256sum` 计算。
+
+记下 URI 和校验和；部署工件时这两者都需要。
+
+#### 示例：从树莓派提供工件
+
+以下示例从与接收设备位于同一网络的树莓派主机上提供更新工件。
+
+1. 在主机上运行 HTTP 服务器，相应更改工件目录：
+
+   ```sh
+   python -m http.server 8080 --directory ./work/image-myapp
+   ```
+
+2. 计算更新文件的 SHA-256 校验和，然后记下该校验和：
+
+   ```sh
+   sha256sum ./work/image-myapp/myapp-update.tar.zst
+   ```
+
+3. 查找主机在本地网络上的 IP 地址，然后记下该 IP 地址。您需要用它来构建工件的 URI：
+
+   ```sh
+   hostname -I
+   ```
+
+### 管理工件库 {#管理工件库}
+
+组织会维护一个工件库，列在 **远程更新** 选项卡下。您在部署时创建的工件也会添加到该库中。
+
+要预先将工件添加到库中，请前往 **远程更新** 选项卡，选择 **新建**，然后选择以下方式之一：
+
+* **上传工件**：输入名称并选择文件，具体说明见[上传工件](./connect.mdx#部署更新工件)，然后选择 **Upload artefact**。
+* **自行托管工件**：输入名称、URI 和 SHA-256 校验和，然后选择 **Save artefact**。
+
+<img src="/img/services/connect-for-organisations/create-deployment-artefact.png" alt="自行托管工件界面，显示必填字段：名称、URI 和 SHA-256 校验和" width="100%" />
+
+工件库还会显示每个已上传工件的 **Expires**（过期时间），以及过期后的 **Expired**（已过期）状态。已过期的工件仍保留在库中，以便您查看曾经部署过什么，但无法再次部署。要再次部署同一文件，请重新上传。
 
 :::note
 工件一旦被部署或尝试部署后便无法删除。这是为了在您的账户遭到入侵时提供可追溯性。
 :::
 
+### 部署工件 {#部署工件}
+
+要部署工件，请前往 **设备** 选项卡，然后在接收设备旁选择 **部署**。**部署** 按钮仅对已启用远程更新的设备显示。
+
+<img src="/img/services/connect-for-organisations/devices-deploy-button.png" alt="设备列表为启用远程更新的设备显示部署按钮" width="100%" />
+
+然后，在 **新建部署** 界面上，选择以下选项之一：
+
+* **使用现有工件**：从库中选择一个工件，然后选择 **下一步**。列表中的每个工件都会显示其名称、校验和的前几个字符、其 URI 或文件名与大小；对于已上传的工件，还会显示距离过期还有多久。已过期的工件不会出现在列表中。
+* **上传工件**：输入名称并选择文件，具体说明见[上传工件](./connect.mdx#部署更新工件)，然后选择 **下一步**。
+* **自行托管工件**：输入名称、URI 和 SHA-256 校验和，然后选择 **下一步**。
+
+<img src="/img/services/connect-for-organisations/new-deployment-view.png" alt="Raspberry Pi Connect 新建部署界面第 1 步，显示使用现有工件、上传工件或自行托管工件的选项" width="100%" />
+
+在 **第 2 步：检查并部署** 中，确认工件的详细信息，然后选择 **部署**。
+
 请按照[监控部署](./connect.mdx#监控部署)中所述跟踪部署进度。
 
 您也可以使用[管理 API](#管理api) 自动管理更新工件和部署。
-
 ## 设置订阅服务
 
 组织版Connect订阅将在四周试用期结束后自动生效，此后按月延后计费。
@@ -310,7 +377,7 @@ import Normal from "../_normal.mdx";
 
 ### 创建授权密钥
 
-若需通过 [Connect 自动关联设备](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)（无需网页界面）进行操作，请创建授权密钥。在**授权密钥**区域选择**新建**，填写描述及有效期（1至90天）。
+若需通过 [Connect 自动关联设备](./connect.mdx#开启-connect-服务并关联设备)（无需网页界面）进行操作，请创建授权密钥。在**授权密钥**区域选择**新建**，填写描述及有效期（1至90天）。
 
 新授权密钥将显示。点击其旁的剪贴板图标即可复制。请立即复制此密钥，后续将无法再次查看。
 
@@ -318,7 +385,7 @@ import Normal from "../_normal.mdx";
 
 ### 创建管理API访问令牌
 
-若需自动生成授权密钥（无需网页界面）以 [连接设备至Connect](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)，可创建 [Connect for Organisations管理API](#管理api) 的API访问令牌。在**API访问令牌**区域选择**新建**，并输入令牌描述。
+若需自动生成授权密钥（无需网页界面）以 [连接设备至Connect](./connect.mdx#开启-connect-服务并关联设备)，可创建 [Connect for Organisations管理API](#管理api) 的API访问令牌。在**API访问令牌**区域选择**新建**，并输入令牌描述。
 
 :::warning[警告]
 管理 API 访问令牌相当于您组织的管理员用户名和密码。它可以管理组织中的每台设备、每个授权密钥和每个设备身份。请将其保存在调用管理 API 的机器上（如部署配置工作站或 CI 系统）；切勿将其嵌入树莓派操作系统镜像或复制到任何设备上。要对设备本身进行身份验证，请使用[设备身份](#device-identities)或[授权密钥](#创建授权密钥)为每台设备生成凭证并分发。
@@ -331,6 +398,41 @@ import Normal from "../_normal.mdx";
 ## 管理API
 
 管理API支持您无需Connect网页界面即可自动管理组织。向管理API发送请求时，必须使用有效的管理API访问令牌进行身份验证。基础URL为 https://api.connect.raspberrypi.com。
+
+### 速率限制
+
+每个管理 API 访问令牌每小时最多可发起 5,000 次请求。该限制按固定的一小时窗口计量：计数器在每小时开始时重置，与您在该小时内首次发起请求的时间无关。
+
+每个经过身份验证的请求响应都包含以下标头，便于您跟踪用量：
+
+* `X-Rate-Limit-Limit`：每小时允许的最大请求数。
+* `X-Rate-Limit-Remaining`：当前小时剩余的请求数。
+* `X-Rate-Limit-Reset`：距离当前小时结束、计数器重置的秒数。
+
+例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+X-Rate-Limit-Limit: 5000
+X-Rate-Limit-Remaining: 4999
+X-Rate-Limit-Reset: 3600
+```
+
+如果超出限制，您将收到带有相同标头的 **429 Too Many Requests** 响应。请等待 `X-Rate-Limit-Reset` 中给出的秒数后再重试。例如：
+
+```http
+HTTP/2 429
+X-Rate-Limit-Limit: 5000
+X-Rate-Limit-Remaining: 0
+X-Rate-Limit-Reset: 1800
+
+Throttled
+```
+
+:::note
+使用无效访问令牌发起的请求仍会计入该令牌的限制，但响应中不会包含速率限制标头。
+:::
 
 ### 创建设备身份 {#device-identities}
 
@@ -708,7 +810,7 @@ curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.
 
 </Tabs>
 
-若成功，将返回 **200 OK** 响应，其中包含最多 100 个按名称字母顺序排列的组织工件，采用 JSON 格式。例如：
+若成功，将返回 **200 OK** 响应，其中包含最多 100 个组织工件，采用 JSON 格式，按名称字母顺序排序，再按创建时间排序（最早的在前）。例如：
 
 ```http
 HTTP/2 200
@@ -719,8 +821,11 @@ Content-Type: application/json; charset=utf-8
         {
             "id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
             "name": "kiosk-v1.0",
+            "type": "uri",
             "uri": "https://example.com/kiosk-v1.0.tar.zst",
-            "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6"
+            "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6",
+            "expires_at": null,
+            "created_at": "2026-02-25T16:09:52Z"
         }
     ],
     "meta": {
@@ -756,16 +861,82 @@ curl --header 'Authorization: Bearer rporg_accesstokenhere' --get --data-urlenco
 
 `page` 和 `per_page` 查询参数的用法与[列出设备](#列出设备)相同，且可与 `name` 参数组合使用，方便对筛选结果进行分页。
 
+每个工件包含以下字段：
+
+* `id`：工件的唯一标识符。
+* `name`：工件的名称。名称在组织内不必唯一。
+* `type`：工件的提供方式：`uri` 表示[您自行托管](#托管更新工件)的工件，`file` 表示上传到 Connect 的工件。
+* `uri`：设备下载工件的位置。对于已上传的工件，这是指向已上传文件的链接；一旦 Connect 删除该文件，则为 `null`。
+* `checksum`：工件的十六进制 SHA-256 校验和。
+* `expires_at`：已上传工件过期且无法再部署的日期和时间（ISO 8601 格式）；对于您自行托管的工件，则为 `null`。
+* `created_at`：工件的创建日期和时间（ISO 8601 格式）。
+
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
+
+### 显示工件
+
+如需显示组织中的单个远程更新工件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+
+请替换下方代码中的参数：
+
+* `rporg_accesstokenhere`：您的管理 API 访问令牌。
+* `artefact-id`：工件的唯一标识符。
+
+<Tabs>
+<TabItem value="http" label="HTTP">
+
+```http
+GET /organisation/artefacts/artefact-id HTTP/1.1
+Host: api.connect.raspberrypi.com
+Authorization: Bearer rporg_accesstokenhere
+```
+
+</TabItem>
+<TabItem value="curl" label="curl">
+
+```sh
+curl --header 'Authorization: Bearer rporg_accesstokenhere' https://api.connect.raspberrypi.com/organisation/artefacts/artefact-id
+```
+
+</TabItem>
+</Tabs>
+
+若成功，将返回 **200 OK** 响应，其中包含该工件的详细信息，采用 JSON 格式。例如：
+
+```http
+HTTP/2 200
+Content-Type: application/json; charset=utf-8
+
+{
+    "id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
+    "name": "kiosk-v1.0",
+    "type": "uri",
+    "uri": "https://example.com/kiosk-v1.0.tar.zst",
+    "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6",
+    "expires_at": null,
+    "created_at": "2026-02-25T16:09:52Z"
+}
+```
+
+否则，您将收到以下响应之一：
+
+| 响应 | 说明 |
+| --- | --- |
+| **401 Unauthorized** | 管理 API 访问令牌无效。 |
+| **404 Not Found** | 组织中未找到给定的工件 ID。 |
 
 ### 创建工件
 
 如需为组织创建远程更新工件，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
 
+:::note
+管理 API 只能创建[您自行托管](#托管更新工件)的工件。要上传工件，请使用[远程更新](#管理工件库)选项卡。
+:::
+
 请替换下方代码中的参数：
 
 * `rporg_accesstokenhere`：您的管理 API 访问令牌。
-* `kiosk-v1.0`：工件在组织中的唯一名称。
+* `kiosk-v1.0`：工件的名称。名称在组织内不必唯一。
 * `https://example.com/kiosk-v1.0.tar.zst`：设备下载工件的 URI。
 * `d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6`：工件的十六进制 SHA-256 校验和。
 
@@ -859,8 +1030,11 @@ Content-Type: application/json; charset=utf-8
 {
     "id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
     "name": "kiosk-v1.0",
+    "type": "uri",
     "uri": "https://example.com/kiosk-v1.0.tar.zst",
-    "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6"
+    "checksum": "d39fc02ad7878db7f6803f54dfce89346a763a603cb8e62221ba893fee9c5cc6",
+    "expires_at": null,
+    "created_at": "2026-02-25T16:09:52Z"
 }
 ```
 
@@ -1073,7 +1247,7 @@ Content-Type: application/json; charset=utf-8
 
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
 
-若在组织中未找到该设备或工件，将返回 **404 Not Found** 响应。
+若在组织中未找到该设备或工件，或工件已过期，将返回 **404 Not Found** 响应。
 
 若组织的免费试用已结束且尚未设置计费，将返回 **403 Forbidden** 响应：
 
@@ -1145,7 +1319,7 @@ Content-Type: application/json; charset=utf-8
 
 ### 创建授权密钥
 
-若需自动生成 [通过Connect连接设备](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来) 的授权密钥，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
+若需自动生成 [通过Connect连接设备](./connect.mdx#开启-connect-服务并关联设备) 的授权密钥，请使用 [管理API访问令牌](#创建管理api访问令牌) 发起以下HTTP请求。
 
 请替换下方代码中的参数：
 
@@ -1226,7 +1400,7 @@ Content-Type: application/json; charset=utf-8
 * **exchanged_at**：授权密钥交换以关联设备的日期和时间（ISO 8601 格式），如尚未交换则为 `null`。
 * **created_at**：创建授权密钥的日期和时间（ISO 8601 格式）。
 
-在过期前可使用 `secret` 进行 [设备与Connect的关联](./connect.mdx#将-raspberry-pi-设备与-connect-账户连接起来)。
+在过期前可使用 `secret` 进行 [设备与Connect的关联](./connect.mdx#开启-connect-服务并关联设备)。
 
 若管理 API 访问令牌无效，将返回 **401 Unauthorized** 响应。
 

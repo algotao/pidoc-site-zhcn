@@ -1,0 +1,252 @@
+---
+sidebar_position: 20
+draft: false
+description: 树莓派智能显示模块（Smart Display Module）是计算模块 5（CM5）的转接板，可将 CM5 直接装入兼容 Intel SDM 规范的数字标牌显示器，无需外部线缆或外部电源。本文详细介绍其规格参数、接口引脚定义、CM5 与散热片、天线、M.2 设备的完整组装步骤，以及在装机状态下通过 Raspberry Pi Imager 烧录 CM5 的方法。
+keywords: [树莓派智能显示模块, Smart Display Module, SDM, 计算模块5, CM5, Intel SDM 规范, 数字标牌, M.2 M key, 外置天线, HDMI 输出, rpiboot]
+last_update:
+  date: 2026-10-11
+---
+import Normal from "../_normal.mdx";
+
+# 智能显示模块
+
+树莓派智能显示模块（Smart Display Module）是树莓派计算模块 5（CM5）的转接板，可让您将 CM5 集成到兼容的数字标牌中，而无需外部线缆或外部电源。
+
+更多信息请参阅 [产品页面](https://www.raspberrypi.com/products/smart-display-module)。
+
+<img src="/img/accessories/smart-display-module/smart-display-module-hero.png" width="80%" alt="树莓派智能显示模块" />
+*树莓派智能显示模块*
+
+如果您从夏普（Sharp）购买树莓派智能显示模块，模块中会预装一台已配置好的 CM5。更多信息请参阅 [夏普网站](https://business.sharpusa.com/computing)。
+
+## 规格参数
+
+本节介绍树莓派智能显示模块的物理特性与能力，包括功能特性、硬件清单和尺寸。
+
+### 功能特性
+
+智能显示模块具有以下特性：
+
+* **兼容 Intel® 智能显示模块（SDM）规范。** 该转接板可直接插入支持此规范的宿主显示器。
+* **兼容计算模块 5。** CM5 安装在智能显示模块上。
+* **散热片。** 散热片适配 SDM 外形尺寸，可将 CM5 的热量导出。
+* **集成供电。** 宿主显示器直接为 CM5 供电。
+* **M.2 M key 扩展。** M.2 M key PCIe 插槽兼容 2230、2242、2260 和 2280 规格，提供扩展空间以添加存储或 AI 加速器。
+* **预留外置天线位置。** 配合[树莓派天线套件](../computers/compute-module.mdx#天线)，您可以在宿主显示器外部安装外置天线。
+* **HDMI 输出。** 支持第二路独立的视频流。
+* **接口。** 在宿主显示器外侧引出各种[接口](#接口)。
+* **启动模式开关。** 可在从 eMMC 启动（标记为 **NORMAL**）与从 USB 设备模式启动（标记为 **USB**）之间切换 CM5。
+* **外部电源按钮。** 可独立于显示器对 CM5 进行电源开关循环。
+* **LED 指示灯。** 指示 CM5 的电源状态与存储活动。该指示灯的 LED 行为与树莓派 5 相同。更多信息请参阅 [LED 行为](../computers/configuration.mdx#led-行为)。
+
+### 硬件清单
+
+智能显示模块包装盒内包含以下部件：
+
+* 一块智能显示模块。
+* 一个被动式铝制散热片。
+* 四颗用于固定散热片的 M3 螺丝。
+* 两颗用于固定 CM5 的 M2 螺丝。
+* 一颗用于固定 M.2 设备的硬盘固定螺丝。
+
+### 尺寸
+
+树莓派智能显示模块的尺寸兼容 [Intel® SDM 规范](https://www.intel.com/content/www/us/en/products/docs/smart-display-module/overview.html)。
+
+智能显示模块采用 SDM-L 外形规格。主板及其元件的尺寸为 175 × 100 × 20 mm。包含面板、把手和金手指接口在内，模块的完整尺寸为 193 × 125 × 25 mm。
+
+单独的智能显示模块重量约为 146 g。装配 CM5、散热片和螺丝后，重量约为 225 g。
+
+### 接口
+
+智能显示模块直接连接树莓派计算模块 5。它通过转接板内侧边缘的金手指接口（Intel SDM 边缘连接器）连接到宿主显示器。
+
+Intel SDM 边缘连接器将以下接口或信号从 CM5 传输到宿主显示器：
+
+| CM5 接口 | Intel SDM 接口 |
+| --- | --- |
+| HDMI0 | HDMI |
+| USB 3.0 端口 1 | USB3 |
+| GPIO7/9/10/11 (SPI0) | GSPI |
+| GPIO14/GPIO15 (UART0) | UART |
+| GPIO2/GPIO3 (I2C1) | I2C0（CM5 作为目标设备） |
+| GPIO38/39 (I2C0) | I2C1（CM5 作为控制器） |
+| PWR_Button | Power Button |
+| PMIC_Enable | Power Reset |
+| GPIO5/GPIO17 | SLP_S4 |
+| GPIO4 | System Fan Control |
+| HDMI0_CEC | HDMI CEC |
+
+:::note[注意]
+树莓派 SDM 不通过 Intel SDM 边缘连接器连接 DisplayPort、PCIe 或以太网接口。
+:::
+
+在宿主显示器外侧，智能显示模块提供以下接口：
+
+* HDMI 2.0。连接到 CM5 的 HDMI1。
+* USB-C（USB 2.0）。该端口仅支持设备模式，用于在安装后为 CM5 烧录程序。
+* 以太网（RJ45）接口。
+* USB-A（USB 3.0）。连接到 CM5 的 USB 3.0 端口 0。
+
+在内侧，智能显示模块提供以下接口：
+
+* 22 针摄像头与显示接口。连接到 CM5 的 CAM/DISP 0。
+* RTC 电池座（CR2032）。
+* M.2 M key PCIe 插槽。
+* CM5 插槽。
+
+在内侧，智能显示模块还在最靠近 CM5 的短边上引出以下引脚。
+
+引脚以两个为一组进行标注。当引脚标签方向正确时，上方四对引脚左侧为接地引脚、右侧为功能引脚；下方四对引脚每对都是两个功能相同的引脚。
+
+<img src="/img/accessories/smart-display-module/wlan-header.jpg" alt="上方四对引脚的引脚排列" width="50%" />
+*上方四对引脚的引脚排列*
+
+<img src="/img/accessories/smart-display-module/fan-header.jpg" alt="下方四对引脚的引脚排列" width="45%" />
+*下方四对引脚的引脚排列*
+
+| 标签 | CM5 引脚名称 | 说明 |
+| --- | --- | --- |
+| **WP_N** | `EEPROM_nWP` | 将相邻的接地引脚连接到功能引脚，以防止更改板载 EEPROM 的内容。 |
+| **BL_ON** | `BT_nDisable` | 将相邻的接地引脚连接到功能引脚，以禁用蓝牙功能。 |
+| **WL_ON** | `WL_nDisable` | 将相邻的接地引脚连接到功能引脚，以禁用 Wi-Fi 功能。 |
+| **12V** | 不适用 | 来自宿主显示器的电源（12 V）。注意不要将 12 V 引脚连接到接地；否则会损坏电路板。 |
+| **VBUS** | `VBUS_EN` | 用于为外部 USB 3.0 端口供电的信号。 |
+| **FPWM** | `Fan_PWM` | 驱动各种 PWM 控制风扇。 |
+| **GND** | `GND` | 接地（0 V） |
+| **FTACH** | `Fan_Tacho` | 读取许多 PWM 风扇上存在的转速计输出信号。 |
+
+有关这些引脚及其使用方法的更多信息，请参阅[计算模块 5 数据手册](https://pip.raspberrypi.com/documents/RP-008180-DS)和[计算模块 5 IO 板数据手册](https://pip.raspberrypi.com/documents/RP-008182-DS)。
+
+## 组装智能显示模块 {#组装智能显示模块}
+
+您可以将计算模块 5 安装到智能显示模块上，加装可选的额外组件，然后将整个模块安装到宿主显示器中。
+
+如果您从夏普购买树莓派智能显示模块，CM5 已预先配置并安装在散热片下方。您无需执行本流程，但在安装可选组件时可能需要参考其中某些步骤。
+
+本流程所需设备：
+
+* 智能显示模块。
+* 随附的散热片和螺丝。
+* 一块计算模块 5。
+* 一把十字螺丝刀。
+* （可选）树莓派天线套件。
+* （可选）一块 M.2 M key 设备。
+* 一台带有 SDM 兼容插槽的宿主显示器。
+
+:::info[重要]
+在执行以下步骤之前，请断开宿主显示器的电源。即使显示器已关闭并处于待机状态，除非完全断开电源，否则它可能仍在为 SDM 插槽供电。
+:::
+
+配置并组装智能显示模块：
+
+1. 通过安装操作系统镜像和您的用例所需的软件来配置计算模块 5。更多信息请参阅[将镜像烧录到计算模块](../computers/compute-module.mdx#flash-compute-module-emmc)。
+   <br />或者，您也可以在组装完智能显示模块后完成此步骤。更多信息请参阅[在装机状态下烧录 CM5](#在装机状态下烧录-cm5)。
+
+2. 从智能显示模块上取下散热片，以露出计算模块 5 的安装位。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-2.png" alt="标出散热片位置的 SDM" width="80%" />
+
+   使用十字螺丝刀拧下固定散热片的四颗 M3 螺丝。请保留这些螺丝以供后续使用。
+
+3. 使用十字螺丝刀拧下 CM5 插槽中的两颗 M2 螺丝。请保留这些螺丝以供后续使用。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-3.png" alt="已拆下 CM5 插槽固定螺丝的 SDM" width="80%" />
+
+4. 将 CM5 安装到智能显示模块上。
+   1. 使 CM5 与智能显示模块上的树莓派标志都朝上且方向正确，将 CM5 放入标有 **COMPUTE MODULE 5** 的位置，使其孔位对准安装柱。
+   2. 轻轻将 CM5 压入连接器，直到安装牢固。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-5.png" alt="标出 CM5 位置的 SDM" width="80%" />
+
+5. 使用 M2 螺丝将 CM5 固定到电路板上。这些螺丝的建议扭矩为 0.15 Nm。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-7.png" alt="已安装 CM5 并标出螺丝位置的 SDM" width="80%" />
+
+6. （可选）安装 M.2 M key 设备。如果您想安装 M.2 NVMe 硬盘或 AI 加速器，在安装散热片之前进行会更方便。
+   1. 用手取下硬盘固定螺丝。
+   2. 将 M.2 设备插入 M.2 边缘连接器，以略微向上的角度将硬盘滑入插槽。请勿用力将硬盘压入插槽；应轻轻滑入。
+   3. 将硬盘固定螺丝的卡扣推入 M.2 硬盘末端的卡槽。
+   4. 将 M.2 设备压平贴住电路板，并用手顺时针拧入硬盘固定螺丝，直到感觉牢固。请勿过度拧紧螺丝。
+
+7. （可选）如果您的 CM5 带有板载 Wi-Fi，可以连接外置天线。如果您想为设备安装天线，请在安装散热片之前完成。
+   1. 拆下智能显示模块内侧天线端口上的橡胶塞。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-11.png" alt="标出天线位置的 SDM" width="80%" />
+
+   2. 确认齿形垫圈已套在 SMA 连接器上。
+   3. 从智能显示模块内侧，将 SMA 连接器（平面一侧朝向其他端口）推入天线端口，使其穿出并可从外侧触及。
+   4. 从外侧装上开口垫圈，并将固定六角螺母顺时针拧到 SMA 连接器上，直到牢固就位。为避免损坏，拧紧时请勿用力过猛。
+   5. 将天线连接到 SMA 连接器，天线朝外，顺时针旋转天线以固定。
+   6. 将天线调整到适合您显示器的角度，使其处于最终位置。
+   7. 如果已安装 M.2 设备，请避免让天线线缆从其上跨过。应将天线线缆走在 M.2 插槽与智能显示模块外侧之间。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-13.png" alt="标出天线线缆走线路径的 SDM" width="80%" />
+
+   8. 将天线线缆上的 U.FL 连接器连接到计算模块 5 上兼容 U.FL 的连接器，该连接器位于 CM5 左上角安装孔旁。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-15.png" alt="已安装天线的 SDM" width="80%" />
+
+8. 安装散热片。其中一个散热片安装位是偏置设计的，这可确保散热片以正确的方向安装。
+   1. 撕下散热片上的护套和导热垫上的纸。
+   2. 如果您安装了天线，请确保天线线缆的走线避开散热片安装位。
+   3. 将散热片盖在计算模块 5 上，使其安装位对准智能显示模块电路板上的孔位。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-16.png" alt="已安装 CM5 和天线并标出散热片位置的 SDM" width="80%" />
+
+   4. 使用十字螺丝刀将 M3 螺丝穿过电路板拧入散热片安装位。均匀拧紧螺丝。这些螺丝的建议扭矩为 0.25 Nm。
+
+   <img src="/img/accessories/smart-display-module/sdm-assembly-w-antenna-step-17.png" alt="已组装 CM5、天线和散热片的 SDM" width="80%" />
+
+9. （可选）在 RTC 电池座中安装一颗 CR2032 电池。
+
+10. （可选）将 22 针摄像头 FFC 或 22 针显示 FFC 连接到摄像头/显示接口，并将线缆穿过 IO 支架的开孔。CM5 不会自动检测这些设备。您必须在 `config.txt` 文件中配置这些设备。更多信息请参阅[连接摄像头模块](../computers/compute-module.mdx#连接摄像头模块)或[连接触摸显示屏 2](../accessories/touch-display-2.mdx#连接到树莓派设备)。
+
+11. 确保宿主显示器已完全断开电源。
+
+12. 将智能显示模块安装到宿主显示器中。有关此安装流程的更多信息，请参阅宿主显示器的文档。
+
+13. 为宿主显示器通电并开启。宿主显示器为智能显示模块供电，CM5 随即启动。
+
+根据宿主显示器的默认行为，您可能需要选择智能显示模块作为其输入源。更多信息请参阅宿主显示器的文档。
+
+## 在装机状态下烧录 CM5 {#在装机状态下烧录-cm5}
+
+您可以在将 CM5 安装到智能显示模块、并将智能显示模块装入宿主显示器之后，再对 CM5 进行配置。
+
+为此，您需要以下设备：
+
+* 已安装智能显示模块的宿主显示器。
+* 一台安装了 2.0.11 或更高版本 [Raspberry Pi Imager](https://www.raspberrypi.com/software/) 的电脑。
+* 一根 USB-C 线缆。
+
+执行以下步骤：
+
+1. 在电脑上启动 Raspberry Pi Imager。
+2. 配置 Raspberry Pi Imager，使其能够使用 `rpiboot` 检测 CM5，并将其视为大容量存储设备。
+   1. 打开 **Debug Options**：
+      * 在 Windows 或 Linux 上，按 **Ctrl + Alt + S**。
+      * 在 macOS 上，按 **Cmd + Option + S**。
+   2. 滚动到 **Advanced Features**。
+   3. 使用开关选择 **Enable Rpiboot/Fastboot Support**。
+   4. 选择 **Apply** 保存更改并退出 **Debug Options** 对话框。
+3. 确保宿主显示器已完全断开电源。
+4. 使用 USB-C 线缆将电脑连接到智能显示模块上标有 **SERVICE** 的 USB-C 接口。
+5. 将启动模式开关从 **NORMAL** 拨到 **USB**。
+6. 开启宿主显示器电源。CM5 在 Raspberry Pi Imager 中显示为一个大容量存储设备。
+7. 在电脑上使用 Raspberry Pi Imager 为 CM5 安装操作系统。安装完成后，电脑会弹出该大容量存储设备。
+8. 从智能显示模块上拔下线缆。
+9. 关闭显示器电源。
+10. 将启动模式开关从 **USB** 拨回 **NORMAL**。
+11. 开启显示器电源。
+
+## 拆卸智能显示模块 {#拆卸智能显示模块}
+
+有关此流程的信息，请参阅宿主显示器的文档。
+
+:::info[重要]
+* 在拆卸智能显示模块之前，请断开宿主显示器的电源。即使显示器已关闭并处于待机模式，除非完全断开电源，否则它可能仍在为 SDM 插槽供电。
+* 拆卸智能显示模块时，请使用把手将其从宿主显示器中直接拉出。
+:::
+
+<Normal />
