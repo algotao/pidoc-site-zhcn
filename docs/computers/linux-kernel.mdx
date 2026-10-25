@@ -4,8 +4,8 @@ draft: false
 title_meta: 从源码构建自定义树莓派Linux内核
 description: 深入了解树莓派Linux内核的构建、配置与贡献流程。本文详细介绍了内核的托管、升级、本地与交叉编译方法，以及如何通过menuconfig进行配置和打补丁。此外，还阐述了如何安装内核头文件、贡献代码至Raspberry Pi内核和上游Linux内核，助力开发者深入定制和优化树莓派系统。
 keywords: [树莓派, Linux内核, 内核构建, 交叉编译, 内核配置, menuconfig, 内核补丁, 内核头文件, 内核贡献, Raspberry Pi内核, 上游Linux内核]
-last_update: 
-  date: 2026-10-11
+last_update:
+  date: 2026-10-25
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -28,6 +28,10 @@ Raspberry Pi 内核 [托管在 GitHub 上](https://github.com/raspberrypi/linux)
 Raspberry Pi 内核的交叉编译允许你从 32 位操作系统构建 64 位内核，反之亦然。或者，你也可以从 Raspberry Pi 以外的设备交叉编译 32 位或 64 位 Raspberry Pi 内核。
 
 下面的说明分为本地编译和交叉编译。选择适合你的情况的部分；虽然这两个过程有许多相同的步骤，但也有一些重要的区别。
+
+:::note[注意]
+在 Raspberry Pi OS 上，固件直接从启动分区加载内核镜像（`$KERNEL.img`）。其他发行版（例如 Ubuntu）安装和选择内核的方式不同。如果你的树莓派运行其他发行版，请遵循该发行版的文档安装自定义内核。
+:::
 
 ### 下载内核源代码
 
@@ -150,8 +154,10 @@ BCM2711 设备上的 32 位 Raspberry Pi OS 发行版使用 32 位用户态域�
 要调整 `LOCALVERSION`，请修改 `.config` 中的以下一行：
 
 ```ini
-CONFIG_LOCALVERSION="-v7l-MY_CUSTOM_KERNEL"
+CONFIG_LOCALVERSION="-v8-MY_CUSTOM_KERNEL"
 ```
+
+每个默认配置都会设置自己的 `LOCALVERSION` 后缀，例如 `bcm2711_defconfig`（64 位）为 `-v8`、`bcm2712_defconfig` 为 `-v8-16k`、`bcm2709_defconfig` 为 `-v7`。请保留该后缀，并在其后追加你自己的文本，如上面的示例所示。
 
 :::tip
 您还可以在 **General setup** > **Local version - append to kernel release** 中使用 `menuconfig` 以图形方式更改此设置。有关 `menuconfig` 的更多信息，请参阅 [内核配置说明](#配置内核)。
@@ -185,13 +191,23 @@ sudo make -j6 modules_install
 
 然后，将内核和设备树 blobs 安装到启动分区中，并备份原始内核。
 
+:::info[重要]
+在 BCM2712 设备（树莓派5、500、500+ 和 CM5）上，固件会优先加载 `kernel_2712.img`（如果存在），而不是 `kernel8.img`。
+
+Raspberry Pi OS 默认包含 `kernel_2712.img`。如果你为上述设备构建了 `KERNEL=kernel8`，则必须将以下行添加到 `config.txt`：
+
+```ini
+kernel=kernel8.img
+```
+:::
+
 :::tip
 如果不想在运行此命令的 Raspberry Pi 上安装刚编译好的内核，可将编译好的内核复制到另一个启动介质的启动分区，而不是 `/boot/firmware/`。
 :::
 
 安装 64 位内核：
 
-- 运行以下命令创建当前内核的备份镜像，安装新的内核镜像、覆盖层、README，并卸载分区：
+- 运行以下命令创建当前内核的备份镜像，并安装新的内核镜像、设备树 blob、覆盖层和 README：
 
 ```sh
 sudo cp /boot/firmware/$KERNEL.img /boot/firmware/$KERNEL-backup.img
@@ -234,6 +250,8 @@ sudo cp arch/arm/boot/dts/overlays/README /boot/firmware/overlays/
 sudo reboot
 ```
 
+树莓派重启后，请[确认你的自定义内核正在运行](#check-your-kernel)。
+
 :::tip
 或者，用不同的文件名复制内核（如 `kernel-myconfig.img`），而不是覆盖 `$KERNEL.img` 文件。然后，编辑启动分区中的 `config.txt` 以选择内核：
 
@@ -256,6 +274,8 @@ initramfs <filename> followkernel
 
 :::note[注意]
 构建和更新 `initramfs` 被视为一种高级技术，只有有经验的用户才会采用。Raspberry Pi 官方不支持该操作，因此我们不提供相关说明。
+
+如果你用自己编译的内核覆盖了 `$KERNEL.img`，启动分区上现有的 `initramfs` 仍然包含为先前内核版本构建的模块。这些模块很可能与新内核不兼容，因而不被加载。需要使用 `initramfs` 的自定义内核编译不属于本指南的范围。
 :::
 
 ### 交叉编译内核
@@ -354,8 +374,10 @@ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bcm2711_defconfig
 要调整 `LOCALVERSION`，请修改 `.config` 中的以下一行：
 
 ```ini
-CONFIG_LOCALVERSION="-v7l-MY_CUSTOM_KERNEL"
+CONFIG_LOCALVERSION="-v8-MY_CUSTOM_KERNEL"
 ```
+
+每个默认配置都会设置自己的 `LOCALVERSION` 后缀，例如 `bcm2711_defconfig`（64 位）为 `-v8`、`bcm2712_defconfig` 为 `-v8-16k`、`bcm2709_defconfig` 为 `-v7`。请保留该后缀，并在其后追加你自己的文本，如上面的示例所示。
 
 :::tip
 您还可以在 *General setup* > *Local version - append to kernel release* 中使用 `menuconfig` 以图形方式更改此设置。有关 `menuconfig` 的更多信息，请参阅 [内核配置说明](#配置内核)。
@@ -366,13 +388,17 @@ CONFIG_LOCALVERSION="-v7l-MY_CUSTOM_KERNEL"
 - 运行以下命令构建 64 位内核：
 
 ```sh
-make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
+make -j6 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
 ```
 
 - 运行以下命令构建 32 位内核：
 ```sh
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage modules dtbs
+make -j6 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage modules dtbs
 ```
+
+:::tip
+在多核设备上，`make -j<n>` 选项可在各核之间分配工作。这会大大加快编译速度。运行 `nproc` 查看你有多少个处理器；我们建议使用处理器数量的 1.5 倍。
+:::
 
 #### 安装内核
 
@@ -407,24 +433,28 @@ sudo mount /dev/sdb2 mnt/root
 - 对于 64 位内核：
 
 ```sh
-sudo env PATH=$PATH make -j12 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=mnt/root modules_install
+sudo env PATH=$PATH make -j6 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=mnt/root modules_install
 ```
 
 - 对于 32 位内核：
 
 ```sh
-sudo env PATH=$PATH make -j12 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_PATH=mnt/root modules_install
+sudo env PATH=$PATH make -j6 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_PATH=mnt/root modules_install
 ```
-
-:::tip
-在多核设备上，`make -j<n>` 选项可在各核之间分配工作。这会大大加快编译速度。运行 `nproc` 查看你有多少个处理器；我们建议使用处理器数量的 1.5 倍。
-:::
 
 接下来，将内核和设备树 blob 安装到启动分区，并备份原始内核。
 
+:::info[重要]
+在 BCM2712 设备（树莓派5、500、500+ 和 CM5）上，如果 `kernel_2712.img` 存在，固件会加载它，仅在它不存在时才回退到 `kernel8.img`。Raspberry Pi OS 默认安装 `kernel_2712.img`。如果你为上述设备构建了 `KERNEL=kernel8`，除非同时将以下行添加到 `config.txt`，否则新内核不会运行：
+
+```ini
+kernel=kernel8.img
+```
+:::
+
 安装 64 位内核：
 
-- 运行以下命令创建当前内核的备份镜像，安装新的内核镜像、覆盖层、README，并卸载分区：
+- 运行以下命令创建当前内核的备份镜像，并安装新的内核镜像、设备树 blob、覆盖层和 README：
 
 ```sh
 sudo cp mnt/boot/$KERNEL.img mnt/boot/$KERNEL-backup.img
@@ -467,7 +497,7 @@ sudo umount mnt/boot
 sudo umount mnt/root
 ```
 
-最后，将启动媒体连接到 Raspberry Pi 并接通电源，运行新编译的内核。
+最后，将启动媒体连接到 Raspberry Pi 并接通电源，运行新编译的内核。随后，请[确认你的自定义内核正在运行](#check-your-kernel)。
 
 :::tip
 或者，用不同的文件名复制内核（例如，`kernel-myconfig.img`），而不是覆盖 `$KERNEL.img` 文件。然后，编辑启动分区中的 `config.txt` 以选择内核：
@@ -488,6 +518,23 @@ initramfs <filename> followkernel
 
 将此方法与自定义的 `LOCALVERSION` 结合使用，可将自定义内核与系统管理的现有内核映像分开。有了这种安排，当你的内核无法启动时，你就可以迅速恢复到库存内核。
 :::
+
+### 确认自定义内核正在运行 {#check-your-kernel}
+
+用新内核启动树莓派后，运行以下命令：
+
+```console
+$ uname -r
+```
+
+输出结尾是您设置的 `LOCALVERSION`，例如 `6.18.54-v8-MY_CUSTOM_KERNEL`。
+
+如果输出显示的是库存内核版本，请检查以下几点：
+
+* 在树莓派5、500、500+ 和 CM5 上，固件会优先启动 `kernel_2712.img`，而不是 `kernel8.img`。如果你构建的是 `KERNEL=kernel8`，请将 `kernel=kernel8.img` 添加到 `config.txt`。
+* `config.txt` 中的 `kernel=` 或 `os_prefix=` 行可能会选择与你所安装的不同内核文件。请检查 `config.txt` 中是否有这些行，包括 `[pi5]` 之类的条件过滤段内部。
+* 确认你将内核镜像复制到了启动分区（运行中的系统上是 `/boot/firmware/`），而不是根分区。
+* 交叉编译时，请确保在取出启动媒体前已卸载它，以保证所有文件都已写入。
 
 ## 配置内核
 
@@ -568,10 +615,10 @@ head Makefile -n 4
 # SPDX-License-Identifier: GPL-2.0
 VERSION = 6
 PATCHLEVEL = 18
-SUBLEVEL = 37
+SUBLEVEL = 56
 ```
 
-在这个例子中，源代码是 6.18.37 内核的。
+在这个例子中，源代码是 6.18.56 内核的。
 
 ### 应用补丁
 
@@ -580,10 +627,22 @@ SUBLEVEL = 37
 开发者会以单个文件的形式发布大多数补丁。使用 `patch` 工具来打补丁。以下命令将下载、解压缩并使用实时内核补丁为我们的示例内核版本打上补丁：
 
 ```sh
-wget https://www.kernel.org/pub/linux/kernel/projects/rt/6.18/patch-6.18.37-rt6.patch.gz
-gunzip patch-6.18.37-rt6.patch.gz
-cat patch-6.18.37-rt6.patch | patch -p1
+wget https://www.kernel.org/pub/linux/kernel/projects/rt/6.18/patch-6.18.56-rt7.patch.gz
+gunzip patch-6.18.56-rt7.patch.gz
+cat patch-6.18.56-rt7.patch | patch -p1
 ```
+
+请在 https://www.kernel.org/pub/linux/kernel/projects/rt/ 查看适用于你的内核的最新补丁。
+
+:::note[注意]
+在 Linux 6.12 及更高版本中，64 位 Arm 的实时（`PREEMPT_RT`）支持已并入主线内核。在当前的树莓派内核分支上，无需打补丁即可构建 64 位实时内核：
+
+1. 按 [配置内核](#配置内核) 所述运行 `menuconfig`。
+2. 在 **General setup** 下启用 **Configure standard kernel features (expert users)**。
+3. 在 **General setup** 下启用 **Fully Preemptible Kernel (Real-Time)**。
+
+来自 `kernel.org` 的实时补丁集包含尚未合并到主线内核的其他改动。仅在需要这些改动时才使用它们。
+:::
 
 有些开发者会以 **邮箱格式** 发布补丁，即一个包含多个补丁文件的文件夹。使用 Git 可以打上这些补丁。
 

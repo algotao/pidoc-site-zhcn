@@ -1,11 +1,11 @@
 ---
-sidebar_position: 11
+sidebar_position: 13
 draft: false
 title_meta: 在树莓派计算模块(CM)进行烧录、连接与启用外设
 description: 深入探索树莓派计算模块（CM）硬件系列，从CM1到最新的CM5，了解各型号的技术规格、内存配置、eMMC存储选项及专用IO板设计。本文详细介绍了CM5、CM4、CM4S、CM3+、CM1和CM0等计算模块的特点，以及与之配套的IO板、外壳、天线和散热器等配件，为工业和商业应用提供全面的硬件解决方案。
 keywords: [树莓派计算模块, CM5, CM4, CM4S, CM3+, CM1, CM0, eMMC存储, IO板, 外设连接, 树莓派硬件, 工业应用]
-last_update: 
-  date: 2026-10-11
+last_update:
+  date: 2026-10-25
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -45,13 +45,17 @@ import TabItem from '@theme/TabItem';
 
 | 型号 | 基于 | SoC | GPU | CPU | 外形规格 |
 | -- | -- | -- | -- | -- | -- |
-| [**CM5**](#计算模块-5-cm5) (2024) | 树莓派5 | 博通BCM2712 | VideoCore VII | 4×Cortex-A76（2.4 GHz） | 双100针接口 |
-| [**CM4S**](#计算模块-4s-cm4s) (2022) | 树莓派4B（采用CM3外形规格） | 博通BCM2711 | VideoCore VI | 4×Cortex-A72 1.5 GHz | DDR2 SODIMM |
-| [**CM4**](#计算模块-4-cm4) (2020)  | 树莓派4B  | 博通BCM2711 | VideoCore VI | 4×Cortex-A72 1.5 GHz | 双100针接口 |
-| [**CM3+**](#计算模块-3-cm3) (2019) | 树莓派3B+ | 博通BCM2837B0 | VideoCore IV | 4 × 1.2 GHz Cortex-A53 | DDR2 SODIMM  |
-| [**CM3**](#计算模块-3-cm3-1) (2017; 2025年10月停产) | 树莓派3B | 博通BCM2837 | VideoCore IV | 4 × 1.2 GHz Cortex-A53 | DDR2 SODIMM |
-| [**CM1**](#计算模块-1-cm1) (2014)| 树莓派B型 | 博通BCM2835| VideoCore IV | 1×ARM1176JZF-S 700 MHz| DDR2 SODIMM |
+| [**CM5**](#计算模块-5-cm5) (2024) | 树莓派5 | 博通[BCM2712](./processors.mdx#bcm2712) | VideoCore VII | 4×Cortex-A76（2.4 GHz） | 双100针接口 |
+| [**CM4S**](#计算模块-4s-cm4s) (2022) | 树莓派4B（采用CM3外形规格） | 博通[BCM2711](./processors.mdx#bcm2711) | VideoCore VI | 4×Cortex-A72 1.5 GHz | DDR2 SODIMM |
+| [**CM4**](#计算模块-4-cm4) (2020)  | 树莓派4B  | 博通[BCM2711](./processors.mdx#bcm2711) | VideoCore VI | 4×Cortex-A72 1.5 GHz | 双100针接口 |
+| [**CM3+**](#计算模块-3-cm3) (2019) | 树莓派3B+ | 博通[BCM2837B0](./processors.mdx#bcm2837b0) | VideoCore IV | 4 × 1.2 GHz Cortex-A53 | DDR2 SODIMM  |
+| [**CM3**](#计算模块-3-cm3-1) (2017; 2025年10月停产) | 树莓派3B | 博通[BCM2837](./processors.mdx#bcm2837) | VideoCore IV | 4 × 1.2 GHz Cortex-A53 | DDR2 SODIMM |
+| [**CM1**](#计算模块-1-cm1) (2014)| 树莓派B型 | 博通[BCM2835](./processors.mdx#bcm2835)| VideoCore IV | 1×ARM1176JZF-S 700 MHz| DDR2 SODIMM |
 | [**CM0**](#计算模块-0-cm0) (2025)| 树莓派Zero 2W | RP3A0| VideoCore IV | 4×Cortex-A53 1 GHz| 39x33mm 超小型邮票孔核心板 |
+
+:::info[重要]
+采用 DDR2 SODIMM 物理外形规格的计算模块并不符合 DDR2 SODIMM 的电气规范。
+:::
 
 ### 计算模块 5 (CM5)
 
@@ -77,6 +81,7 @@ CM5采用与**CM4**相同的规格，提供超越标准树莓派主板的输入/
 * **处理器**：博通BCM2711
 * **内存选项**：1GB、2GB、4GB或8GB RAM
 * **存储选项**：0 GB（**CM4SLite**）、8 GB、16 GB 或 32 GB eMMC 闪存。
+* **连接选项**：双频（2.4 GHz 或 5 GHz）802.11ac Wi-Fi（300 Mb/s）与蓝牙（5 及 BLE）。
 * **外形规格**：标准 DDR2 SODIMM 模块。
 
 与 **CM4** 不同，CM4S 延续了 **CM1**、**CM3** 和 **CM3+** 采用的 DDR2 SODIMM 外形规格。
@@ -91,6 +96,7 @@ CM5采用与**CM4**相同的规格，提供超越标准树莓派主板的输入/
 * **处理器**：博通BCM2711。
 * **内存选项**：1 GB、2 GB、4 GB 或 8 GB RAM。
 * **存储选项**：0 GB（**CM4Lite**）、8 GB、16 GB 或 32 GB eMMC 闪存。
+* **连接选项**：双频（2.4 GHz 或 5 GHz）802.11ac Wi-Fi（300 Mb/s）与蓝牙（5 及 BLE）。
 * **外形规格**：配备两个100针高密度连接器，用于连接配套载板。
 * **温度范围选项**：标准型号工作温度为-20°C至+85°C，宽温型号支持-40°C至+85°C。
 

@@ -1,11 +1,11 @@
 ---
 sidebar_position: 9
 draft: false
-title_meta: 树莓派1 至 树莓派5 硬件的完整介绍，最详细的树莓派资料
-description: 全面了解树莓派系列硬件的多样性及其应用。本文详细介绍树莓派旗舰系列、键盘系列、Zero系列、Compute Module系列和Pico微控制器系列的规格与特点，包括处理器、内存、GPIO接口、无线连接、电源管理等。此外，还探讨了散热方案、电源需求、USB-C电源、以太网供电(PoE)等功能，为树莓派用户提供全面的硬件知识。
-keywords: [树莓派硬件, 旗舰系列, 键盘系列, Zero系列, Compute Module系列, Pico微控制器, 处理器, 内存, GPIO接口, 无线连接, 电源管理, 散热方案, USB-C电源, 以太网供电]
+title_meta: 树莓派硬件总览：40 针 GPIO、启动方式、电源与散热
+description: 树莓派硬件的总体介绍，涵盖 40 针 GPIO 排针与焊盘控制、产品合规性、频率管理与散热、启动 EEPROM 与各种启动模式、电源需求与以太网供电（PoE），以及 PCIe、RTC、SPI 与 USB 总线等硬件主题。
+keywords: [树莓派硬件, 40针GPIO, GPIO焊盘, 启动模式, bootloader, 电源管理, 散热风扇, 以太网供电, PCIe, RTC, SPI总线, USB总线]
 last_update:
-  date: 2026-10-11
+  date: 2026-10-25
 ---
 import Normal from "../_normal.mdx";
 import Tabs from '@theme/Tabs';
@@ -13,625 +13,345 @@ import TabItem from '@theme/TabItem';
 
 # 树莓派硬件
 
-## 介绍
+树莓派制造的计算设备可分为五大硬件**系列**：
 
-Raspberry Pi 电脑分为几个不同的**系列**：
+* **经典单板计算机（SBC）。** 经典树莓派单板计算机系列提供高性能硬件、完整的 Linux 操作系统以及多种常见端口，外形尺寸大致相当于一张信用卡。更多信息请参阅[经典单板计算机（SBC）](./sbcs.mdx)。
+* **树莓派 Zero。** 外形极简、小巧且价格实惠的型号，提供完整的 Linux 操作系统和基本端口，功耗低。更多信息请参阅 [Zero 型号](./zero.mdx)。
+* **键盘计算机（X00）。** 将单板计算机硬件、完整的 Linux 操作系统和常用端口集成在紧凑的键盘外壳中。更多信息请参阅[键盘计算机](./keyboard-computers.mdx)。
+* **计算模块（CM）。** 面向嵌入式和工业应用设计的板卡，提供与经典单板计算机相同的硬件，但外形更小且没有板载连接器。它们改为连接一块单独的载板，由载板提供必要的端口和引脚。更多信息请参阅[计算模块硬件](./compute-module.mdx)。
+* **树莓派 Pico。** 小巧多功能的微控制器板，不运行 Linux。程序直接烧录到板载存储器，而没有可移除存储。Pico 微控制器非常适合实时控制和轻量级嵌入式项目。更多信息请参阅 [Pico 微控制器开发板](../microcontrollers/pico-series.mdx)。
 
-* **[单板计算机(SBCs)](./raspberry-pi.mdx#旗舰级单板计算机sbc系列)**。旗舰级的树莓派系列在信用卡大小的机身内，集成了高性能硬件、完整的Linux操作系统以及多种通用接口。
-* **[键盘计算机(X00)](./raspberry-pi.mdx#键盘计算机系列x00)**。树莓派键盘计算机将单板计算机硬件、完整的Linux操作系统及常用接口整合于紧凑的键盘外壳内。
-* **[Zero](./raspberry-pi.mdx#zero系列)**。采用极简设计的小型经济型机型，提供完整的Linux操作系统和基本接口，具有低功耗特性。
-* **[计算模块(CM)](./raspberry-pi.mdx#compute-module系列)**。 专为嵌入式及工业应用设计的板卡，提供与旗舰级单板计算机相同的硬件配置，但采用更小尺寸且无板载接口。需连接独立底板以获取必要端口和引脚。
-* **[Pico(微控制器)](./raspberry-pi.mdx#pico微控制器)**。小巧多功能板卡，不运行Linux系统。程序直接刷写至板载存储器，无需可移除存储介质。Pico微控制器适用于实时控制与轻量级嵌入式项目。
+大多数经典树莓派型号、树莓派 Zero 型号和键盘计算机共享许多特性，包括：
 
-### 旗舰级单板计算机(SBC)系列
+* **microSD 卡槽。** 用于插入 microSD 卡的卡槽，microSD 卡作为主要存储设备，通常包含操作系统（OS）和用户数据。
+* **USB 连接。** 至少一个用于连接外设的 USB 端口。树莓派 Zero 型号使用单个 micro-USB 数据端口；经典型号和键盘计算机提供多个 USB 端口。
+* **电源输入。** 尽管板上的物理连接器已从 micro-USB 演变为 USB-C，但所有板都由稳定的 5 V 直流输入供电。
+* **通用输入/输出（GPIO）引脚。** 由 40 个引脚组成的标准化接口，可让你的树莓派与其他硬件（如 LED、按钮、传感器等）通信。更多信息请参阅 [40 针 GPIO 排针](#gpio)。
 
-**Model B** 表示有以太网端口。
-**Model A** 表示成本较低的型号，外形较小，没有以太网端口，RAM 较小，USB 端口较少，以限制电路板高度。
+## 40 针 GPIO 排针 {#gpio}
 
-:::important[重要]
-由于核心SoC停产，树莓派2B的1.1版和1.2版已达到产品生命周期终止（EoL）。官方EoL日期为2025年10月16日。树莓派2B修订版1.3采用相同机械尺寸并搭载BCM2837B0处理器，因此推荐用于现有设计。更多详情请参阅官方[停产通知](https://pip.raspberrypi.com/documents/RP-009284-PC)。
+目前所有[经典单板计算机（SBC）](./sbcs.mdx)、[Zero 型号](./zero.mdx)和[键盘计算机](./keyboard-computers.mdx)都带有 40 针通用输入/输出（GPIO）排针，分为两行各 20 针，标准针距 2.54 mm。部分 Zero 型号的 GPIO 排针出厂时未焊接针脚。有关这些变体的更多信息，请参阅 [Zero 型号](./zero.mdx)。
+
+:::note
+已停产的早期经典树莓派单板计算机型号使用的是 26 针 GPIO 排针。
 :::
 
-<table>
-    <tr>
-        <th width="35%">型号</th>
-        <th width="10%">SoC</th>
-        <th width="10%">内存</th>
-        <th width="15%">GPIO</th>
-        <th width="30%">接口</th>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/model-b.jpg" alt="Raspberry Pi Model B"/>*Raspberry Pi Model B*</td>
-        <td>[BCM2835](./processors.mdx#bcm2835)</td>
-        <td>256MB<br/>512MB</td>
-        <td>26针GPIO头</td>
-        <td>
-          - HDMI
-          - 2× USB 2.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音频接口
-          - RCA 复合视频
-          - 100Mb/s以太网 RJ45
-          - SD 卡插槽
-          - 微型 USB 电源
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/model-a.jpg" alt="Raspberry Pi Model A" width="80%"/>*Raspberry Pi Model A*</td>
-        <td>[BCM2835](./processors.mdx#bcm2835)</td>
-        <td>256MB</td>
-        <td>26针GPIO头</td>
-        <td>
-          - HDMI
-          - USB 2.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音频接口
-          - RCA 复合视频
-          - SD 卡插槽
-          - 微型 USB 电源
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/model-b-plus.jpg" alt="Raspberry Pi Model B+"/>*Raspberry Pi Model B+*</td>
-        <td>[BCM2835](./processors.mdx#bcm2835)</td>
-        <td>512MB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - HDMI
-          - 4× USB 2.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音视频接口
-          - 100Mb/s以太网 RJ45
-          - microSD 卡插槽
-          - 微型 USB 电源
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/model-a-plus.jpg" alt="Raspberry Pi Model A+"/>*Raspberry Pi Model A+*</td>
-        <td>[BCM2835](./processors.mdx#bcm2835)</td>
-        <td>256MB<br/>512MB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - HDMI
-          - USB 2.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音视频接口
-          - microSD 卡插槽
-          - 微型 USB 电源
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/2-model-b.jpg" alt="Raspberry Pi Model 2B"/>*Raspberry Pi Model 2B*</td>
-        <td>
-          - revision 1.1 [BCM2836](./processors.mdx#bcm2836)
-          - revision 1.2 [BCM2837](./processors.mdx#bcm2837)
-          - revision 1.3 [BCM2837b0](./processors.mdx#bcm2837b0)
-        </td>
-        <td>1 GB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - HDMI
-          - 4× USB 2.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音视频接口
-          - 100Mb/s以太网 RJ45
-          - microSD 卡插槽
-          - 微型 USB 电源
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/3-model-b.jpg" alt="Raspberry Pi Model 3B"/>*Raspberry Pi Model 3B*</td>
-        <td>
-          - revision 1.1[BCM2837](./processors.mdx#bcm2837)
-          - revision 1.2[BCM2837B0](./processors.mdx#bcm2837b0)
-        </td>
-        <td>1 GB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - HDMI
-          - 4× USB 2.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音视频接口
-          - 100Mb/s以太网 RJ45
-          - 2.4GHz 单频 802.11n Wi-Fi (35Mb/s)
-          - 蓝牙 4.1、低功耗蓝牙 (BLE)
-          - microSD 卡插槽
-          - 微型 USB 电源
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/3-model-b-plus.jpg" alt="Raspberry Pi Model 3B+"/>*Raspberry Pi Model 3B+*</td>
-        <td>[BCM2837B0](./processors.mdx#bcm2837b0)</td>
-        <td>1 GB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - HDMI
-          - 4× USB 2.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音视频接口
-          - 300Mb/s以太网 RJ45 支持PoE
-          - 2.4/5GHz 双频 802.11ac Wi-Fi (100Mb/s)
-          - 蓝牙 4.2、低功耗蓝牙 (BLE)
-          - microSD 卡插槽
-          - 微型 USB 电源
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/3-model-a-plus.jpg" alt="Raspberry Pi Model 3A+"/>*Raspberry Pi Model 3A+*</td>
-        <td>[BCM2837B0](./processors.mdx#bcm2837b0)</td>
-        <td>512MB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - HDMI
-          - USB 2.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音视频接口
-          - 2.4/5GHz 双频 802.11ac Wi-Fi (100Mb/s)
-          - 蓝牙 4.2、低功耗蓝牙 (BLE)
-          - microSD 卡插槽
-          - 微型 USB 电源
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/4-model-b.jpg" alt="Raspberry Pi Model 4B"/>*Raspberry Pi Model 4B*</td>
-        <td>[BCM2711](./processors.mdx#bcm2711)</td>
-        <td>1 GB<br/>2 GB<br/>3 GB<br/>4 GB<br/>8 GB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - 2× 微型 HDMI
-          - 2× USB 2.0
-          - 2× USB 3.0
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，CSI（摄像头）端口
-          - 标准 15 针，1.0 毫米间距，16 毫米宽，DSI（显示）端口
-          - 3.5 毫米音视频接口
-          - 千兆（1Gb/s）以太网 RJ45 支持PoE+
-          - 2.4/5GHz 双频 802.11ac Wi-Fi (120Mb/s)
-          - 蓝牙 5、低功耗蓝牙 (BLE)
-          - microSD 卡插槽
-          - USB-C 电源（5V/3A（15W））
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/5.jpg" alt="Raspberry Pi Model 5"/>*Raspberry Pi Model 5*</td>
-        <td>[BCM2712](./processors.mdx#bcm2712)</td>
-        <td>1 GB<br/>2 GB<br/>4 GB<br/>8 GB<br/>16 GB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - 2× 微型 HDMI
-          - 2× USB 2.0
-          - 2× USB 3.0
-          - 2× 微型 22 针，0.5 毫米（精细）间距，11.5 毫米宽，CSI（摄像头）/DSI（显示器）组合端口
-          - 单通道 [PCIe FFC 连接器](https://pip.raspberrypi.com/documents/RP-008298-DS)
-          - UART 连接器
-          - RTC 电池连接器
-          - 四针 [JST-SH PWM 风扇连接器](#raspberry-pi-5-风扇连接器引脚说明)
-          - 千兆（1Gb/s）以太网 RJ45 支持PoE+
-          - 2.4/5GHz 双频 802.11ac Wi-Fi 5 (300Mb/s)
-          - 蓝牙 5、低功耗蓝牙 (BLE)
-          - microSD 卡插槽
-          - USB-C 电源(5V/5A(25W) 或 5V/3A(15W)+外设限制为 600mA)
-        </td>
-    </tr>
-</table>
+GPIO 排针是树莓派处理器与外部电子元件之间的主要硬件桥梁。树莓派上运行的程序通过这些引脚执行两类核心操作：
 
-### 键盘计算机系列(X00)
+* **接收输入。** 从连接的传感器、开关和按钮读取数字状态。
+* **发送输出。** 发送电信号以控制 LED、电机和显示器等外部硬件。
 
-键盘系列设备采用`<X00>`形式的型号标识符，其中`X`代表对应的旗舰单板计算机（SBC）系列设备。例如，树莓派400即为树莓派4的键盘版本。有关树莓派键盘计算机的详细信息，请参阅[键盘计算机](./keyboard-computers.mdx)。
+### 引脚布局
 
-<table>
-    <tr>
-        <th width="35%">型号</th>
-        <th width="10%">SoC</th>
-        <th width="10%">内存</th>
-        <th width="15%">GPIO</th>
-        <th width="30%">接口</th>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/400.jpg" alt="Raspberry Pi 400"/>*Raspberry Pi 400*</td>
-        <td>[BCM2711](./processors.mdx#bcm2711)</td>
-        <td>4 GB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - 2× 微型 HDMI
-          - USB 2.0
-          - 2× USB 3.0
-          - 千兆（1Gb/s）以太网 RJ45
-          - 2.4/5GHz 双频 802.11ac Wi-Fi（120Mb/s）
-          - 蓝牙 5、低功耗蓝牙 (BLE)
-          - microSD 卡插槽
-          - USB-C 电源(5V/3A(15W))
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/500.png" alt="Raspberry Pi 500"/>*Raspberry Pi 500*</td>
-        <td>[BCM2712](./processors.mdx#bcm2712)</td>
-        <td>8 GB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - 2× 微型 HDMI
-          - USB 2.0
-          - 2× USB 3.0
-          - 千兆（1Gb/s）以太网 RJ45
-          - 2.4/5GHz 双频 802.11ac Wi-Fi（300Mb/s）
-          - 蓝牙 5、低功耗蓝牙 (BLE)
-          - microSD 卡插槽
-          - USB-C 电源(5V/5A(25W) 或 5V/3A(15W)+外设限制为 600mA)
-        </td>
-    </tr>
-     <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/500plus.png" alt="Raspberry Pi 500+"/>*Raspberry Pi 500+*</td>
-        <td>[BCM2712](./processors.mdx#bcm2712)</td>
-        <td>16 GB</td>
-        <td>40针GPIO头</td>
-        <td>
-          - 2× 微型 HDMI
-          - USB 2.0
-          - 2× USB 3.0
-          - 千兆（1Gb/s）以太网 RJ45
-          - 2.4/5GHz 双频 802.11ac Wi-Fi（300Mb/s）
-          - 蓝牙 5、低功耗蓝牙 (BLE)
-          - microSD 卡插槽
-          - 内置 M.2 SSD（256 GB）
-          - USB-C 电源(5V/5A(25W))
-        </td>
-    </tr>
-</table>
+40 针 GPIO 排针位于标准电路板（经典单板计算机和 Zero 型号）的顶部边缘，以及键盘一体机型（键盘计算机）的背面。
 
+下图展示了树莓派B+ 及后续型号、以及所有 Zero 型号的标准引脚布局。在**经典单板计算机**和 **Zero** 型号上，引脚 1 位于排针的左下角，引脚 40 位于对角相对的右上角。
 
-### Zero系列
+**键盘计算机**上的 GPIO 排针方向相反：相较于标准板布局旋转了 180 度，但引脚 1 和 40 都已标注，以减少混淆。
 
-后缀为 **H** 的型号已将针脚预焊在 GPIO 针脚上。没有后缀 **H** 的型号不带连接到 GPIO 针座的针座引脚；用户必须手动焊接引脚或安装第三方引脚套件。
-
-所有 Zero 型号都具有以下连接功能：
-
-- 1 个 microSD 卡插槽
-- 1 个微型 HDMI 端口
-- 2 个微型 USB 端口（一个用于输入电源，一个用于外接设备）
-
-自原始 Zero 1.3 版起，所有 Zero 型号还包括
-
-- 微型 22 针、0.5 毫米（精细）间距、11.5 毫米宽 CSI（摄像头）端口
-
-<table>
-    <tr>
-        <th width="35%">型号</th>
-        <th width="10%">SoC</th>
-        <th width="10%">内存</th>
-        <th width="15%">GPIO</th>
-        <th width="30%">无线连接</th>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/zero.jpg" alt="Raspberry Pi Zero"/>*Raspberry Pi Zero*</td>
-        <td>[BCM2835](./processors.mdx#bcm2835)</td>
-        <td>512MB</td>
-        <td>40针GPIO头(未填充)</td>
-        <td>无</td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/zero-w.jpg" alt="Raspberry Pi Zero W"/>*Raspberry Pi Zero W*</td>
-        <td>[BCM2835](./processors.mdx#bcm2835)</td>
-        <td>512MB</td>
-        <td>40针GPIO头(未填充)</td>
-        <td>
-         - 2.4GHz 单频 802.11n Wi-Fi (35Mb/s)
-         - 蓝牙 4.0、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/zero-wh.jpg" alt="Raspberry Pi Zero WH"/>*Raspberry Pi Zero WH*</td>
-        <td>[BCM2835](./processors.mdx#bcm2835)</td>
-        <td>512MB</td>
-        <td>40针GPIO头</td>
-        <td>
-         - 2.4GHz 单频 802.11n Wi-Fi (35Mb/s)
-         - 蓝牙 4.0、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/zero-2-w.jpg" alt="Raspberry Pi Zero 2 W"/>*Raspberry Pi Zero 2 W*</td>
-        <td>[RP3A0](./processors.mdx#rp3a0)</td>
-        <td>512MB</td>
-        <td>40针GPIO头(未填充)</td>
-        <td>
-         - 2.4GHz 单频 802.11n Wi-Fi (35Mb/s)
-         - 蓝牙 4.2、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/zero-2-wh.png" alt="Raspberry Pi Zero 2 WH"/>*Raspberry Pi Zero 2 WH*</td>
-        <td>[RP3A0](./processors.mdx#rp3a0)</td>
-        <td>512MB</td>
-        <td>40针GPIO头(未填充)</td>
-        <td>
-         - 2.4GHz 单频 802.11n Wi-Fi (35Mb/s)
-         - 蓝牙 4.2、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-</table>
-
-### Compute Module系列
-
-:::important[重要]
-由于核心SoC停产，树莓派计算模块3（CM3）和计算模块3精简版（CM3Lite）已达到产品生命周期终止（EoL）。官方EoL日期为2025年10月16日。与CM3最接近的替代品是树莓派计算模块3+，其提供相同的机械尺寸、改进的散热设计以及BCM2837B0处理器，因此推荐用于现有设计。对于需要SODIMM规格的新设计，建议选用计算模块4S；其他新设计则推荐计算模块4或计算模块5。更多详情请参阅官方[停产通知](https://pip.raspberrypi.com/documents/RP-009286-PC)。
+:::warning[警告]
+将外部硬件连接到 GPIO 排针时，请在上电前检查排针的方向和对齐情况。接线错误可能导致电路故障、行为异常、所连外设受到永久性热损坏或过流损坏，以及树莓派设备的 SoC 受到不可逆的电气损坏。
 :::
 
-有关树莓派计算模块硬件的更多详细信息，请参阅 [计算模块硬件](./compute-module.mdx)。
+<img src="/img/computers/raspberry-pi/GPIO-Pinout-Diagram-2.png" alt="树莓派引脚布局图" width="100%" />
+*树莓派引脚布局图*
 
-<table>
-    <tr>
-        <th width="30%">型号</th>
-        <th width="10%">SoC</th>
-        <th width="10%">内存</th>
-        <th width="10%">存贮</th>
-        <th width="15%">外型尺寸</th>
-        <th width="25%">无线连接</th>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/compute-module-1.jpg" alt="Raspberry Pi Compute Module 1"/>*Raspberry Pi Compute Module 1*</td>
-        <td>[BCM2835](./processors.mdx#bcm2835)</td>
-        <td>512MB</td>
-        <td>4GB</td>
-        <td>DDR2 SODIMM</td>
-        <td>无</td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/compute-module-3.jpg" alt="Raspberry Pi Compute Module 3"/>*Raspberry Pi Compute Module 3*</td>
-        <td>[BCM2837](./processors.mdx#bcm2837)</td>
-        <td>1GB</td>
-        <td>0GB (精简版)<br />4GB</td>
-        <td>DDR2 SODIMM</td>
-        <td>无</td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/compute-module-3-plus.jpg" alt="Raspberry Pi Compute Module 3+"/>*Raspberry Pi Compute Module 3+*</td>
-        <td>[BCM2837B0](./processors.mdx#bcm2837b0)</td>
-        <td>1GB</td>
-        <td>0GB (精简版)<br />8GB<br />16GB<br />32GB</td>
-        <td>DDR2 SODIMM</td>
-        <td>无</td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/compute-module-4s.jpg" alt="Raspberry Pi Compute Module 4S"/>*Raspberry Pi Compute Module 4S*</td>
-        <td>[BCM2711](./processors.mdx#bcm2711)</td>
-        <td>1GB<br />2GB<br />4GB<br />8GB</td>
-        <td>0GB (精简版)<br />8GB<br />16GB<br />32GB</td>
-        <td>DDR2 SODIMM</td>
-        <td>无</td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/compute-module-4.jpg" alt="Raspberry Pi Compute Module 4"/>*Raspberry Pi Compute Module 4*</td>
-        <td>[BCM2711](./processors.mdx#bcm2711)</td>
-        <td>1GB<br />2GB<br />4GB<br />8GB</td>
-        <td>0GB (精简版)<br />8GB<br />16GB<br />32GB</td>
-        <td>双 100 针高密度连接器</td>
-        <td>
-          可选：
-          - 2.4/5GHz 双频 802.11ac Wi-Fi 5 (300Mb/s)
-          - 蓝牙 5、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/compute-module-5.png" alt="Raspberry Pi Compute Module 5"/>*Raspberry Pi Compute Module 5*</td>
-        <td>[BCM2712](./processors.mdx#bcm2712)</td>
-        <td>2GB<br />4GB<br />8GB<br />16GB</td>
-        <td>0GB (精简版)<br />16GB<br />32GB<br />64GB</td>
-        <td>双 100 针高密度连接器</td>
-        <td>
-          可选：
-          - 2.4/5GHz 双频 802.11ac Wi-Fi 5 (300Mb/s)
-          - 蓝牙 5、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/compute-module-0.jpg" alt="Raspberry Pi Compute Module 0"/>*Raspberry Pi Compute Module 0*</td>
-        <td>[RP3A0](./processors.mdx#rp3a0)</td>
-        <td>512MB</td>
-        <td>0GB (精简版)<br />8GB<br />16GB</td>
-        <td>132引脚 39*33mm封装</td>
-        <td>
-          可选：
-          - 2.4GHz 单频 802.11n Wi-Fi (35Mb/s)
-          - 蓝牙 4.2、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-</table>
+#### GPIO 引脚标签与位置
 
-:::tip
-使用 DDR2 SO-DIMM 物理外形尺寸的计算模块与 DDR2 SODIMM 电气规格**不兼容**。
+物理引脚编号（1 到 40）与代码中使用的逻辑 GPIO 标识并不一致。例如，`GP17` 在树莓派板上的物理位置是引脚 11。
+
+下图中标注的引脚标签对应代码中使用的逻辑 GPIO 标识，而不是它们在板上的物理顺序。这意味着图中以黄色表示的 GPIO 引脚编号方案并不按数字顺序排列。
+
+<img src="/img/computers/raspberry-pi/GPIO-numbers.png" alt="GPIO 布局" width="100%" />
+*树莓派 GPIO 排针的引脚标注*
+
+#### GPIO 引脚布局图
+
+Raspberry Pi OS 包含 [GPIO Zero Python 库](https://gpiozero.readthedocs.io/)，你可以在终端中用以下命令显示树莓派上 GPIO 引脚的布局图：
+
+```console
+$ pinout
+```
+
+该命令会显示一张引脚布局图，包含物理引脚位置、逻辑 GPIO 标识和引脚功能。
+
+### 引脚类型
+
+每个引脚都映射到特定功能，可分为四种主要类型，汇总于下表。
+
+| 引脚类型 | 数量 | 标识 | 电压 | 主要用途 |
+| -- | -- | -- | -- | -- |
+| 电源 | 4 | `3V3`（2 个）<br />`5V`（2 个） | 3.3 V DC<br />5.0 V DC | 为兼容的低电流外设供电 |
+| 接地 | 8 | `GND` | 0 V | 提供接地连接（0 伏），用于在排针上构成完整电路。 |
+| GPIO | 26 | `GPXX`，其中 `XX` 为 2 到 27 的数字（`GP2` 到 `GP27`） | 3.3 V 逻辑 | 通用数字输入输出引脚，可通过软件定制；支持[通信协议](#protocols)（SPI、I2C、UART、PWM 和 PCM）。 |
+| ID EEPROM | 2 | `GP0` 和 `GP1` | 3.3 V 逻辑 | 保留给 HAT（Hardware Attached on Top）扩展板使用。 |
+
+:::note
+GPIO 引脚 0 和 1 有时分别称为 `GPIO 0 (ID_SD)` 和 `GPIO 1 (ID_SC)`，保留用于特殊用途。在物理上，这两个引脚对应树莓派板上的引脚 27 和 28。
 :::
 
-### Pico微控制器
+### GPIO 引脚的输入、输出和通信协议
 
-后缀为 **H** 的型号已将接头引脚预焊接到 GPIO 接头。没有后缀 **H** 的型号不附带连接到 GPIO 针座的针座引脚；用户必须手动焊接引脚或安装第三方引脚套件。
+GPIO 引脚可以工作在两种模式下：[输入](#inputs)和[输出](#outputs)。部分 GPIO 引脚还可以使用特定的[通信协议](#protocols)控制所连接的元件，包括 **SPI**、**I2C**、**UART**、**PWM** 和 **PCM**。
 
-<table>
-    <tr>
-        <th width="30%">型号</th>
-        <th width="10%">SoC</th>
-        <th width="10%">内存</th>
-        <th width="10%">存贮</th>
-        <th width="15%">GPIO</th>
-        <th width="25%">无线连接</th>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/pico.png" alt="Raspberry Pi Pico"/>*Raspberry Pi Pico*</td>
-        <td>[RP2040](../microcontrollers/microcontroller-chips#rp2040)</td>
-        <td>264kB</td>
-        <td>2MB</td>
-        <td>2个20针GPIO头(未填充)</td>
-        <td>无</td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/pico-h.png" alt="Raspberry Pi Pico H"/>*Raspberry Pi Pico H*</td>
-        <td>[RP2040](../microcontrollers/microcontroller-chips#rp2040)</td>
-        <td>264kB</td>
-        <td>2MB</td>
-        <td>2个20针GPIO头</td>
-        <td>无</td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/pico-w.png" alt="Raspberry Pi Pico W"/>*Raspberry Pi Pico W*</td>
-        <td>[RP2040](../microcontrollers/microcontroller-chips#rp2040)</td>
-        <td>264kB</td>
-        <td>2MB</td>
-        <td>2个20针GPIO头(未填充)</td>
-        <td>
-          - 2.4GHz 单频 802.11n Wi-Fi (10Mb/s)
-          - 蓝牙 5.2、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/pico-wh.png" alt="Raspberry Pi Pico WH"/>*Raspberry Pi Pico WH*</td>
-        <td>[RP2040](../microcontrollers/microcontroller-chips#rp2040)</td>
-        <td>264kB</td>
-        <td>2MB</td>
-        <td>2个20针GPIO头</td>
-        <td>
-          - 2.4GHz 单频 802.11n Wi-Fi (10Mb/s)
-          - 蓝牙 5.2、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/pico-2.png" alt="Raspberry Pi Pico 2"/>*Raspberry Pi Pico 2*</td>
-        <td>[RP2350](../microcontrollers/microcontroller-chips#rp2350)</td>
-        <td>520kB</td>
-        <td>4MB</td>
-        <td>2个20针GPIO头(未填充)</td>
-        <td>无</td>
-    </tr>
-        <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/pico-2-w.png" alt="Raspberry Pi Pico 2 W"/>*Raspberry Pi Pico 2 W*</td>
-        <td>[RP2350](../microcontrollers/microcontroller-chips#rp2350)</td>
-        <td>520kB</td>
-        <td>4MB</td>
-        <td>2个20针GPIO头(未填充)</td>
-        <td>
-          - 2.4GHz 单频 802.11n Wi-Fi (10Mb/s)
-          - 蓝牙 5.2、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/pico-2-h.jpg" alt="Raspberry Pi Pico 2 with headers"/>*Raspberry Pi Pico 2 with headers*</td>
-        <td>[RP2350](../microcontrollers/microcontroller-chips#rp2350)</td>
-        <td>520kB</td>
-        <td>4MB</td>
-        <td>2个20针GPIO头(未填充)</td>
-        <td>无</td>
-    </tr>
-    <tr>
-        <td align="center"><img src="/img/computers/raspberry-pi/pico-2-wh.jpg" alt="Raspberry Pi Pico 2 W with headers"/>*Raspberry Pi Pico 2 W with headers*</td>
-        <td>[RP2350](../microcontrollers/microcontroller-chips#rp2350)</td>
-        <td>520kB</td>
-        <td>4MB</td>
-        <td>2个20针GPIO头(未填充)</td>
-        <td>
-          - 2.4GHz 单频 802.11n Wi-Fi (10Mb/s)
-          - 蓝牙 5.2、低功耗蓝牙 (BLE)
-        </td>
-    </tr>
-</table>
+#### 输入 {#inputs}
 
-有关 Raspberry Pi Pico 型号的更多信息，请参阅 [Pico 文档](../microcontrollers/pico-series.mdx)。
+指定为输入的 GPIO 引脚在连接到 3.3 V 时读为高电平，连接到 0 V 时读为低电平。内部上拉或下拉电阻有助于在未施加外部信号时建立确定的输入状态。
 
-## 原理图和机械图
-各种树莓派板版本的原理图：
+:::warning[警告]
+树莓派 GPIO 引脚工作在 3.3 V，不耐 5 V。只有 5 V 电源引脚设计用于提供 5 V 电源。切勿将 5 V 直接施加到 GPIO 引脚上，这可能对树莓派的 SoC 造成永久损坏。
+:::
 
-### 树莓派5
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008347-DS)
-- 树莓派5的[STEP文件](https://pip.raspberrypi.com/documents/RP-008369-DS)
+`GP2`（SDA）和 `GP3`（SCL）具有固定的 1.8 kΩ 电阻。其他引脚的上下拉配置可通过软件控制。
 
-### 树莓派4B
-- [原理图，修订版4.0](https://pip.raspberrypi.com/documents/RP-008345-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008343-DS)
-- [机械制图，DXF](https://pip.raspberrypi.com/documents/RP-008342-DS)
+#### 输出 {#outputs}
 
-### 树莓派3B+
-- [原理图，修订版 1.0](https://pip.raspberrypi.com/documents/RP-008339-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008337-DS)
-- [机械制图，DXF](https://pip.raspberrypi.com/documents/RP-008336-DS)
-- [案例图纸，PDF](https://pip.raspberrypi.com/documents/RP-008160-DS)
+指定为输出的 GPIO 引脚可设置为高电平（3.3 V）或低电平（0 V），以控制所连接的电子元件。
 
-### 树莓派3A+
-- [原理图，修订版 1.0](https://pip.raspberrypi.com/documents/RP-008332-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008330-DS)
-- [案例图纸，PDF](https://pip.raspberrypi.com/documents/RP-008329-DS)
+单个 GPIO 引脚最多可向所连接的设备提供 16 mA 电流，所有 GPIO 引脚合计最多可提供 50 mA 总电流。
 
-### 树莓派3B
-- [原理图，修订版 1.2](https://pip.raspberrypi.com/documents/RP-008340-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008335-DS)
-- [机械制图，DXF](https://pip.raspberrypi.com/documents/RP-008334-DS)
+:::warning[警告]
+只要接线正确，将简单元件连接到 GPIO 引脚通常是安全的，但将电子元件连接到树莓派时仍需小心。对于 LED，请使用合适的限流电阻。对于电机，请使用合适的电机驱动器，例如 H 桥或电机控制板；切勿将电机直接连接到 GPIO 引脚。
+:::
 
-### 树莓派2B
-- [原理图，修订版 1.2](https://pip.raspberrypi.com/documents/RP-008327-DS)
+#### 通信协议（替代功能） {#protocols}
 
-### 树莓派1B+
-- [原理图，修订版 1.2](https://pip.raspberrypi.com/documents/RP-008353-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008351-DS)
-- [机械制图，DXF](https://pip.raspberrypi.com/documents/RP-008352-DS)
+部分 GPIO 引脚可以使用特定的通信协议控制所连接的元件，包括：
+
+* **SPI（串行外设接口）**，用于与外部 SPI 设备（如传感器、显示器和其他外设）通信。
+* **UART（通用异步收发器）**，用于与微控制器等设备收发串行数据。
+* **PWM（脉宽调制）**，用于控制输送到电机和 LED 等设备的功率大小。
+* **PCM（脉冲编码调制）**，用于数字音频输入和输出。
+* **I2C（集成电路间总线）**，用于与外部 I2C 设备（如传感器、显示器和其他外设）通信。
+
+### 引脚功能
+
+下表汇总了各引脚的典型功能。有些功能在所有引脚上都可用，有些则仅在特定引脚上可用。
+
+本表中的大多数 GPIO 引脚都有多个替代功能。具有替代功能的 GPIO 引脚允许 SoC 内部的外设硬件连接到选定的 GPIO 引脚，而不是将它们用作通用输入或输出。例如，I2C 信号可以分配到不同的受支持 GPIO 引脚位置。
+
+* 有关树莓派5 系列设备可用功能的详细信息，请参阅 [Compute Module 5 数据表](https://pip.raspberrypi.com/documents/RP-008180-DS)中的 *Alternative function assignments*。
+* 有关树莓派4 系列设备可用功能的详细信息，请参阅 [Compute Module 4 数据表](https://pip.raspberrypi.com/documents/RP-008168-DS)中的 *Alternative function assignments*。
+* 有关更早的树莓派系列设备和树莓派 Zero 型号可用功能的详细信息，请参阅 [BCM2835 外设数据表](https://pip.raspberrypi.com/documents/RP-008249-DS)中的 *Alternative Function Assignments*。
+
+:::note
+当引脚配置为替代功能时，焊盘控制设置（例如输出驱动强度和施密特触发滤波）仍然适用。
+:::
+
+| 引脚 | 名称 | 类型 | 典型功能 |
+| -- | -- | -- | -- |
+| 1 | `3V3` | 电源 | 以 3.3 V 向所连接的外设输出电源 |
+| 2 | `5V` | 电源 | 向外部设备提供 5 V 电源输出，或接受 5 V 电源输入为树莓派供电（例如通过 PoE+ HAT 或第三方 HAT） |
+| 3 | `GP2` | GPIO | 串行数据线（SDA）；与 *I2C* 设备收发数据；该引脚带有 1.8 kΩ 板载上拉电阻至 3.3 V |
+| 4 | `5V` | 电源 | 向外部设备提供 5 V 电源输出，或接受 5 V 电源输入为树莓派供电（例如通过 PoE+ HAT 或第三方 HAT） |
+| 5 | `GP3` | GPIO | 串行时钟线（SCL）；提供时钟信号，同步树莓派与 *I2C* 设备之间的通信；该引脚带有 1.8 kΩ 板载上拉电阻至 3.3 V |
+| 6 | `GND` | 接地 | 接通与电源相连的电路 |
+| 7 | `GP4` | GPIO | `GPCLK0`；时钟输出 |
+| 8 | `GP14` | GPIO | 发送数据（TXD）；向所连接的设备发送串行（*UART*）数据 |
+| 9 | `GND` | 接地 | 接通与电源相连的电路 |
+| 10 | `GP15` | GPIO | 接收数据（RXD）；从所连接的设备接收串行（*UART*）数据 |
+| 11 | `GP17` | GPIO | *SPI* 片选（`CE1`） |
+| 12 | `GP18` | GPIO | *PCM* 时钟或 *SPI* 片选（`CE0`） |
+| 13 | `GP27` | GPIO | — |
+| 14 | `GND` | 接地 | 接通与电源相连的电路 |
+| 15 | `GP22` | GPIO | — |
+| 16 | `GP23` | GPIO | — |
+| 17 | `3V3` | 电源 | 以 3.3 V 向所连接的外设输出电源 |
+| 18 | `GP24` | GPIO | — |
+| 19 | `GP10` | GPIO | MOSI；将树莓派的数据发送到 *SPI* 设备 |
+| 20 | `GND` | 接地 | 接通与电源相连的电路 |
+| 21 | `GP9` | GPIO | MISO；接收来自 *SPI* 设备的数据 |
+| 22 | `GP25` | GPIO | — |
+| 23 | `GP11` | GPIO | 串行时钟（`SCLK`）；为 *SPI* 提供时钟信号 |
+| 24 | `GP8` | GPIO | *SPI* 片选（`CE0`） |
+| 25 | `GND` | 接地 | 接通与电源相连的电路 |
+| 26 | `GP7` | GPIO | *SPI* 片选（`CE1`） |
+| 27 | `GP0` | GPIO | *I2C*（`ID_SD`）；用于识别 HAT |
+| 28 | `GP1` | GPIO | *I2C*（`ID_SC`）；用于识别 HAT |
+| 29 | `GP5` | GPIO | — |
+| 30 | `GND` | 接地 | 接通与电源相连的电路 |
+| 31 | `GP6` | GPIO | — |
+| 32 | `GP12` | GPIO | 脉宽调制（`PWM0`）输出 |
+| 33 | `GP13` | GPIO | 脉宽调制（`PWM1`）输出 |
+| 34 | `GND` | 接地 | 接通与电源相连的电路 |
+| 35 | `GP19` | GPIO | *PCM* 帧同步（`PCM_FS`）或 MISO（接收来自 *SPI* 设备的数据） |
+| 36 | `GP16` | GPIO | *SPI* 片选（`CE2`） |
+| 37 | `GP26` | GPIO | — |
+| 38 | `GP20` | GPIO | *PCM*（`PCM_DIN`）；音频数据输入 |
+| 39 | `GND` | 接地 | 接通与电源相连的电路 |
+| 40 | `GP21` | GPIO | *PCM*（`PCM_DOUT`）；音频数据输出 |
+
+### GPIO 配置
+
+本节介绍 GPIO 硬件的底层架构和底层配置。
+
+#### GPIO 权限
+
+要使用 GPIO 端口，用户必须是相应 `gpio` 组的成员。Raspberry Pi OS 上的主用户账户默认是 `gpio` 组的成员。其他用户必须使用以下命令手动添加，并用实际用户名替换 `<username>`：
+
+```console
+$ sudo usermod -a -G gpio <username>
+```
+
+#### GPIO 焊盘
+
+SoC 上对外的 GPIO 连接在 [BCM2835 外设数据表](https://pip.raspberrypi.com/documents/RP-008249-DS)中有时被称为“焊盘”。在半导体术语中，焊盘是芯片与外界连接的电气连接点。
+
+GPIO 焊盘包含可配置的 CMOS 推挽输出驱动器和输入缓冲器。基于寄存器的设置可以控制以下内容：
+
+* 内部上拉和下拉电阻（启用或禁用）。
+* 输出[驱动强度](#gpio焊盘控制)。
+* 输入施密特触发滤波。
+
+#### 开机状态
+
+上电复位后，GPIO 引脚通常配置为输入。默认上拉状态也会应用，详情见 [BCM2835 外设数据表](https://pip.raspberrypi.com/documents/RP-008249-DS)中的 *Alternative Function Assignments* 表。大多数 GPIO 都应用了默认上拉状态。
+
+#### 中断
+
+每个配置为通用输入的 GPIO 引脚都可以配置为 Arm 处理器的中断源。可用的中断产生模式有：
+
+* **电平敏感中断**，当输入信号为高或低时触发。这类中断会保持中断状态，直到系统软件清除该电平，例如通过为产生中断的所连外设提供服务。
+* **边沿敏感中断**，在信号上升或下降跳变时触发。上升沿和下降沿检测内置了一定的同步机制。检测电路以系统时钟频率对输入采样，当跳变在三个时钟周期的窗口内满足检测条件时产生中断。例如，`1, 0, 0`（高、低、低）和 `0, 1, 1`（低、高、高）都算符合条件。
+* **异步边沿检测**，绕过边沿敏感中断所涉及的同步过程，使硬件能够检测更窄的输入事件。
+
+### 电压规格
+
+40 针 GPIO 排针中有两个 5 V 引脚和两个 3.3 V 引脚，以及若干接地（`GND`）引脚。这些引脚无法重新配置。其余引脚为通用 3.3 V 引脚，高电平输出为 3.3 V，输入可承受 3.3 V。
+
+#### BCM2835、BCM2836、BCM2837 和 RP3A0 {#电压规格-bcm2835}
+
+下表给出 BCM2835、BCM2836、BCM2837 和 RP3A0 产品（例如树莓派 Zero 或树莓派3B+）的 GPIO 引脚电压规格。有关计算模块的信息，请参阅[相关计算模块数据表](./compute-module.mdx#规格)。
+
+| 符号 | 参数 | 条件 | 最小 | 典型 | 最大 | 单位 |
+| -- | -- | -- | -- | -- | -- | -- |
+| V<sub>IL</sub> | 输入低电压 | - | - | - | 0.9 | V |
+| V<sub>IH</sub> | 输入高电压<sup>a</sup> | - | 1.6 | - | - | V |
+| I<sub>IL</sub> | 输入漏电流 | TA = +85°C | - | - | 5 | µA |
+| C<sub>IN</sub> | 输入电容 | - | - | 5 | - | pF |
+| V<sub>OL</sub> | 输出低电压<sup>b</sup> | IOL = -2 mA | - | - | 0.14 | V |
+| V<sub>OH</sub> | 输出高电压<sup>b</sup> | IOH = 2 mA | 3.0 | - | - | V |
+| I<sub>OL</sub> | 输出低电流<sup>c</sup> | VO = 0.4 V | 18 | - | - | mA |
+| I<sub>OH</sub> | 输出高电流<sup>c</sup> | VO = 2.3 V | 17 | - | - | mA |
+| R<sub>PU</sub> | 上拉电阻 | - | 50 | - | 65 | kΩ |
+| R<sub>PD</sub> | 下拉电阻 | - | 50 | - | 65 | kΩ |
+
+<sup>a</sup> 启用迟滞<br />
+<sup>b</sup> 默认驱动强度（8 mA）<br />
+<sup>c</sup> 最大驱动强度（16 mA）
+
+#### BCM2711 产品 {#电压规格-bcm2711}
+
+下表给出 BCM2711 产品（树莓派4 和 400）的 GPIO 引脚电压规格。有关计算模块4 的信息，请参阅[相关计算模块数据表](./compute-module.mdx#规格)。
+
+| 符号 | 参数 | 条件 | 最小 | 典型 | 最大 | 单位 |
+| -- | -- | -- | -- | -- | -- | -- |
+| V<sub>IL</sub> | 输入低电压 | - | - | - | 0.8 | V |
+| V<sub>IH</sub> | 输入高电压<sup>a</sup> | - | 2.0 | - | - | V |
+| I<sub>IL</sub> | 输入漏电流 | TA = +85°C | - | - | 10 | µA |
+| V<sub>OL</sub> | 输出低电压<sup>b</sup> | IOL = -4 mA | - | - | 0.4 | V |
+| V<sub>OH</sub> | 输出高电压<sup>b</sup> | IOH = 4 mA | 2.6 | - | - | V |
+| I<sub>OL</sub> | 输出低电流<sup>c</sup> | VO = 0.4 V | 7 | - | - | mA |
+| I<sub>OH</sub> | 输出高电流<sup>c</sup> | VO = 2.6 V | 7 | - | - | mA |
+| R<sub>PU</sub> | 上拉电阻 | - | 33 | - | 73 | kΩ |
+| R<sub>PD</sub> | 下拉电阻 | - | 33 | - | 73 | kΩ |
+
+<sup>a</sup> 启用迟滞<br />
+<sup>b</sup> 默认驱动强度（4 mA）<br />
+<sup>c</sup> 最大驱动强度（8 mA）
+
+#### RP1 产品 {#电压规格-rp1}
+
+下表给出基于 RP1 的产品（树莓派5、500 和 500+）的 GPIO 引脚电压规格。有关计算模块5 的信息，请参阅[相关计算模块数据表](./compute-module.mdx#规格)。
+
+| 符号 | 参数 | 条件 | 最小 | 典型 | 最大 | 单位 |
+| -- | -- | -- | -- | -- | -- | -- |
+| V<sub>IL</sub> | 输入低电压 | - | 0 | - | 0.8 | V |
+| V<sub>IH</sub> | 输入高电压 | - | 2.0 | - | 3.3 | V |
+| I<sub>IL</sub> | 输入漏电流 | - | - | - | 3 | µA |
+| V<sub>OL</sub> | 输出低电压 | - | - | - | 0.4 | V |
+| V<sub>OH</sub> | 输出高电压 | - | 2.9 | - | - | V |
+| I<sub>OL</sub> | 输出电流 | 驱动强度 = 2 mA | 6.1 | 9.6 | 13.5 | mA |
+| I<sub>OL</sub> | 输出电流 | 驱动强度 = 4 mA | 9.2 | 14.3 | 20.2 | mA |
+| I<sub>OL</sub> | 输出电流 | 驱动强度 = 8 mA | 15.3 | 23.9 | 33.7 | mA |
+| I<sub>OL</sub> | 输出电流 | 驱动强度 = 12 mA | 18.4 | 28.7 | 40.5 | mA |
+| I<sub>OH</sub> | 输出电流 | 驱动强度 = 2 mA | 4.5 | 6.3 | 8.4 | mA |
+| I<sub>OH</sub> | 输出电流 | 驱动强度 = 4 mA | 6.8 | 9.5 | 12.6 | mA |
+| I<sub>OH</sub> | 输出电流 | 驱动强度 = 8 mA | 11.4 | 15.8 | 21 | mA |
+| I<sub>OH</sub> | 输出电流 | 驱动强度 = 12 mA | 13.6 | 19 | 25.2 | mA |
+| R<sub>PU</sub> | 上拉电阻 | - | 37 | 55 | 86 | kΩ |
+| R<sub>PD</sub> | 下拉电阻 | - | 35 | 55 | 98 | kΩ |
+
+## GPIO焊盘控制
+
+GPIO 驱动强度并不指示最大电流，而是指示焊盘仍能满足规格要求的最大电流。为使设备正常工作，应设置与所连接设备相匹配的 GPIO 驱动强度。
+
+### 控制驱动强度
+焊盘内部有多个并联驱动器。如果将驱动强度设置为低值（`0b000`），其中大部分驱动器都是三态的，因此不会增加任何输出电流。如果驱动强度增加，并联的驱动器就会越来越多。下图显示了这种情况。
+
+:::warning[警告]
+在 4 系列设备上，电流电平为图中所示值的一半。
+:::
+
+<img src="/img/computers/raspberry-pi/pi_gpio_drive_strength_diagram.png" alt="GPIO驱动强度图" />
+
+### 当前值
+
+电流值规定了焊盘仍能满足规格要求的最大电流。
+
+电流值**不是**焊盘将输出的电流，也**不是**电流限制。
+
+焊盘输出是一个电压源：
+- 如果设置为高电平，焊盘将尝试将输出驱动至轨压（3.3V）。
+- 如果设置为低电平，焊盘将尝试将输出驱动至接地电压（0V）
+
+焊盘将尝试驱动输出高电平或低电平。成功与否取决于连接的要求。如果焊盘对地短路，则无法驱动高电平。实际上，它将尽可能多地输出电流，而电流仅受内部电阻的限制。
+
+如果焊盘被驱动到高电平，而它又与地短路，那么在适当的时候它就会失效。如果将其连接到 3.3V 并将其驱动为低电平，情况也是如此。
+
+是否符合规范取决于保证电压水平。由于焊盘是数字信号，因此有两个电压电平，即高电平和低电平。I/O 端口有两个处理输出电平的参数：
+- V<sub>OL</sub>，最大低电平电压（3.3V VDD IO 时为 0.14V）
+- V<sub>OH</sub>，最低高电平电压（3.3V VDD IO 时为 3.0V）
+
+V<sub>OL</sub>=0.14V 表示如果输出为低电平，电压将\<= 0.14V。V<sub>OH</sub>=3.0V 表示如果输出为高电平，则电压 \>= 3.0V。
+
+举例来说，16mA 的驱动强度意味着，如果将焊盘设置为高电平，则可以消耗高达 16mA 的电流，并且保证输出电压 \>=V<sub>OH</sub>。这也意味着，如果您将驱动强度设置为 2mA，并消耗 16mA 电流，电压将**不是** V<sub>OH</sub>，而是更低。事实上，它可能还不够高，以至于外部设备无法将其视为高电平。
+
+有关 GPIO 引脚[物理特性](#gpio)的更多信息。
 
 :::note[注意]
-树莓派3A+的机械图也适用于树莓派1A+。
+在计算模块设备上，可以将 VDD IO 从标准的 3.3V 改为别的值。在这种情况下，V<sub>OL</sub> 和 V<sub>OH</sub> 将根据[GPIO](#gpio)表格中的情况发生变化。
 :::
 
-### 树莓派1 型号 A+
-- [原理图，修订版 1.1](https://pip.raspberrypi.com/documents/RP-008350-DS)
+Raspberry Pi 3.3V 电源的设计最大电流为每个 GPIO 引脚约 3mA。如果为每个引脚加载 16mA 电流，则总电流为 272mA。在这种负载水平下，3.3V 电源将崩溃。会出现大电流尖峰，尤其是在有电容负载的情况下。尖峰电流会在其附近的所有其他引脚上反弹。这很可能会对 SD 卡甚至 SDRAM 行为造成干扰。
 
-### 树莓派Zero
-- [原理图，修订版 1.3](https://pip.raspberrypi.com/documents/RP-008366-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008365-DS)
-- [案例图纸，PDF - 空白盖子](https://pip.raspberrypi.com/documents/RP-008362-DS)
-- [案例图纸，PDF - GPIO 盖](https://pip.raspberrypi.com/documents/RP-008364-DS)
-- [案例图纸，PDF - 摄像头盖](https://pip.raspberrypi.com/documents/RP-008363-DS)
+### 安全电流
+所有焊盘电子元件的设计电流均为 16mA。这个安全值不会损坏设备。即使将驱动强度设置为 2mA，然后加载到 16mA 输出，也不会损坏器件。除此之外，没有可保证的最大安全电流。
 
-### 树莓派Zero W
-- [原理图，修订版 1.1](https://pip.raspberrypi.com/documents/RP-008368-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008367-DS)
+### GPIO 地址
+- 0x 7e10 002c 焊盘（GPIO 0-27）
+- 0x 7e10 0030 焊盘（GPIO 28-45）
+- 0x 7e10 0034 焊盘（GPIO 46-53）
 
-### 树莓派Zero 2W
-- [原理图](https://pip.raspberrypi.com/documents/RP-008360-DS)
-- [机械图纸，PDF](https://pip.raspberrypi.com/documents/RP-008358-DS)
-- [测试焊盘位置](https://pip.raspberrypi.com/documents/RP-008361-DS)
+| 位 | 字段名称 | 描述 | 类型 | 重置 |
+| -- | -- | -- | -- | -- |
+| 31:24 | PASSWRD | 写入时必须为0x5A；意外写保护密码 | 写 | 0 |
+| 23:5 |  | **保留**- 写为 0，读无关 |  |  |
+| 4 | SLEW | 转换率；0 = 转换速率受限；1 = 转换速率不受限制 | 读写 | 0x1 |
+| 3 | HYST | 启用输入迟滞；0 = 禁用；1 = 启用 | 读写 | 0x1 |
+| 2:0 | DRIVE | 驱动强度，参见下面的细分列表 | 读写 | 0x3 |
 
-#### 测试焊盘位置
-树莓派Zero 2W有许多在电路板生产过程中使用的测试焊盘位置。
-<img src="/img/computers/raspberry-pi/zero2-pad-diagram.png" alt="Zero2测试焊盘位置" />
+请注意 SSO（同步开关输出）的限制，它不仅取决于设备，还取决于 PCB 的质量和布局、去耦电容器的数量和质量、焊盘上的负载类型（电阻、电容）以及树莓派无法控制的其他因素。
 
-原点：左下角ORIGIN所示位置
-
-| 标签 | 功能 | X（距离原点毫米） | Y（距离原点毫米） |
-| -- | -- | -- | -- |
-| STATUS_LED | 电源状态（低=ON） | 5.15 | 8.8 |
-| CORE | 处理器电源 | 6.3 | 18.98 |
-| RUN | 连接到GND复位 | 8.37 | 22.69 |
-| 5V | 5V输入 | 8.75 | 11.05 |
-| 5V | 5V输入 | 11.21 | 6.3 |
-| GND | 接地引脚 | 10.9 | 3.69 |
-| GND | 接地引脚 | 17.29 | 2.41 |
-| USB_DP | USB端口 | 22.55 | 1.92 |
-| USB_DM | USB端口 | 24.68 | 1.92 |
-| OTG | OTG引脚 | 39.9 | 7.42 |
-| 1V8 | 1.8V模拟电池 | 42.03 | 8.42 |
-| TV | 复合电视输出 | 45.58 | 3.17 |
-| GND | 接地引脚 | 49.38 | 3.05 |
-| GND | 接地引脚 | 55.99 | 22.87 |
-| 3V3 | 3.3V IO电源 | 48.55 | 22.44 |
-| SD_CLK | SD卡时钟引脚 | 60.95 | 18.45 |
-| SD_CMD | SD卡命令引脚 | 58.2 | 16.42 |
-| SD_DAT0 | SD卡数据引脚 | 58.13 | 20.42 |
-| SD_DAT1 | SD卡数据引脚 | 60.65 | 21.1 |
-| SD_DAT2 | SD卡数据引脚 | 57.78 | 13.57 |
-| SD_DAT3 | SD卡数据引脚 | 60.8 | 15.22 |
-| BT_ON | 蓝牙电源状态 | 25.13 | 19.55 |
-| WL_ON | WiFi电源状态 | 27.7 | 19.2 |
-
+### 驱动强度列表
+- 0 = 2mA
+- 1 = 4mA
+- 2 = 6mA
+- 3 = 8mA
+- 4 = 10mA
+- 5 = 12mA
+- 6 = 14mA
+- 7 = 16mA
 
 ## 产品合规性与安全性
 所有树莓派产品都经过了广泛的合规性测试，有关更多信息，请参阅[产品信息门户](https://pip.raspberrypi.com/)
@@ -709,6 +429,8 @@ vcgencmd measure_temp
 
 对于 Raspberry Pi 4，请将 [Raspberry Pi 4 外壳风扇](https://www.raspberrypi.com/products/raspberry-pi-4-case-fan/) 添加到 Raspberry Pi 4 外壳的盖子上。
 
+该风扇额定电流 0.18 A，通过 40 针 GPIO 排针以 5 V 直流供电，通常消耗 60 mA（300 mW）。
+
 #### Raspberry Pi 5 风扇 
 
 对于 Raspberry Pi 5，请使用其中一个官方风扇选项：
@@ -716,15 +438,21 @@ vcgencmd measure_temp
 - [Active Cooler](https://www.raspberrypi.com/products/active-cooler/)
 - [Raspberry Pi 5 专用外壳](https://www.raspberrypi.com/products/raspberry-pi-5-case/)
 
-Raspberry Pi 5 的两个风扇都插入了位于电路板右上方 40 针 GPIO 接头和 USB 2 端口之间的四针 JST-SH PWM 风扇接头。风扇连接器的电流限制与 USB 外围设备相同。我们向超频者推荐 Active Cooler 盒子，因为它能提供更好的散热性能。
+Raspberry Pi 5 的两个风扇都插入了位于电路板右上方 40 针 GPIO 接头和 USB 2 端口之间的四针 JST-SH PWM 风扇接头。
 
-当 Raspberry Pi 5 的温度升高时，风扇的反应如下：
+风扇连接器的电流限制与 USB 外围设备相同。
 
-- 低于 50°C，风扇不旋转（0% 速度）
-- 50°C时，风扇以低速运转（30%速度）
-- 60°C时，风扇速度增加至中速（50%速度）
-- 67.5°C时，风扇转速增至高速（70%转速）
-- 75°C时，风扇升至全速（100%速度）
+官方外壳风扇在 5 V 下约消耗 60 mA（300 mW）。
+
+考虑到 Active Cooler 更强的散热性能，我们向希望为树莓派5 超频的用户推荐它。
+
+风扇会根据 SoC 温度按计划启停。默认温度映射如下：
+
+- 低于 50°C：风扇完全不旋转（0% 速度）。
+- 50°C：风扇以低速启动（30% 速度）。
+- 60°C：风扇速度提升至中速（50% 速度）。
+- 67.5°C：风扇速度提升至高速（70% 速度）。
+- 75°C：风扇升至全速（100% 速度）。
 
 温度下降使用相同的映射，**滞后**温度为 5°C；当温度下降到低于上述每个阈值 5°C 时，风扇转速下降。
 
@@ -734,7 +462,7 @@ Raspberry Pi 5 的两个风扇都插入了位于电路板右上方 40 针 GPIO �
 
 启动时，风扇打开，并检查转速计输入，查看风扇是否在转动。如果是，则启用 `cooling_fan` 设备树覆盖。该覆盖层默认位于 `bcm2712-rpi-5-b.dtb`，但`status=disabled`。
 
-#### Raspberry Pi 5 风扇连接器引脚说明
+##### Raspberry Pi 5 风扇连接器引脚说明
 
 Raspberry Pi 5 风扇连接器是一个 1 毫米间距的 JST-SH 插座，包含以下四个引脚：
 
@@ -1115,7 +843,7 @@ USB 有两种不同的启动模式：
 ### USB设备启动模式
 
 :::note[注意]
-USB 设备启动在 [计算模块系列](#compute-module系列)、[Zero系列](#zero系列)和 [Model A 旗舰系列变体](#旗舰级单板计算机sbc系列) 上可用。
+USB 设备启动在[计算模块系列](./compute-module.mdx)、[Zero 系列](./zero.mdx)和[经典树莓派单板计算机的 Model A 变体](./sbcs.mdx)上可用。
 :::
 
 当这种启动模式被激活时（通常是在从 SD 卡启动失败之后），树莓派会将其 USB 端口设置为设备模式，并等待主机的 USB 复位。可以在 [Github](https://github.com/raspberrypi/usbboot) 上找到示例代码，说明主机需要如何与树莓派通信。
@@ -1128,9 +856,7 @@ USB 设备启动在 [计算模块系列](#compute-module系列)、[Zero系列](#
 ### USB主机启动模式
 
 :::note[注意]
-主机启动仅适用于树莓派3B、3B+、3A+ 和 2B v1.2。树莓派3A+ 仅支持大容量存储器启动，不支持网络启动。
-
-主机启动适用于 [Compute Module 系列（自 Compute Module 3 起）](#compute-module系列)、[Zero 系列（自 Zero 2 W 起）](#zero系列)、Raspberry Pi 2B（1.2 版）、Raspberry Pi 3B 和 [所有的旗舰系列（自 Raspberry Pi 3B+ 起）](#旗舰级单板计算机sbc系列 )。Raspberry Pi 3A+ 支持大容量存储器启动，但不支持网络启动。
+主机启动适用于 [Compute Module 系列（自 Compute Module 3 起）](./compute-module.mdx)、[Zero 系列（自 Zero 2 W 起）](./zero.mdx)、Raspberry Pi 2B（1.2 版）、Raspberry Pi 3B 和[所有经典树莓派单板计算机（自 Raspberry Pi 3B+ 起）](./sbcs.mdx)。Raspberry Pi 3A+ 支持大容量存储器启动，但不支持网络启动。
 :::
 
 USB 主机启动模式使用以下逻辑：
@@ -1163,8 +889,7 @@ USB 主机启动模式使用以下逻辑：
 
 ## USB大容量存储启动
 :::note[注意]
-仅适用于树莓派2B v1.2、3A+、3B、3B+、4B、400 和零 2 W，以及树莓派计算模块 3、3+ 和 4。
-适用于 [自 Compute Module 3 起的 Compute Module 系列](#compute-module系列)、[自 Zero 2 W 起的 Zero 系列](#zero系列)和 [自 Raspberry Pi 2B（1.2 版）起的所有旗舰系列设备](#旗舰级单板计算机sbc系列)。
+适用于[自 Compute Module 3 起的 Compute Module 系列](./compute-module.mdx)、[自 Zero 2 W 起的 Zero 系列](./zero.mdx)以及[自 Raspberry Pi 2B（1.2 版）起的所有经典单板计算机](./sbcs.mdx)。
 :::
 
 您可能希望从 USB 大容量存储设备（如闪存盘或 USB 硬盘）启动 Raspberry Pi。在连接 USB 设备（尤其是硬盘和固态硬盘）时，请注意它们的电源要求。如果您计划在 Raspberry Pi 上连接一个以上的固态硬盘或硬盘，通常需要外接电源--供电硬盘盒或供电 USB 集线器。
@@ -2191,7 +1916,7 @@ NETCONSOLE 会阻塞，直到以太网链接建立或发生超时。超时值为
 
 ##### 格式
 
-更多信息参见 [Netconsole文档](https://wiki.archlinux.org/index.php/Netconsole)
+更多信息参见 [Netconsole 文档](https://docs.kernel.org/networking/netconsole.html)
 
 ```
 src_port@src_ip/dev_name,dst_port@dst_ip/dst_mac
@@ -2718,198 +2443,6 @@ dtparam=clock-frequency=32000000,rgb666-padhi
 | `bus-format` | 覆盖 MEDIA_BUS_FMT_* 值的总线格式，也由 rgbXXX 覆盖覆盖 |
 | `backlight-gpio` | 定义用于背光控制的GPIO（默认值：无） |
 
-## 通用I/O (GPIO) {#gpio}
-
-目前所有 Raspberry Pi 电路板上都有一个 40 针 GPIO（通用输入/输出）针座。所有板上的 GPIO 针座的针距都是 0.1 英寸（2.54 毫米）。
-
-:::note
-在没有 `H` 后缀的 Zero 和 Pico 设备上，该针座没有填充（没有针座）。
-::: 
-
-<img src="/img/computers/os/GPIO-Pinout-Diagram-2.png" width="100%" alt="GPIO引脚" />
-
-通用I/O (GPIO) 引脚可配置为通用输入、通用输出或多达六种特殊备用设置之一，其功能取决于引脚。
-
-<img src="/img/computers/os/GPIO.png" width="100%" alt="GPIO布局" />
-
-:::note
-GPIO 引脚编号方案不按数字顺序排列。电路板上有 GPIO 引脚 0 和 1（物理引脚 27 和 28），但保留给高级用途。
-:::
-
-### 输出
-
-指定为输出引脚的 GPIO 引脚可设置为高电平（3.3V）或低电平（0V）。
-
-### 输入
-
-指定为输入引脚的 GPIO 引脚可读取为高电平（3.3V）或低电平（0V）。使用内部上拉或下拉电阻可以更方便地实现这一点。GPIO2 和 GPIO3 引脚具有固定的上拉电阻，其他引脚可通过软件进行配置。
-
-### 查看 Raspberry Pi 的 GPIO 引脚布局
-
-打开终端窗口并运行 `pinout` 命令，即可在 Raspberry Pi 上访问 GPIO 参考信息。该工具由 [GPIO Zero](https://gpiozero.readthedocs.io/) Python 库提供，Raspberry Pi OS 默认安装了该库。
-
-:::warning
-虽然将简单元件连接到 GPIO 引脚是安全的，但接线时一定要小心。LED 应使用电阻来限制通过它们的电流。不要将 5V 电压用于 3.3V 元件。不要将电机直接连接到 GPIO 引脚，而应使用[H-桥电路或电机控制器板](https://projects.raspberrypi.org/en/projects/physical-computing/14)。
-:::
-
-### 权限
-
-要使用 GPIO 端口，用户必须是 `gpio` 组的成员。默认用户账户是该组的成员，但必须使用以下命令手动添加其他用户：
-
-```sh
-sudo usermod -a -G gpio <用户名>
-```
-
-### GPIO焊盘
-BBCM2835 封装上的 GPIO 连接有时在外设数据表中被称为 "焊盘"，这是一个半导体设计术语，意思是 "芯片与外界的连接"。
-
-焊盘是可配置的 CMOS 推-拉驱动器/输入缓冲器。基于寄存器的控制设置可用于：
-- 内部上拉/下拉启用/禁用
-- 输出[驱动强度](#gpio焊盘控制)
-- 输入施密特触发滤波
-
-#### 开机状态
-上电复位时，所有 GPIO 引脚都恢复为通用输入。默认上拉状态也会应用，详情请参阅 Arm 外设数据表中的备用功能表。大多数 GPIO 都应用了默认上拉状态。
-
-### 中断
-每个 GPIO 引脚在配置为通用输入时，都可配置为 Arm 的中断源。可配置多个中断源：
-- 电平敏感（高/低）
-- 上升/下降沿
-- 异步上升沿/下降沿
-
-电平中断保持中断状态，直到系统软件清除电平（例如，通过为产生中断的附加外设提供服务）。
-
-正常的上升沿/下降沿检测内置了少量同步功能。以系统时钟频率对引脚进行采样，产生中断的标准是三个周期窗口内的稳定转换，即记录 1 0 0 或 0 1 1。异步检测绕过了这一同步过程，从而能够检测非常小的事件。
-
-### 替代功能
-
-几乎所有 GPIO 引脚都有替代功能。SoC 内部的外设块可以选择出现在一组 GPIO 引脚中的一个或多个引脚上，例如，I2C 总线可以配置到至少 3 个独立的位置。当引脚配置为替代功能时，驱动强度或施密特滤波等焊盘控制仍然适用。
-
-有些功能可在所有引脚上使用，有些则在特定引脚上使用：
-
-- PWM （脉宽调制）
-  - 所有引脚均可使用软件 PWM
-  - GPIO12, GPIO13, GPIO18, GPIO19 上可用的硬件 PWM
-- SPI
-  - SPI0：MOSI（GPIO10）；MISO（GPIO9）；SCLK（GPIO11）；CE0（GPIO8），CE1（GPIO7）
-  - SPI1：MOSI（GPIO20）；MISO（GPIO19）；SCLK（GPIO21）；CE0（GPIO18）；CE1（GPIO17）；CE2（GPIO16）
-- I2C
-  - 数据：（GPIO2）；时钟（GPIO3）
-  - EEPROM 数据：（GPIO0）；EEPROM 时钟（GPIO1）
-- 串行通讯
-  - TX (GPIO14); RX (GPIO15)
-
-### 电压规格
-
-电路板上有两个 5V 引脚和两个 3.3V 引脚，以及一些无法重新配置的接地引脚 (GND)。其余引脚均为通用 3.3V 引脚，即输出设置为 3.3V，输入为 3.3V 容差。
-
-下表给出了 BCM2835、BCM2836、BCM2837 和基于 RP3A0 的产品（如树莓派Zero或树莓派3+）的 GPIO 引脚的各种电压规格。有关CM的信息，请参阅[相关数据表](./compute-module.mdx#规格)。
-
-| 标签 | 参数 | 状况 | 最小 |典型的 | 最大限度 |单位 |
-| -- | -- | -- | -- | -- | -- | -- |
-| V<sub>IL</sub> | 输入低电压 | - | - | - | 0.9 | V |
-| V<sub>IH</sub> | 输入高压<sup>a</sup> | - | 1.6 | - | V |
-| I<sub>IL</sub> | 输入漏电流 | TA = +85°C | - | - | 5 | µA |
-| C<sub>IN</sub> | 输入电容 | - | - | 5 | - | pF |
-| V<sub>OL</sub> | 输出低电压<sup>b</sup> | IOL = -2mA | - | - | 0.14 | V |
-| V<sub>OH</sub> | 输出高电压<sup>b</sup> | IOH = 2mA | 3.0 | - | - | V |
-| I<sub>OL</sub> | 输出低电流<sup>c</sup> | VO = 0.4V | 18 | - | - | mA |
-| I<sub>OH</sub> | 输出高电流<sup>c</sup> | VO = 2.3V | 17 | - | - | mA |
-| R<sub>PU</sub> | 上拉电阻 | - | 50 | - | 65 | kΩ |
-| R<sub>PD</sub> | 下拉电阻 | - | 50 | - | 65 | kΩ |
-
-<sup>a</sup> 启用迟滞<br />
-<sup>b</sup> 默认驱动强度 (8mA)<br />
-<sup>c</sup> 最大驱动强度 (16mA)
-
-下表列出了基于 BCM2711 的产品（4 系列器件）上 GPIO 引脚的电压规格。有关计算模块的信息，请参阅[相关数据表](./compute-module.mdx#规格)。
-
-| 标签 | 参数 | 状况 | 最小 |典型的 | 最大限度 |单位 |
-| -- | -- | -- | -- | -- | -- | -- |
-| V<sub>IL</sub> | 输入低电压 | - | - | - | 0.8 | V |
-| V<sub>IH</sub> | 输入高压<sup>a</sup> | - | 2.0 | - | V |
-| I<sub>IL</sub> | 输入漏电流 | TA = +85°C | - | - | 10 | µA |
-| V<sub>OL</sub> | 输出低电压<sup>b</sup> | IOL = -4mA | - | - | 0.4 | V |
-| V<sub>OH</sub> | 输出高电压<sup>b</sup> | IOH = 4mA | 2.6 | - | - | V |
-| I<sub>OL</sub> | 输出低电流<sup>c</sup> | VO = 0.4V | 7 | - | - | mA |
-| I<sub>OH</sub> | 输出高电流<sup>c</sup> | VO = 2.6V | 7 | - | - | mA |
-| R<sub>PU</sub> | 上拉电阻 | - | 33 | - | 73 | kΩ |
-| R<sub>PD</sub> | 下拉电阻 | - | 33 | - | 73 | kΩ |
-
-<sup>a</sup> 启用迟滞<br />
-<sup>b</sup> 默认驱动强度 (8mA)<br />
-<sup>c</sup> 最大驱动强度 (16mA)
-
-## GPIO焊盘控制
-GPIO 驱动强度并不指示最大电流，而是指示焊盘仍能满足规格要求的最大电流。为使设备正常工作，应设置与所连接设备相匹配的 GPIO 驱动强度。
-
-### 控制驱动强度
-焊盘内部有多个并联驱动器。如果将驱动强度设置为低值（`0b000`），其中大部分驱动器都是三态的，因此不会增加任何输出电流。如果驱动强度增加，并联的驱动器就会越来越多。下图显示了这种情况。
-
-:::warning[警告]
-在 4 系列设备上，电流电平为图中所示值的一半。
-:::
-
-<img src="/img/computers/raspberry-pi/pi_gpio_drive_strength_diagram.png" alt="GPIO驱动强度图" />
-
-### 当前值
-
-电流值规定了焊盘仍能满足规格要求的最大电流。
-
-电流值**不是**焊盘将输出的电流，也**不是**电流限制。
-
-焊盘输出是一个电压源：
-- 如果设置为高电平，焊盘将尝试将输出驱动至轨压（3.3V）。
-- 如果设置为低电平，焊盘将尝试将输出驱动至接地电压（0V）
-
-焊盘将尝试驱动输出高电平或低电平。成功与否取决于连接的要求。如果焊盘对地短路，则无法驱动高电平。实际上，它将尽可能多地输出电流，而电流仅受内部电阻的限制。
-
-如果焊盘被驱动到高电平，而它又与地短路，那么在适当的时候它就会失效。如果将其连接到 3.3V 并将其驱动为低电平，情况也是如此。
-
-是否符合规范取决于保证电压水平。由于焊盘是数字信号，因此有两个电压电平，即高电平和低电平。I/O 端口有两个处理输出电平的参数：
-- V<sub>OL</sub>，最大低电平电压（3.3V VDD IO 时为 0.14V）
-- V<sub>OH</sub>，最低高电平电压（3.3V VDD IO 时为 3.0V）
-
-V<sub>OL</sub>=0.14V 表示如果输出为低电平，电压将\<= 0.14V。V<sub>OH</sub>=3.0V 表示如果输出为高电平，则电压 \>= 3.0V。
-
-举例来说，16mA 的驱动强度意味着，如果将焊盘设置为高电平，则可以消耗高达 16mA 的电流，并且保证输出电压 \>=V<sub>OH</sub>。这也意味着，如果您将驱动强度设置为 2mA，并消耗 16mA 电流，电压将**不是** V<sub>OH</sub>，而是更低。事实上，它可能还不够高，以至于外部设备无法将其视为高电平。
-
-有关 GPIO 引脚[物理特性](#gpio)的更多信息。
-
-:::note[注意]
-在计算模块设备上，可以将 VDD IO 从标准的 3.3V 改为别的值。在这种情况下，V<sub>OL</sub> 和 V<sub>OH</sub> 将根据[GPIO](#gpio)表格中的情况发生变化。
-:::
-
-Raspberry Pi 3.3V 电源的设计最大电流为每个 GPIO 引脚约 3mA。如果为每个引脚加载 16mA 电流，则总电流为 272mA。在这种负载水平下，3.3V 电源将崩溃。会出现大电流尖峰，尤其是在有电容负载的情况下。尖峰电流会在其附近的所有其他引脚上反弹。这很可能会对 SD 卡甚至 SDRAM 行为造成干扰。
-
-### 安全电流
-所有焊盘电子元件的设计电流均为 16mA。这个安全值不会损坏设备。即使将驱动强度设置为 2mA，然后加载到 16mA 输出，也不会损坏器件。除此之外，没有可保证的最大安全电流。
-
-### GPIO 地址
-- 0x 7e10 002c 焊盘（GPIO 0-27）
-- 0x 7e10 0030 焊盘（GPIO 28-45）
-- 0x 7e10 0034 焊盘（GPIO 46-53）
-
-| 位 | 字段名称 | 描述 | 类型 | 重置 |
-| -- | -- | -- | -- | -- |
-| 31:24 | PASSWRD | 写入时必须为0x5A；意外写保护密码 | 写 | 0 |
-| 23:5 |  | **保留**- 写为 0，读无关 |  |  |
-| 4 | SLEW | 转换率；0 = 转换速率受限；1 = 转换速率不受限制 | 读写 | 0x1 |
-| 3 | HYST | 启用输入迟滞；0 = 禁用；1 = 启用 | 读写 | 0x1 |
-| 2:0 | DRIVE | 驱动强度，参见下面的细分列表 | 读写 | 0x3 |
-
-请注意 SSO（同步开关输出）的限制，它不仅取决于设备，还取决于 PCB 的质量和布局、去耦电容器的数量和质量、焊盘上的负载类型（电阻、电容）以及树莓派无法控制的其他因素。
-
-### 驱动强度列表
-- 0 = 2mA
-- 1 = 4mA
-- 2 = 6mA
-- 3 = 8mA
-- 4 = 10mA
-- 5 = 12mA
-- 6 = 14mA
-- 7 = 16mA
-
 ## 树莓派的工业用途
 树莓派经常作为其他产品的一部分使用。本文档介绍了一些可用于使用树莓派其他功能的额外设施。
 
@@ -3383,15 +2916,28 @@ Raspberry Pi 4B 和 Pi 3B+ 的以太网插孔具有 PoE 功能，支持 IEEE 802
 Raspberry Pi 5 在+5V（25W）电压下可提供 5A 电流时，可为下游 USB 外围设备提供 1.6A 电流。当连接到任何其他兼容电源时，Raspberry Pi 5 将下游 USB 设备的功率限制为 600mA。
 :::
 
-大多数 Raspberry Pi 都能为 USB 外围设备提供足够的电流，为大多数 USB 设备供电，包括键盘、鼠标和适配器。不过，有些设备需要额外的电流，包括调制解调器、外置磁盘和高功率天线。要连接电源要求超过上表规定值的 USB 设备，请使用外部供电的 USB 集线器进行连接。
+树莓派的电源需求会随着你使用其接口和连接外设而增加。
 
-随着您使用 Raspberry Pi 上的各种接口，Raspberry Pi 对电源的要求也会增加。GPIO 引脚总计可安全地消耗 50mA 电流；每个引脚可单独消耗高达 16mA 电流。HDMI 端口的电流为 50mA。摄像头模块需要 250mA。USB 键盘和鼠标的电流可低至 100mA，也可高达 1000mA。检查您计划连接到 Raspberry Pi 的设备的额定功率，并购买相应的电源。如果不确定，请使用外部供电的 USB 集线器。
+大多数树莓派计算机都能为标准 USB 设备（如键盘、鼠标和基本适配器）提供足够的电流。不过，高功耗设备（包括调制解调器、外置硬盘和高功率天线）需要额外供电。
 
-运行以下命令检查 USB 端口的电源输出状态：
+要检查树莓派5 的 USB 端口当前供电状态，请运行：
 
 ```sh
 vcgencmd get_config usb_max_current_enable
 ```
+
+在连接外设之前，请检查其额定功率并据此选择电源。如果不确定电源能否提供足够的电流，请使用外部供电的 USB 集线器连接高功耗设备。更多信息请参阅 [USB 配件](../accessories/usb.mdx)。
+
+下表列出了常见板载接口和官方配件的典型电源需求：
+
+| 接口或外设 | 典型电流消耗 |
+| -- | -- |
+| GPIO 引脚（合计） | 最大 50 mA |
+| GPIO 引脚（单个） | 最高 16 mA |
+| HDMI 端口 | 50 mA |
+| 摄像头模块 | 250 mA |
+| 外壳风扇 | 5 V 下 60 mA（300 mW） |
+| USB 键盘或鼠标 | 100 mA 至 1,000 mA |
 
 下表描述了不同型号的树莓派在各种工作负载下消耗的电流（单位为安培）：
 

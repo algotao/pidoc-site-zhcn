@@ -204,8 +204,7 @@ import Normal from "../_normal.mdx";
 您可以使用 Raspberry Pi Connect 的[远程更新](./connect.mdx#远程更新你的设备)功能向组织中的设备推送更新。向组织设备部署的方式与[向个人设备部署](./connect.mdx#部署更新工件)大致相同，但有以下区别：
 
 * 组织会维护一个[工件库](#管理工件库)，您可以多次部署其中的工件。
-* 除了上传工件，您还可以[自行托管工件](#托管更新工件)。
-* 部署时设备无需在线；它们会在下次上线时更新。
+* 除了上传工件，您还可以[自行托管工件](#托管更新工件)，这样工件在您等待设备上线期间不会过期。
 * 您可以使用[管理 API](#管理api) 管理工件和部署。
 
 :::note
@@ -292,7 +291,7 @@ import Normal from "../_normal.mdx";
 
 <img src="/img/services/connect-for-organisations/new-deployment-view.png" alt="Raspberry Pi Connect 新建部署界面第 1 步，显示使用现有工件、上传工件或自行托管工件的选项" width="100%" />
 
-在 **第 2 步：检查并部署** 中，确认工件的详细信息，然后选择 **部署**。
+在 **第 2 步：检查并部署** 中，确认工件的详细信息，然后选择 **部署**。对于上传的工件，此步骤还会显示文件的过期时间；只有当接收设备在此之前上线并开始部署时，部署才会成功。
 
 请按照[监控部署](./connect.mdx#监控部署)中所述跟踪部署进度。
 
@@ -1107,15 +1106,15 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
-每个部署的 `state` 为 `pending`、`in_progress`、`succeeded`、`failed` 或 `cancelled` 之一。对于 `failed` 的部署，`state_reason` 包含部署失败原因的可读说明（例如校验和不匹配或被更新的部署取代）；对于其他状态，该值为 `null`。
+每个部署的 `state` 为 `queued`、`in_progress`、`succeeded`、`failed`、`cancelled` 或 `invalidated` 之一。对于 `failed` 的部署，`state_reason` 包含部署失败原因的可读说明（例如校验和不匹配或被更新的部署取代）；对于其他状态，该值为 `null`。
 
-如需按状态筛选返回的部署，请在查询字符串中使用 `state` 参数，值为上述状态之一：
+如需按状态筛选返回的部署，请在查询字符串中使用 `state` 参数，值为上述状态之一。为向后兼容，`state=pending` 会返回 `queued` 的部署：
 
 <Tabs>
 <TabItem value="http" label="HTTP">
 
 ```http
-GET /organisation/devices/device-id/deployments?state=pending HTTP/1.1
+GET /organisation/devices/device-id/deployments?state=queued HTTP/1.1
 Host: api.connect.raspberrypi.com
 Authorization: Bearer rporg_accesstokenhere
 ```
@@ -1124,7 +1123,7 @@ Authorization: Bearer rporg_accesstokenhere
 <TabItem value="curl" label="curl">
 
 ```sh
-curl --header 'Authorization: Bearer rporg_accesstokenhere' 'https://api.connect.raspberrypi.com/organisation/devices/device-id/deployments?state=pending'
+curl --header 'Authorization: Bearer rporg_accesstokenhere' 'https://api.connect.raspberrypi.com/organisation/devices/device-id/deployments?state=queued'
 ```
 
 </TabItem>
@@ -1193,7 +1192,7 @@ Content-Type: application/json; charset=utf-8
 
 ### 创建部署
 
-如需将工件部署到设备，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。新部署将取代该设备上已排队的任何待处理部署。
+如需将工件部署到设备，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。新部署将取代该设备上已排队的任何部署。
 
 请替换下方代码中的参数：
 
@@ -1234,7 +1233,7 @@ Content-Type: application/json; charset=utf-8
 
 {
     "id": "fdf45c44-2c0e-4f12-9b04-3a6a1c0d3b8d",
-    "state": "pending",
+    "state": "queued",
     "state_reason": null,
     "device_id": "69739b44-ebb2-468e-9e24-08126dec4925",
     "artefact_id": "ee92e7e6-2c2c-4e7d-9d80-2cce8a6c7e8a",
@@ -1260,7 +1259,7 @@ Content-Type: application/json; charset=utf-8
 
 ### 取消部署
 
-如需取消待处理的部署，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
+如需取消已排队的部署，请使用 [管理 API 访问令牌](#创建管理api访问令牌) 发起以下 HTTP 请求。
 
 请替换下方代码中的参数：
 

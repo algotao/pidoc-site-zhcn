@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Pico系列微控制器包含多个型号，如Pico、Pico 2、Pico W等，分别搭载RP2040和RP2350芯片，具备丰富的外设接口与无线连接能力。
 keywords: [Raspberry Pi Pico, Pico 2, Pico 2 W, Pico W, Pico H, RP2040, RP2350, 微控制器, 嵌入式开发, IoT, Wi-Fi, 蓝牙, GPIO, USB编程, C/C++ SDK, MicroPython, 低功耗, 开发板, 英飞凌CYW43439, 数据手册, Fritzing, 调试工具, Picotool, SWD]
 last_update: 
-  date: 2026-08-02
+  date: 2026-10-25
 ---
 import Normal from "../_normal.mdx";
 
@@ -21,6 +21,32 @@ Raspberry Pi Pico 系列有两代产品：
 
 * **无线连接**。名称中包含 **W** 后缀的变体具有 Wi-Fi 和蓝牙功能。
 * **预焊接排针**。变体可以是齿形模块（用于直接焊接）或带有预焊接排针。
+
+## 型号
+
+下表按时间倒序汇总了 Raspberry Pi Pico 微控制器开发板，列出其 SoC、内存和存储以便快速参考。
+
+你可以根据型号名称判断哪些型号带有预焊接排针和无线连接：
+
+* **无线连接**。名称中包含 **W** 后缀的型号具备以下无线连接：
+  * 双频（2.4 GHz 或 5 GHz）802.11ac Wi-Fi（10 Mb/s）。
+  * 蓝牙（5.2 及 BLE）。
+* **预焊接排针**。名称中带 **H** 或 **with headers** 后缀的型号已在 GPIO 排针上焊接针脚；如果型号名称中缺少这两种后缀，则需自行焊接针脚或安装第三方针脚套件。
+  * 带 **H** 后缀的第一代 Raspberry Pi Pico 已在 GPIO 排针上预焊针脚。
+  * Raspberry Pi Pico 2 使用 **with headers** 而不使用 **H** 后缀。
+
+有关各型号的更多信息，请参阅本页后面 [Raspberry Pi Pico](#raspberry-pi-pico) 和 [Raspberry Pi Pico 2](#raspberry-pi-pico-2) 的专属章节。
+
+| 型号 | SoC | 内存 | 存储 |
+| -- | -- | -- | -- |
+| Raspberry Pi Pico 2 W with headers | [RP2350](./microcontroller-chips#rp2350) | 520 kB | 4 MB |
+| Raspberry Pi Pico 2 with headers | [RP2350](./microcontroller-chips#rp2350) | 520 kB | 4 MB |
+| Raspberry Pi Pico 2 W | [RP2350](./microcontroller-chips#rp2350) | 520 kB | 4 MB |
+| Raspberry Pi Pico 2 | [RP2350](./microcontroller-chips#rp2350) | 520 kB | 4 MB |
+| Raspberry Pi Pico WH | [RP2040](./microcontroller-chips#rp2040) | 264 kB | 2 MB |
+| Raspberry Pi Pico W | [RP2040](./microcontroller-chips#rp2040) | 264 kB | 2 MB |
+| Raspberry Pi Pico H | [RP2040](./microcontroller-chips#rp2040) | 264 kB | 2 MB |
+| Raspberry Pi Pico | [RP2040](./microcontroller-chips#rp2040) | 264 kB | 2 MB |
 
 ## Raspberry Pi Pico
 

@@ -1,0 +1,205 @@
+---
+sidebar_position: 11
+draft: false
+title_meta: 树莓派 Zero 系列型号总览与硬件规格
+description: 树莓派 Zero 系列各型号总览，包括 Zero 2 W、Zero W 与 Zero 的处理器、内存、组件、端口与测试焊盘位置，帮助你区分带 W 后缀与带排针的型号。
+keywords: [树莓派Zero, Raspberry Pi Zero 2 W, Zero WH, Zero W, Zero, RP3A0, 型号对比, 硬件规格, 测试焊盘]
+last_update:
+  date: 2026-10-25
+---
+import Normal from "../_normal.mdx";
+
+# 树莓派 Zero
+
+树莓派 **Zero** 采用超紧凑的单板计算机（SBC）设计，功耗低于[经典单板计算机](./sbcs.mdx)。这些型号省略了经典树莓派单板计算机上的一些特性，以实现更小的外形规格，更适合嵌入式和便携式应用。所有 Zero 型号共享相同的硬件基线，包括：
+
+* 一个 microSD 卡槽。
+* 一个 mini HDMI 端口。
+* 两个 micro-USB 端口，其中一个用于输入电源，另一个用于外部设备。
+
+自初代 Zero 的 1.3 版起，所有 Zero 型号还带有一个 22 针、0.5 mm（细间距）、11.5 mm 宽的迷你 CSI（摄像头）端口。
+
+同一代树莓派 Zero 内各型号的主要差异在于板子是否配备：
+
+* **无线连接。** 名称带 **W** 后缀的型号带有板载无线电模块，支持 Wi-Fi 和蓝牙；不带 W 后缀的型号没有无线能力，需要 USB 适配器才能联网。
+* **预焊接 GPIO 排针。** 名称带 **H** 后缀或 *with headers* 标识（因代次而异）的型号出厂即带预焊接的 40 针排针；不带后缀或标识的型号只有未焊接的通孔，如果需要使用 GPIO，必须自行焊接排针或安装兼容的第三方针脚套件。
+
+## 型号列表
+
+下表按时间倒序汇总了树莓派 Zero 型号，列出其关键区别以便快速参考。
+
+带无线连接（以 **W** 后缀表示）的树莓派 Zero 型号具备：
+
+* 2.4 GHz 单频 802.11n Wi-Fi（35 Mb/s）。
+* 蓝牙 4.2 和低功耗蓝牙（BLE）。
+
+树莓派 **Zero 2 W** 使用 *with headers* 而不使用 **H** 后缀。缺少 **H** 或 *with headers* 后缀的型号在 GPIO 排针上没有焊接针脚。有关各型号的详细信息，请参阅本页后面各型号的专属章节。
+
+| 型号 | 微处理器 | 内存 (RAM) | GPIO 排针 | GPU | CPU |
+| -- | -- | -- | -- | -- | -- |
+| Raspberry Pi Zero 2 W with headers (2021) | Raspberry Pi [RP3A0](./processors.mdx#rp3a0) | 512 MB RAM | 40 针 GPIO 排针 | VideoCore IV | 1 GHz 四核 64 位 Cortex-A53 |
+| Raspberry Pi Zero 2 W (2021) | Raspberry Pi [RP3A0](./processors.mdx#rp3a0) | 512 MB RAM | 未焊接的 40 针 GPIO 排针 | VideoCore IV | 1 GHz 四核 64 位 Cortex-A53 |
+| Raspberry Pi Zero WH (2018) | Broadcom [BCM2835](./processors.mdx#bcm2835) | 512 MB RAM | 40 针 GPIO 排针 | VideoCore IV | 1 GHz 单核 32 位 ARM11 |
+| Raspberry Pi Zero W (2017) | Broadcom [BCM2835](./processors.mdx#bcm2835) | 512 MB RAM | 未焊接的 40 针 GPIO 排针 | VideoCore IV | 1 GHz 单核 32 位 ARM11 |
+| Raspberry Pi Zero (2015/2016) | Broadcom [BCM2835](./processors.mdx#bcm2835) | 512 MB RAM | 未焊接的 40 针 GPIO 排针 | VideoCore IV | 1 GHz 单核 32 位 ARM11 |
+
+## Raspberry Pi Zero 2 W（带与不带排针） {#zero2w}
+
+<img src="/img/computers/zero/zero2wandwh.jpg" alt="树莓派 Zero 2 W 不带排针（左）和带排针（右）" width="100%" />
+*树莓派 Zero 2 W 不带排针（左）和带排针（右）*
+
+[树莓派 Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) 提供未焊接的 GPIO 排针；带排针的树莓派 Zero 2 W 出厂即带预焊接的 GPIO 排针。与 [Zero W 和 WH](#zerow-wh) 一样，两种型号都可以通过 Wi-Fi 连接网络。
+
+树莓派 Zero 2 W（带与不带排针）的尺寸约为 65 mm × 30 mm。更详细的尺寸请参阅 [树莓派 Zero 2 W 机械图](https://pip.raspberrypi.com/documents/RP-008358-DS)。电气电路、组件与引脚连接的工程图请参阅 [树莓派 Zero 2 W 原理图](https://pip.raspberrypi.com/documents/RP-008360-DS)。
+
+### 相对树莓派 Zero W 和 WH 的功能变化
+
+树莓派 Zero 2 W（带与不带排针）采用与树莓派 Zero W 和 WH 相同的外形规格、连接器和安装孔，同时带来以下性能和连接性改进：
+
+* **系统级封装（SiP）。** SoC 和 RAM 集成在单个 SiP **RP3A0** 中，包括：
+  * 一颗 Broadcom BCM2710A1 SoC，具有四个 64 位 Arm Cortex-A53 CPU 核心，每个核心运行在 1 GHz。
+  * 一个 400 MHz 的 Broadcom VideoCore IV GPU，用于视频和 3D 渲染任务。
+  * 512 MB 运行在 450 MHz 的 LPDDR2 RAM。
+* **更快的处理器。** 用四核 64 位 Cortex-A53 处理器取代树莓派 Zero 上的单核 ARM11 处理器。
+* **升级的蓝牙。** 无线连接从蓝牙 4.0 升级为蓝牙 4.2。
+
+以下章节在描述这些变化的同时，还会介绍：
+
+* 焊接在树莓派 Zero 2 W 上的其他内部组件。
+* 用于将外部硬件连接到这些组件的物理插槽和排针。
+
+### 树莓派 Zero 2 W（带与不带排针）组件 {#zero2w-components}
+
+树莓派 Zero 2 W（带与不带排针）包含以下板载组件：
+
+| 组件 | 说明 |
+| -- | -- |
+| **SiP** | SoC 和 RAM 包含在同一个组件（SiP）中。该 SiP 为 **RP3A0**，由 Broadcom BCM2710A1 SoC（包括 1 GHz 四核 64 位 Cortex-A53（CPU）和 400 MHz VideoCore IV（GPU））以及 512 MB 运行在 450 MHz 的 LPDDR2（增强型低功耗双倍数据速率 2）内存组成。 |
+| **无线模块** | 一个充当两个组件的无线模块：用于连接计算机网络的 **Wi-Fi** 无线电，提供单频（2.4 GHz）802.11b/g/n Wi-Fi；以及用于连接外设的**蓝牙**无线电，提供蓝牙 4.2 和低功耗蓝牙（BLE）。 |
+
+### 树莓派 Zero 2 W（带与不带排针）端口 {#zero2w-ports}
+
+树莓派 Zero 2 W（带与不带排针）包含以下端口：
+
+| 端口类型 | Raspberry Pi Zero 2 W | Raspberry Pi Zero 2 W with headers |
+| -- | -- | -- |
+| **Micro USB 端口** | 两个 micro USB 端口，一个用于输入电源，一个用于 USB On-The-Go（OTG），兼容 OTG 适配器，可连接键盘、鼠标、USB 集线器及其他外部设备。 | 两个 micro USB 端口，一个用于输入电源，一个用于 USB On-The-Go（OTG），兼容 OTG 适配器，可连接键盘、鼠标、USB 集线器及其他外部设备。 |
+| **Mini-HDMI 端口** | 一个 mini-HDMI 端口，支持单台显示器输出视频和音频，最高 1080p 60 Hz。 | 一个 mini-HDMI 端口，支持单台显示器输出视频和音频，最高 1080p 60 Hz。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，可连接摄像头。采用 22 针、0.5 mm（细间距）、11.5 mm 宽的迷你 CSI 端口。 | 2 通道 MIPI 摄像头串行接口（CSI）端口，可连接摄像头。采用 22 针、0.5 mm（细间距）、11.5 mm 宽的迷你 CSI 端口。 |
+| **GPIO 排针（未焊接或已焊接）** | 标准 40 针 GPIO 接口，排成两行各 20 针。该 GPIO 排针未焊接；在焊上 2 × 20、2.54 mm 的排针后，这些引脚可让树莓派 Zero 2 W 与其他硬件（LED、按钮、传感器等）通信。 | 标准 40 针 GPIO 接口，排成两行各 20 针，并已预焊接 2 × 20、2.54 mm 的排针。这些引脚可让带排针的树莓派 Zero 2 W 与其他硬件（LED、按钮、传感器等）通信。 |
+| **microSD 卡槽** | 用于插入 microSD 卡以加载操作系统和存储数据的卡槽。 | 用于插入 microSD 卡以加载操作系统和存储数据的卡槽。 |
+
+### 测试焊盘位置 {#zero2w-test-pads}
+
+<img src="/img/computers/zero/zero2-pad-diagram.png" alt="树莓派 Zero 2 W 测试焊盘位置" width="70%" />
+
+树莓派 Zero 2 W（带与不带排针）在板子生产过程中使用多处测试焊盘，列于下表。
+
+| 标签 | 功能 | X（距原点，mm） | Y（距原点，mm） |
+| -- | -- | -- | -- |
+| `STATUS_LED` | LED 电源状态（LOW = 亮） | 5.15 | 8.8 |
+| `CORE` | 处理器电源 | 6.3 | 18.98 |
+| `RUN` | 接 `GND` 可复位 | 8.37 | 22.69 |
+| `5V` | 5 V 输入 | 8.75 | 11.05 |
+| `5V` | 5 V 输入 | 11.21 | 6.3 |
+| `GND` | 接地引脚 | 10.9 | 3.69 |
+| `GND` | 接地引脚 | 17.29 | 2.41 |
+| `USB_DP` | USB 端口 | 22.55 | 1.92 |
+| `USB_DM` | USB 端口 | 24.68 | 1.92 |
+| `OTG` | On-the-go ID 引脚 | 39.9 | 7.42 |
+| `1V8` | 1.8 V 模拟供电 | 42.03 | 8.42 |
+| `TV` | 复合电视输出 | 45.58 | 3.17 |
+| `GND` | 接地引脚 | 49.38 | 3.05 |
+| `GND` | 接地引脚 | 55.99 | 22.87 |
+| `3V3` | 3.3 V I/O 供电 | 48.55 | 22.44 |
+| `SD_CLK` | SD 卡时钟引脚 | 60.95 | 18.45 |
+| `SD_CMD` | SD 卡命令引脚 | 58.2 | 16.42 |
+| `SD_DAT0` | SD 数据引脚 | 58.13 | 20.42 |
+| `SD_DAT1` | SD 数据引脚 | 60.65 | 21.1 |
+| `SD_DAT2` | SD 数据引脚 | 57.78 | 13.57 |
+| `SD_DAT3` | SD 数据引脚 | 60.8 | 15.22 |
+| `BT_ON` | 蓝牙电源状态 | 25.13 | 19.55 |
+| `WL_ON` | 无线局域网电源状态 | 27.7 | 19.2 |
+
+## Raspberry Pi Zero W 和 WH {#zerow-wh}
+
+<img src="/img/computers/zero/zerowandwh.jpg" alt="树莓派 Zero W（左）和 WH（右）" width="100%" />
+*树莓派 Zero W（左）和 WH（右）*
+
+[树莓派 Zero W](https://www.raspberrypi.com/products/raspberry-pi-zero-w/) 提供未焊接的 GPIO 排针；树莓派 Zero WH 出厂即带预焊接的 GPIO 排针。两者都没有有线以太网端口，但仍可通过 Wi-Fi 连接网络。
+
+树莓派 Zero W 和 WH 的尺寸约为 65 mm × 30 mm。更详细的尺寸请参阅 [树莓派 Zero W 机械图](https://pip.raspberrypi.com/documents/RP-008367-DS)。电气电路、组件与引脚连接的工程图请参阅 [树莓派 Zero W 原理图](https://pip.raspberrypi.com/documents/RP-008368-DS)。
+
+### 相对树莓派 Zero 的功能变化
+
+树莓派 Zero W 和 WH 采用与树莓派 Zero 相同的外形规格、组件、连接器和安装孔，并增加了**无线网络**：
+
+* 单频（2.4 GHz）802.11b/g/n Wi-Fi。
+* 蓝牙 4.0 和低功耗蓝牙（BLE）。
+
+此外，树莓派 Zero WH 是首个提供**预焊接 GPIO 排针**的 Zero 型号。
+
+以下章节在描述这些变化的同时，还会介绍：
+
+* 焊接在树莓派 Zero W 上的其他内部组件。
+* 用于将外部硬件连接到这些组件的物理插槽和排针。
+
+### 树莓派 Zero W 和 WH 组件 {#zerow-wh-components}
+
+树莓派 Zero W 和 WH 包含以下板载组件：
+
+| 组件 | 说明 |
+| -- | -- |
+| **SiP** | **Broadcom BCM2835**，包括 1 GHz 单核 32 位 ARM11（CPU）和 400 MHz VideoCore IV（GPU）。 |
+| **内存** | 512 MB 运行在 450 MHz 的 **LPDDR2**（低功耗双倍数据速率 2）内存。 |
+| **无线模块** | 一个充当两个组件的无线模块：用于连接计算机网络的 **Wi-Fi** 无线电，提供单频（2.4 GHz）802.11b/g/n Wi-Fi；以及用于连接外设的**蓝牙**无线电，提供蓝牙 4.0 和低功耗蓝牙（BLE）。 |
+
+### 树莓派 Zero W 和 WH 端口 {#zerow-wh-ports}
+
+树莓派 Zero W 和 WH 包含以下端口：
+
+| 端口类型 | Raspberry Pi Zero W | Raspberry Pi Zero WH |
+| -- | -- | -- |
+| **Micro USB 端口** | 两个 micro USB 端口，一个用于输入电源，一个用于 USB on-the-go（OTG），兼容 OTG 适配器，可连接键盘、鼠标、USB 集线器及其他外部设备。 | 两个 micro USB 端口，一个用于输入电源，一个用于 USB on-the-go（OTG），兼容 OTG 适配器，可连接键盘、鼠标、USB 集线器及其他外部设备。 |
+| **Mini-HDMI 端口** | 一个 mini-HDMI 端口，支持单台显示器输出视频和音频，最高 1080p 60 Hz。 | 一个 mini-HDMI 端口，支持单台显示器输出视频和音频，最高 1080p 60 Hz。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，可连接摄像头。采用 22 针、0.5 mm（细间距）、11.5 mm 宽的迷你 CSI 端口。 | 2 通道 MIPI 摄像头串行接口（CSI）端口，可连接摄像头。采用 22 针、0.5 mm（细间距）、11.5 mm 宽的迷你 CSI 端口。 |
+| **GPIO 排针（未焊接或已焊接）** | 标准 40 针 GPIO 接口，排成两行各 20 针。该 GPIO 排针未焊接；在焊上 2 × 20、2.54 mm 的排针后，这些引脚可让树莓派 Zero W 与其他硬件（LED、按钮、传感器等）通信。 | 标准 40 针 GPIO 接口，排成两行各 20 针，并已预焊接 2 × 20、2.54 mm 的排针。这些引脚可让树莓派 Zero WH 与其他硬件（LED、按钮、传感器等）通信。 |
+| **microSD 卡槽** | 用于插入 microSD 卡以加载操作系统和存储数据的卡槽。 | 用于插入 microSD 卡以加载操作系统和存储数据的卡槽。 |
+
+## Raspberry Pi Zero {#zero}
+
+树莓派 Zero 是经典树莓派型号的紧凑版本，连接器更少，GPIO 排针也未焊接。
+
+<img src="/img/computers/zero/zero1.jpg" alt="树莓派 Zero" width="80%" />
+*树莓派 Zero*
+
+树莓派 Zero 的尺寸约为 65 mm × 30 mm。更详细的尺寸请参阅 [树莓派 Zero 机械图](https://pip.raspberrypi.com/documents/RP-008366-DS)。电气电路、组件与引脚连接的工程图请参阅 [树莓派 Zero 原理图](https://pip.raspberrypi.com/documents/RP-008365-DS)。
+
+树莓派 Zero 外壳也有机械图：
+
+* [树莓派 Zero 外壳机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008362-DS)
+* [带 GPIO 盖板的树莓派 Zero 外壳机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008364-DS)
+* [带摄像头盖板的树莓派 Zero 外壳机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008363-DS)
+
+### 树莓派 Zero 组件 {#zero-components}
+
+树莓派 Zero 包含以下板载组件：
+
+| 组件 | 说明 |
+| -- | -- |
+| **SoC** | **Broadcom BCM2835**，包括 1 GHz 单核 32 位 ARM11（CPU）和 400 MHz VideoCore IV（GPU）。 |
+| **内存** | 512 MB 运行在 450 MHz 的 **LPDDR2**（低功耗双倍数据速率 2）内存。 |
+
+### 树莓派 Zero 端口 {#zero-ports}
+
+树莓派 Zero 包含以下端口：
+
+| 端口类型 | 说明 |
+| -- | -- |
+| **Micro USB 端口** | 两个 micro USB 端口，一个用于输入电源，一个用于 USB on-the-go（OTG），兼容 OTG 适配器，可连接键盘、鼠标、USB 集线器及其他外部设备。 |
+| **Mini-HDMI 端口** | 一个 mini-HDMI 端口，支持单台显示器输出视频和音频，最高 1080p 60 Hz。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，可连接摄像头。采用 22 针、0.5 mm（细间距）、11.5 mm 宽的迷你 CSI 端口。 |
+| **GPIO 排针（未焊接或已焊接）** | 标准 40 针 GPIO 接口，排成两行各 20 针。该 GPIO 排针未焊接；在焊上 2 × 20、2.54 mm 的排针后，这些引脚可让树莓派 Zero 与其他硬件（LED、按钮、传感器等）通信。 |
+| **microSD 卡槽** | 用于插入 microSD 卡以加载操作系统和存储数据的卡槽。 |
+
+<Normal />

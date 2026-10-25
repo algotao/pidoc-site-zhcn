@@ -1,0 +1,484 @@
+---
+sidebar_position: 10
+draft: false
+title_meta: 树莓派经典单板计算机（SBC）型号总览与硬件规格
+description: 经典树莓派单板计算机（SBC）各型号总览，包括树莓派5、4B、3A+、3B+、3B、2B 以及初代 A、B、A+、B+ 的处理器、内存、组件与端口规格对比。
+keywords: [树莓派单板计算机, SBC, Raspberry Pi 5, Raspberry Pi 4B, Raspberry Pi 3B+, 树莓派3A+, 树莓派2B, 型号对比, 硬件规格]
+last_update:
+  date: 2026-10-25
+---
+import Normal from "../_normal.mdx";
+
+# 经典单板计算机 (SBC)
+
+单板计算机（SBC）是构建在一块印刷电路板（PCB）上的完整、可用的计算机。经典树莓派单板计算机将以下部件集成在一块板上：
+
+* 片上系统（SoC）。
+* 内存。
+* GPIO 排针。
+* 各种连接选项。
+
+所有组件和端口都暴露在外，但你可以购买保护壳或边框来保护它们。只要不放在金属表面上，树莓派单板计算机在没有外壳或边框的情况下使用是安全的。如果把没有外壳的树莓派单板计算机放在金属表面上，可能会发生短路。
+
+你还可以连接各种外设，例如显示屏、键盘和鼠标。操作说明请参阅[设置你的树莓派](./getting-started.mdx#设置您的树莓派)。
+
+:::note
+如果你拥有树莓派400、500 或 500+，树莓派电路板内置于键盘外壳中。有关这些设备的更多信息，请参阅[键盘电脑](./keyboard-computers.mdx)。
+:::
+
+## 型号
+
+树莓派设备历经多个型号演进，在性能、连接性和功能上不断提升，以满足不同的使用场景。
+
+### 型号变体
+
+经典单板计算机同一代产品中的型号变体有时会用字母 **A** 或 **B** 加以区分，表示该代产品内不同的外形规格与功能配置。
+
+* **Model B** 表示包含以太网端口和多个 USB 端口的全功能变体，适合通用用途。
+* **Model A** 表示成本更低、体积更小的变体，没有以太网端口，USB 端口也更少，适合空间受限的应用。
+
+### 型号列表
+
+下表按时间倒序汇总了经典树莓派单板计算机型号，列出其关键区别以便快速参考。有关各型号的详细信息（包括连接选项的拆解说明），请参阅本页后面各型号的专属章节。
+
+| 型号 | 微处理器 | 内存 (RAM) | GPIO 排针 | GPU | CPU |
+| -- | -- | -- | -- | -- | -- |
+| Raspberry Pi 5 (2023) | Broadcom [BCM2712](./processors.mdx#bcm2712) | 1、2、4、8 或 16 GB RAM | 40 针 GPIO 排针 | VideoCore VII | 2.4 GHz 四核 64 位 Cortex-A76 |
+| Raspberry Pi 4B (2019) | Broadcom [BCM2711](./processors.mdx#bcm2711) | 1、2、3、4 或 8 GB RAM | 40 针 GPIO 排针 | VideoCore VI | 1.8 GHz 四核 64 位 Cortex-A72 |
+| Raspberry Pi 3A+ (2018) | Broadcom [BCM2837B0](./processors.mdx#bcm2837b0) | 512 MB RAM | 40 针 GPIO 排针 | VideoCore IV | 1.4 GHz 四核 64 位 Cortex-A53 |
+| Raspberry Pi 3B+ (2018) | Broadcom [BCM2837B0](./processors.mdx#bcm2837b0) | 1 GB RAM | 40 针 GPIO 排针 | VideoCore IV | 1.4 GHz 四核 64 位 Cortex-A53 |
+| Raspberry Pi 3B (2017) | Broadcom [BCM2837B0](./processors.mdx#bcm2837b0)（早期版本使用 [BCM2837](./processors.mdx#bcm2837)） | 1 GB RAM | 40 针 GPIO 排针 | VideoCore IV | 1.2 GHz 四核 64 位 Cortex-A53 |
+| Raspberry Pi 2B (2015) | Broadcom [BCM2837B0](./processors.mdx#bcm2837b0)（早期版本使用 [BCM2837](./processors.mdx#bcm2837) 或 [BCM2836](./processors.mdx#bcm2836)） | 1 GB RAM | 40 针 GPIO 排针 | VideoCore IV | 900 MHz 四核 64 位 Cortex-A53（早期版本使用 900 MHz 四核 32 位 Cortex-A7） |
+| Raspberry Pi A+ (2014) | Broadcom [BCM2835](./processors.mdx#bcm2835) | 256 或 512 MB RAM | 40 针 GPIO 排针 | VideoCore IV | 700 MHz 单核 32 位 ARM11 |
+| Raspberry Pi B+ (2014) | Broadcom [BCM2835](./processors.mdx#bcm2835) | 512 MB RAM | 40 针 GPIO 排针 | VideoCore IV | 700 MHz 单核 32 位 ARM11 |
+| Raspberry Pi A (2013) | Broadcom [BCM2835](./processors.mdx#bcm2835) | 256 MB RAM | 26 针 GPIO 排针 | VideoCore IV | 700 MHz 单核 32 位 ARM11 |
+| Raspberry Pi B (2012) | Broadcom [BCM2835](./processors.mdx#bcm2835) | 256 或 512 MB RAM | 26 针 GPIO 排针 | VideoCore IV | 700 MHz 单核 32 位 ARM11 |
+
+## Raspberry Pi 5 {#rpi5}
+
+<img src="/img/computers/sbcs/rpi5.jpg" alt="树莓派5" width="80%" />
+*树莓派5*
+
+[树莓派5](https://www.raspberrypi.com/products/raspberry-pi-5/) 是树莓派第五代经典单板计算机。与以往型号相比，它在 CPU 性能、图形能力、内存带宽、I/O 吞吐量和电源管理方面都有提升。该板引入了一种新架构，将 I/O 管理从主处理器中分离出来，从而实现更快的外设连接和更好的整体系统性能，具体见下文。
+
+树莓派5 的尺寸约为 85 mm × 56 mm。更详细的尺寸请参阅 [树莓派5 机械图](https://pip.raspberrypi.com/documents/RP-008347-DS)。
+
+### 相对树莓派4 的功能变化
+
+树莓派5 在架构和用户体验上相对树莓派4 有根本性变化：
+
+* **更快的 SoC。** 树莓派5 的 SoC 是 Broadcom **BCM2712**，包括：
+  * 四个 64 位 Arm Cortex-A76 CPU 核心，每个核心运行在 2.4 GHz。
+  * 一个 800 MHz 的 Broadcom VideoCore VII GPU，用于视频和 3D 渲染任务。
+* **更快的内存。** 升级为运行在 4267 MHz 的 LPDDR4X。
+* **可选更大内存。** 共有五种内存配置，最高 16 GB。
+* **RP1 I/O 控制器。** RP1 组件充当 SoC 与板载外设接口之间的中间层，使 SoC 不再直接管理底层 I/O 任务。RP1 管理板上的大部分端口连接，让 SoC 专注于处理任务。有关该组件的更多信息，请参阅 [I/O 控制器](./io-controllers.mdx)。
+* **USB 3.0 带宽可同时满载。** 得益于 RP1 组件，树莓派5 的两个 USB 3.0 端口可以同时全速运行。
+* **支持 PCIe 2.0。** 通过专用的 [FFC 连接器](https://pip.raspberrypi.com/documents/RP-008298-DS)提供高带宽通信，可直接连接 NVMe 硬盘或 AI 加速器等外部外设，相比 microSD 卡提高数据读写速度。
+* **可互换的高带宽 MIPI 端口。** 树莓派5 不再是一个 CSI 端口加一个 DSI 端口，而是两个可互换的 CSI/DSI 端口，可以接入两个摄像头、两台显示器，或各接一个。每个连接器支持 4 条 MIPI 数据通道，适用于高性能摄像头和显示器。
+* **增强的双 4K 显示支持。** 可以同时连接两台 60 Hz 的 4K 显示器。
+* **专用电源按钮。** 不再需要插拔电源来开关机，电源按钮带来了更接近 PC 的电源管理体验。
+* **更高功率规格。** PMIC 支持 5 V 5 A（25 W）规格，以容纳耗电更多的 USB 设备。
+* **热管理。** 专用风扇接口可连接以下任一配件，通过脉宽调制（PWM）管理温度：
+  * [Raspberry Pi 主动散热器](https://www.raspberrypi.com/products/active-cooler/)，将铝制散热器与温控鼓风扇结合。
+  * [树莓派5 外壳](https://www.raspberrypi.com/products/raspberry-pi-5-case/)，自带温控散热风扇。
+* **实时时钟（RTC）。** 可以接上电池，即使在树莓派5 断电时也能保持系统时间。
+* **专用 UART 调试端口。** 一个排针（[3 针调试连接器](https://pip.raspberrypi.com/documents/RP-008189-DS)），无需占用 GPIO 引脚即可对 CPU 进行调试访问。
+* **PoE 排针位置调整。** 4 针 PoE 排针从板子顶部 GPIO 排针旁移到了板子底部以太网与 CSI/DSI 端口之间。
+
+以下章节在描述这些变化的同时，还会介绍：
+
+* 焊接在树莓派5 上的其他内部组件。
+* 用于将外部硬件连接到这些组件的物理插槽和排针。
+
+### 树莓派5 组件 {#rpi5-components}
+
+树莓派5 包含以下板载组件：
+
+| 组件 | 说明 |
+| -- | -- |
+| **SoC** | **Broadcom BCM2712**，包括 2.4 GHz 四核 64 位 Arm Cortex-A76（CPU）和 800 MHz VideoCore VII（GPU）。 |
+| **RP1（I/O 管理）** | 管理外设的 I/O 控制器，将 GPIO、USB、以太网和 MIPI 等 I/O 任务从主 CPU 上卸载。更多信息请参阅 [I/O 控制器](./io-controllers.mdx)。 |
+| **内存** | 运行在 4267 MHz 的 **LPDDR4X**（增强型低功耗双倍数据速率 4）内存；可选 1、2、4、8 或 16 GB。 |
+| **无线模块** | 一个充当两个组件的无线模块：用于连接计算机网络的 **Wi-Fi** 无线电，提供双频（2.4 GHz 或 5 GHz）802.11ac Wi-Fi；以及用于连接外设的**蓝牙**无线电，提供蓝牙 5.0 和低功耗蓝牙（BLE）。 |
+| **以太网 PHY** | 专用物理层收发器（PHY），在 RP1 I/O 控制器与 RJ45（千兆以太网）端口之间传输数据。 |
+| **实时时钟（RTC）** | RTC 模块，即使树莓派5 断电也能跟踪当前日期和时间。 |
+| **电源按钮** | 位于板边的物理按键，无需拔掉 USB-C 线缆即可实现软关机、唤醒和强制断电。 |
+
+### 树莓派5 端口 {#rpi5-ports}
+
+树莓派5 包含以下端口：
+
+| 端口类型 | 说明 |
+| -- | -- |
+| **USB 3.0 端口** | 两个 USB 3.0 端口（蓝色），得益于 RP1 可同时以 5 Gb/s 运行。这些 USB 端口可连接高速存储和外设。 |
+| **USB 2.0 端口** | 两个 USB 2.0 端口（黑色），适合键盘、鼠标等不需要高带宽的较慢外设。 |
+| **千兆以太网端口** | 用于连接有线计算机网络的高速 RJ45 端口。端口底部有两个 LED 指示连接状态和活动。配合 PoE+ HAT 使用时还支持 PoE，可在另一端连接到支持 PoE 的网络交换机、路由器或注入器时从以太网线缆取电。 |
+| **PoE 排针** | 位于 CSI/DSI 端口与以太网端口之间的 4 针排针。接上 PoE+ HAT 后，这些引脚可让树莓派5 通过以太网线缆而非 USB-C 线缆取电。 |
+| **Micro-HDMI 端口** | 两个 micro-HDMI 端口，标为 `HDMI0` 和 `HDMI1`，可同时支持两台 60 Hz 的 4K 显示器。 |
+| **双 CSI/DSI 端口** | 两个可互换的 4 通道 MIPI 连接器，标为 `CAM/DISP 0` 和 `CAM/DISP 1`，采用两个 22 针、0.5 mm 间距、11.5 mm 宽的迷你 CSI/DSI 复合端口，支持两个摄像头、两台显示器或各接一个。 |
+| **PCIe 2.0 接口** | 单通道 PCIe 2.0 接口，通过 16 针、0.5 mm 间距的 FFC 连接器引出，可连接 NVMe 固态硬盘（通过 M.2 HAT）和 AI 加速器（通过 AI HAT）等高速外设。 |
+| **USB Type-C 电源端口** | USB-C 端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 5 A（25 W），或 5 V 3 A（15 W），此时 USB 外设电流上限为 600 mA。 |
+| **GPIO 排针** | 由 40 根金属针组成的标准化接口，排成两行各 20 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 |
+| **风扇接口** | 专用的 4 针 JST 连接器（JST-SH 1.25 mm），用于风扇，可根据 CPU 温度通过 PWM 调整转速，在负载下保持低温。 |
+| **RTC 电池接口** | 2 针 JST 连接器，标为 `BAT`，位于 USB-C 电源端口右侧。用于连接[锂电池](https://www.raspberrypi.com/products/rtc-battery/)，在主电源断开时为板载实时时钟（RTC）供电。 |
+| **microSD 卡槽** | 位于板子底面，用于插入高速 microSD 卡以加载操作系统。 |
+| **UART 调试端口** | 专用的 3 针 JST 排针，位于两个 micro-HDMI 端口之间，为 CPU 提供调试访问以便排查故障。 |
+
+## Raspberry Pi 4 Model B {#rpi4b}
+
+<img src="/img/computers/sbcs/rpi4b.jpg" alt="树莓派4B" width="80%" />
+*树莓派4B*
+
+[树莓派4B](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) 是树莓派第四代经典单板计算机。与以往型号相比，它在处理器性能、内存容量、网络和多媒体能力方面都有提升。该板配备更强大的四核处理器，支持最高 4K 分辨率的双显示输出，并通过千兆以太网、USB 3.0 和双频无线网络提供更快的连接，具体见下文。
+
+树莓派4B 的尺寸约为 85 mm × 56 mm。更详细的尺寸请参阅机械图：
+
+* [树莓派4B 机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008343-DS)
+* [树莓派4B 机械图（DXF）](https://pip.raspberrypi.com/documents/RP-008342-DS)
+
+电源电路与端口连接的工程图请参阅 [树莓派4B 原理图](https://pip.raspberrypi.com/documents/RP-008345-DS)。
+
+### 相对树莓派3A+ 和 3B+ 的功能变化
+
+树莓派4B 相对树莓派3A+ 和 3B+ 在架构上有所变化：
+
+* **更快的 SoC。** 树莓派4B 的 SoC 是 Broadcom **BCM2711**，包括：
+  * 四个 64 位 Arm Cortex-A72 CPU 核心，每个核心运行在 1.8 GHz。
+  * 一个 500 MHz 的 Broadcom VideoCore VI GPU，用于视频和 3D 渲染任务。
+* **更快的内存。** 升级为运行在 3200 MHz 的 LPDDR4。
+* **多种内存配置。** 共有五种内存配置，最高 8 GB。
+* **USB 3.0 端口。** 除两个 USB 2.0 端口（黑色）外，树莓派4B 还有两个 USB 3.0 端口（蓝色），速度更快，供电能力强于 USB 2.0。
+* **真正的千兆以太网。** 树莓派4B 不通过 USB 控制器转发以太网流量（如树莓派3B+ 那样），而是提供完整、不受限制的千兆以太网，线路速率可达 1 Gb/s。
+* **支持双 4K 显示器。** 两个 micro-HDMI 端口取代了单个全尺寸 HDMI 端口，可支持两台 30 Hz 的 4K 显示器或一台 60 Hz 的 4K 显示器。
+* **升级的蓝牙。** 无线连接升级为蓝牙 5.0，速度是蓝牙 4.2 的两倍，传输距离是四倍。
+* **USB-C 电源输入。** USB-C 电源输入取代了 micro USB 电源输入。
+* **专用 USB 控制器。** 树莓派4B 不再使用单一的以太网与 USB 控制器，而是为 USB 控制单独配备组件；以太网控制器则集成在 SoC 中。
+
+以下章节在描述这些变化的同时，还会介绍：
+
+* 焊接在树莓派5 上的其他内部组件。
+* 用于将外部硬件连接到这些组件的物理插槽和排针。
+
+### 树莓派4B 组件 {#rpi4b-components}
+
+树莓派4B 包含以下板载组件：
+
+| 组件 | 说明 |
+| -- | -- |
+| **SoC** | **Broadcom BCM2711**，包括 1.8 GHz 四核 64 位 Arm Cortex-A72（CPU）和 500 MHz VideoCore VI（GPU）。 |
+| **内存** | 运行在 3200 MHz 的 **LPDDR4**（低功耗双倍数据速率 4）内存；可选 1、2、3、4 或 8 GB。 |
+| **无线模块** | 一个充当两个组件的无线模块：用于连接计算机网络的 **Wi-Fi** 无线电，提供双频（2.4 GHz 或 5 GHz）802.11ac Wi-Fi；以及用于连接外设的**蓝牙**无线电，提供蓝牙 5.0 和低功耗蓝牙（BLE）。 |
+| **USB 控制器** | USB 端口后方控制端口的小型黑色组件（VL805）。 |
+| **以太网 PHY** | 专用物理层收发器（PHY），将 SoC 中的千兆以太网接口连接到 RJ45（千兆以太网）端口。 |
+
+### 树莓派4B 端口 {#rpi4b-ports}
+
+树莓派4B 包含以下端口：
+
+| 端口类型 | 说明 |
+| -- | -- |
+| **USB 3.0 端口** | 两个 USB 3.0 端口（蓝色），支持高速运行，可连接高速存储和外设。 |
+| **USB 2.0 端口** | 两个 USB 2.0 端口（黑色），适合键盘、鼠标等不需要高带宽的较慢外设。 |
+| **千兆以太网端口** | 用于连接有线计算机网络的高速 RJ45 端口。端口底部有两个 LED 指示连接状态和活动。配合 PoE+ HAT 使用时还支持 PoE，可在另一端连接到支持 PoE 的网络交换机、路由器或注入器时从以太网线缆取电。 |
+| **PoE 排针** | 位于 GPIO 排针附近的 4 针排针。接上 PoE+ HAT 后，这些引脚可让树莓派4B 通过以太网线缆而非 USB-C 线缆取电。 |
+| **AV 插孔** | 3.5 mm 4 极立体声音频与复合视频端口（AV 插孔），可通过 TRRS 线缆连接电视、投影仪及其他支持复合视频信号的显示器。 |
+| **Micro-HDMI 端口** | 两个 micro-HDMI 端口，标为 `HDMI0` 和 `HDMI1`，可支持两台 30 Hz 的 4K 显示器或一台 60 Hz 的 4K 显示器。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 |
+| **DSI（显示）端口** | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 |
+| **USB Type-C 电源端口** | USB-C 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 3 A（15 W）。 |
+| **GPIO 排针** | 由 40 根金属针组成的标准化接口，排成两行各 20 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 |
+| **microSD 卡槽** | 位于板子底面，用于插入高速 microSD 卡以加载操作系统。 |
+
+## Raspberry Pi 3 Models A+ and B+ {#rpi3aplus-3bplus}
+
+<img src="/img/computers/sbcs/rpi3aplusand3bplus.jpg" alt="树莓派3A+（左）和 3B+（右）" width="100%" />
+*树莓派3A+（左）和 3B+（右）*
+
+树莓派3A+ 和 3B+ 都在初代树莓派3B 的基础上做了硬件升级：更快的 SoC、用于改善散热的金属散热片，以及升级的无线连接。
+
+[树莓派3B+](https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/) 是增强版的第三代（树莓派3B）经典单板计算机。相比树莓派3A+，它提供更多硬件特性，包括以太网端口和更多 USB 端口。其尺寸约为 85 mm × 56 mm。更详细的尺寸请参阅机械图：
+
+* [树莓派3B+ 机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008337-DS)
+* [树莓派3B+ 机械图（DXF）](https://pip.raspberrypi.com/documents/RP-008336-DS)
+
+电源电路与端口连接的工程图请参阅 [树莓派3B+ 原理图](https://pip.raspberrypi.com/documents/RP-008339-DS)。
+
+[树莓派3A+](https://www.raspberrypi.com/products/raspberry-pi-3-model-a-plus/) 与树莓派3B+ 共享相同的核心处理器和无线能力，但外形更小，内存更少、端口更少。其尺寸约为 65 mm × 56 mm。更详细的尺寸请参阅 [树莓派3A+ 机械图](https://pip.raspberrypi.com/documents/RP-008330-DS)。电源电路与端口连接的工程图请参阅 [树莓派3A+ 原理图](https://pip.raspberrypi.com/documents/RP-008332-DS)。
+
+树莓派3A+ 外壳和 3B+ 外壳也有机械图：
+
+* [树莓派3A+ 外壳机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008329-DS)
+* [树莓派3B+ 外壳机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008160-DS)
+
+### 相对树莓派3B 的功能变化
+
+树莓派3A+ 和 3B+ 升级了无线网络：
+
+* 双频（2.4 GHz 和 5 GHz）Wi-Fi，具备模块化合规认证。
+* 蓝牙 4.2（由 4.1 升级而来）和低功耗蓝牙（BLE）。
+
+树莓派3B+ 相对树莓派3B 还有以下变化：
+
+* **更快的以太网。** 树莓派3B+ 通过 USB 2.0 实现千兆以太网，吞吐量从约 100 Mb/s 提升到约 300 Mb/s。
+* **支持 PoE。** 配合 PoE+ HAT，树莓派3B+ 上的 4 针 PoE 排针可让单板计算机通过以太网线缆供电。
+
+以下章节在描述这些变化的同时，还会介绍：
+
+* 焊接在树莓派3A+ 或 3B+ 上的其他内部组件。
+* 用于将外部硬件连接到这些组件的物理插槽和排针。
+
+### 树莓派3A+ 和 3B+ 组件 {#rpi3aplus-3bplus-components}
+
+树莓派3A+ 和 3B+ 板载以下组件：
+
+| 组件 | Raspberry Pi 3A+ | Raspberry Pi 3B+ |
+| -- | -- | -- |
+| **SoC** | **Broadcom BCM2837B0**，包括 1.4 GHz 四核 64 位 Arm Cortex-A53（CPU）和 400 MHz VideoCore IV（GPU）。 | **Broadcom BCM2837B0**，包括 1.4 GHz 四核 64 位 Arm Cortex-A53（CPU）和 400 MHz VideoCore IV（GPU）。 |
+| **内存** | 512 MB **LPDDR2**（低功耗双倍数据速率 2）内存，运行在 900 MHz。 | 1 GB **LPDDR2**（低功耗双倍数据速率 2）内存，运行在 900 MHz。 |
+| **无线模块** | 一个充当两个组件的无线模块：用于连接计算机网络的 **Wi-Fi** 无线电，提供双频（2.4 GHz 或 5 GHz）802.11b/g/n Wi-Fi；以及用于连接外设的**蓝牙**无线电，提供蓝牙 4.2 和低功耗蓝牙（BLE）。 | 一个充当两个组件的无线模块：用于连接计算机网络的 **Wi-Fi** 无线电，提供双频（2.4 GHz 或 5 GHz）802.11b/g/n Wi-Fi；以及用于连接外设的**蓝牙**无线电，提供蓝牙 4.2 和低功耗蓝牙（BLE）。 |
+| **I/O 管理** | 单个 USB 2.0 端口直接连接到 Broadcom SoC。 | 网络与 USB 控制器（LAN7515），USB 端口后方控制 USB 端口和以太网的小型黑色组件。 |
+
+### 树莓派3A+ 和 3B+ 端口 {#rpi3aplus-3bplus-ports}
+
+树莓派3A+ 和 3B+ 包含以下端口：
+
+| 端口类型 | Raspberry Pi 3A+ | Raspberry Pi 3B+ |
+| -- | -- | -- |
+| **USB 2.0 端口** | 单个 USB 2.0 端口，支持键盘、鼠标等不需要高带宽的较慢外设。 | 四个 USB 2.0 端口，支持键盘、鼠标等不需要高带宽的较慢外设。 |
+| **千兆以太网端口（通过 USB 2.0）** | 无。如需要有线连接，需使用 USB 转以太网适配器。 | RJ45 网络端口，内部通过 USB 2.0 总线连接。虽然是千兆以太网端口，但受 USB 2.0 限制，实际网络吞吐量约为 300 Mb/s。端口底部有两个 LED 指示连接状态和活动。配合 PoE+ HAT 使用时还支持 PoE，可在另一端连接到支持 PoE 的网络交换机、路由器或注入器时从以太网线缆取电。 |
+| **PoE 排针** | 无。 | 位于 GPIO 排针附近的 4 针排针。接上 PoE+ HAT 后，这些引脚可让树莓派通过以太网线缆取电，无需 micro USB 线缆即可运行。 |
+| **AV 插孔** | 3.5 mm 4 极立体声音频与复合视频端口（AV 插孔），可通过 TRRS 线缆连接电视、投影仪及其他支持复合视频信号的显示器。 | 3.5 mm 4 极立体声音频与复合视频端口（AV 插孔），可通过 TRRS 线缆连接电视、投影仪及其他支持复合视频信号的显示器。 |
+| **HDMI 端口** | 全尺寸 HDMI（Type-A）端口，可向显示器或电视输出视频和音频，分辨率最高 1080p 60 Hz。 | 全尺寸 HDMI（Type-A）端口，可向显示器或电视输出视频和音频，分辨率最高 1080p 60 Hz。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 |
+| **DSI（显示）端口** | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 |
+| **Micro USB 电源端口** | micro USB 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 2.5 A（12.5 W）。 | micro USB 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 2.5 A（12.5 W）。 |
+| **GPIO 排针** | 由 40 根金属针组成的标准化接口，排成两行各 20 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 | 由 40 根金属针组成的标准化接口，排成两行各 20 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 |
+| **microSD 卡槽** | 位于板子底面，用于插入高速 microSD 卡以加载操作系统。 | 位于板子底面，用于插入高速 microSD 卡以加载操作系统。 |
+
+## Raspberry Pi 3 Model B {#rpi3b}
+
+<img src="/img/computers/sbcs/rpi3b.jpg" alt="树莓派3B" width="80%" />
+*树莓派3B*
+
+[树莓派3B](https://www.raspberrypi.com/products/raspberry-pi-3-model-b/) 是树莓派第三代经典单板计算机。它带来了性能升级、内存增加和内置无线连接。它也是首款采用 64 位 CPU 的树莓派型号，基于四核 Arm Cortex-A53 处理器。其尺寸约为 85 mm × 56 mm。更详细的尺寸请参阅机械图：
+
+* [树莓派3B 机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008335-DS)
+* [树莓派3B 机械图（DXF）](https://pip.raspberrypi.com/documents/RP-008334-DS)
+
+电气电路、组件与引脚连接的工程图请参阅 [树莓派3B 原理图](https://pip.raspberrypi.com/documents/RP-008340-DS)。
+
+:::note
+使用 **BCM2837** 的树莓派3B 修订版 1.1 已停产，不再销售。
+:::
+
+### 相对树莓派2B 的功能变化
+
+树莓派3B 相对树莓派2B 在性能和连接性上有所变化：
+
+* **更快的 SoC。** 树莓派3B 最新修订版的 SoC 是 Broadcom **BCM2837B0**，包括四个 64 位 Arm Cortex-A53 CPU 核心，每个核心运行在 1.2 GHz。
+* **改进的热管理。** 树莓派3B 最新修订版的 SoC 带有金属散热片（封装），以改善散热。
+* **无线网络。** 新增无线连接，包括：
+  * 单频（2.4 GHz）802.11b/g/n Wi-Fi。
+  * 蓝牙 4.1 和低功耗蓝牙（BLE）。
+
+以下章节在描述这些变化的同时，还会介绍：
+
+* 焊接在树莓派3B 上的其他内部组件。
+* 用于将外部硬件连接到这些组件的物理插槽和排针。
+
+### 树莓派3B 组件 {#rpi3b-components}
+
+树莓派3B 包含以下板载组件：
+
+| 组件 | 说明 |
+| -- | -- |
+| **SoC** | 树莓派3B 最新修订版为 **Broadcom BCM2837B0**，包括 1.2 GHz 四核 64 位 Cortex-A53（CPU）和 400 MHz VideoCore IV（GPU）。 |
+| **内存** | 1 GB **LPDDR2**（低功耗双倍数据速率 2）内存，运行在 900 MHz。 |
+| **无线模块** | 一个充当两个组件的无线模块：用于连接计算机网络的 **Wi-Fi** 无线电，提供单频（2.4 GHz）802.11b/g/n Wi-Fi；以及用于连接外设的**蓝牙**无线电，提供蓝牙 4.1 和低功耗蓝牙（BLE）。 |
+| **I/O 管理** | **网络与 USB 控制器**（LAN9514），USB 端口后方控制 USB 端口和以太网的小型黑色组件。 |
+
+### 树莓派3B 端口 {#rpi3b-ports}
+
+树莓派3B 包含以下端口：
+
+| 端口类型 | 说明 |
+| -- | -- |
+| **USB 2.0 端口** | 四个 USB 2.0 端口，支持键盘、鼠标等不需要高带宽的较慢外设。 |
+| **100BASE-T 以太网端口** | RJ45 网络端口，以 100 Mb/s 连接有线计算机网络。以太网端口底部有两个 LED 指示连接状态和活动。 |
+| **AV 插孔** | 3.5 mm 4 极立体声音频与复合视频端口（AV 插孔），可通过 TRRS 线缆连接电视、投影仪及其他支持复合视频信号的显示器。 |
+| **HDMI 端口** | 全尺寸 HDMI（Type-A）端口，可向显示器或电视输出视频和音频，分辨率最高 1080p 60 Hz。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 |
+| **DSI（显示）端口** | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 |
+| **Micro USB 电源端口** | micro USB 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 2.5 A（12.5 W）。 |
+| **GPIO 排针** | 由 40 根金属针组成的标准化接口，排成两行各 20 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 |
+| **microSD 卡槽** | 位于板子底面，用于插入高速 microSD 卡以加载操作系统。 |
+
+## Raspberry Pi 2 Model B {#rpi2b}
+
+<img src="/img/computers/sbcs/rpi2b.jpg" alt="树莓派2B" width="80%" />
+*树莓派2B*
+
+[树莓派2B](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) 是树莓派第二代经典单板计算机。它带来了性能升级和内存增加，从单核处理器转向四核处理器和 1 GB RAM，同时保留了与树莓派B+ 相同的外形规格和连接选项。其尺寸为 85 mm × 56 mm。电气电路、组件与引脚连接的工程图请参阅 [树莓派2B 原理图](https://pip.raspberrypi.com/documents/RP-008327-DS)。
+
+:::info[重要]
+使用 **BCM2836** 和 **BCM2837** 的树莓派2B 修订版 1.1 和 1.2 已停产，不再销售。由于这些产品使用的核心 SoC 停产，官方停产日期为 2025 年 10 月 16 日。树莓派2 Model B 修订版 1.3 提供相同的机械尺寸并搭载 **BCM2837B0** 处理器，因此推荐用于现有设计。更多信息请参阅官方[停产通知](https://pip.raspberrypi.com/documents/RP-009284-PC)。
+:::
+
+### 相对树莓派 A+ 和 B+ 的功能变化
+
+树莓派2B 相对树莓派1A+ 和 1B+ 在性能和架构上有所变化：
+
+* **多核架构。** 树莓派2B 的 SoC 从初代树莓派系列的单核 32 位架构转向基于 Arm 的四核处理器。树莓派2B 最新修订版的 SoC 是 Broadcom **BCM2837B0**，包括：
+  * 四个 64 位 Arm Cortex-A53 CPU 核心，每个核心运行在 900 MHz。
+  * 一个 250 MHz 的 Broadcom VideoCore IV GPU，用于视频和 3D 渲染任务。
+* **更大的内存。** 提供 1 GB RAM。
+
+以下章节在描述这些变化的同时，还会介绍：
+
+* 焊接在树莓派2B 上的其他内部组件。
+* 用于将外部硬件连接到这些组件的物理插槽和排针。
+
+### 树莓派2B 组件 {#rpi2b-components}
+
+树莓派2B 包含以下板载组件：
+
+| 组件 | 说明 |
+| -- | -- |
+| **SoC** | 树莓派2B 最新修订版为 **Broadcom BCM2837B0**，包括 900 MHz 四核 64 位 Cortex-A53（CPU）和 250 MHz VideoCore IV（GPU）。 |
+| **内存** | 1 GB **LPDDR2**（低功耗双倍数据速率 2）内存，运行在 450 MHz。 |
+| **I/O 管理** | **网络与 USB 控制器**（LAN9514），USB 端口后方控制 USB 端口和以太网的小型黑色组件。 |
+
+### 树莓派2B 端口 {#rpi2b-ports}
+
+树莓派2B 包含以下端口：
+
+| 端口类型 | 说明 |
+| -- | -- |
+| **USB 2.0 端口** | 四个 USB 2.0 端口，支持键盘、鼠标等不需要高带宽的较慢外设。 |
+| **100BASE-T 以太网端口** | RJ45 端口，以 100 Mb/s 连接有线计算机网络。以太网端口底部有两个 LED 指示连接状态和活动。 |
+| **AV 插孔** | 3.5 mm 4 极立体声音频与复合视频端口（AV 插孔），可通过 TRRS 线缆连接电视、投影仪及其他支持复合视频信号的显示器。 |
+| **HDMI 端口** | 全尺寸 HDMI（Type-A）端口，可向显示器或电视输出视频和音频，分辨率最高 1080p 60 Hz。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 |
+| **DSI（显示）端口** | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 |
+| **Micro USB 电源端口** | micro USB 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 2.5 A（12.5 W）。 |
+| **GPIO 排针** | 由 40 根金属针组成的标准化接口，排成两行各 20 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 |
+| **microSD 卡槽** | 位于板子底面，用于插入高速 microSD 卡以加载操作系统。 |
+
+## Raspberry Pi Model A+ and B+ {#rpia-plus-b-plus}
+
+<img src="/img/computers/sbcs/rpiaplusandbplus.jpg" alt="树莓派A+（左）和 B+（右）" width="100%" />
+*树莓派A+（左）和 B+（右）*
+
+:::note
+为区别于后续带编号的树莓派单板计算机，树莓派A+ 和 B+ 有时也被称为树莓派1 A+ 和 1 B+。
+:::
+
+[树莓派A+](https://www.raspberrypi.com/products/raspberry-pi-1-model-a-plus/) 和 B+ 都在初代树莓派A 和 B 的基础上做了硬件升级：功耗更低、音频更好、GPIO 引脚更多，并增加了 microSD 卡槽。两者的外形设计也更为规整，详情见下文。
+
+[树莓派B+](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/) 比树莓派B 多两个 USB 2.0 端口（比树莓派A+ 多三个）。其尺寸为 85 mm × 56 mm。更详细的尺寸请参阅机械图：
+
+* [树莓派B+ 机械图（PDF）](https://pip.raspberrypi.com/documents/RP-008351-DS)
+* [树莓派B+ 机械图（DXF）](https://pip.raspberrypi.com/documents/RP-008352-DS)
+
+树莓派A+ 的尺寸为 65 mm × 56 mm。树莓派3A+ 的机械图同样适用于树莓派A+。
+
+电气电路、组件与引脚连接的工程图请参阅树莓派A+ 和 B+ 的原理图：
+
+* [树莓派A+ 原理图](https://pip.raspberrypi.com/documents/RP-008350-DS)
+* [树莓派B+ 原理图](https://pip.raspberrypi.com/documents/RP-008353-DS)
+
+### 相对树莓派 A 和 B 的功能变化
+
+树莓派A+ 和 B+ 是对树莓派A 和 B 的渐进式硬件升级，增加了一些增强能力：
+
+* **更多 GPIO 引脚。** GPIO 引脚数量从 26 针增加到 40 针；前 26 针的 GPIO 引脚布局与 A、B 型号相同。
+* **紧凑存储。** 用 microSD 卡槽取代全尺寸 SD 卡槽。
+* **更低功耗。** 用开关稳压器取代线性稳压器，功耗降低 0.5 W 至 1 W。
+* **单端口双路音视频输出。** 用 3.5 mm AV 复合插孔取代 RCA 视频接口和音频插孔，可同时输出立体声音频和复合视频。
+* **更规整的外形。**
+  * USB 端口与板边对齐，形成更平直的信用卡形状。
+  * microSD 卡取代了原先突出板边的全尺寸 SD 卡。
+  * 复合视频集成到 3.5 mm AV 插孔中，节省空间。
+  * 圆角设计便于拿取，并降低了勾挂风险。
+* **安装孔。** 四个安装孔便于固定在外壳中，也便于用支撑柱安装 HAT。
+
+树莓派B+ 相对树莓派B 还有以下变化：
+
+* **更多 USB 2.0 端口。** 四个 USB 2.0 端口。
+* **改进的 USB 可靠性。** 增强了 USB 设备的热插拔支持和过流保护。
+
+以下章节在描述这些变化的同时，还会介绍：
+
+* 焊接在树莓派A+ 和 B+ 上的其他内部组件。
+* 用于将外部硬件连接到这些组件的物理插槽和排针。
+
+### 树莓派 A+ 和 B+ 组件 {#rpia-plus-b-plus-components}
+
+树莓派A+ 和 B+ 板载以下组件：
+
+| 组件 | Raspberry Pi A+ | Raspberry Pi B+ |
+| -- | -- | -- |
+| **SoC** | **Broadcom BCM2835**，包括 700 MHz 单核 32 位 ARM11（CPU）和 250 MHz VideoCore IV（GPU）。 | **Broadcom BCM2835**，包括 700 MHz 单核 32 位 ARM11（CPU）和 250 MHz VideoCore IV（GPU）。 |
+| **内存** | 512 MB（早期为 256 MB）**LPDDR2**（低功耗双倍数据速率 2）内存，运行在 400 MHz。 | 512 MB **LPDDR2**（低功耗双倍数据速率 2）内存，运行在 400 MHz。 |
+| **I/O 管理** | 单个 USB 2.0 端口直接连接到 Broadcom SoC。 | **网络与 USB 控制器**（LAN9514），USB 端口后方控制 USB 端口和以太网的小型黑色组件。 |
+
+### 树莓派 A+ 和 B+ 端口 {#rpia-plus-b-plus-ports}
+
+树莓派A+ 和 B+ 包含以下端口：
+
+| 端口类型 | Raspberry Pi A+ | Raspberry Pi B+ |
+| -- | -- | -- |
+| **USB 2.0 端口** | 单个 USB 2.0 端口，支持键盘、鼠标等不需要高带宽的较慢外设。 | 四个 USB 2.0 端口，支持键盘、鼠标等不需要高带宽的较慢外设。 |
+| **100BASE-T 以太网端口** | 无。如需要有线连接，需使用 USB 转以太网适配器。 | RJ45 端口，以 100 Mb/s 连接有线计算机网络。以太网端口底部有两个 LED 指示连接状态和活动。 |
+| **AV 插孔** | 3.5 mm 4 极立体声音频与复合视频端口（AV 插孔），可通过 TRRS 线缆连接电视、投影仪及其他支持复合视频信号的显示器。 | 3.5 mm 4 极立体声音频与复合视频端口（AV 插孔），可通过 TRRS 线缆连接电视、投影仪及其他支持复合视频信号的显示器。 |
+| **HDMI 端口** | 全尺寸 HDMI（Type-A）端口，可向显示器或电视输出视频和音频，分辨率最高 1080p 60 Hz。 | 全尺寸 HDMI（Type-A）端口，可向显示器或电视输出视频和音频，分辨率最高 1080p 60 Hz。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 |
+| **DSI（显示）端口** | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 |
+| **Micro USB 电源端口** | micro USB 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 700 mA。 | micro USB 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 700 mA。 |
+| **GPIO 排针** | 由 40 根金属针组成的标准化接口，排成两行各 20 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 | 由 40 根金属针组成的标准化接口，排成两行各 20 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 |
+| **microSD 卡槽** | 位于板子底面，用于插入高速 microSD 卡以加载操作系统。 | 位于板子底面，用于插入高速 microSD 卡以加载操作系统。 |
+
+## Raspberry Pi Model A and B {#rpia-b}
+
+<img src="/img/computers/sbcs/rpiaandb.jpg" alt="树莓派A（左）和 B（右）" width="100%" />
+*树莓派A（左）和 B（右）*
+
+:::note
+为区别于后续带编号的树莓派单板计算机，树莓派A 和 B 有时也被称为树莓派1A 和 1B。
+:::
+
+被 [树莓派B+](https://www.raspberrypi.com/products/raspberry-pi-1-model-b-plus/) 取代的树莓派B，是经典树莓派单板计算机的第一代产品。
+
+被 [树莓派A+](https://www.raspberrypi.com/products/raspberry-pi-1-model-a-plus/) 取代的树莓派A，是首款 A 系列树莓派型号。它与树莓派B 具有相同的核心处理器能力，但内存更少、端口更少。
+
+两块板的尺寸都是 85 mm × 56 mm，端口突出于板边。后续的树莓派单板计算机对这一外形做了优化。
+
+### 树莓派 A 和 B 组件 {#rpia-b-components}
+
+树莓派A 和 B 板载以下组件：
+
+| 组件 | Raspberry Pi A | Raspberry Pi B |
+| -- | -- | -- |
+| **SoC** | **Broadcom BCM2835**，包括 700 MHz 单核 32 位 ARM11（CPU）和 250 MHz VideoCore IV（GPU）。 | **Broadcom BCM2835**，包括 700 MHz 单核 32 位 ARM11（CPU）和 250 MHz VideoCore IV（GPU）。 |
+| **内存** | 256 MB **LPDDR2**（低功耗双倍数据速率 2）内存，运行在 400 MHz。 | 512 MB（早期为 256 MB）**LPDDR2**（低功耗双倍数据速率 2）内存，运行在 400 MHz。 |
+| **I/O 管理** | 单个 USB 2.0 端口直接连接到 Broadcom SoC。 | **网络与 USB 控制器**（LAN9512），USB 端口后方控制 USB 端口和以太网的小型黑色组件。 |
+
+### 树莓派 A 和 B 端口 {#rpia-b-ports}
+
+树莓派A 和 B 包含以下端口：
+
+| 端口类型 | Raspberry Pi A | Raspberry Pi B |
+| -- | -- | -- |
+| **USB 2.0 端口** | 单个 USB 2.0 端口，支持键盘、鼠标等不需要高带宽的较慢外设。 | 两个 USB 2.0 端口，支持键盘、鼠标等不需要高带宽的较慢外设。 |
+| **100BASE-T 以太网端口** | 无。如需要有线连接，需使用 USB 转以太网适配器。 | RJ45 端口，以 100 Mb/s 连接有线计算机网络。 |
+| **音频插孔** | 3.5 mm 3 极立体声音频端口。 | 3.5 mm 3 极立体声音频端口。 |
+| **RCA 复合视频端口** | 用于向显示器传输标清视频信号的模拟接口。 | 用于向显示器传输标清视频信号的模拟接口。 |
+| **HDMI 端口** | 全尺寸 HDMI（Type-A）端口，可向显示器或电视输出视频和音频，分辨率最高 1080p 60 Hz。 | 全尺寸 HDMI（Type-A）端口，可向显示器或电视输出视频和音频，分辨率最高 1080p 60 Hz。 |
+| **CSI（摄像头）端口** | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 | 2 通道 MIPI 摄像头串行接口（CSI）端口，标为 `CAMERA`，可连接摄像头。采用标准 15 针、1 mm 间距、16 mm 宽的 CSI 端口。 |
+| **DSI（显示）端口** | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 | 2 通道 MIPI 显示串行接口（DSI）端口，标为 `DISPLAY`，可连接显示器。采用标准 15 针、1 mm 间距、16 mm 宽的 DSI 端口。 |
+| **Micro USB 电源端口** | micro USB 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 700 mA。 | micro USB 电源端口，用于为树莓派供电，支持为板子及外设供电所需的 5 V 1.2 A。 |
+| **GPIO 排针** | 由 26 根金属针组成的接口，排成两行各 13 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 | 由 26 根金属针组成的接口，排成两行各 13 针。这些引脚让树莓派能够与其他硬件（LED、按钮、传感器等）通信。 |
+| **SD 卡槽** | 位于板子底面，用于插入 SD 卡以加载操作系统。 | 位于板子底面，用于插入 SD 卡以加载操作系统。 |
+
+<Normal />

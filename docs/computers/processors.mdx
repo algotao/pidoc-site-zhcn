@@ -1,11 +1,11 @@
 ---
-sidebar_position: 12
+sidebar_position: 14
 draft: false
 title_meta: 树莓派处理器介绍，包括BCM2835、BCM2836、BCM2837、BCM2711、BCM2712、RP3A0等CPU的参数与功能规格
 description: 深入了解树莓派系列所使用的各类处理器，包括BCM2835、BCM2836、BCM2837、BCM2837B0、BCM2711、BCM2712和RP3A0等。本文详细介绍了这些处理器的架构、性能特点、内存与缓存配置、多媒体功能以及输入输出接口等关键信息，同时提及了BCM2712处理器的漏洞及缓解措施，为树莓派爱好者和开发者提供全面的处理器知识。
 keywords: [树莓派, 处理器, BCM2835, BCM2836, BCM2837, BCM2837B0, BCM2711, BCM2712, RP3A0, ARM架构, 多媒体功能, 漏洞缓解]
 last_update: 
-  date: 2026-09-04
+  date: 2026-10-25
 ---
 import Normal from "../_normal.mdx";
 
@@ -124,9 +124,9 @@ Vulnerability Spectre v2:             Mitigation; CSV2, BHB
 
 
 ## RP3A0
-树莓派 RP3A0 是我们的第一个系统级封装 (SiP)，由 Broadcom BCM2710A1（封装在[树莓派3](./raspberry-pi.mdx#树莓派3b)上使用的 Broadcom [BCM2837](#bcm2837) 芯片内的硅芯片）和 512MB DRAM 组成。
+树莓派 RP3A0 是我们的第一个系统级封装 (SiP)，由 Broadcom BCM2710A1 和 512MB DRAM 组成。BCM2710A1 是封装在 [树莓派3](./sbcs.mdx#rpi3b) 上使用的 Broadcom [BCM2837](#bcm2837) 芯片内的硅芯片。
 
-它被[树莓派 Zero 2W](./raspberry-pi.mdx#树莓派zero-2w)使用。
+它被[树莓派 Zero 2 W](./zero.mdx#zero2w)使用。
 
 <img src="/img/computers/processors/RP3A0-crosssection.png" alt="RP3A0截面图" width="70%" />
 
@@ -137,7 +137,7 @@ RP3A0 是一款四核 64 位 Arm Cortex A53 CPU，主频为 1 GHz，不过如果
 - [Cortex-A53 MPCore 处理器技术参考手册](https://support.arm.com/documentation/ddi0500/latest/)
 
 :::note[注意]
-原始[树莓派 Zero](./raspberry-pi.mdx#树莓派zero)使用封装上封装 (PoP) DRAM，其中 DRAM 直接焊接在 [BCM2835](#bcm2835) 芯片顶部。
+原始[树莓派 Zero](./zero.mdx#zero)使用封装上封装 (PoP) DRAM，其中 DRAM 直接焊接在 [BCM2835](#bcm2835) 芯片顶部。
 :::
 
 <Normal />
