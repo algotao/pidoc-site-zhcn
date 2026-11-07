@@ -4,7 +4,7 @@ draft: false
 description: Raspberry Pi Connect是一款强大的远程访问工具，允许用户从全球任何地方安全地连接并控制他们的树莓派设备。通过安装Connect软件，用户能够访问树莓派的桌面环境或shell，实现远程操作。该工具采用加密连接，确保数据传输的安全性，并在无法直接连接时使用中继服务器。Raspberry Pi Connect支持屏幕共享和远程shell访问，提供灵活的远程管理解决方案，适合需要远程监控和管理树莓派项目的用户。
 keywords: [Raspberry Pi Connect, 远程访问, 树莓派, 安全连接, 屏幕共享, 远程shell, 加密通信, 中继服务器, Raspberry Pi OS Bookworm, 设备管理]
 last_update:
-  date: 2026-10-25
+  date: 2026-11-07
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -239,6 +239,17 @@ Connect 的屏幕共享界面适用于桌面和移动设备。
 * **断开连接**。终止共享会话。
 
 <img src="/img/services/connect/screen-sharing.png" alt="Connect 页面，显示树莓派的下拉菜单。" width="80%" />
+
+#### 屏幕分辨率 {#screen-sharing-resolution}
+
+Connect 会以设备显示器的分辨率显示桌面，并缩放图像以适应浏览器窗口。
+
+该分辨率从何而来，取决于树莓派是否连接了显示器：
+
+* **已连接显示器**。桌面以所连接显示器的分辨率运行。调整浏览器窗口大小只会缩放图像，Connect 从不更改物理显示器的分辨率。如需使用其他分辨率，请按[配置显示设置](../computers/configuration.mdx#显示设置)中的说明在设备上更改；这一步可以在屏幕共享会话中完成。
+* **未连接显示器**。Raspberry Pi OS 会为桌面创建一块虚拟显示器。屏幕共享会话开始时，Connect 会调整虚拟显示器的尺寸以匹配浏览器窗口，使桌面无需缩放即可填满窗口。此后每当调整窗口大小或进入全屏，Connect 都会再次调整；窗口尺寸变化时，你在设备上设置的任何分辨率都会被覆盖。如果桌面需要保持固定分辨率（例如信息亭场景），请连接一台显示器。
+
+Connect 一次只为一个会话调整虚拟显示器。首个连入的会话在连接期间控制分辨率，其他会话则显示按各自窗口缩放后的同一桌面。控制会话断开后，下一个调整窗口尺寸的会话将接管。
 
 #### 开始屏幕共享
 

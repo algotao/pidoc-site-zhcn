@@ -1,0 +1,127 @@
+---
+sidebar_position: 11
+draft: false
+title_meta: 树莓派高品质摄像头（HQ Camera）规格、镜头与同步捕捉
+description: 树莓派高品质摄像头基于索尼 IMX477 传感器，1200 万像素并支持 C/CS 与 M12 外接镜头；本文含透射特性、推荐镜头参数与 XVS 有线同步捕捉配置。
+keywords: [高品质摄像头, HQ Camera, IMX477, C/CS卡口, M12镜头, 同步捕捉, XVS, 红外滤光片, 树莓派摄像头]
+last_update:
+  date: 2026-11-07
+---
+import Normal from "../_normal.mdx";
+
+# 高品质摄像头
+
+这款1200万像素[高品质摄像头](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)配备M12卡口或C/CS卡口，可兼容多种镜头。更多信息请参阅[镜头](#hq-lenses)。该摄像头采用索尼IMX477传感器，分辨率达4056 × 3040像素，最长可记录670.74秒曝光时间。
+
+可通过 XVS（垂直同步）引脚同步多台高品质摄像头。更多信息请参阅[同步捕捉](#synchronous-captures)。
+
+<img src="/img/accessories/camera/hq.jpg" alt="M12接口与C/CS接口版本的高品质摄像头" />
+*高品质摄像头，M12接口（左）与C/CS接口（右）*
+
+有关本摄像头硬件特性与功能的详细信息，请参阅[硬件规格](./camera.mdx#hardware-specification)。
+
+## 透射特性
+
+高品质摄像头采用Hoya CM500红外滤光片，其透射特性如图所示：
+
+<img src="/img/accessories/camera/hoyacm500.png" alt="CM500透射曲线图" width="65%" />
+
+若需增强摄像头对红外光的敏感度，可移除红外滤光片。此操作不可逆且将导致保修失效。更多信息请参阅[红外滤光片](./camera.mdx#ir-filter)。
+
+移除滤光片后，树莓派高品质摄像头的透射特性如下：
+
+<img src="/img/accessories/camera/hq.png" alt="未安装红外截止滤光片的高品质摄像头透射曲线图" width="65%" />
+
+## 推荐镜头 {#hq-lenses}
+
+建议将以下镜头与我们的 HQ 摄像头配合使用。
+
+:::note[注意]
+HQ 摄像头有 C/CS 卡口和 M12 卡口两种型号，而 GS 摄像头只有 C/CS 卡口。
+:::
+
+### C/CS 镜头
+
+我们推荐两款镜头：由CGL电子有限公司生产的6毫米广角镜头和16毫米远摄镜头。您可通过就近的[授权经销商](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)购买这些镜头。
+
+|  | 16 毫米长焦镜头 | 6 毫米广角镜头 |
+| -- | -- | -- |
+| 分辨率 | 1000 万像素 | 300 万像素 |
+| 图像格式 | 1" | 1/2" |
+| 光圈 | F1.4 至 F16 | F1.2 |
+| 卡口 | C | CS |
+| HQ 视场角 H°×V° (D°) | 22.2°×16.7° (27.8°) | 55°×45° (71°) |
+| 背面焦距 | 17.53 毫米 | 7.53 毫米 |
+| 最小物距 | 0.2 m | 0.2 m |
+| 尺寸 | φ39×50 毫米 | φ30×34 毫米 |
+
+### M12镜头
+
+<img src="/img/accessories/camera/m12-lens.jpg" alt="M12 镜片" />
+
+我们推荐三种由[高佳光学](https://www.gaojiaoptotech.com/)制造的镜片。这些镜片可从离您最近的[授权经销商](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)处购买。
+
+|  | 8 毫米 | 25 毫米 | 鱼眼 |
+| -- | -- | -- | -- |
+| 分辨率 | 1200 万像素 | 500 万像素 | 1500 万像素 |
+| 图像格式 | 1/1.7" | 1/2" | 1/2.3" |
+| 光圈 | F1.8 | F2.4 | F2.5 |
+| 卡口 | M12 | M12 | M12 |
+| HQ 视场角 H°×V° (D°) | 49°×36° (62°) | 14.4°×10.9° (17.9°) | 140°×102.6° (184.6°) |
+
+## 同步捕捉 {#synchronous-captures}
+
+高品质（HQ）摄像头支持同步捕获。
+一台摄像头（"源摄像头"）可配置为在启动帧捕获时在其XVS（垂直同步）引脚上生成一个脉冲。
+其他（"目标"）摄像头可以监听此脉冲，并在源摄像头捕获帧的同时进行捕获。
+
+此方法已被[软件摄像头同步](./camera-software.mdx#软件摄像头同步)所取代，该方法可在无需额外线缆的情况下实现长距离操作，并具备亚毫秒级精度。但当摄像头物理距离较近时，可使用有线同步。
+
+:::note[注意]
+无法将 GS 摄像头与 HQ 摄像头同步。如需同步 GS 摄像头，请参阅[同步模式（XVS）](./global-shutter-camera.mdx#synchronous-mode-xvs)。
+:::
+
+### 连接摄像头
+
+将导线焊接到每个摄像头的XVS测试点，并将它们连接在一起。
+
+将导线焊接到每个摄像头的GND测试点，并将它们连接在一起。
+
+:::note[注意]
+本文件较早版本曾建议为XVS添加外部上拉电阻。此建议不再适用。请确保使用Raspberry Pi OS最新版本，并为所有连接的摄像头设置`always-on`属性。
+:::
+
+### 驱动程序配置
+
+配置摄像头驱动程序，使其在非流媒体传输时保持1.8V电源供电，并可选地选择源设备和接收设备角色。
+
+编辑 `/boot/firmware/config.txt`。将 `camera_auto_detect=1` 改为 `camera_auto_detect=0`。
+
+对于源摄像头，添加以下行：
+```ini
+dtoverlay=imx477,always-on,sync-source
+```
+
+或对于汇：
+```ini
+dtoverlay=imx477,always-on,sync-sink
+```
+
+在 Raspberry Pi 5、CM4 或 CM5 上使用 CAM0 端口时，在该行末尾添加 `,cam0`（不带空格）。如果同一台 Raspberry Pi 上连接了两台摄像头，则需要两行 `dtoverlay` 配置，其中仅一行以 `,cam0` 结尾。
+
+或者，如果您希望在运行时交换摄像头的角色（且它们未连接到同一台 Raspberry Pi），请省略上述 `,sync-source` 或 `,sync-sink`。相反，您可以在启动每个摄像头前设置模块参数：
+
+对于带有源摄像头的 Raspberry Pi：
+```sh
+echo 1 | sudo tee /sys/module/imx477/parameters/trigger_mode
+```
+
+对于带有目标摄像头的树莓派：
+```sh
+echo 2 | sudo tee /sys/module/imx477/parameters/trigger_mode
+```
+每次系统启动时都需要执行此操作。
+
+完成连接与驱动配置后，请按[有线同步](./camera-software.mdx#wired-synchronisation)中的说明配置 libcamera 并启动摄像头。
+
+<Normal />

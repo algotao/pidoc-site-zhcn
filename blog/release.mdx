@@ -2,9 +2,10 @@
 title: Pidoc更新记录
 authors: [algotao]
 tags: [Raspberry-Pi, 中文文档]
-date: 2026-10-25T10:00
+date: 2026-11-07T10:00
 ---
 
+- 2026年11月07日：更新到 master 分支的 [7376533a](https://github.com/raspberrypi/documentation/commit/7376533ab86ea07acc77ef6a9f3c3e57fcff833d)。主要变更：**摄像头文档重构**：按上游 DOCS-274 拆分页面，新增「摄像头模块 2」「摄像头模块 3」「高品质摄像头」「全局快门摄像头」四个产品页（含镜头参数、外部触发、XVS 同步、传感器组件规格），`docs/computers/camera-software.mdx` 搬迁为 `docs/accessories/camera-software.mdx` 并补入「安装树莓派摄像头」「有线同步」两节，AI 摄像头页按上游重组为「用户指南」结构；摄像头总览页改为硬件对比表、旧版型号、硬件规格、红外滤光片、机械图与引脚分配，硬件规格表更新为 6 款在售型号。**Connect** 新增「屏幕分辨率」，说明有无物理显示器时虚拟显示器的分辨率行为。配件首页新增 5 张摄像头卡片并改名「摄像头模块硬件」，电脑首页移除「摄像头软件」卡；同步 6 张卡片图与 `gs-camera.jpg`，修正全站因搬迁产生的链接与锚点。
 - 2026年10月25日：更新到 master 分支的 [41e24fbd](https://github.com/raspberrypi/documentation/commit/41e24fbd459d47e7db979cd084676c790b60a3de)。主要变更：**树莓派硬件页大拆分**，新增「经典单板计算机（SBC）」与「Zero 型号」两页（型号总表、各型号组件与端口、Zero 测试焊盘表），硬件页介绍改为五大系列概述并链接到各板块，删除「原理图和机械图」整节；**GPIO 章节重写为「40 针 GPIO 排针」**（引脚布局、引脚类型、输入输出、通信协议、引脚功能总表、权限、焊盘、开机状态、中断、三套电压规格表），并上移至介绍之后；键盘电脑新增 `<X00>` 命名说明、技术规格表细化、型号与套装配图；**Linux 内核构建章节重写**（`LOCALVERSION` 后缀说明、Pi 5 上 `kernel_2712.img` 覆盖提示、initramfs 与自定义内核说明、`-j6` 编译、新增「确认自定义内核正在运行」），内核补丁示例更新至 6.18.56-rt7 并新增 PREEMPT_RT 并入主线的说明；**Connect 远程更新**新增工件两小时过期提示、部署状态改为 Queued/In Progress 等六种，管理 API 状态字段同步（`pending`→`queued`、新增 `invalidated`），新增「安全通知」章节与连接信息静态加密表述；其余更新包括 vcgencmd 新增 `pmic_read_adc`、`mem_oom`/`mem_reloc_stats` 在 Pi 5 不可用、计算模块 SoC 链接与 DDR2 SODIMM 外形提示、Pico 新增型号表、入门页系列列表改写、安全概览新增漏洞邮件订阅。同时补齐历史缺口：键盘电脑「入门指南」缺失的硬件前提与四个设置步骤、无显示器设置中的电源与网络步骤（含无线/有线子节），并修正操作系统页面中 VLC 命令行与 GPIO Zero 示例的标题层级；删除上游已移除的 5 张 Connect 截图。
 - 2026年10月11日：更新到 master 分支的 [62ba0a0c](https://github.com/raspberrypi/documentation/commit/62ba0a0c2dd5030fe9b19458fa9bd174a451f79b)。主要变更：新增智能显示模块文档；Connect 页面重构并新增安全性整章，远程更新改为直接上传工件；另更新安全启动制造数据库、桌面外观与键盘快捷键、autoboot、SPI/RP1、CM5 设备树等。
 - 2026年09月04日：更新到 master 分支的 [68354487](https://github.com/raspberrypi/documentation/commit/68354487)。主要变更：**新增 CM5 编程夹具完整文档**（规格参数、背面接口、夹具设置、CM5 烧录与取出、制造数据库、弹簧针更换、LED 指示灯行为、故障排除与安全警告）；安全启动配置工具新增"故障排除"章节（常见问题、查看日志、清除缓存、获取帮助）；**Linux 内核构建章节大段重写**（架构/型号/命令对照表改为按 64 位与 32 位分组的选项卡，内核补丁示例更新至 6.18.37）；操作系统章节新增 kmsprint 在 Raspberry Pi 5 上的多 DRM 卡说明（`--device` 参数）、屏幕放大镜与放大 UI 元素两节；Build HAT 兼容性表与图注的 27 条 BrickLink 链接改用新版 `?P=` 参数；触摸显示屏 2 的 10 英寸厚度与外形尺寸修正；Arm 官方文档域名整体迁移至 support.arm.com，另更新 libcamera、UL 认证、MIPI DBI、VNC Viewer、Fail2Ban 等一批外链。同步完成全站术语统一（`provisioning` 统一为"配置"、`camera` 统一为"摄像头"、`Troubleshooting` 统一为"故障排除"）。另：Raspberry Pi Imager 下载地址更新至 2.0.11.1。
@@ -67,7 +68,7 @@ date: 2026-10-25T10:00
 
 从开写第一行到现在近20天，多亏了 [DeepL](https://www.deepl.com/) 和 [Google翻译](https://translate.google.com/) 两大翻译利器，才使得处理效率大大提升。Wiki建站工具使用了 [Docusaurus](https://docusaurus.io/)。中文版遵循官方的授权模式，使用 [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.zh-hans)协议（署名-相同方式共享 4.0）。
 
-整个过程就是 **机器翻译** ==> **思考逻辑推导** ==> **原版人工校对** ==> **排版** ==> **再校对** 的循环，过程相当枯燥。特别是 [树莓派硬件](/docs/computers/raspberry-pi) 和 [摄像头软件](/docs/computers/camera-software/) 这两个巨幅章节把我累得够呛，各花了我3-4天时间才处理完。
+整个过程就是 **机器翻译** ==> **思考逻辑推导** ==> **原版人工校对** ==> **排版** ==> **再校对** 的循环，过程相当枯燥。特别是 [树莓派硬件](/docs/computers/raspberry-pi) 和 [摄像头软件](/docs/accessories/camera-software/) 这两个巨幅章节把我累得够呛，各花了我3-4天时间才处理完。
 
 域名的申请及备案也相当顺利，常见工信部备案时间需要8-20天，这次只用了3天，算得上是神速。
 

@@ -16,15 +16,61 @@ const OSConfig = {
     osimages_content2: ' 是将操作系统安装到 microSD 卡上并与 Raspberry Pi 配套使用的快速简便方法。您也可以从以下操作系统中进行选择，下载并手动安装。',
     imager_url: { downloadurl: "/downloads", title: "Raspberry Pi Imager", showButton: false, },
     inner_url: [
-        { linkto: "#ubuntu-2604", title: "Ubuntu 26.04.1 *推荐*", showButton: false },
+        { linkto: "#ubuntu-2610", title: "Ubuntu 26.10 *最新*", showButton: false },
+        { linkto: "#ubuntu-2604", title: "Ubuntu 26.04.1 LTS *推荐*", showButton: false },
         { linkto: "#ubuntu-2404-lts", title: "Ubuntu 24.04.5 LTS", showButton: false },
         { linkto: "#ubuntu-2204-lts", title: "Ubuntu 22.04.5 LTS", showButton: false },
         { linkto: "#ubuntu-core", title: "Ubuntu Core for IoT", showButton: false },
     ],
     os: [
         {
+            id: "ubuntu-2610",
+            title: "Ubuntu 26.10",
+            desc: "Ubuntu 26.10 是 2026 年 10 月 15 日发布的最新常规版本（过渡版本），提供九个月的安全与维护更新。需要五年长期支持的生产环境请选用 Ubuntu 26.04.1 LTS。",
+            extos: [
+                {
+                    title: "Ubuntu 26.10 Desktop(桌面)",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/stonking/release/ubuntu-26.10-preinstalled-desktop-arm64+raspi.img.xz",
+                    release_date: "2026-10-15",
+                    system: "64位",
+                    image_size: "3,460MB",
+                    compatible_list: [
+                        { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
+                        { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
+                        { name: "5", url: "https://www.raspberrypi.com/products/raspberry-pi-5/" },
+                        { name: "500", url: "https://www.raspberrypi.com/products/raspberry-pi-500/" },
+                        { name: "CM4", url: "https://www.raspberrypi.com/products/compute-module-4/" },
+                        { name: "CM4S", url: "https://www.raspberrypi.com/products/compute-module-4s/" },
+                        { name: "CM5", url: "https://www.raspberrypi.com/products/compute-module-5/" },
+                    ],
+                },
+                {
+                    title: "Ubuntu 26.10 Server(64位)",
+                    download_url: "https://dl.pidoc.cn/ubuntu/releases/stonking/release/ubuntu-26.10-preinstalled-server-arm64+raspi.img.xz",
+                    release_date: "2026-10-15",
+                    system: "64位",
+                    image_size: "1,592MB",
+                    compatible_list: [
+                        { name: "3B", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b/" },
+                        { name: "3B+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/" },
+                        { name: "3A+", url: "https://www.raspberrypi.com/products/raspberry-pi-3-model-a-plus/" },
+                        { name: "4B", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/" },
+                        { name: "400", url: "https://www.raspberrypi.com/products/raspberry-pi-400/" },
+                        { name: "5", url: "https://www.raspberrypi.com/products/raspberry-pi-5/" },
+                        { name: "500", url: "https://www.raspberrypi.com/products/raspberry-pi-500/" },
+                        { name: "CM3", url: "https://www.raspberrypi.com/products/compute-module-io-board-v3/" },
+                        { name: "CM3+", url: "https://www.raspberrypi.com/products/compute-module-3-plus/" },
+                        { name: "CM4", url: "https://www.raspberrypi.com/products/compute-module-4/" },
+                        { name: "CM4S", url: "https://www.raspberrypi.com/products/compute-module-4s/" },
+                        { name: "CM5", url: "https://www.raspberrypi.com/products/compute-module-5/" },
+                        { name: "Zero 2 W", url: "https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/" },
+                    ],
+                }
+            ],
+        },
+        {
             id: "ubuntu-2604",
-            title: "Ubuntu 26.04.1 (推荐)",
+            title: "Ubuntu 26.04.1 LTS (推荐)",
             desc: "Ubuntu 的最新 LTS 版本。LTS 代表长期支持，这意味着五年的免费安全和维护更新。",
             extos: [
                 {

@@ -5,7 +5,7 @@ title_meta: 在树莓派5上运行AI模型 - 视觉AI与大语言模型LLM完整
 description: 在树莓派5上运行由Hailo NPU驱动的AI模型完整指南。支持AI Kit、AI HAT+和AI HAT+ 2三种硬件方案。包含视觉AI模型（对象检测、图像分割、姿势估计）和大语言模型LLM的详细配置步骤。涵盖硬件安装、软件依赖、PCIe Gen 3.0配置、rpicam-apps演示、Hailo Ollama服务器部署及Open WebUI界面设置。支持Hailo-8L、Hailo-8和Hailo-10H多种NPU芯片。提供完整的安装验证和故障排除指南。
 keywords: [树莓派5 AI, Hailo NPU, AI HAT+ 2, 大语言模型LLM, 视觉AI, 对象检测, YOLO模型, Hailo-10H, Hailo Ollama, Open WebUI, Docker, GenAI生成式AI, 神经网络加速, rpicam-apps, PCIe Gen 3.0]
 last_update: 
-  date: 2026-01-31
+  date: 2026-11-07
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -41,7 +41,7 @@ AI HAT+ 2 还允许您运行生成式 AI（GenAI）模型。使用 AI HAT+ 2，�
 AI Kit 已停产；对于新设计，我们建议使用 AI HAT+ 或 AI HAT+ 2。
 :::
 
-如果您想运行视觉 AI 模型，还需要一个支持的摄像头，例如树莓派摄像头模块 3。我们建议在连接 AI 硬件之前先连接摄像头。有关说明，请参阅[安装树莓派摄像头](../accessories/camera.mdx#安装树莓派摄像头)。跳过重新连接树莓派电源的步骤，因为下一步需要断开树莓派电源。
+如果您想运行视觉 AI 模型，还需要一个支持的摄像头，例如树莓派摄像头模块 3。我们建议在连接 AI 硬件之前先连接摄像头。有关说明，请参阅[安装树莓派摄像头](../accessories/camera-software.mdx#安装树莓派摄像头)。跳过重新连接树莓派电源的步骤，因为下一步需要断开树莓派电源。
 
 然后，根据您的 AI 硬件，按照连接 [AI HAT](../accessories/ai-hat-plus.mdx)（HAT+ 或 HAT+ 2）或 [AI Kit](../accessories/ai-kit.mdx) 到树莓派 5 的说明操作。
 
@@ -228,11 +228,11 @@ $ rpicam-hello
 
 ### 步骤 2. 运行实时视觉 AI 演示
 
-验证一切正确安装后，您可以使用 `rpicam-apps` 摄像头软件运行摄像头 AI 演示。该软件使用[后处理框架](./camera-software.mdx#使用-rpicam-apps-做后处理)实现 AI 演示；该软件使用预训练的神经网络在 NPU 上对摄像头帧运行 AI 推理。
+验证一切正确安装后，您可以使用 `rpicam-apps` 摄像头软件运行摄像头 AI 演示。该软件使用[后处理框架](../accessories/camera-software.mdx#使用-rpicam-apps-做后处理)实现 AI 演示；该软件使用预训练的神经网络在 NPU 上对摄像头帧运行 AI 推理。
 
 为了突出 NPU 的一些功能，本节概述了一些展示不同模型和后处理阶段的演示，例如在对象周围绘制边界框或在人周围绘制姿势线。结果以视觉方式显示在实时预览窗口（默认）或在树莓派终端中显示为文本。
 
-以下演示使用 [`rpicam-hello`](./camera-software.mdx#rpicam-hello)，但您也可以使用其他 rpicam-apps，例如用于视频录制的 [`rpicam-vid`](./camera-software.mdx#rpicam-vid) 和用于静态图像的 [`rpicam-still`](./camera-software.mdx#rpicam-still)。这些应用程序可能需要您添加或修改一些命令行选项以使其兼容。
+以下演示使用 [`rpicam-hello`](../accessories/camera-software.mdx#rpicam-hello)，但您也可以使用其他 rpicam-apps，例如用于视频录制的 [`rpicam-vid`](../accessories/camera-software.mdx#rpicam-vid) 和用于静态图像的 [`rpicam-still`](../accessories/camera-software.mdx#rpicam-still)。这些应用程序可能需要您添加或修改一些命令行选项以使其兼容。
 
 #### 对象检测
 

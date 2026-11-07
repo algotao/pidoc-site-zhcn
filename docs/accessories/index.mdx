@@ -2,10 +2,10 @@
 sidebar_position: 2
 draft: false
 title: 树莓派配件
-description: 树莓派配件，包括摄像头模块、显示屏、智能显示模块、键盘与鼠标、Build HAT、Sense HAT、TV HAT、AI Kit、AI Camera、AI HAT+、M2 HAT+、SSD、SD Cards、Audio HAT、CM5 编程夹具等。
-keywords: [树莓派, Raspberry Pi, 配件, accessories, 智能显示模块, Smart Display Module, CM5 编程夹具]
+description: 树莓派配件，包括摄像头模块 2/3、高品质摄像头、全局快门摄像头、AI 摄像头与摄像头软件、显示屏、智能显示模块、键盘与鼠标、Build HAT、Sense HAT、TV HAT、AI Kit、AI HAT+、M2 HAT+、SSD、SD Cards、Audio HAT、CM5 编程夹具等。
+keywords: [树莓派, Raspberry Pi, 配件, accessories, 摄像头模块, rpicam, 智能显示模块, Smart Display Module, CM5 编程夹具]
 last_update: 
-  date: 2026-10-25
+  date: 2026-11-07
 ---
 import Normal from "../_normal.mdx";
 import {Card} from "../_card.js";
@@ -16,7 +16,7 @@ import {Card} from "../_card.js";
 <div class="container">
   <div class="row">
     <div class="col col--4">
-       <Card url="sd-cards" cardimage="/img/big/sd-card.png" texthead="SD卡" textinfo="树莓派官方SD卡"/>
+      <Card url="sd-cards" cardimage="/img/big/sd-card.png" texthead="SD卡" textinfo="树莓派官方SD卡"/>
     </div>
     <div class="col col--4">
       <Card url="ssds" cardimage="/img/big/ssds.png" texthead="SSD" textinfo="树莓派官方固态硬盘"/>
@@ -44,13 +44,13 @@ import {Card} from "../_card.js";
 <div class="container">
   <div class="row">
     <div class="col col--4">
-       <Card url="monitor" cardimage="/img/big/monitor.png" texthead="树莓派显示器" textinfo="树莓派显示器"/>
+      <Card url="monitor" cardimage="/img/big/monitor.png" texthead="树莓派显示器" textinfo="树莓派显示器"/>
     </div>
     <div class="col col--4">
-       <Card url="camera" cardimage="/img/big/Camera.png" texthead="摄像头" textinfo="树莓派摄像头模块"/>
+      <Card url="camera" cardimage="/img/big/Camera.png" texthead="摄像头模块硬件" textinfo="树莓派摄像头板"/>
     </div>
     <div class="col col--4">
-       <Card url="ai-camera" cardimage="/img/big/ai-cam.png" texthead="AI摄像头" textinfo="树莓派的人工智能摄像头"/>
+      <Card url="camera-software" cardimage="/img/big/Camera-Software.png" texthead="摄像头模块软件与安装" textinfo="用于树莓派摄像头硬件的软件和库"/>
     </div>
   </div>
 </div>
@@ -58,50 +58,75 @@ import {Card} from "../_card.js";
 <div class="container">
   <div class="row">
     <div class="col col--4">
+      <Card url="camera-module-2" cardimage="/img/big/Camera-Module-2.png" texthead="摄像头模块 2" textinfo="800 万像素摄像头，提供标准版与 NoIR 版"/>
+    </div>
+    <div class="col col--4">
+      <Card url="high-quality-camera" cardimage="/img/big/High-Quality-Camera.png" texthead="高品质摄像头" textinfo="1200 万像素摄像头，可搭配外接镜头"/>
+    </div>
+    <div class="col col--4">
+      <Card url="camera-module-3" cardimage="/img/big/Camera-Module-3.png" texthead="摄像头模块 3" textinfo="1200 万像素摄像头，提供标准/NoIR 版与标准/广角视场"/>
+    </div>
+  </div>
+</div>
+<br /><br /><br />
+<div class="container">
+  <div class="row">
+    <div class="col col--4">
+      <Card url="global-shutter-camera" cardimage="/img/big/Global-Shutter-Camera.png" texthead="全局快门摄像头" textinfo="160 万像素摄像头，采用全局快门机制"/>
+    </div>
+    <div class="col col--4">
+      <Card url="ai-camera" cardimage="/img/big/ai-cam.png" texthead="AI摄像头" textinfo="用于树莓派的 AI 摄像头"/>
+    </div>
+    <div class="col col--4">
       <Card url="keyboard-and-mouse" cardimage="/img/big/Keyboard-and-Mouse.png" texthead="键盘和鼠标" textinfo="树莓派官方键盘与鼠标"/>
     </div>
+  </div>
+</div>
+<br /><br /><br />
+<div class="container">
+  <div class="row">
     <div class="col col--4">
       <Card url="usb" cardimage="/img/big/usb-accessories.png" texthead="USB 配件" textinfo="树莓派官方 USB 配件"/>
     </div>
     <div class="col col--4">
       <Card url="build-hat" cardimage="/img/big/Build-HAT.png" texthead="Build HAT" textinfo="如何使用Build HAT"/>
     </div>
+    <div class="col col--4">
+      <Card url="sense-hat" cardimage="/img/big/Sense-HAT.png" texthead="Sense HAT" textinfo="监控和可视化传感器数据"/>
+    </div>
   </div>
 </div>
 <br /><br /><br />
 <div class="container">
   <div class="row">
-    <div class="col col--4">
-      <Card url="sense-hat" cardimage="/img/big/Sense-HAT.png" texthead="Sense HAT" textinfo="监控和可视化传感器数据"/>
-    </div>
     <div class="col col--4">
       <Card url="ai-kit" cardimage="/img/big/ai-kit.png" texthead="AI Kit" textinfo="通过 M.2 连接到树莓派的 NPU"/>
     </div>
     <div class="col col--4">
       <Card url="ai-hat-plus" cardimage="/img/big/ai-hat-plus.png" texthead="AI HATs" textinfo="适用于树莓派的 NPU HATs"/>
     </div>
+    <div class="col col--4">
+      <Card url="audio" cardimage="/img/big/Audio-HATs.png" texthead="树莓派音频" textinfo="用树莓派实现高清音频"/>
+    </div>
   </div>
 </div>
 <br /><br /><br />
 <div class="container">
   <div class="row">
-    <div class="col col--4">
-      <Card url="audio" cardimage="/img/big/Audio-HATs.png" texthead="树莓派音频" textinfo="用树莓派实现高清音频"/>
-    </div>
     <div class="col col--4">
       <Card url="tv-hat" cardimage="/img/big/TV-HAT.png" texthead="TV HAT" textinfo="在您的树莓莓观看TV"/>
     </div>
     <div class="col col--4">
       <Card url="cm5-programming-jig" cardimage="/img/big/cm5-programming-jig.png" texthead="CM5 编程夹具" textinfo="一次为一台 CM5 写入操作系统与安全配置"/>
     </div>
+    <div class="col col--4">
+      <Card url="smart-display-module" cardimage="/img/big/smart-display-module.png" texthead="智能显示模块" textinfo="将 Compute Module 5 集成到兼容的数字标牌中"/>
+    </div>
   </div>
 </div>
 <br /><br /><br />
 <div class="container">
   <div class="row">
-    <div class="col col--4">
-      <Card url="smart-display-module" cardimage="/img/big/smart-display-module.png" texthead="智能显示模块" textinfo="将 Compute Module 5 集成到兼容的数字标牌中"/>
-    </div>
     <div class="col col--4">
       <Card url="bumper" cardimage="/img/big/bumper.png" texthead="保护底座" textinfo="树莓派5的保护套"/>
     </div>

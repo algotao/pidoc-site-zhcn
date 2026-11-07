@@ -1,0 +1,74 @@
+---
+sidebar_position: 10
+draft: false
+title_meta: 树莓派摄像头模块 3 规格、变体与传感器组件
+description: 树莓派摄像头模块 3（Camera Module 3）基于索尼 IMX708 传感器，1200 万像素、电动自动对焦，提供标准/广角与 NoIR 共四种版本，另可单独购买传感器组件。
+keywords: [摄像头模块3, Camera Module 3, IMX708, 自动对焦, NoIR, 广角, 传感器组件, 树莓派摄像头]
+last_update:
+  date: 2026-11-07
+---
+import Normal from "../_normal.mdx";
+
+# 摄像头模块 3
+
+这款 [1200万像素摄像头](https://www.raspberrypi.com/products/camera-module-3/) 采用索尼IMX708传感器，分辨率为4608 × 2592像素。具备[电动自动对焦](https://www.raspberrypi.com/news/new-autofocus-camera-modules/)功能，最长可支持112秒曝光时间。
+
+## 变体
+
+摄像头模块3提供以下版本：
+
+* 标准版，常规视场角(FoV)
+* 标准版，广角视场角
+* NoIR版，常规视场角
+* NoIR版，广角视场
+
+标准型号仅捕捉可见光，红外光被滤除。NoIR型号未配备红外滤光片，可同时捕捉可见光与红外光。
+
+所有这些版本也适用于独立的[摄像头模块3传感器组件](https://www.raspberrypi.com/products/camera-module-3-sensor-assembly/)。
+
+<img src="/img/accessories/camera/cm3.jpg" alt="摄像头模块3标准版与广角版" />
+*摄像头模块3（左）与摄像头模块3广角版（右）*
+
+<img src="/img/accessories/camera/cm3_noir.jpg" alt="摄像头模块3无红外标准版与广角版" />
+*摄像头模块3无红外版（左）与摄像头模块3无红外广角版（右）*
+
+有关该摄像头硬件特性与功能的详细信息，请参阅[硬件规格](./camera.mdx#hardware-specification)。
+
+:::tip
+[现有证据](https://github.com/raspberrypi/libcamera/issues/43)表明摄像头模块3可能在CSI时钟频率谐波频率下产生射频干扰。该射频干扰频率范围可能干扰GPS L1频段（1575 MHz）。详情及建议的解决方法请参阅[Github讨论帖](https://github.com/raspberrypi/libcamera/issues/43)。
+:::
+
+## 透射特性
+
+摄像头模块3中的IMX708传感器具有以下光谱灵敏度特性。
+
+<img src="/img/accessories/camera/cm3-filter.png" alt="摄像头模块3透射曲线图" width="65%" />
+
+## 摄像头模块 3 传感器组件
+
+树莓派摄像头模块 3 传感器组件内置与摄像头模块 3 AF（自动对焦）相同的传感器和自动对焦功能，可让你把摄像头模块 3 的特性集成到更多样的外形规格中。
+
+它以低成本为更小的设备增加成像能力，降低制造复杂度并缩短上市时间。
+
+**规格**
+
+* 索尼 IMX708 传感器
+* 分辨率：1200 万像素
+* 传感器尺寸：对角线 7.4 mm
+* 像素尺寸：1.4 μm × 1.4 μm
+* 水平 × 垂直：4608 × 2592 像素
+* 标准版集成红外截止滤光片；NoIR 版不配备
+* 相位检测自动对焦
+* 工作温度：0°C 至 50°C
+* 板载 EEPROM，用于存储摄像头数据
+
+**文档**
+
+* [树莓派摄像头模块 3 传感器组件产品简介](https://pip.raspberrypi.com/documents/RP-009789-MM-1-sensor-assembly-product-brief.pdf)
+* [树莓派摄像头模块 3 参考原理图](https://pip.raspberrypi.com/documents/RP-008969-SD)
+
+**停产说明**
+
+树莓派摄像头模块 3 传感器组件至少将持续生产到 2030 年 1 月。
+
+<Normal />

@@ -1,11 +1,11 @@
 ---
-sidebar_position: 7
+sidebar_position: 13
 draft: false
 title_meta: 在树莓派运行 libcamera 及 rpicam 等系列工具实现拍照、延时摄影、记录视频
 description: 全面掌握树莓派摄像头应用！本文详细介绍如何使用rpicam-apps软件套件进行图像捕捉、视频录制、对象检测、图像分割等，支持多种摄像头模块（如HQ、GS、AI摄像头）。提供命令行选项、后处理框架（含TensorFlow Lite集成）、多摄像头同步及网络流媒体传输方法，助您实现高效的树莓派视觉应用开发。
 keywords: [树莓派摄像头应用, rpicam-apps, 图像捕捉, 视频录制, 对象检测, 图像分割, TensorFlow Lite, 多摄像头同步, 网络流媒体, 后处理框架, 树莓派视觉开发]
 last_update:
-  date: 2026-10-11
+  date: 2026-11-07
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -13,24 +13,111 @@ import Normal from "../_normal.mdx";
 
 # 摄像头软件
 
-本文档介绍如何将支持的摄像头模块与我们的软件工具配合使用。所有 Raspberry Pi 摄像头都可以使用我们的软件工具录制高分辨率照片和全高清 1080p 视频（或更好）。
+本文档介绍如何将树莓派摄像头模块与树莓派软件工具配合使用。
 
-Raspberry Pi 生产多种官方摄像头模块，包括
+所有树莓派摄像头都可以使用我们的软件工具录制高分辨率照片和全高清 1080p 视频（或更高）。
 
-* 最初的 500 万像素摄像头模块 1（已停产）
-* 800 万像素 [摄像头模块 2](https://www.raspberrypi.com/products/camera-module-v2/)，带或不带红外滤镜
-* 1200 万像素 [摄像头模块 3](https://raspberrypi.com/products/camera-module-3/)，有标准镜头和广角镜头，带或不带红外滤光镜
-* 1200 万像素的 [高质量摄像头](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)，配有 CS 和 M12 卡口，可与外置镜头配合使用
-* 160 万像素 [全局快门摄像头](https://www.raspberrypi.com/products/raspberry-pi-global-shutter-camera/)，用于快速动态摄影
-* 1200 万像素的 [AI摄像头](https://www.raspberrypi.com/products/ai-camera/)，使用索尼IMX500成像传感器，为任何摄像头应用提供低延迟、高性能的AI功能
+有关树莓派摄像头硬件的更多信息，请参阅[摄像头硬件文档](./camera.mdx#about-the-camera-modules)。
 
-有关摄像头硬件的更多信息，请参阅[摄像头硬件文档](../accessories/camera.mdx#关于摄像头模块)。
+首先[安装摄像头模块](#安装树莓派摄像头)，然后按照本节中的指南使用你的摄像头模块。
 
-首先，[安装摄像头模块](../accessories/camera.mdx#安装树莓派摄像头)。然后，按照本节中的指南使用你的摄像头模块。
+:::note
+本指南不涵盖 _Bullseye_ 及更早 Raspberry Pi OS 版本中提供的*传统摄像头栈*。传统摄像头栈使用 `raspivid`、`raspistill` 等应用程序和原始的 `Picamera`（*而非* `Picamera2`）Python 库，多年来已被弃用且不再受支持。如果你仍在使用传统摄像头栈，它仅支持摄像头模块 1、摄像头模块 2 和高品质摄像头，且永远不会支持任何更新的摄像头模块。本文档其余部分不适用于传统摄像头栈。
+:::
+
+## 安装树莓派摄像头
+
+树莓派摄像头的安装流程在所有摄像头与主板组合中基本一致。连接器存在些许差异，具体区别将在后续步骤中说明。
+
+### 步骤1：准备工作
 
 :::warning
-本指南不再涵盖在 _Bullseye_ 和早期 Raspberry Pi OS 版本中可用的*传统摄像头栈*。传统的摄像头栈使用 `raspivid`、`raspistill` 等应用程序和原始的 `Picamera`（*而不是* `Picamera2`）Python 库，多年来已被弃用，现在已不再支持。如果您使用的是传统的摄像头栈，它将只支持 摄像头模块 1、摄像头模块 2 和 高质量摄像头，而不会支持任何更新的摄像头模块。
+摄像头易受静电影响。操作PCB前请进行接地处理。若无接地带，可触碰水龙头等金属物体实现接地。
 :::
+
+完成本操作需准备以下物品：
+
+* 带摄像头接口的树莓派主板
+* 树莓派摄像头
+
+    部分摄像头镜头可能覆盖有蓝色半透明塑料薄膜，此为运输保护措施，请轻柔撕除。
+
+* 适配摄像头与主板的连接线
+  * 所有树莓派摄像头均采用标准15针接口。
+  * 树莓派4及以下旗舰型号采用标准15针接口。此类主板请使用摄像头附带的标准-标准摄像头线缆。
+  * 树莓派5、所有树莓派Zero型号及计算模块I/O板采用迷你22针接口。此类主板需使用[标准-迷你摄像头线缆](https://www.raspberrypi.com/products/camera-cable/)。
+  * 部分计算模块开发套件附带计算模块摄像头显示适配器（CMCDA）板，可将IO板上的迷你22针接口转换为标准15针接口。
+
+### 步骤2：将线缆连接至树莓派
+
+:::tip
+若计划在树莓派5上使用主动散热器，请在安装散热器前将线缆连接至设备摄像头接口。安装散热器后，摄像头接口可能难以触及。
+:::
+
+1. 关闭树莓派并断开电源。
+2. 定位树莓派主板上的摄像头接口。
+
+    以下说明基于您手持树莓派主板时芯片和接口朝上、树莓派标识与主板名称方向正确的情况。对于顶部无标识的树莓派Zero主板，请将GPIO接口沿远离您的边缘方向放置。
+
+    * 在树莓派Zero设备上，摄像头接口位于右侧短边，与SD卡槽相对。
+
+    * 在树莓派4之前的旗舰型号上，摄像头接口位于离您最近的边缘，介于HDMI接口和音频插孔之间，标有CAMERA字样。
+    * 在树莓派4上，摄像头接口位于离您最近的边缘，介于微型HDMI接口与音频插孔之间，标注为CAMERA。
+    * 在树莓派5上，两个摄像头和显示接口位于离您最近的边缘，介于微型HDMI接口与以太网端口之间，分别标注为CAM/DISP0和CAM/DISP1。您可任选其中一个接口连接摄像头。
+    * 在树莓派计算模块1/3/3+的IO板上，两个摄像头接口位于左侧边缘（即IO板上最靠近logo的边缘）靠近您的末端。它们标注为CAM0和CAM1。您可任选其中一个接口连接摄像头。
+    * 在树莓派计算模块4的IO板上，两个摄像头接口位于最左侧角落。标记为CAM0和CAM1。您可任选其中一个接口连接摄像头。
+    * 在树莓派计算模块5的I/O板上，两个摄像头接口位于最远边缘的左端。标记为CAM/DISP0和CAM/DISP1。您可任选其中一个接口连接摄像头。
+
+3. 打开接口盖板。
+
+    a. 若有薄膜条固定盖板，请将其移除。
+
+    b. 轻柔地将盖板从接口处向外拉出，直至触及阻力点。此时盖板可自由活动。
+
+    c. 将盖板轻微倾斜远离接口开口。
+
+4. 将摄像头线缆金属触点端朝向远离盖板的方向插入接口。
+
+    确保摄像头线缆完全插入连接器且保持笔直，使所有触点正确对齐。注意避免线缆弯折角度过大。
+
+5. 将盖板向线缆方向倾斜，按压至连接器直至听到咔嗒声锁定到位。
+
+    挡板可固定线缆位置，确保连接器针脚与线缆金属触点紧密接触。
+
+拆卸线缆时请按上述步骤逆向操作。
+
+
+### 步骤3：将电缆连接至摄像头
+
+我们的摄像头已预装标准-标准电缆。若您已拆下该电缆或需更换其他电缆，请完成以下步骤。
+
+摄像头连接器位于电路板与镜头相对的一侧。请将摄像头镜头朝下或背离您握持。
+
+1. 打开连接器上的盖板。
+
+    a. 轻柔地将挡板从接口处向外拉出，直至触及阻力点。此时挡板可自由活动。
+
+    b. 将挡板轻微向接口开口外侧倾斜。
+
+2. 将摄像头线缆端口（金属触点朝向摄像头主板方向）插入接口。
+
+    确保线缆端口完全插入接口且保持垂直，使所有触点正确对齐。注意避免柔性线缆产生锐角弯折。
+
+3. 将挡板向线缆方向倾斜并按压至连接器，直至听到咔嗒声确认到位。
+
+    挡板可固定线缆位置，确保连接器针脚与线缆金属触点紧密接触。
+
+拆卸线缆时请按相反步骤操作。
+
+### 步骤4：准备软件
+
+1. 重新连接树莓派电源并启动设备。
+
+2. 参照[系统更新指南](../computers/os.mdx#升级软件)确保内核及应用程序均已更新至最新版本。.
+
+3. 执行[`rpicam-apps`](#rpicam-apps)的安装说明。
+
+4. （可选）若需使用Picamera2 Python库，请参照[Picamera2 Python库](https://pip.raspberrypi.com/documents/RP-008156-DS)的安装指南。
 
 ## rpicam-apps
 
@@ -244,7 +331,7 @@ Shutter Speed                   : 1/20
 rpicam-still -o long_exposure.jpg --shutter 100000000 --gain 1 --awbgains 1,1 --immediate
 ```
 
-要查找 Raspberry Pi 官方摄像头的最大曝光时间，请参阅 [摄像头硬件规格](../accessories/camera.mdx#硬件规格)。
+要查找 Raspberry Pi 官方摄像头的最大曝光时间，请参阅 [摄像头硬件规格](./camera.mdx#hardware-specification)。
 
 #### 创建延时视频
 
@@ -531,7 +618,7 @@ Raspberry Pi 5 之前的 Raspberry Pi 型号使用不同的调谐文件。在这
 :::
 
 
-### 软件摄像头同步
+#### 软件摄像头同步
 
 Raspberry Pi 的 `libcamera` 实现能够仅使用软件同步不同摄像头的帧。这将使一个摄像头调整其帧计时，以便尽可能与另一个摄像头的帧同步。无需焊接或硬件连接，它可以与 Raspberry Pi 的所有摄像头模块配合使用，甚至可以与第三方模块配合使用，只要它们的驱动程序能正确实现帧时长控制。
 
@@ -585,6 +672,44 @@ rpicam-vid -n -t 20s --camera 0 --codec libav -o server.mp4 --sync server
 
 * 固定帧频必须低于摄像头可运行的最大帧频（在使用的摄像头模式下）。这是因为同步算法可能需要缩短摄像头帧，以便客户端能赶上服务器，如果服务器已经以最快速度运行，同步算法就会失败。
 * 虽然摄像头帧应正确同步，但在帧频较高或系统负载较大的情况下，客户端或服务器上的帧都有可能丢失。在这种情况下，帧时间戳会帮助应用程序找出发生了什么，不过通常更简单的方法是尽量避免丢帧--也许可以通过降低帧频、增加分配给摄像头队列的缓冲区数量（参见 [`--buffer-count`选项](#buffer-count)）或减少系统负载来避免。
+
+#### 有线同步 {#wired-synchronisation}
+
+[高品质摄像头](./high-quality-camera.mdx#synchronous-captures)与[全局快门摄像头](./global-shutter-camera.mdx#synchronous-mode-xvs)也可以通过摄像头之间的连线实现同步。按各自页面中的说明完成连接与配置后，再按下面的步骤配置 libcamera 并启动摄像头。
+
+##### Libcamera 配置 {#libcamera-configuration}
+
+如果所有摄像头未能在 1 秒内启动，`rpicam`应用程序可能会超时。为避免此情况，请编辑任何搭载 sink 摄像头的树莓派上的配置文件。
+
+在 Raspberry Pi 5 或 CM5 上：
+```sh
+cp /usr/share/libcamera/pipeline/rpi/pisp/example.yaml timeout.yaml
+```
+
+在其他 Raspberry Pi 型号上：
+```sh
+cp /usr/share/libcamera/pipeline/rpi/vc4/rpi_apps.yaml timeout.yaml
+```
+
+现在编辑副本。在两种情况下，删除 `"camera_timeout_value_ms":` 行中的 `#`（注释），并将数字改为 `60000`（60 秒）。
+
+##### 启动摄像头 {#starting-the-cameras}
+
+运行以下命令以启动汇：
+
+```sh
+export LIBCAMERA_RPI_CONFIG_FILE=timeout.yaml
+rpicam-vid --frames 300 --qt-preview -o sink.h264
+```
+
+等待几秒钟，然后运行以下命令以启动源：
+
+```sh
+rpicam-vid --frames 300 --qt-preview -o source.h264
+```
+
+帧应保持同步。使用 `--frames` 确保捕获的帧数相同，且录制文件的长度完全一致。
+先运行 汇 可确保不会丢失任何帧。
 
 ### 安装 libcamera 和 rpicam-apps
 
@@ -1257,7 +1382,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 使用快门指定曝光时间，单位为_微秒_。使用此选项时，增益仍可能发生变化。如果摄像头的帧频太快，无法达到指定的曝光时间（例如，帧频为 1fps，曝光时间为 10000 微秒），传感器将使用帧频所允许的最长曝光时间。
 
-有关正式摄像头的最小和最大快门时间列表，请参阅 [摄像头硬件文档](../accessories/camera.mdx#硬件规格)。超过最大值会导致未定义的行为。
+有关正式摄像头的最小和最大快门时间列表，请参阅 [摄像头硬件文档](./camera.mdx#hardware-specification)。超过最大值会导致未定义的行为。
 
 #### gain
 
@@ -1265,7 +1390,7 @@ Raspberry Pi 5 及更高版本设备具有板载 HDR 模式。
 
 设置模拟和数字综合增益。当传感器驱动程序可以提供所需的增益时，只使用模拟增益。当模拟增益达到最大值时，ISP 将使用数字增益。接受数值。
 
-有关正式摄像头的模拟增益限制列表，请参阅 [摄像头硬件文档](../accessories/camera.mdx#硬件规格)。
+有关正式摄像头的模拟增益限制列表，请参阅 [摄像头硬件文档](./camera.mdx#hardware-specification)。
 
 有时，即使没有超过模拟增益限制，数字增益也会超过 1.0。这种情况可能发生在以下情况：
 
@@ -1871,6 +1996,8 @@ rpicam-hello --post-process-file negate.json
 :::tip[注意]
 Raspberry Pi OS 提供的 `rpicam-apps` 不包括 OpenCV 和 TensorFlow Lite。因此，某些依赖于它们的后处理阶段会被禁用。要使用这些阶段，请使用 [重新编译 `rpicam-apps`](#构建libcamera和rpicam-apps)。在运行 32 位内核的 Raspberry Pi 3 或 4 上，使用 `-DENABLE_COMPILE_FLAGS_FOR_TARGET=armv8-neon` 标记编译可加快某些阶段的速度。
 :::
+
+### 内置阶段 {#built-in-stages}
 
 #### negate(负片)阶段
 

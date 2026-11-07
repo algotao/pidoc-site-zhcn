@@ -1,0 +1,200 @@
+---
+sidebar_position: 12
+draft: false
+title_meta: 树莓派全局快门摄像头（GS Camera）规格、外部触发与同步
+description: 树莓派全局快门摄像头基于索尼 IMX296 传感器，160 万像素、C/CS 卡口；本文含全局快门原理、透射特性、XTR 外部触发、XVS 同步模式与推荐镜头参数。
+keywords: [全局快门摄像头, Global Shutter Camera, IMX296, 外部触发, XTR, XVS, 同步捕捉, C/CS卡口, 树莓派摄像头]
+last_update:
+  date: 2026-11-07
+---
+import Normal from "../_normal.mdx";
+
+# 全局快门摄像头
+
+160万像素[全局快门摄像头](https://www.raspberrypi.com/products/raspberry-pi-global-shutter-camera/)可捕捉快速移动的物体并最大限度减少失真。其核心采用索尼IMX296传感器，分辨率达1456×1088像素。
+
+摄像头配备C/CS卡口，兼容多种镜头。更多信息请参阅[镜头](#gs-lenses)。
+
+通过板载外部触发接口脉冲信号即可启动全局快门（GS）摄像头。此功能支持多台全局快门摄像头同步工作。更多信息请参阅[全局快门摄像头的外部触发功能](#external-trigger)。
+
+<img src="/img/accessories/camera/gs-camera.jpg" alt="GS摄像头" />
+*全局快门摄像头*
+
+有关本摄像头硬件特性与功能的详细信息，请参阅[硬件规格](./camera.mdx#hardware-specification)。
+
+## 滚动快门还是全局快门？
+
+大多数数码摄像头（包括我们其他摄像头模块）采用**滚动快门**：逐行扫描拍摄图像后输出结果。此机制在某些场景下会产生畸变效应。例如拍摄旋转螺旋桨时，图像可能呈现波光粼粼的效果而非物体旋转的动态感。这是因为在摄像头扫描场景的极短时间内，螺旋桨叶片已完成位置变化。
+
+而**全局快门**（如我们全局快门摄像头模块所采用）则不同。它能同时捕捉场景中每个像素的光线，因此拍摄螺旋桨叶片等物体时不会产生相同畸变。
+
+这种特性非常实用，它使拍摄螺旋桨叶片等高速运动物体变得容易；我们还能同步多台摄像头，在精确同一时刻完成拍摄。其优势包括：在捕捉立体图像时能最大限度减少失真——若左眼看到的物体运动尚未出现在右眼视野中，会导致人脑产生混淆。树莓派全局快门摄像头还支持更短的曝光时间——在光照充足时可达30微秒——远优于滚动快门摄像头，这使其在高速摄影领域具有显著优势。
+
+:::tip
+全局快门摄像头的图像传感器对角线有效成像区域为6.3毫米，尺寸与树莓派HQ摄像头相当。但其像素尺寸更大，能收集更多光线。大像素尺寸与低像素数量在机器视觉应用中尤为珍贵：传感器像素越多，实时图像处理难度越大。为解决此问题，许多应用会缩小图像尺寸并裁剪画面。而全局快门摄像头配合适配镜头放大倍率时，其较低分辨率与大像素尺寸特性可实现原生图像捕捉，无需额外处理。
+:::
+
+## 透射特性
+
+全局快门摄像头采用Hoya CM500红外滤光片，其透射特性如图所示：
+
+<img src="/img/accessories/camera/hoyacm500.png" alt="CM500透射曲线图" width="65%" />
+
+若需增强摄像头对红外光的敏感度，可移除红外滤光片。此操作不可逆且将导致保修失效。更多信息请参阅[红外滤光片](./camera.mdx#ir-filter)。
+
+移除滤光片后，树莓派全局快门摄像头的透射特性如下：
+
+<img src="/img/accessories/camera/gs.png" alt="无红外截止滤光片时的GS摄像头透射曲线图" width="65%" />
+
+## 高级特性与集成
+
+### 全局快门摄像头的外部触发器 {#external-trigger}
+
+全局快门（GS）摄像头可通过外部脉冲触发板载外部触发接口（板载标记为XTR）实现外部触发。多个摄像头可连接至同一脉冲信号，从而提供同步两台摄像头的替代方案。
+
+曝光时间等于低脉冲宽度时间加上 14.26 µs 的额外时间，即 10000 µs 的低脉冲导致 10014.26 µs 的曝光时间。帧频直接受控于对引脚的脉冲频率。PWM 频率为 30Hz 时，帧频为每秒 30 帧。
+
+<img src="/img/accessories/camera/external_trigger.jpg" alt="显示脉冲格式的图片" width="80%" />
+
+#### 准备工作
+
+:::warning[警告]
+本修改包括拆除 SMD 焊接部件。除非您认为自己有能力完成此改装，否则不应尝试。焊接到摄像头电路板时，请取下塑料后盖，以免损坏电路板。
+:::
+
+如果电路板上安装了晶体管 Q2（如下图中蓝色所示），则需要从电路板上拆下 R11（如下图中红色所示）。它将 GP1 连接到 XTR，如果不取下 R11，摄像头将无法在外部触发模式下工作。元件位置如下所示。
+
+<img src="/img/accessories/camera/resistor.jpg" alt="显示待拆除电阻的图片" width="80%" />
+
+接下来，将一根导线焊接到 GS 摄像头电路板上的 XTR 和 GND 连接点上。请注意，XTR 是 1.8V 输入电压，因此可能需要电平转换器或分压器。
+
+我们可以使用树莓派Pico来提供触发器。通过 1.5kΩ 电阻器将任何 Pico GPIO 引脚（本例中使用 GP28）连接至 XTR。同时在 XTR 和 GND 之间连接一个 1.8kΩ 电阻器，以将高逻辑电平降至 1.8V。接线图如下所示。
+
+<img src="/img/accessories/camera/pico_wiring.jpg" alt="显示树莓派Pico接线的图片" width="50%" />
+
+##### 树莓派Pico MicroPython代码
+
+```py
+from machine import Pin, PWM
+
+from time import sleep
+
+pwm = PWM(Pin(28))
+
+framerate = 30
+shutter = 6000  # In microseconds
+
+frame_length = 1000000 / framerate
+pwm.freq(framerate)
+
+pwm.duty_u16(int((1 - (shutter - 14) / frame_length) * 65535))
+```
+
+低脉冲宽度等于快门时间，PWM 频率等于帧频。
+
+:::note[注意]
+在本示例中，引脚 28 用于连接 GS 摄像头板上的 XTR 触摸点。
+:::
+
+#### 摄像头驱动程序配置
+
+此步骤仅在您使用多台通过XTR并联连接的摄像头时需要执行。
+
+编辑 `/boot/firmware/config.txt` 文件。将 `camera_auto_detect=1` 修改为 `camera_auto_detect=0`。
+
+添加以下行：
+
+```ini
+dtoverlay=imx296,always-on
+```
+
+若在 Raspberry Pi 5、CM4 或 CM5 上使用 CAM0 端口，需在该行末尾添加 `,cam0`（不带空格）。若两台摄像头均连接至同一台 Raspberry Pi，则需添加两行 dtoverlay，其中仅一行以 `,cam0` 结尾。
+
+如果外部触发器不会立即启动，您还需要按[Libcamera 配置](./camera-software.mdx#libcamera-configuration)中的说明增加 libcamera 超时设置。
+
+#### 启动摄像头
+
+启用外部触发：
+
+```sh
+echo 1 | sudo tee /sys/module/imx296/parameters/trigger_mode
+```
+
+在 Pico 上运行代码，然后启动摄像头：
+
+```sh
+rpicam-hello -t 0 --qt-preview --shutter 3000
+```
+
+每次 Pico 脉冲引脚时，它都应捕获一帧图像。然而，如果未设置 `--gain` 和 `--awbgains` 参数，部分帧将被丢弃，以允许自动增益控制（AGC）和自动白平衡（AWB）算法稳定下来。
+
+:::note[注意]
+在运行 `rpicam-apps` 时，请始终指定一个固定的快门持续时间，以确保 AGC 不会尝试调整摄像头的快门速度。该值并不重要，因为它实际上由外部触发脉冲控制。
+:::
+
+### 同步模式（XVS） {#synchronous-mode-xvs}
+
+全局快门（GS）摄像头也可以在同步模式下工作。但此时源摄像头会额外记录一帧画面。因此，对于 GS 摄像头，我们建议改用[外部触发源](#external-trigger)。GS 摄像头与 HQ 摄像头无法同步。
+
+同步模式的整体说明，请参阅[高品质摄像头页面上的同步捕捉](./high-quality-camera.mdx#synchronous-captures)。
+
+#### 连接摄像头
+
+将导线焊接到每个摄像头的XVS测试点，并将它们连接在一起。
+
+将导线焊接到每个摄像头的GND测试点，并将它们连接在一起。
+
+还必须将每个摄像头的 XHS（水平同步）测试点相互连接。对于任何希望作为接收端的 GS 摄像头，请用焊锡将 MAS 焊盘的两部分短接。
+
+:::note[注意]
+本文件较早版本曾建议为XVS添加外部上拉电阻。此建议不再适用。请确保使用Raspberry Pi OS最新版本，并为所有连接的摄像头设置`always-on`属性。
+:::
+
+#### 驱动程序配置
+
+配置摄像头驱动程序，使其在非流媒体传输时保持1.8V电源供电。
+
+编辑 `/boot/firmware/config.txt`。将 `camera_auto_detect=1` 改为 `camera_auto_detect=0`。
+
+对于源或汇，添加以下行：
+
+```ini
+dtoverlay=imx296,always-on
+```
+
+在 Raspberry Pi 5、CM4 或 CM5 上使用 CAM0 端口时，在该行末尾添加 `,cam0`，且不留空格。如果同一台 Raspberry Pi 上有两台摄像头，则需要两行 `dtoverlay`，其中仅一行以 `,cam0` 结尾。
+
+在 GS 摄像头上，接收端角色通过 MAS 引脚启用，无法通过软件配置（"trigger_mode" 和 "sync-sink" 与[外部触发方法](#external-trigger)相关，此模式下不得设置）。
+
+#### 启动摄像头
+
+按[Libcamera 配置](./camera-software.mdx#libcamera-configuration)与[启动摄像头](./camera-software.mdx#starting-the-cameras)中的说明配置 libcamera 并启动摄像头。
+
+:::note[注意]
+在使用 GS 摄像头同步模式时，汇记录的帧数不会与源完全相同。**源会在 sink 开始记录前多记录一帧**。因此，您需要使用 `--frames` 选项指定 sink 少记录一帧。
+:::
+
+### 推荐镜头 {#gs-lenses}
+
+建议将以下镜头与我们的 GS 摄像头配合使用。
+
+:::note[注意]
+HQ 摄像头有 C/CS 卡口和 M12 卡口两种型号，而 GS 摄像头只有 C/CS 卡口。
+:::
+
+#### C/CS 镜头
+
+我们推荐两款镜头：由CGL电子有限公司生产的6毫米广角镜头和16毫米远摄镜头。您可通过就近的[授权经销商](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)购买这些镜头。
+
+|  | 16 毫米长焦镜头 | 6 毫米广角镜头 |
+| -- | -- | -- |
+| 分辨率 | 1000 万像素 | 300 万像素 |
+| 图像格式 | 1" | 1/2" |
+| 光圈 | F1.4 至 F16 | F1.2 |
+| 卡口 | C | CS |
+| GS 视场角 H°×V° (D°) | 17.8°×13.4° (22.3°) | 45°×34° (56°) |
+| 背面焦距 | 17.53 毫米 | 7.53 毫米 |
+| 最小物距 | 0.2 m | 0.2 m |
+| 尺寸 | φ39×50 毫米 | φ30×34 毫米 |
+
+<Normal />
