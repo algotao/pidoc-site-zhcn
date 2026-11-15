@@ -4,7 +4,7 @@ draft: false
 description: 访问 bootrom 中的函数和数据。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK bootrom]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -39,6 +39,7 @@ import Normal from "../../_normal.mdx";
 - `static void rom_flash_flush_cache (void)`: 刷新 XIP 缓存。
 - `static void rom_flash_enter_cmd_xip (void)`: 使用标准命令配置 SSI/QMI。
 `static int rom_reboot (uint32_t flags, uint32_t delay_ms, uint32_t p0, uint32_t p1)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;使用看门狗重启。
+`bool rom_get_boot_random (uint32_t out[4])`<br/>&emsp;获取每次启动生成的随机数。
 
 `static void rom_bootrom_state_reset (uint32_t flags)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;重置 bootrom 状态。
 
@@ -460,6 +461,22 @@ RP2350 上请参阅 rom_flash_op 获取更高级别的 API，它会检查对齐�
 **参数**
 
 - pi_a: A 分区号
+
+#### rom_get_boot_random
+
+`bool rom_get_boot_random (uint32_t out[4])`
+
+获取每次启动生成的随机数。
+
+返回 bootrom 在启动过程中生成的 128 位随机数，该数值在单次启动期间保持不变。成功时四个 32 位字写入 `out` 并返回 `true`；若无法获取，`out` 保持不变并返回 `false`。
+
+**参数**
+
+- out: 用于接收启动随机数的、由四个 32 位字组成的数组
+
+**返回值**
+
+成功获取启动随机数返回 true，否则返回 false
 
 #### rom_get_partition_table_info <span className="chip-tag rp2350">RP2350</span>
 

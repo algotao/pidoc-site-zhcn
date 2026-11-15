@@ -4,7 +4,7 @@ draft: false
 description: 在进入 main 之前设置运行时环境所需的主要运行时初始化函数。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK runtime init]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -34,7 +34,7 @@ import Normal from "../../_normal.mdx";
 void runtime_init_bootrom_reset(void);
 ```
 
-若设置了 PICO_RUNTIME_NO_INIT_BOOTOROM_RESET（NO 与上面的 SKIP 不同），则该函数不会被定义，允许用户提供替换实现（同时避免因缺少依赖导致默认实现无法编译的情况）。
+若设置了 PICO_RUNTIME_NO_INIT_BOOTROM_RESET（NO 与上面的 SKIP 不同），则该函数不会被定义，允许用户提供替换实现（同时避免因缺少依赖导致默认实现无法编译的情况）。
 
 ### 函数
 

@@ -4,7 +4,7 @@ draft: false
 description: 时钟管理 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK clocks]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -246,27 +246,31 @@ int main() {
 
 #### clock_num_t <span className="chip-tag rp2040">RP2040</span>
 
-typedef enum clock_num_rp2040 clock_num_t
+`typedef enum clock_num_rp2040 clock_num_t`
 
 RP2040 上的时钟编号（用作 typedef `clock_num_t`）
+
 #### clock_dest_num_t <span className="chip-tag rp2040">RP2040</span>
 
-typedef enum clock_dest_num_rp2040 clock_dest_num_t
+`typedef enum clock_dest_num_rp2040 clock_dest_num_t`
 
 RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
+
 #### clock_num_t <span className="chip-tag rp2350">RP2350</span>
 
-typedef enum clock_num_rp2350 clock_num_t
+`typedef enum clock_num_rp2350 clock_num_t`
 
 RP2350 上的时钟编号（用作 typedef `clock_num_t`）
+
 #### clock_dest_num_t <span className="chip-tag rp2350">RP2350</span>
 
-typedef enum clock_dest_num_rp2350 clock_dest_num_t
+`typedef enum clock_dest_num_rp2350 clock_dest_num_t`
 
 RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
+
 #### resus_callback_t
 
-typedef void(* resus_callback_t) (void)
+`typedef void(* resus_callback_t) (void)`
 
 Resus 回调函数类型。
 
@@ -276,7 +280,7 @@ Resus 回调函数类型。
 
 #### clock_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
 
-enum clock_num_rp2040
+`enum clock_num_rp2040`
 
 RP2040 上的时钟编号（用作 typedef `clock_num_t`）
 
@@ -295,7 +299,7 @@ RP2040 上的时钟编号（用作 typedef `clock_num_t`）
 
 #### clock_dest_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
 
-enum clock_dest_num_rp2040
+`enum clock_dest_num_rp2040`
 
 RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
 
@@ -351,7 +355,7 @@ RP2040 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
 
 #### clock_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
 
-enum clock_num_rp2350
+`enum clock_num_rp2350`
 
 RP2350 上的时钟编号（用作 typedef `clock_num_t`）
 
@@ -370,7 +374,7 @@ RP2350 上的时钟编号（用作 typedef `clock_num_t`）
 
 #### clock_dest_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
 
-enum clock_dest_num_rp2350
+`enum clock_dest_num_rp2350`
 
 RP2350 上的时钟目标编号（用作 typedef `clock_dest_num_t`）
 

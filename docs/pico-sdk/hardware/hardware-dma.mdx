@@ -4,7 +4,7 @@ draft: false
 description: RP 系列微控制器直接内存访问（DMA）主控器代表处理器执行批量数据传输，使处理器可以专注于其他任务或进入低功耗睡眠状态。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK dma, DMA]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -115,24 +115,27 @@ DMA 每个时钟周期可执行一次读访问和一次写访问，每次最多 
 
 #### dreq_num_t <span className="chip-tag rp2350">RP2350</span>
 
-typedef enum dreq_num_rp2350 dreq_num_t
+`typedef enum dreq_num_rp2350 dreq_num_t`
 
 RP2350 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t`）
+
 #### dreq_num_t <span className="chip-tag rp2040">RP2040</span>
 
-typedef enum dreq_num_rp2040 dreq_num_t
+`typedef enum dreq_num_rp2040 dreq_num_t`
 
 RP2040 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t`）
+
 #### dma_channel_transfer_size_t
 
-typedef enum dma_channel_transfer_size dma_channel_transfer_size_t
+`typedef enum dma_channel_transfer_size dma_channel_transfer_size_t`
 
 可用 DMA 通道传输大小的枚举。
 
 名称表示位数。
+
 #### dma_address_update_type_t
 
-typedef enum dma_address_update_type dma_address_update_type_t
+`typedef enum dma_address_update_type dma_address_update_type_t`
 
 每次传输后可对 DMA 读写地址进行的更新类型枚举。
 
@@ -140,7 +143,7 @@ typedef enum dma_address_update_type dma_address_update_type_t
 
 #### dreq_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
 
-enum dreq_num_rp2350
+`enum dreq_num_rp2350`
 
 RP2350 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t`）
 
@@ -209,7 +212,7 @@ RP2350 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t`）
 
 #### dreq_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
 
-enum dreq_num_rp2040
+`enum dreq_num_rp2040`
 
 RP2040 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t`）
 
@@ -263,7 +266,7 @@ RP2040 上 DMA 节拍的 DREQ 编号（用作 typedef `dreq_num_t`）
 
 #### dma_channel_transfer_size
 
-enum dma_channel_transfer_size
+`enum dma_channel_transfer_size`
 
 可用 DMA 通道传输大小的枚举。
 
@@ -277,7 +280,7 @@ enum dma_channel_transfer_size
 
 #### dma_address_update_type
 
-enum dma_address_update_type
+`enum dma_address_update_type`
 
 每次传输后可对 DMA 读写地址进行的更新类型枚举。
 
@@ -387,7 +390,7 @@ if (dma_channel >= 0) {
 - read_addr: 初始读取地址
 - encoded_transfer_count: 编码的传输计数
 
-RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），范围 0 \-> 2^32 - 1。
+RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），范围 0 → 2^32 - 1。
 
 RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），高 4 位非零值用于指定其他选项。
 
@@ -514,7 +517,7 @@ RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_co
 - channel: DMA 通道
 - encoded_transfer_count: 编码的传输计数
 
-RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），范围 0 \-> 2^32 - 1。
+RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），范围 0 → 2^32 - 1。
 
 RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），高 4 位非零值用于指定其他选项。
 
@@ -558,7 +561,7 @@ RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_co
 - read_addr: 设置初始读取地址
 - encoded_transfer_count: 编码的传输计数
 
-RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），范围 0 \-> 2^32 - 1。
+RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），范围 0 → 2^32 - 1。
 
 RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），高 4 位非零值用于指定其他选项。
 
@@ -576,7 +579,7 @@ RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_co
 - write_addr: 设置初始写入地址
 - encoded_transfer_count: 编码的传输计数
 
-RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），范围 0 \-> 2^32 - 1。
+RP2040 上即为传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），范围 0 → 2^32 - 1。
 
 RP2350 上低 28 位用于编码传输次数（非字节数，参见 `channel_config_set_transfer_data_size`），高 4 位非零值用于指定其他选项。
 
@@ -670,9 +673,9 @@ encoded_transfer_count 值。
 
 - `transfer_count`: 传输次数（非字节数，参见 `channel_config_set_transfer_data_size`）
 
-RP2040 上有效范围为 0 \-> 2^32 - 1。
+RP2040 上有效范围为 0 → 2^32 - 1。
 
-RP2350 上有效范围为 0 \-> 2^28 - 1。
+RP2350 上有效范围为 0 → 2^28 - 1。
 
 **返回**
 
@@ -696,7 +699,7 @@ encoded_transfer_count 值。
 
 RP2040 不支持自触发 DMA，因此不应使用此方法。
 
-RP2350 上有效范围为 0 \-> 2^28 - 1。
+RP2350 上有效范围为 0 → 2^28 - 1。
 
 **返回**
 
@@ -1143,7 +1146,7 @@ channel_config_set_read_address_update_type(c, incr ? DMA_ADDRESS_UPDATE_INCREME
 
 地址环绕区域的大小。若为 0，则不环绕。对于 n > 0 的值，只有地址的低 n 位会改变。
 
-0x0 \-> 不环绕。
+0x0 → 不环绕。
 
 **参数**
 

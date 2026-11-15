@@ -4,7 +4,7 @@ draft: false
 description: 将 CYW43 驱动（用于 Pico W 无线功能）和 lwIP（用于 TCP/IP 协议栈）集成到 SDK 中的架构层。访问 Pico W 板载 LED 也需要此模块。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK cyw43 arch, CYW43, lwIP]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -123,7 +123,7 @@ lwIP 回调在（低优先级）IRQ 上下文中发生（类似于告警回调�
 
 #### cyw43_arch_async_context
 
-async_context_t * cyw43_arch_async_context (void)
+`async_context_t * cyw43_arch_async_context (void)`
 
 返回 cyw43_arch 代码当前使用的 async_context。
 
@@ -236,7 +236,7 @@ GPIO 为高电平时返回 true，否则返回 false
 
 #### cyw43_arch_init_default_async_context
 
-async_context_t * cyw43_arch_init_default_async_context (void)
+`async_context_t * cyw43_arch_init_default_async_context (void)`
 
 为当前 cyw43_arch 类型初始化默认的 async_context。
 

@@ -4,7 +4,7 @@ draft: false
 description: 电源管理 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK powman]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -53,11 +53,14 @@ import Normal from "../../_normal.mdx";
 
 #### powman_power_domains
 
-enum powman_power_domains
+`enum powman_power_domains`
 
 powman 的电源域。
 
-.枚举值
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
 | POWMAN_POWER_DOMAIN_SRAM_BANK1 | bank1 包含 SRAM 顶部 256K 以及 SRAM 8 和 9（scratch x 和 scratch y） |
 | POWMAN_POWER_DOMAIN_SRAM_BANK0 | bank0 为 SRAM 底部 256K |
 | POWMAN_POWER_DOMAIN_XIP_CACHE | XIP 缓存为 2x8K 实例。 |
@@ -148,7 +151,7 @@ Powman 的写操作需要密码以防止意外写入。此函数使用适当的�
 
 #### powman_get_power_state
 
-powman_power_state powman_get_power_state (void)
+`powman_power_state powman_get_power_state (void)`
 
 获取当前电源状态。
 

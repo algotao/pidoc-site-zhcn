@@ -4,7 +4,7 @@ draft: false
 description: RP 系列微控制器具有 2 个相同的 UART 外设实例，基于 ARM PL011。每个 UART 可连接到 GPIO 复用中定义的多个 GPIO 引脚。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK uart, UART, GPIO]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -114,6 +114,7 @@ UART 实例 0 的标识符。
 用于 UART 函数的 UART 标识符。
 
 例如：uart_init(uart1, 48000)
+
 #### uart1
 
 `#define uart1 ((uart_inst_t *)uart1_hw)`
@@ -129,6 +130,7 @@ UART 实例 1 的标识符。
 返回 UART 实例的 UART 编号。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### UART_INSTANCE
 
 `#define UART_INSTANCE(num)`
@@ -136,6 +138,7 @@ UART 实例 1 的标识符。
 返回具有给定 UART 编号的 UART 实例。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### UART_DREQ_NUM
 
 `#define UART_DREQ_NUM(uart, is_tx)`
@@ -143,6 +146,7 @@ UART 实例 1 的标识符。
 返回用于此 UART 实例 DMA 传输节拍的 `dreq_num_t`。如果 is_tx 为 true，则用于向 UART 传输，否则用于从 UART 接收。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### UART_CLOCK_NUM
 
 `#define UART_CLOCK_NUM(uart)`
@@ -150,6 +154,7 @@ UART 实例 1 的标识符。
 返回给定 UART 实例时钟的 `clock_num_t`。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### UART_FUNCSEL_NUM
 
 `#define UART_FUNCSEL_NUM(uart, gpio)`
@@ -157,6 +162,7 @@ UART 实例 1 的标识符。
 返回在指定 GPIO 编号上为给定 UART 实例选择 UART 功能所需的 `gpio_function_t`。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### UART_IRQ_NUM
 
 `#define UART_IRQ_NUM(uart)`
@@ -164,6 +170,7 @@ UART 实例 1 的标识符。
 返回来自给定 UART 实例的处理器中断的 `irq_num_t`。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### UART_RESET_NUM
 
 `#define UART_RESET_NUM(uart)`

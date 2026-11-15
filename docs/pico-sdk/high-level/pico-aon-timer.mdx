@@ -4,13 +4,13 @@ draft: false
 description: 高级"常开定时器"抽象接口。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK aon timer]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
 高级"常开定时器"抽象接口。
 
-### 详细说明
+### 详细描述
 
 此库在 RP2040 上使用 RTC，在 RP2350 上使用 Powman 定时器。
 
@@ -75,7 +75,7 @@ import Normal from "../../_normal.mdx";
 
 #### aon_timer_enable_alarm
 
-aon_timer_alarm_handler_t aon_timer_enable_alarm (const struct timespec * ts, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)
+`aon_timer_alarm_handler_t aon_timer_enable_alarm (const struct timespec * ts, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)`
 
 为指定时间启用 AON 定时器闹钟。
 
@@ -98,7 +98,7 @@ aon_timer_alarm_handler_t aon_timer_enable_alarm (const struct timespec * ts, ao
 
 #### aon_timer_enable_alarm_calendar
 
-aon_timer_alarm_handler_t aon_timer_enable_alarm_calendar (const struct tm * tm, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)
+`aon_timer_alarm_handler_t aon_timer_enable_alarm_calendar (const struct tm * tm, aon_timer_alarm_handler_t handler, bool wakeup_from_low_power)`
 
 为指定的日历日期/时间启用 AON 定时器闹钟。
 
@@ -123,7 +123,7 @@ aon_timer_alarm_handler_t aon_timer_enable_alarm_calendar (const struct tm * tm,
 
 #### aon_timer_get_absolute_time
 
-absolute_time_t aon_timer_get_absolute_time (void)
+`absolute_time_t aon_timer_get_absolute_time (void)`
 
 以绝对时间形式获取 AON 定时器的当前时间。
 

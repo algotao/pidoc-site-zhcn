@@ -4,7 +4,7 @@ draft: false
 description: 底层硬件自旋锁、内存屏障及处理器事件 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK sync]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -19,6 +19,8 @@ RP 系列微控制器提供 32 个硬件自旋锁，可用于管理对共享软�
 通常每个自旋锁本身也是一种共享资源，即同一个硬件自旋锁可以被多个高层原语使用（前提是自旋锁既不被长时间持有，也不被同一核心同时与其他自旋锁一起持有——否则可能导致死锁）。独占所有的硬件自旋锁可以单独使用，无需考虑其他软件的影响。注意，任何硬件自旋锁都不可重入获取（即硬件自旋锁本身对线程代码和 IRQ 的同时使用是不安全的），但此处默认的自旋锁相关方法（如 `spin_lock_blocking`）在持锁期间总会禁用中断，因为 `IRQ` 处理程序和用户代码同时使用是常见且可取的场景，且自旋锁预期只被短暂持有。
 
 RP2350 警告：由于勘误 RP2350-E2，向偏移量 +0x180 以上的新 SIO 寄存器写入会与自旋锁地址别名重叠，导致虚假的锁释放。作为对 RP2350 A2 的变通方案，SDK 默认使用原子内存访问来实现 hardware_sync_spin_lock API。
+
+<span className="chip-tag rp2350">RP2350</span> 在 RP2350 上，当 `PICO_USE_SW_SPIN_LOCKS=0` 时，默认锁编号会调整，以避开受勘误 RP2350-E2 影响的锁：OS 对变为 18-19，条纹范围变为 20-25，可申请范围变为 26-31。`PICO_SPINLOCK_ID_*` 宏反映实际编号。
 
 SDK 使用如下默认自旋锁分配，区分哪些自旋锁保留用于独占/特殊用途，哪些适合更通用的共享使用：
 
@@ -111,7 +113,7 @@ SDK 使用如下默认自旋锁分配，区分哪些自旋锁保留用于独占/
 
 #### boot_lock_t <span className="chip-tag rp2350">RP2350</span>
 
-typedef volatile uint32_t boot_lock_t
+`typedef volatile uint32_t boot_lock_t`
 
 引导锁标识符。
 
@@ -147,7 +149,7 @@ typedef volatile uint32_t boot_lock_t
 
 #### boot_lock_init <span className="chip-tag rp2350">RP2350</span>
 
-boot_lock_t * boot_lock_init (uint lock_num)
+`boot_lock_t * boot_lock_init (uint lock_num)`
 
 初始化引导锁。
 
@@ -456,7 +458,7 @@ PICO_SPINLOCK_ID_STRIPED_LAST
 
 #### spin_lock_init
 
-spin_lock_t * spin_lock_init (uint lock_num)
+`spin_lock_t * spin_lock_init (uint lock_num)`
 
 初始化自旋锁。
 

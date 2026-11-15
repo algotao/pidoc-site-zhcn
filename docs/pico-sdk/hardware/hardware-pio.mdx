@@ -4,7 +4,7 @@ draft: false
 description: 可编程 I/O（PIO）API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK pio, PIO]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -170,6 +170,7 @@ PIO 的完整详细信息请参阅相应的 RP 系列微控制器数据手册。
 第一个（PIO 0）硬件 PIO 实例的标识符（用于 PIO 函数）。
 
 例如：pio_gpio_init(pio0, 5)
+
 #### pio1
 
 #define pio1 pio1_hw
@@ -177,6 +178,7 @@ PIO 的完整详细信息请参阅相应的 RP 系列微控制器数据手册。
 第二个（PIO 1）硬件 PIO 实例的标识符（用于 PIO 函数）。
 
 例如：pio_gpio_init(pio1, 5)
+
 #### PIO_NUM
 
 #define PIO_NUM(pio)
@@ -184,6 +186,7 @@ PIO 的完整详细信息请参阅相应的 RP 系列微控制器数据手册。
 返回 PIO 实例的 PIO 编号。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### PIO_INSTANCE
 
 #define PIO_INSTANCE(instance)
@@ -191,6 +194,7 @@ PIO 的完整详细信息请参阅相应的 RP 系列微控制器数据手册。
 返回具有给定 PIO 编号的 PIO 实例。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### PIO_FUNCSEL_NUM
 
 #define PIO_FUNCSEL_NUM(pio, gpio)
@@ -198,6 +202,7 @@ PIO 的完整详细信息请参阅相应的 RP 系列微控制器数据手册。
 返回在给定 GPIO 上为给定 PIO 实例选择 PIO 功能所需的 gpio_function_t。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### PIO_DREQ_NUM
 
 #define PIO_DREQ_NUM(pio, sm, is_tx)
@@ -205,6 +210,7 @@ PIO 的完整详细信息请参阅相应的 RP 系列微控制器数据手册。
 返回用于调节此 PIO 实例上给定状态机 FIFO DMA 传输速率的 dreq_num_t。若 is_tx 为 true，则用于向 PIO 状态机 TX FIFO 传输；否则用于从 PIO 状态机 RX FIFO 传输。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### PIO_IRQ_NUM
 
 #define PIO_IRQ_NUM(pio, irqn)
@@ -225,13 +231,13 @@ PIO 的完整详细信息请参阅相应的 RP 系列微控制器数据手册。
 
 #### pio_interrupt_source_t
 
-typedef enum pio_interrupt_source pio_interrupt_source_t
+`typedef enum pio_interrupt_source pio_interrupt_source_t`
 
 PIO 相关 IRQ 的 PIO 中断源编号。
 
 #### pio_program_t
 
-typedef struct pio_program pio_program_t
+`typedef struct pio_program pio_program_t`
 
 PIO 程序定义。
 
@@ -241,7 +247,7 @@ PIO 程序定义。
 
 #### pio_fifo_join
 
-enum pio_fifo_join
+`enum pio_fifo_join`
 
 FIFO 连接状态。
 
@@ -253,12 +259,13 @@ FIFO 连接状态。
 
 #### pio_mov_status_type
 
-enum pio_mov_status_type
+`enum pio_mov_status_type`
 
 MOV 状态类型。
+
 #### pio_interrupt_source
 
-enum pio_interrupt_source
+`enum pio_interrupt_source`
 
 PIO 相关 IRQ 的 PIO 中断源编号。
 

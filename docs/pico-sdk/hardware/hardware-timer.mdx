@@ -4,7 +4,7 @@ draft: false
 description: 底层硬件定时器 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK timer]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -154,6 +154,7 @@ int main() {
 返回给定定时器实例上指定报警的报警中断 `irq_num_t`。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### TIMER_ALARM_NUM_FROM_IRQ
 
 `#define TIMER_ALARM_NUM_FROM_IRQ(irq_num)`
@@ -161,6 +162,7 @@ int main() {
 从 `irq_num_t` 返回报警编号。使用 TIMER_INSTANCE_NUM_FROM_IRQ 可获取定时器实例编号。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### TIMER_NUM_FROM_IRQ
 
 `#define TIMER_NUM_FROM_IRQ(irq_num)`
@@ -168,11 +170,13 @@ int main() {
 从 `irq_num_t` 返回报警编号。使用 TIMER_INSTANCE_NUM_FROM_IRQ 可获取报警编号。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### PICO_DEFAULT_TIMER
 
 `#define PICO_DEFAULT_TIMER 0`
 
 用于不接受显式定时器实例参数的 API 的默认定时器实例编号。在 RP2040 上，由于只有一个定时器实例，必须为 0；在 RP2350 上，可设置为 0 或 1。
+
 #### PICO_DEFAULT_TIMER_INSTANCE
 
 `#define PICO_DEFAULT_TIMER_INSTANCE()`

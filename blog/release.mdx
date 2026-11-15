@@ -2,9 +2,10 @@
 title: Pidoc更新记录
 authors: [algotao]
 tags: [Raspberry-Pi, 中文文档]
-date: 2026-11-07T10:00
+date: 2026-11-15T10:00
 ---
 
+- 2026年11月15日：Pico SDK 子模块 API 文档更新至 [2.3.1](https://github.com/raspberrypi/pico-sdk/tree/079c6f39023649b154152db30f1d781e884879bc)。主要变更：**新增 IRQ 挂起查询、启动随机数、等待者唤醒、段布局与锁通知宏**；**重写两个 flash 段布局宏说明**；另更新门铃措辞、RP2350 锁编号、队列 IRQ 提示与参数名，并按官方 Doxygen 输出完成结构自检；同步补齐历史漏译：**补译 hardware_gpio 全部 API 文档与 RP2040/RP2350 功能选择表**（修正 F8/F9 列位）、hardware_flash 的 9 个 RP2350 函数与 hardware_rtc 的外部时钟函数，并修复索引链接及全站 AsciiDoc 与签名格式残留。
 - 2026年11月07日：更新到 master 分支的 [7376533a](https://github.com/raspberrypi/documentation/commit/7376533ab86ea07acc77ef6a9f3c3e57fcff833d)。主要变更：**摄像头文档重构**：按上游 DOCS-274 拆分页面，新增「摄像头模块 2」「摄像头模块 3」「高品质摄像头」「全局快门摄像头」四个产品页（含镜头参数、外部触发、XVS 同步、传感器组件规格），`docs/computers/camera-software.mdx` 搬迁为 `docs/accessories/camera-software.mdx` 并补入「安装树莓派摄像头」「有线同步」两节，AI 摄像头页按上游重组为「用户指南」结构；摄像头总览页改为硬件对比表、旧版型号、硬件规格、红外滤光片、机械图与引脚分配，硬件规格表更新为 6 款在售型号。**Connect** 新增「屏幕分辨率」，说明有无物理显示器时虚拟显示器的分辨率行为。配件首页新增 5 张摄像头卡片并改名「摄像头模块硬件」，电脑首页移除「摄像头软件」卡；同步 6 张卡片图与 `gs-camera.jpg`，修正全站因搬迁产生的链接与锚点。
 - 2026年10月25日：更新到 master 分支的 [41e24fbd](https://github.com/raspberrypi/documentation/commit/41e24fbd459d47e7db979cd084676c790b60a3de)。主要变更：**树莓派硬件页大拆分**，新增「经典单板计算机（SBC）」与「Zero 型号」两页（型号总表、各型号组件与端口、Zero 测试焊盘表），硬件页介绍改为五大系列概述并链接到各板块，删除「原理图和机械图」整节；**GPIO 章节重写为「40 针 GPIO 排针」**（引脚布局、引脚类型、输入输出、通信协议、引脚功能总表、权限、焊盘、开机状态、中断、三套电压规格表），并上移至介绍之后；键盘电脑新增 `<X00>` 命名说明、技术规格表细化、型号与套装配图；**Linux 内核构建章节重写**（`LOCALVERSION` 后缀说明、Pi 5 上 `kernel_2712.img` 覆盖提示、initramfs 与自定义内核说明、`-j6` 编译、新增「确认自定义内核正在运行」），内核补丁示例更新至 6.18.56-rt7 并新增 PREEMPT_RT 并入主线的说明；**Connect 远程更新**新增工件两小时过期提示、部署状态改为 Queued/In Progress 等六种，管理 API 状态字段同步（`pending`→`queued`、新增 `invalidated`），新增「安全通知」章节与连接信息静态加密表述；其余更新包括 vcgencmd 新增 `pmic_read_adc`、`mem_oom`/`mem_reloc_stats` 在 Pi 5 不可用、计算模块 SoC 链接与 DDR2 SODIMM 外形提示、Pico 新增型号表、入门页系列列表改写、安全概览新增漏洞邮件订阅。同时补齐历史缺口：键盘电脑「入门指南」缺失的硬件前提与四个设置步骤、无显示器设置中的电源与网络步骤（含无线/有线子节），并修正操作系统页面中 VLC 命令行与 GPIO Zero 示例的标题层级；删除上游已移除的 5 张 Connect 截图。
 - 2026年10月11日：更新到 master 分支的 [62ba0a0c](https://github.com/raspberrypi/documentation/commit/62ba0a0c2dd5030fe9b19458fa9bd174a451f79b)。主要变更：新增智能显示模块文档；Connect 页面重构并新增安全性整章，远程更新改为直接上传工件；另更新安全启动制造数据库、桌面外观与键盘快捷键、autoboot、SPI/RP1、CM5 设备树等。

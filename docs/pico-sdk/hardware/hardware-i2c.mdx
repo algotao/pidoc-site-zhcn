@@ -4,7 +4,7 @@ draft: false
 description: I2C 总线是一种双线串行接口，由串行数据线 SDA 和串行时钟线 SCL 组成。这些线路在连接到总线的设备之间传输信息。每个设备通过唯一的 7 位地址识别，可作为"发送方"或"接收方"运行，具体取决于设备功能。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK i2c, I2C]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -153,7 +153,7 @@ int main() {
 
 #### i2c0_inst
 
-i2c_inst_t i2c0_inst
+`i2c_inst_t i2c0_inst`
 
 用于 I2C 函数的 I2C 标识符。
 
@@ -168,6 +168,7 @@ i2c_inst_t i2c0_inst
 返回 I2C 实例的 I2C 编号。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### I2C_INSTANCE
 
 #define I2C_INSTANCE(num)
@@ -175,6 +176,7 @@ i2c_inst_t i2c0_inst
 返回具有给定 I2C 编号的 I2C 实例。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### I2C_DREQ_NUM
 
 #define I2C_DREQ_NUM(i2c, is_tx)

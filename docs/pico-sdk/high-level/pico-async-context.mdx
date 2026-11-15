@@ -4,7 +4,7 @@ draft: false
 description: "`async_context` 提供一个逻辑上单线程的上下文，用于执行工作和响应异步事件。因此，`async_context` 实例适合为非可重入的第三方库提供服务。"
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK async context]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -96,7 +96,7 @@ async_context_threadsafe_background - 为了在后台工作，使用低优先级
 
 #### async_at_time_worker_t
 
-typedef struct async_work_on_timeout async_at_time_worker_t
+`typedef struct async_work_on_timeout async_at_time_worker_t`
 
 async_context 使用的"超时"实例。
 
@@ -107,7 +107,7 @@ async_context 使用的"超时"实例。
 
 #### async_when_pending_worker_t
 
-typedef struct async_when_pending_worker async_when_pending_worker_t
+`typedef struct async_when_pending_worker async_when_pending_worker_t`
 
 async_context 使用的"工作者"实例。
 
@@ -118,7 +118,7 @@ async_context 使用的"工作者"实例。
 
 #### async_context_type_t
 
-typedef struct async_context_type async_context_type_t
+`typedef struct async_context_type async_context_type_t`
 
 async_context 类型的实现，提供该类型通用的方法。
 
@@ -485,7 +485,7 @@ func 的返回值
 
 #### async_context_poll_t
 
-typedef struct async_context_poll async_context_poll_t
+`typedef struct async_context_poll async_context_poll_t`
 
 用于简单单核轮询循环的 async_context 类型。
 

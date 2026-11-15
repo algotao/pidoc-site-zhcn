@@ -4,7 +4,7 @@ draft: false
 description: 硬件实时时钟 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK rtc]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -63,30 +63,37 @@ int main() {
 
 ### 类型定义
 
-typedef void(* rtc_callback_t)(void)
+`typedef void(* rtc_callback_t)(void)`
 
 ### 函数
 
-- `void rtc_init (void)`: 初始化 RTC 系统。
+`void rtc_init (void)`<br/>&emsp;初始化 RTC 系统。
+
 `bool rtc_set_datetime (const datetime_t *t)`<br/>&emsp;将 RTC 设置为指定时间。
 
 `bool rtc_get_datetime (datetime_t *t)`<br/>&emsp;从 RTC 获取当前时间。
-- `bool rtc_running (void)`: RTC 是否正在运行？
+
+`bool rtc_running (void)`<br/>&emsp;RTC 是否正在运行？
+
 `void rtc_set_alarm (const datetime_t *t, rtc_callback_t user_callback)`<br/>&emsp;设置未来某个时间，RTC 届时将调用用户提供的回调函数。
-- `void rtc_enable_alarm (void)`: 启用 RTC 闹钟（如果未激活）
-- `void rtc_disable_alarm (void)`: 禁用 RTC 闹钟（如果已激活）
+
+`void rtc_enable_alarm (void)`<br/>&emsp;启用 RTC 闹钟（如果未激活）
+
+`void rtc_disable_alarm (void)`<br/>&emsp;禁用 RTC 闹钟（如果已激活）
+
+`bool rtc_run_from_external_source (uint32_t src_hz, uint gpio_pin)`<br/>&emsp;通过 GPIO 使用外部时钟源驱动 RTC。
 
 ### 类型定义文档
 
 #### rtc_callback_t
 
-typedef void(* rtc_callback_t) (void)
+`typedef void(* rtc_callback_t) (void)`
 
 RTC 闹钟的回调函数类型
 
 **另请参阅**
 
-rtc_set_alarm()
+`rtc_set_alarm()`
 
 ### 函数文档
 
@@ -121,6 +128,23 @@ rtc_set_alarm()
 `void rtc_init (void)`
 
 初始化 RTC 系统。
+
+#### rtc_run_from_external_source
+
+`bool rtc_run_from_external_source (uint32_t src_hz, uint gpio_pin)`
+
+通过 GPIO 使用外部时钟源驱动 RTC。
+
+注意：若外部时钟源未运行，此函数将返回 false。
+
+**参数**
+
+- `src_hz`: 外部时钟源的频率
+- `gpio_pin`: 提供外部时钟的输入引脚（GP20 或 GP22）
+
+**返回值**
+
+若可以使用该外部时钟频率驱动 RTC 则返回 true，否则返回 false。
 
 #### rtc_running
 

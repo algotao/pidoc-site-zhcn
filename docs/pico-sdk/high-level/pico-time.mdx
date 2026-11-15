@@ -4,7 +4,7 @@ draft: false
 description: 用于精确时间戳、睡眠和基于时间回调的 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK time]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -35,7 +35,7 @@ import Normal from "../../_normal.mdx";
 
 #### timeout_state_t
 
-typedef struct timeout_state timeout_state_t
+`typedef struct timeout_state timeout_state_t`
 
 用于跟踪超时条件的状态。
 
@@ -357,7 +357,6 @@ busy_wait_us_32()
 
 示例用法：
 
-// .c
 ```c
 bool my_function_with_timeout_us(uint64_t timeout_us) {
     absolute_time_t timeout_time = make_timeout_time_us(timeout_us);
@@ -862,6 +861,8 @@ alarm_pool_get_default()
 `void alarm_pool_destroy (alarm_pool_t * pool)`
 
 销毁定时器池，取消所有定时器并释放底层 timer_alarm。
+
+必须在创建该定时器池的同一核心上调用，以避免与其自身的回调发生竞争。
 
 **参数**
 

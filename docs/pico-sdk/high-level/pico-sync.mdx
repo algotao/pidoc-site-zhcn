@@ -4,7 +4,7 @@ draft: false
 description: 同步原语与互斥机制。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK sync]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -149,13 +149,15 @@ lock_core 基础结构的工作方式是：锁定自旋锁，检查状态，然�
 
 #### 宏
 
-* #define lock_owner_id_t int8_t
-* #define [LOCK_INVALID_OWNER_ID] ((lock_owner_id_t)-1)
-* #define lock_get_caller_owner_id() \((lock_owner_id_t)get_core_num())
-* #define lock_internal_spin_unlock_with_wait(lock, save) spin_unlock((lock)\->spin_lock, save), __wfe()
-* #define lock_internal_spin_unlock_with_notify(lock, save) spin_unlock((lock)\->spin_lock, save), __sev()
-* #define lock_internal_spin_unlock_with_best_effort_wait_or_timeout(lock, save, until)
-* #define sync_internal_yield_until_before(until) ((void)0)
+* `#define lock_owner_id_t int8_t`
+* `#define [LOCK_INVALID_OWNER_ID] ((lock_owner_id_t)-1)`
+* `#define lock_get_caller_owner_id() ((lock_owner_id_t)get_core_num())`
+* `#define lock_internal_spin_unlock_with_wait(lock, save) spin_unlock((lock)->spin_lock, save), __wfe()`
+* `#define lock_internal_spin_unlock_with_notify(lock, save) spin_unlock((lock)->spin_lock, save), __sev()`
+* `#define lock_internal_spin_unlock_with_best_effort_wait_or_timeout(lock, save, until)`
+* `#define LOCK_INTERNAL_SPIN_UNLOCK_WITH_NOTIFY_WAKES_ALL 1`
+* `#define lock_internal_spin_unlock_maybe_notify(lock, save, others_may_proceed) spin_unlock((lock)->spin_lock, save)`
+* `#define sync_internal_yield_until_before(until) ((void)0)`
 
 #### 函数
 
@@ -165,26 +167,26 @@ lock_core 基础结构的工作方式是：锁定自旋锁，检查状态，然�
 
 **lock_owner_id_t**
 
-#define lock_owner_id_t int8_t
+`#define lock_owner_id_t int8_t`
 
 用于存储锁"所有者"的类型。
 
 默认为 int8_t，因为它只需要存储核心编号或 -1；但如果需要更大的类型（例如 RTOS 任务 ID），可以覆盖此定义。
 **LOCK_INVALID_OWNER_ID**
 
-#define LOCK_INVALID_OWNER_ID ((lock_owner_id_t)-1)
+`#define LOCK_INVALID_OWNER_ID ((lock_owner_id_t)-1)`
 
 用于表示不指向任何有效所有者的 lock_owner_id_t 标记值。
 **lock_get_caller_owner_id**
 
-#define lock_get_caller_owner_id() \((lock_owner_id_t)get_core_num())
+`#define lock_get_caller_owner_id() ((lock_owner_id_t)get_core_num())`
 
 返回调用者的所有者 ID。
 
 默认返回调用核心的编号，但可以被覆盖（例如返回 RTOS 任务 ID）。
 **lock_internal_spin_unlock_with_wait**
 
-#define lock_internal_spin_unlock_with_wait(lock, save) spin_unlock((lock)\->spin_lock, save), __wfe()
+`#define lock_internal_spin_unlock_with_wait(lock, save) spin_unlock((lock)->spin_lock, save), __wfe()`
 
 原子地解锁锁的自旋锁，并等待通知。
 
@@ -200,13 +202,15 @@ lock_core 基础结构的工作方式是：锁定自旋锁，检查状态，然�
 - `save`: 解锁自旋锁时应传递给 `spin_unlock` 的 `uint32_t` 值（即获取自旋锁时的 `PRIMASK` 状态）
 **lock_internal_spin_unlock_with_notify**
 
-#define lock_internal_spin_unlock_with_notify(lock, save) spin_unlock((lock)\->spin_lock, save), __sev()
+`#define lock_internal_spin_unlock_with_notify(lock, save) spin_unlock((lock)->spin_lock, save), __sev()`
 
 原子地解锁锁的自旋锁，并发送通知。
 
-此处的*原子性*是指：此通知不应能在 lock_internal_spin_unlock_with_wait 等待期间发生，使得等待错过通知（即不应发生通知遗漏）。换言之，此方法应始终唤醒在本次调用完成之前开始的任意 lock_internal_spin_unlock_with_wait。
+此处的*原子性*是指：此通知不应能在 lock_internal_spin_unlock_with_wait 等待期间发生，使得等待错过通知（即不应发生通知遗漏）。
 
-理想实现中，此方法只会唤醒在同一锁实例上调用的对应 lock_internal_spin_unlock_with_wait，但它可以唤醒其中任意一个，因为它们会检查条件，必要时重新等待。
+用锁的获取顺序重述上述要求：如果 `lock_internal_spin_unlock_with_notify()` 释放的锁，是在 `lock_internal_spin_unlock_with_wait()` 释放同一把锁之后才获取的，则必须通知等待者。漏通知会导致死锁，多余的通知则无害。
+
+宏 `LOCK_INTERNAL_SPIN_UNLOCK_WITH_NOTIFY_WAKES_ALL` 记录实现是否满足上述保证。使用 SDK 内置实现时默认为 1：在 RP2040 上就是普通的 SEV/WFE，在 RP2350 上因事件与独占访问的相互作用而略复杂。FreeRTOS 移植注入的宏目前不满足该保证：它们会消耗共享事件组的比特位，仍处于自旋锁解锁与阻塞之间的等待者将无事可等。
 
 默认情况下，此宏简单地解锁自旋锁，然后执行 SEV，但可以被覆盖（例如实际取消阻塞 RTOS 任务）。
 
@@ -225,7 +229,7 @@ lock_core 基础结构的工作方式是：锁定自旋锁，检查状态，然�
 
 原子地解锁锁的自旋锁，并等待通知或超时。
 
-此处的*原子性*是指：并发的 lock_internal_spin_unlock_with_notify 不应能在自旋锁解锁和本次等待之间插入，使得等待错过通知（即不应发生通知遗漏）。换言之，此方法应始终响应在本次调用开始后完成的、针对同一锁的 lock_internal_spin_unlock_with_notify 而唤醒。
+此处的*原子性*是指：并发的 lock_internal_spin_unlock_with_notify 不应能在自旋锁解锁和本次等待之间插入，使得等待错过通知（即不应发生通知遗漏）。换言之，此方法应始终响应「对同一锁的获取顺序排在本方法释放锁之后」的 lock_internal_spin_unlock_with_notify 而唤醒。
 
 理想实现中，此方法应在相应的 lock_internal_spin_unlock_with_notify 在同一锁实例上被调用后或超时到达时立即返回，但此方法可以在那之前的*任意*时刻返回；此宏*始终*在循环中使用，循环中会锁定自旋锁、检查内部锁原语状态，若调用线程不应继续则再次等待。
 
@@ -242,7 +246,7 @@ lock_core 基础结构的工作方式是：锁定自旋锁，检查状态，然�
 若超时已到达返回 true。
 **sync_internal_yield_until_before**
 
-#define sync_internal_yield_until_before(until) ((void)0)
+`#define sync_internal_yield_until_before(until) ((void)0)`
 
 让出处理器直到请求时间之前的某个时刻。
 
@@ -253,6 +257,38 @@ lock_core 基础结构的工作方式是：锁定自旋锁，检查状态，然�
 **参数**
 
 - until: absolute_time_t 值
+
+**LOCK_INTERNAL_SPIN_UNLOCK_WITH_NOTIFY_WAKES_ALL**
+
+`#define LOCK_INTERNAL_SPIN_UNLOCK_WITH_NOTIFY_WAKES_ALL 1`
+
+通知是否能到达所有更早的等待者。
+
+SDK 内置的 notify/wait 实现保证：如果 `lock_internal_spin_unlock_with_wait()` 释放了某把锁，而随后该锁被获取、再由 `lock_internal_spin_unlock_with_notify()` 释放，则等待者一定会收到通知。**只有锁的获取顺序起作用。** 即使通知前存在多次等待调用，所有等待者都会被通知；即使等待者已释放锁但尚未进入睡眠，一旦睡眠也必须被唤醒。
+
+RTOS 覆盖实现可能不具备该特性。FreeRTOS 移植把所有自旋锁复用到一个事件组的各个比特位上，并在退出时消费该位（xClearOnExit），因此每次通知只能被一个等待者消费。
+
+如果任何 notify/wait 原语被覆盖，应保守地标记它们为*不满足*同一保证。此时我们会发出额外的通知来补救，使第一个等待者唤醒下一个等待者，依此类推——参见 `lock_internal_spin_unlock_maybe_notify()`。
+
+若确定自己的实现满足与 SDK 版本相同的契约，可以将其重新定义为 1。
+
+**lock_internal_spin_unlock_maybe_notify**
+
+`#define lock_internal_spin_unlock_maybe_notify(lock, save, others_may_proceed) spin_unlock((lock)->spin_lock, save)`
+
+释放自旋锁；当实现无法保证较早的通知已到达其余等待者时，一并通知它们。
+
+此原语的作用是：若单次通知面向多个等待者，而实现不保证通知能到达所有等待者（即 `LOCK_INTERNAL_SPIN_UNLOCK_WITH_NOTIFY_WAKES_ALL = 0`），则在第一个等待者释放锁时*生成额外通知*，把原始通知继续传递给其余等待者。
+
+若 `LOCK_INTERNAL_SPIN_UNLOCK_WITH_NOTIFY_WAKES_ALL = 1`，则无需额外传递，此时就是普通的 `spin_unlock()`。
+
+`others_may_proceed` 参数控制是否生成通知。例如信号量有多个可用许可时，第一个等待者消费一个许可后传入 `others_may_proceed = true`，从而通知下一个等待者；通知链持续到传入 `others_may_proceed = false` 为止——在本例中即剩余许可数降为零时。
+
+**参数**
+
+- `lock`: 对应的 `lock_core`
+- `save`: 对应 `spin_lock_blocking()` 返回的 `uint32_t` 值
+- `others_may_proceed`: 若其他等待者仍可继续则为 true，即本次调用未排除它们
 
 #### 函数文档
 
@@ -291,7 +327,7 @@ Mutex 是应用层级的锁，通常用于保护可能被多个执行线程使�
 
 #### 宏
 
-* `#define auto_init_mutex(name) [static] __attribute__\((section(".mutex_array"))) mutex_t name<br/>&emsp;* `#define auto_init_recursive_mutex(name) [static] `__attribute__\((section(".mutex_array"))) recursive_mutex_t name = { .core = { .spin_lock = (spin_lock_t **)1 /`**` marker for runtime_init **/ }, .owner = 0, .enter_count = 0 }`
+* `#define auto_init_mutex(name) [static] __attribute__((section(".mutex_array"))) mutex_t name<br/>&emsp;* `#define auto_init_recursive_mutex(name) [static] `__attribute__((section(".mutex_array"))) recursive_mutex_t name = { .core = { .spin_lock = (spin_lock_t **)1 /`**` marker for runtime_init **/ }, .owner = 0, .enter_count = 0 }`
 
 #### 类型定义
 
@@ -337,20 +373,18 @@ Mutex 是应用层级的锁，通常用于保护可能被多个执行线程使�
 
 **auto_init_mutex**
 
-#define auto_init_mutex(name) [static] __attribute__\((section(".mutex_array"))) mutex_t name
+`#define auto_init_mutex(name) [static] __attribute__((section(".mutex_array"))) mutex_t name`
 
 用于静态定义 mutex 的辅助宏。
 
 如下定义的 mutex：
 
-// .c
 ```c
 auto_init_mutex(my_mutex);
 ```
 
 等价于：
 
-// .c
 ```c
 static mutex_t my_mutex;
 
@@ -368,14 +402,12 @@ void my_init_function() {
 
 如下定义的递归 mutex：
 
-// .c
 ```c
 auto_init_recursive_mutex(my_recursive_mutex);
 ```
 
 等价于：
 
-// .c
 ```c
 static recursive_mutex_t my_recursive_mutex;
 
@@ -777,7 +809,7 @@ typedef struct semaphore semaphore_t
 **参数**
 
 - sem: 指向信号量结构的指针
-- initial_permits: 初始已获取的许可数
+- initial_permits: 初始可用的许可数
 - max_permits: 此信号量允许的最大许可总数
 
 **sem_release**

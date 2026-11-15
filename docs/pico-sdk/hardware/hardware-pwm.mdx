@@ -4,7 +4,7 @@ draft: false
 description: 硬件脉冲宽度调制（PWM）API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK pwm, PWM]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -119,11 +119,13 @@ int main() {
 返回用于调节给定 PWM 片 DMA 传输速率的 dreq_num_t。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### PWM_GPIO_SLICE_NUM
 
 #define PWM_GPIO_SLICE_NUM(gpio)
 
 返回给定 GPIO 编号的 PWM 片编号。
+
 #### PWM_DEFAULT_IRQ_NUM
 
 #define PWM_DEFAULT_IRQ_NUM()
@@ -140,7 +142,7 @@ int main() {
 
 #### pwm_clkdiv_mode
 
-enum pwm_clkdiv_mode
+`enum pwm_clkdiv_mode`
 
 PWM 分频器模式设置。
 

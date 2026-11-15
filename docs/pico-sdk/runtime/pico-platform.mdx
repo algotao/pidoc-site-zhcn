@@ -4,7 +4,7 @@ draft: false
 description: 为 RP2 系列设备/架构提供针对底层编译器/平台特定内容的通用抽象的宏、定义（以及在非汇编代码中包含时的函数）。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK platform]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -41,8 +41,9 @@ import Normal from "../../_normal.mdx";
 * `#define __persistent_data(name) __attribute__\((section(".persistent_data." #name))) name`
 * `#define __not_in_flash(group) PICO_NOT_IN_FLASH_PLACEMENT(group)`
 * `#define __not_in_flash_func(func_name) __not_in_flash (__STRING(func_name)) func_name`
-* `#define __time_critical_func(func_name) __noinline PICO_TIME_CRITICAL_PLACEMENT (__STRING(func_name)) func_name`
+* `#define __time_critical_func(func_name) PICO_TIME_CRITICAL_PLACEMENT (__STRING(func_name)) func_name`
 * `#define __no_inline_not_in_flash_func(func_name) __noinline` __not_in_flash_func(func_name)
+* `#define __no_inline_time_critical_func(func_name) __noinline __time_critical_func(func_name)`
 
 ### 函数
 
@@ -63,6 +64,7 @@ import Normal from "../../_normal.mdx";
 `static __force_inline int32_t __mul_instruction (int32_t a, int32_t b)`<br/>&emsp;使用汇编 `MUL` 指令将两个整数相乘。
 
 `static __force_inline void tight_loop_contents (void)`<br/>&emsp;用于紧密循环体的空操作函数。
+`static __force_inline void blocked_waiter_wakeup (bool timed_out)`<br/>&emsp;记录阻塞的等待者已唤醒的空操作函数。
 
 `static __always_inline void __compiler_memory_barrier (void)`<br/>&emsp;确保编译器不会将内存访问移过此方法调用。
 - `void panic_unsupported (void)`: 以"Unsupported"消息触发 panic。
@@ -88,6 +90,7 @@ import Normal from "../../_normal.mdx";
 **返回**
 
 a `*` b
+
 #### `__isr`
 
 `#define __isr`
@@ -99,6 +102,7 @@ a `*` b
 ```c
 void __isr my_interrupt_handler(void) {
 ```
+
 #### `__force_inline`
 
 `#define __force_inline __always_inline`
@@ -110,21 +114,25 @@ void __isr my_interrupt_handler(void) {
 ```c
 int __force_inline my_function(int x) {
 ```
+
 #### count_of
 
 `#define count_of(a) (sizeof(a)/sizeof\((a)[0]))`
 
 用于确定数组元素数量的宏。
+
 #### MAX
 
 `#define MAX(a, b) \((a)>(b)?(a):(b))`
 
 返回两个可比较值中较大值的宏。
+
 #### MIN
 
 `#define MIN(a, b) \((b)>(a)?(a):(b))`
 
 返回两个可比较值中较小值的宏。
+
 #### `__check_type_compatible`
 
 `#define __check_type_compatible(type_a, type_b) _Static_assert(__builtin_types_compatible_p (type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));`
@@ -132,6 +140,7 @@ int __force_inline my_function(int x) {
 用于断言两个类型等价的工具宏。
 
 此宏可在其他宏中与 `typeof` 配合使用，断言两个参数的类型等价（或单个参数为预期类型）。
+
 #### `__after_data`
 
 `#define __after_data(group) __attribute__\((section(".after_data." group)))`
@@ -149,6 +158,7 @@ uint32_t __after_data("my_group_name") a_big_array[400];
 **参数**
 
 - `group`: 用于区分可被链接器独立垃圾回收的组的节名后缀字符串
+
 #### `__in_ram`
 
 `#define __in_ram(group) __attribute__\((section(".time_critical." group)))`
@@ -365,9 +375,11 @@ static const uint32_t __not_in_flash("my_group_name") an_array[3];
 
 `#define __not_in_flash_func(func_name) __not_in_flash (__STRING(func_name)) func_name`
 
-指示函数不应存储在 flash 中。
+指示函数不应置于 flash 中。
 
-修饰函数名，使该函数从 RAM 执行（假设编译器未将其内联到 flash 函数中）以避免可能的 flash 延迟。
+修饰函数名，使函数不会被放置为从 flash 执行（通过 `__not_in_flash` 放置）。
+
+**注意**：此宏不添加 `__no_inline`，因此函数仍可能被内联（由用户显式指定，或由编译器优化），导致代码最终进入调用函数所在的位置。为兼容旧版 SDK，此行为予以保留；需要明确禁止内联时可改用 `__no_inline_not_in_flash_func`。
 
 例如，一个接受 int 参数的函数 my_func：
 
@@ -375,31 +387,25 @@ static const uint32_t __not_in_flash("my_group_name") an_array[3];
 void __not_in_flash_func(my_func)(int some_arg) {
 ```
 
-函数使用 `__not_in_flash` 放置，默认为 `__in_ram`。
+函数使用 `__not_in_flash` 放置，而 `__not_in_flash` 本身默认为 `__in_ram`。
 
 #### `__no_inline_not_in_flash_func`
 
 `#define __no_inline_not_in_flash_func(func_name) __noinline` __not_in_flash_func(func_name)
 
-指示函数不应存储在 flash 中且不应被内联。
+指示函数不应置于 flash 中且不应被内联。
 
-修饰函数名，使该函数从 RAM 执行，并明确标记为 noinline 以防止编译器将其内联到 flash 函数中。
-
-例如，一个接受 int 参数的函数 my_func：
-
-```c
-void __no_inline_not_in_flash_func(my_func)(int some_arg) {
-```
-
-函数使用 `__not_in_flash` 放置，默认为 `__in_ram`。
+此宏等价于 `__not_in_flash_func`，但额外添加 `__noinline` 属性，防止编译器内联该函数（可能内联到 flash 函数中）。
 
 #### `__time_critical_func`
 
-`#define __time_critical_func(func_name) __noinline PICO_TIME_CRITICAL_PLACEMENT (__STRING(func_name)) func_name`
+`#define __time_critical_func(func_name) PICO_TIME_CRITICAL_PLACEMENT (__STRING(func_name)) func_name`
 
-指示函数对时间/延迟敏感，不应从 flash 运行。
+指示函数对时间/延迟敏感，不应放置为从 flash 执行。
 
-修饰函数名，使该函数从 RAM 执行以避免可能的 flash 延迟。默认情况下，此宏的实现与 `__no_inline_not_in_flash_func` 相同，但语义不同，`__time_critical_func` 可以受到特殊处理以减少从 flash 函数调用此类函数的开销。
+修饰函数名，使函数在默认情况下从 RAM 执行，以避免可能的 flash 延迟。默认情况下此宏等价于 `__not_in_flash_func`，但语义不同，`__time_critical_func` 可配置为不同的函数放置方式。
+
+**注意**：此宏不添加 `__no_inline`，因此函数仍可能被内联（由用户显式指定，或由编译器优化），导致代码最终进入调用函数所在的位置。为兼容旧版 SDK，此行为予以保留；需要明确禁止内联时可改用 `__no_inline_time_critical_func`。
 
 例如，一个接受 int 参数的函数 my_func：
 
@@ -413,7 +419,19 @@ void __time_critical_func(my_func)(int some_arg) {
 
 **参见**
 
-`__not_in_flash`
+`__not_in_flash`、`__no_inline_time_critical_func`
+
+#### `__no_inline_time_critical_func`
+
+`#define __no_inline_time_critical_func(func_name) __noinline __time_critical_func(func_name)`
+
+指示函数对时间/延迟敏感，不应放置为从 flash 执行，且不应被内联。
+
+此宏等价于 `__time_critical_func`，但额外添加 `__noinline` 属性，防止编译器内联该函数（可能内联到 flash 函数中）。
+
+**参见**
+
+`__time_critical_func`
 
 ### 函数文档
 
@@ -574,6 +592,18 @@ RP2350 ROM 版本号（RP2350-A2 为 2，RP2350-A3 为 3，RP2350-A4 为 4）。
 
 用于紧密循环体的空操作函数。
 
-此空操作函数旨在被任何紧密硬件轮询循环调用。普遍使用此函数可以更容易地找到紧密循环，并且将来可能会添加 #ifdef 化的锁死调试支持。
+此空操作函数旨在被任何紧密硬件轮询循环调用。普遍使用此函数可以更容易地找到紧密循环，也可以通过 `#ifdef` 用于调试。
+
+#### blocked_waiter_wakeup
+
+`static __force_inline void blocked_waiter_wakeup (bool timed_out) [static]`
+
+记录阻塞的等待者已唤醒的空操作函数。
+
+供刚完成条件等待的任意原语调用，也包括因超时而非条件满足而结束的等待。与 `tight_loop_contents` 不同，此操作跟在某种实际等待（例如 `__wfe()`）之后，而非轮询之后。主要用于调试或测试场景中被覆盖。
+
+**参数**
+
+- timed_out: 等待是否因超时而结束
 
 <Normal />

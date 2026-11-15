@@ -4,7 +4,7 @@ draft: false
 description: 通用输入/输出（GPIO）API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK gpio, GPIO]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -36,33 +36,1479 @@ RP2040 和 RP2350 QFN-60 的 GPIO ADC 引脚为 26-29。RP2350 QFN-80 的 ADC �
 
 | GPIO | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 0 | SPI0 RX | UART0 TX | I2C0 SDA | PWM0 A | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
-| 1 | SPI0 CSn | UART0 RX | I2C0 SCL | PWM0 B | SIO | PIO0 | PIO1 | USB VBUS DET |  |
-| 2 | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM1 A | SIO | PIO0 | PIO1 | USB VBUS EN |  |
-| 3 | SPI0 TX | UART0 RTS | I2C1 SCL | PWM1 B | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
-| 4 | SPI0 RX | UART1 TX | I2C0 SDA | PWM2 A | SIO | PIO0 | PIO1 | USB VBUS DET |  |
-| 5 | SPI0 CSn | UART1 RX | I2C0 SCL | PWM2 B | SIO | PIO0 | PIO1 | USB VBUS EN |  |
-| 6 | SPI0 SCK | UART1 CTS | I2C1 SDA | PWM3 A | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
-| 7 | SPI0 TX | UART1 RTS | I2C1 SCL | PWM3 B | SIO | PIO0 | PIO1 | USB VBUS DET |  |
-| 8 | SPI1 RX | UART1 TX | I2C0 SDA | PWM4 A | SIO | PIO0 | PIO1 | USB VBUS EN |  |
-| 9 | SPI1 CSn | UART1 RX | I2C0 SCL | PWM4 B | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
-| 10 | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM5 A | SIO | PIO0 | PIO1 | USB VBUS DET |  |
-| 11 | SPI1 TX | UART1 RTS | I2C1 SCL | PWM5 B | SIO | PIO0 | PIO1 | USB VBUS EN |  |
-| 12 | SPI1 RX | UART0 TX | I2C0 SDA | PWM6 A | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
-| 13 | SPI1 CSn | UART0 RX | I2C0 SCL | PWM6 B | SIO | PIO0 | PIO1 | USB VBUS DET |  |
-| 14 | SPI1 SCK | UART0 CTS | I2C1 SDA | PWM7 A | SIO | PIO0 | PIO1 | USB VBUS EN |  |
-| 15 | SPI1 TX | UART0 RTS | I2C1 SCL | PWM7 B | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
-| 16 | SPI0 RX | UART0 TX | I2C0 SDA | PWM0 A | SIO | PIO0 | PIO1 | USB VBUS DET |  |
-| 17 | SPI0 CSn | UART0 RX | I2C0 SCL | PWM0 B | SIO | PIO0 | PIO1 | USB VBUS EN |  |
-| 18 | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM1 A | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
-| 19 | SPI0 TX | UART0 RTS | I2C1 SCL | PWM1 B | SIO | PIO0 | PIO1 | USB VBUS DET |  |
+| 0 | SPI0 RX | UART0 TX | I2C0 SDA | PWM0 A | SIO | PIO0 | PIO1 |  | USB OVCUR DET |
+| 1 | SPI0 CSn | UART0 RX | I2C0 SCL | PWM0 B | SIO | PIO0 | PIO1 |  | USB VBUS DET |
+| 2 | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM1 A | SIO | PIO0 | PIO1 |  | USB VBUS EN |
+| 3 | SPI0 TX | UART0 RTS | I2C1 SCL | PWM1 B | SIO | PIO0 | PIO1 |  | USB OVCUR DET |
+| 4 | SPI0 RX | UART1 TX | I2C0 SDA | PWM2 A | SIO | PIO0 | PIO1 |  | USB VBUS DET |
+| 5 | SPI0 CSn | UART1 RX | I2C0 SCL | PWM2 B | SIO | PIO0 | PIO1 |  | USB VBUS EN |
+| 6 | SPI0 SCK | UART1 CTS | I2C1 SDA | PWM3 A | SIO | PIO0 | PIO1 |  | USB OVCUR DET |
+| 7 | SPI0 TX | UART1 RTS | I2C1 SCL | PWM3 B | SIO | PIO0 | PIO1 |  | USB VBUS DET |
+| 8 | SPI1 RX | UART1 TX | I2C0 SDA | PWM4 A | SIO | PIO0 | PIO1 |  | USB VBUS EN |
+| 9 | SPI1 CSn | UART1 RX | I2C0 SCL | PWM4 B | SIO | PIO0 | PIO1 |  | USB OVCUR DET |
+| 10 | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM5 A | SIO | PIO0 | PIO1 |  | USB VBUS DET |
+| 11 | SPI1 TX | UART1 RTS | I2C1 SCL | PWM5 B | SIO | PIO0 | PIO1 |  | USB VBUS EN |
+| 12 | SPI1 RX | UART0 TX | I2C0 SDA | PWM6 A | SIO | PIO0 | PIO1 |  | USB OVCUR DET |
+| 13 | SPI1 CSn | UART0 RX | I2C0 SCL | PWM6 B | SIO | PIO0 | PIO1 |  | USB VBUS DET |
+| 14 | SPI1 SCK | UART0 CTS | I2C1 SDA | PWM7 A | SIO | PIO0 | PIO1 |  | USB VBUS EN |
+| 15 | SPI1 TX | UART0 RTS | I2C1 SCL | PWM7 B | SIO | PIO0 | PIO1 |  | USB OVCUR DET |
+| 16 | SPI0 RX | UART0 TX | I2C0 SDA | PWM0 A | SIO | PIO0 | PIO1 |  | USB VBUS DET |
+| 17 | SPI0 CSn | UART0 RX | I2C0 SCL | PWM0 B | SIO | PIO0 | PIO1 |  | USB VBUS EN |
+| 18 | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM1 A | SIO | PIO0 | PIO1 |  | USB OVCUR DET |
+| 19 | SPI0 TX | UART0 RTS | I2C1 SCL | PWM1 B | SIO | PIO0 | PIO1 |  | USB VBUS DET |
 | 20 | SPI0 RX | UART1 TX | I2C0 SDA | PWM2 A | SIO | PIO0 | PIO1 | CLOCK GPIN0 | USB VBUS EN |
 | 21 | SPI0 CSn | UART1 RX | I2C0 SCL | PWM2 B | SIO | PIO0 | PIO1 | CLOCK GPOUT0 | USB OVCUR DET |
 | 22 | SPI0 SCK | UART1 CTS | I2C1 SDA | PWM3 A | SIO | PIO0 | PIO1 | CLOCK GPIN1 | USB VBUS DET |
 | 23 | SPI0 TX | UART1 RTS | I2C1 SCL | PWM3 B | SIO | PIO0 | PIO1 | CLOCK GPOUT1 | USB VBUS EN |
 | 24 | SPI1 RX | UART1 TX | I2C0 SDA | PWM4 A | SIO | PIO0 | PIO1 | CLOCK GPOUT2 | USB OVCUR DET |
 | 25 | SPI1 CSn | UART1 RX | I2C0 SCL | PWM4 B | SIO | PIO0 | PIO1 | CLOCK GPOUT3 | USB VBUS DET |
-| 26 | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM5 A | SIO | PIO0 | PIO1 | USB VBUS EN |  |
-| 27 | SPI1 TX | UART1 RTS | I2C1 SCL | PWM5 B | SIO | PIO0 | PIO1 | USB OVCUR DET |  |
-| 28 | SPI1 RX | UART0 TX | I2C0 SDA | PWM6 A | SIO | PIO0 | PIO1 | USB VBUS DET |  |
-| 29 | SPI1 CSn | UART0 RX | I2C0 SCL | PWM6 B | SIO | PIO0 | PIO1 | USB VBUS EN |  |
+| 26 | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM5 A | SIO | PIO0 | PIO1 |  | USB VBUS EN |
+| 27 | SPI1 TX | UART1 RTS | I2C1 SCL | PWM5 B | SIO | PIO0 | PIO1 |  | USB OVCUR DET |
+| 28 | SPI1 RX | UART0 TX | I2C0 SDA | PWM6 A | SIO | PIO0 | PIO1 |  | USB VBUS DET |
+| 29 | SPI1 CSn | UART0 RX | I2C0 SCL | PWM6 B | SIO | PIO0 | PIO1 |  | USB VBUS EN |
+
+在 RP2350 上，功能选择为：
+
+| GPIO | F0 | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | F10 | F11 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 |  | SPI0 RX | UART0 TX | I2C0 SDA | PWM0 A | SIO | PIO0 | PIO1 | PIO2 | XIP_CS1n | USB OVCUR DET |  |
+| 1 |  | SPI0 CSn | UART0 RX | I2C0 SCL | PWM0 B | SIO | PIO0 | PIO1 | PIO2 | TRACECLK | USB VBUS DET |  |
+| 2 |  | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM1 A | SIO | PIO0 | PIO1 | PIO2 | TRACEDATA0 | USB VBUS EN | UART0 TX |
+| 3 |  | SPI0 TX | UART0 RTS | I2C1 SCL | PWM1 B | SIO | PIO0 | PIO1 | PIO2 | TRACEDATA1 | USB OVCUR DET | UART0 RX |
+| 4 |  | SPI0 RX | UART1 TX | I2C0 SDA | PWM2 A | SIO | PIO0 | PIO1 | PIO2 | TRACEDATA2 | USB VBUS DET |  |
+| 5 |  | SPI0 CSn | UART1 RX | I2C0 SCL | PWM2 B | SIO | PIO0 | PIO1 | PIO2 | TRACEDATA3 | USB VBUS EN |  |
+| 6 |  | SPI0 SCK | UART1 CTS | I2C1 SDA | PWM3 A | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET | UART1 TX |
+| 7 |  | SPI0 TX | UART1 RTS | I2C1 SCL | PWM3 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET | UART1 RX |
+| 8 |  | SPI1 RX | UART1 TX | I2C0 SDA | PWM4 A | SIO | PIO0 | PIO1 | PIO2 | XIP_CS1n | USB VBUS EN |  |
+| 9 |  | SPI1 CSn | UART1 RX | I2C0 SCL | PWM4 B | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET |  |
+| 10 |  | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM5 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET | UART1 TX |
+| 11 |  | SPI1 TX | UART1 RTS | I2C1 SCL | PWM5 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN | UART1 RX |
+| 12 | HSTX | SPI1 RX | UART0 TX | I2C0 SDA | PWM6 A | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPIN0 | USB OVCUR DET |  |
+| 13 | HSTX | SPI1 CSn | UART0 RX | I2C0 SCL | PWM6 B | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPOUT0 | USB VBUS DET |  |
+| 14 | HSTX | SPI1 SCK | UART0 CTS | I2C1 SDA | PWM7 A | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPIN1 | USB VBUS EN | UART0 TX |
+| 15 | HSTX | SPI1 TX | UART0 RTS | I2C1 SCL | PWM7 B | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPOUT1 | USB OVCUR DET | UART0 RX |
+| 16 | HSTX | SPI0 RX | UART0 TX | I2C0 SDA | PWM0 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET |  |
+| 17 | HSTX | SPI0 CSn | UART0 RX | I2C0 SCL | PWM0 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN |  |
+| 18 | HSTX | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM1 A | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET | UART0 TX |
+| 19 | HSTX | SPI0 TX | UART0 RTS | I2C1 SCL | PWM1 B | SIO | PIO0 | PIO1 | PIO2 | XIP_CS1n | USB VBUS DET | UART0 RX |
+| 20 |  | SPI0 RX | UART1 TX | I2C0 SDA | PWM2 A | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPIN0 | USB VBUS EN |  |
+| 21 |  | SPI0 CSn | UART1 RX | I2C0 SCL | PWM2 B | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPOUT0 | USB OVCUR DET |  |
+| 22 |  | SPI0 SCK | UART1 CTS | I2C1 SDA | PWM3 A | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPIN1 | USB VBUS DET | UART1 TX |
+| 23 |  | SPI0 TX | UART1 RTS | I2C1 SCL | PWM3 B | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPOUT1 | USB VBUS EN | UART1 RX |
+| 24 |  | SPI1 RX | UART1 TX | I2C0 SDA | PWM4 A | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPOUT2 | USB OVCUR DET |  |
+| 25 |  | SPI1 CSn | UART1 RX | I2C0 SCL | PWM4 B | SIO | PIO0 | PIO1 | PIO2 | CLOCK GPOUT3 | USB VBUS DET |  |
+| 26 |  | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM5 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN | UART1 TX |
+| 27 |  | SPI1 TX | UART1 RTS | I2C1 SCL | PWM5 B | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET | UART1 RX |
+| 28 |  | SPI1 RX | UART0 TX | I2C0 SDA | PWM6 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET |  |
+| 29 |  | SPI1 CSn | UART0 RX | I2C0 SCL | PWM6 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN |  |
+
+GPIO 30 至 47 仅 QFN-80 封装提供：
+
+| GPIO | F0 | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | F10 | F11 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 30 |  | SPI1 SCK | UART0 CTS | I2C1 SDA | PWM7 A | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET | UART0 TX |
+| 31 |  | SPI1 TX | UART0 RTS | I2C1 SCL | PWM7 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET | UART0 RX |
+| 32 |  | SPI0 RX | UART0 TX | I2C0 SDA | PWM8 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN |  |
+| 33 |  | SPI0 CSn | UART0 RX | I2C0 SCL | PWM8 B | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET |  |
+| 34 |  | SPI0 SCK | UART0 CTS | I2C1 SDA | PWM9 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET | UART0 TX |
+| 35 |  | SPI0 TX | UART0 RTS | I2C1 SCL | PWM9 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN | UART0 RX |
+| 36 |  | SPI0 RX | UART1 TX | I2C0 SDA | PWM10 A | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET |  |
+| 37 |  | SPI0 CSn | UART1 RX | I2C0 SCL | PWM10 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET |  |
+| 38 |  | SPI0 SCK | UART1 CTS | I2C1 SDA | PWM11 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN | UART1 TX |
+| 39 |  | SPI0 TX | UART1 RTS | I2C1 SCL | PWM11 B | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET | UART1 RX |
+| 40 |  | SPI1 RX | UART1 TX | I2C0 SDA | PWM8 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET |  |
+| 41 |  | SPI1 CSn | UART1 RX | I2C0 SCL | PWM8 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN |  |
+| 42 |  | SPI1 SCK | UART1 CTS | I2C1 SDA | PWM9 A | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET | UART1 TX |
+| 43 |  | SPI1 TX | UART1 RTS | I2C1 SCL | PWM9 B | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET | UART1 RX |
+| 44 |  | SPI1 RX | UART0 TX | I2C0 SDA | PWM10 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS EN |  |
+| 45 |  | SPI1 CSn | UART0 RX | I2C0 SCL | PWM10 B | SIO | PIO0 | PIO1 | PIO2 |  | USB OVCUR DET |  |
+| 46 |  | SPI1 SCK | UART0 CTS | I2C1 SDA | PWM11 A | SIO | PIO0 | PIO1 | PIO2 |  | USB VBUS DET | UART0 TX |
+| 47 |  | SPI1 TX | UART0 RTS | I2C1 SCL | PWM11 B | SIO | PIO0 | PIO1 | PIO2 | XIP_CS1n | USB VBUS EN | UART0 RX |
+
+### 类型定义
+
+`typedef enum gpio_function_rp2040 gpio_function_t`<br/>&emsp;RP2040 上的 GPIO 引脚功能选择项（用作 `gpio_function_t` 类型定义）
+
+`typedef enum gpio_function_rp2350 gpio_function_t`<br/>&emsp;RP2350 上的 GPIO 引脚功能选择项（用作 `gpio_function_t` 类型定义）
+
+`typedef void(* gpio_irq_callback_t)(uint gpio, uint32_t event_mask)`<br/>&emsp;GPIO 事件的回调函数类型
+
+### 枚举
+
+`enum gpio_function_rp2040 { GPIO_FUNC_XIP = 0, GPIO_FUNC_SPI = 1, GPIO_FUNC_UART = 2, GPIO_FUNC_I2C = 3, GPIO_FUNC_PWM = 4, GPIO_FUNC_SIO = 5, GPIO_FUNC_PIO0 = 6, GPIO_FUNC_PIO1 = 7, GPIO_FUNC_GPCK = 8, GPIO_FUNC_USB = 9, GPIO_FUNC_NULL = 0x1f }`<br/>&emsp;RP2040 上的 GPIO 引脚功能选择项（用作 `gpio_function_t` 类型定义）
+
+`enum gpio_function_rp2350 { GPIO_FUNC_HSTX = 0, GPIO_FUNC_SPI = 1, GPIO_FUNC_UART = 2, GPIO_FUNC_I2C = 3, GPIO_FUNC_PWM = 4, GPIO_FUNC_SIO = 5, GPIO_FUNC_PIO0 = 6, GPIO_FUNC_PIO1 = 7, GPIO_FUNC_PIO2 = 8, GPIO_FUNC_GPCK = 9, GPIO_FUNC_XIP_CS1 = 9, GPIO_FUNC_CORESIGHT_TRACE = 9, GPIO_FUNC_USB = 10, GPIO_FUNC_UART_AUX = 11, GPIO_FUNC_NULL = 0x1f }`<br/>&emsp;RP2350 上的 GPIO 引脚功能选择项（用作 `gpio_function_t` 类型定义）
+
+`enum gpio_irq_level { GPIO_IRQ_LEVEL_LOW = 0x1u, GPIO_IRQ_LEVEL_HIGH = 0x2u, GPIO_IRQ_EDGE_FALL = 0x4u, GPIO_IRQ_EDGE_RISE = 0x8u }`<br/>&emsp;GPIO 中断电平定义（GPIO 事件）
+
+`enum gpio_override { GPIO_OVERRIDE_NORMAL = 0, GPIO_OVERRIDE_INVERT = 1, GPIO_OVERRIDE_LOW = 2, GPIO_OVERRIDE_HIGH = 3 }`<br/>&emsp;GPIO 覆盖模式。
+
+`enum gpio_slew_rate { GPIO_SLEW_RATE_SLOW = 0, GPIO_SLEW_RATE_FAST = 1 }`<br/>&emsp;GPIO 输出的压摆率限制级别。
+
+`enum gpio_drive_strength { GPIO_DRIVE_STRENGTH_2MA = 0, GPIO_DRIVE_STRENGTH_4MA = 1, GPIO_DRIVE_STRENGTH_8MA = 2, GPIO_DRIVE_STRENGTH_12MA = 3 }`<br/>&emsp;GPIO 输出的驱动强度级别。
+
+### 函数
+
+`void gpio_set_function (uint gpio, gpio_function_t fn)`<br/>&emsp;选择 GPIO 功能。
+
+`void gpio_set_function_masked (uint32_t gpio_mask, gpio_function_t fn)`<br/>&emsp;为多个 GPIO 选择功能。
+
+`static void gpio_set_function_masked64 (uint64_t gpio_mask, gpio_function_t fn)`<br/>&emsp;为多个 GPIO 选择功能。
+
+`gpio_function_t gpio_get_function (uint gpio)`<br/>&emsp;确定当前的 GPIO 功能。
+
+`void gpio_set_pulls (uint gpio, bool up, bool down)`<br/>&emsp;设置指定 GPIO 的上拉和下拉。
+
+`static void gpio_pull_up (uint gpio)`<br/>&emsp;将指定 GPIO 设置为上拉。
+
+`static bool gpio_is_pulled_up (uint gpio)`<br/>&emsp;判断指定 GPIO 是否上拉。
+
+`static void gpio_pull_down (uint gpio)`<br/>&emsp;将指定 GPIO 设置为下拉。
+
+`static bool gpio_is_pulled_down (uint gpio)`<br/>&emsp;判断指定 GPIO 是否下拉。
+
+`static void gpio_disable_pulls (uint gpio)`<br/>&emsp;禁用指定 GPIO 的上拉与下拉。
+
+`void gpio_set_irqover (uint gpio, uint value)`<br/>&emsp;设置 GPIO IRQ 覆盖。
+
+`void gpio_set_outover (uint gpio, uint value)`<br/>&emsp;设置 GPIO 输出覆盖。
+
+`void gpio_set_inover (uint gpio, uint value)`<br/>&emsp;选择 GPIO 输入覆盖。
+
+`void gpio_set_oeover (uint gpio, uint value)`<br/>&emsp;选择 GPIO 输出使能覆盖。
+
+`void gpio_set_input_enabled (uint gpio, bool enabled)`<br/>&emsp;使能 GPIO 输入。
+
+`void gpio_set_input_hysteresis_enabled (uint gpio, bool enabled)`<br/>&emsp;使能或禁用 GPIO 输入迟滞（施密特触发器）
+
+`bool gpio_is_input_hysteresis_enabled (uint gpio)`<br/>&emsp;判断指定 GPIO 是否使能了输入迟滞。
+
+`void gpio_set_slew_rate (uint gpio, enum gpio_slew_rate slew)`<br/>&emsp;设置指定 GPIO 的压摆率。
+
+`enum gpio_slew_rate gpio_get_slew_rate (uint gpio)`<br/>&emsp;获取指定 GPIO 当前的压摆率。
+
+`void gpio_set_drive_strength (uint gpio, enum gpio_drive_strength drive)`<br/>&emsp;设置指定 GPIO 的驱动强度。
+
+`enum gpio_drive_strength gpio_get_drive_strength (uint gpio)`<br/>&emsp;获取指定 GPIO 当前的驱动强度。
+
+`void gpio_set_irq_enabled (uint gpio, uint32_t event_mask, bool enabled)`<br/>&emsp;为指定 GPIO 使能或禁用特定的中断事件。
+
+`void gpio_set_irq_callback (gpio_irq_callback_t callback)`<br/>&emsp;设置当前核心用于 GPIO IRQ 事件的通用回调。
+
+`void gpio_set_irq_enabled_with_callback (uint gpio, uint32_t event_mask, bool enabled, gpio_irq_callback_t callback)`<br/>&emsp;便捷函数，一次性完成多项 GPIO IRQ 相关的初始化。
+
+`void gpio_set_dormant_irq_enabled (uint gpio, uint32_t event_mask, bool enabled)`<br/>&emsp;为指定 GPIO 和指定事件使能休眠唤醒中断。
+
+`static uint32_t gpio_get_irq_event_mask (uint gpio)`<br/>&emsp;返回指定 GPIO 当前的中断状态（待处理事件）。
+
+`static void gpio_acknowledge_irq (uint gpio, uint32_t event_mask)`<br/>&emsp;确认当前核心上指定事件的 GPIO 中断。
+
+`void gpio_add_raw_irq_handler_with_order_priority_masked (uint32_t gpio_mask, irq_handler_t handler, uint8_t order_priority)`<br/>&emsp;为当前核心上指定的多个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+`void gpio_add_raw_irq_handler_with_order_priority_masked64 (uint64_t gpio_mask, irq_handler_t handler, uint8_t order_priority)`<br/>&emsp;为当前核心上指定的多个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+`static void gpio_add_raw_irq_handler_with_order_priority (uint gpio, irq_handler_t handler, uint8_t order_priority)`<br/>&emsp;为当前核心上指定的单个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+`void gpio_add_raw_irq_handler_masked (uint32_t gpio_mask, irq_handler_t handler)`<br/>&emsp;为当前核心上指定的多个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+`void gpio_add_raw_irq_handler_masked64 (uint64_t gpio_mask, irq_handler_t handler)`<br/>&emsp;为当前核心上指定的多个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+`static void gpio_add_raw_irq_handler (uint gpio, irq_handler_t handler)`<br/>&emsp;为当前核心上指定的单个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+`void gpio_remove_raw_irq_handler_masked (uint32_t gpio_mask, irq_handler_t handler)`<br/>&emsp;移除当前核心上指定多个 GPIO 的原始 GPIO IRQ 处理程序。
+
+`void gpio_remove_raw_irq_handler_masked64 (uint64_t gpio_mask, irq_handler_t handler)`<br/>&emsp;移除当前核心上指定多个 GPIO 的原始 GPIO IRQ 处理程序。
+
+`static void gpio_remove_raw_irq_handler (uint gpio, irq_handler_t handler)`<br/>&emsp;移除当前核心上指定单个 GPIO 的原始 GPIO IRQ 处理程序。
+
+`void gpio_init (uint gpio)`<br/>&emsp;初始化一个 GPIO（使能 I/O 并将功能设为 `GPIO_FUNC_SIO`）
+
+`void gpio_deinit (uint gpio)`<br/>&emsp;将 GPIO 复位回 NULL 功能，即禁用该 GPIO。
+
+`void gpio_init_mask (uint32_t gpio_mask)`<br/>&emsp;初始化多个 GPIO（使能 I/O 并将功能设为 `GPIO_FUNC_SIO`）
+
+`static void gpio_init_mask64 (uint64_t gpio_mask)`<br/>&emsp;初始化多个 GPIO（使能 I/O 并将功能设为 `GPIO_FUNC_SIO`）
+
+`static bool gpio_get (uint gpio)`<br/>&emsp;获取单个指定 GPIO 的状态。
+
+`static uint32_t gpio_get_all (void)`<br/>&emsp;获取所有 GPIO 的原始值。
+
+`static uint64_t gpio_get_all64 (void)`<br/>&emsp;获取所有 GPIO 的原始值。
+
+`static void gpio_set_mask (uint32_t mask)`<br/>&emsp;将掩码中出现的所有 GPIO 驱动为高电平。
+
+`static void gpio_set_mask64 (uint64_t mask)`<br/>&emsp;将掩码中出现的所有 GPIO 驱动为高电平。
+
+`static void gpio_set_mask_n (uint n, uint32_t mask)`<br/>&emsp;将掩码中出现的所有 GPIO 驱动为高电平。
+
+`static void gpio_clr_mask (uint32_t mask)`<br/>&emsp;将掩码中出现的所有 GPIO 驱动为低电平。
+
+`static void gpio_clr_mask64 (uint64_t mask)`<br/>&emsp;将掩码中出现的所有 GPIO 驱动为低电平。
+
+`static void gpio_clr_mask_n (uint n, uint32_t mask)`<br/>&emsp;将掩码中出现的所有 GPIO 驱动为低电平。
+
+`static void gpio_xor_mask (uint32_t mask)`<br/>&emsp;翻转掩码中出现的所有 GPIO。
+
+`static void gpio_xor_mask64 (uint64_t mask)`<br/>&emsp;翻转掩码中出现的所有 GPIO。
+
+`static void gpio_xor_mask_n (uint n, uint32_t mask)`<br/>&emsp;翻转掩码中出现的所有 GPIO。
+
+`static void gpio_put_masked (uint32_t mask, uint32_t value)`<br/>&emsp;根据参数将 GPIO 驱动为高电平或低电平。
+
+`static void gpio_put_masked64 (uint64_t mask, uint64_t value)`<br/>&emsp;根据参数将 GPIO 驱动为高电平或低电平。
+
+`static void gpio_put_masked_n (uint n, uint32_t mask, uint32_t value)`<br/>&emsp;根据参数将 GPIO 驱动为高电平或低电平。
+
+`static void gpio_put_all (uint32_t value)`<br/>&emsp;同时驱动所有引脚。
+
+`static void gpio_put_all64 (uint64_t value)`<br/>&emsp;同时驱动所有引脚。
+
+`static void gpio_put (uint gpio, bool value)`<br/>&emsp;驱动单个 GPIO 为高电平或低电平。
+
+`static bool gpio_get_out_level (uint gpio)`<br/>&emsp;判断 GPIO 当前被驱动为高电平还是低电平。
+
+`static void gpio_set_dir_out_masked (uint32_t mask)`<br/>&emsp;将多个 GPIO 设置为输出。
+
+`static void gpio_set_dir_out_masked64 (uint64_t mask)`<br/>&emsp;将多个 GPIO 设置为输出。
+
+`static void gpio_set_dir_in_masked (uint32_t mask)`<br/>&emsp;将多个 GPIO 设置为输入。
+
+`static void gpio_set_dir_in_masked64 (uint64_t mask)`<br/>&emsp;将多个 GPIO 设置为输入。
+
+`static void gpio_set_dir_masked (uint32_t mask, uint32_t value)`<br/>&emsp;设置多个 GPIO 的方向。
+
+`static void gpio_set_dir_masked64 (uint64_t mask, uint64_t value)`<br/>&emsp;设置多个 GPIO 的方向。
+
+`static void gpio_set_dir_all_bits (uint32_t values)`<br/>&emsp;同时设置所有引脚的方向。
+
+`static void gpio_set_dir_all_bits64 (uint64_t values)`<br/>&emsp;同时设置所有引脚的方向。
+
+`static void gpio_set_dir (uint gpio, bool out)`<br/>&emsp;设置单个 GPIO 的方向。
+
+`static bool gpio_is_dir_out (uint gpio)`<br/>&emsp;检查指定 GPIO 的方向是否为输出（OUT）。
+
+`static uint gpio_get_dir (uint gpio)`<br/>&emsp;获取指定 GPIO 的方向。
+
+### 类型定义文档
+
+#### gpio_function_t <span className="chip-tag rp2040">RP2040</span>
+
+`typedef enum gpio_function_rp2040 gpio_function_t`
+
+RP2040 上的 GPIO 引脚功能选择项（用作 `gpio_function_t` 类型定义）
+
+#### gpio_function_t <span className="chip-tag rp2350">RP2350</span>
+
+`typedef enum gpio_function_rp2350 gpio_function_t`
+
+RP2350 上的 GPIO 引脚功能选择项（用作 `gpio_function_t` 类型定义）
+
+#### gpio_irq_callback_t
+
+`typedef void(* gpio_irq_callback_t) (uint gpio, uint32_t event_mask)`
+
+GPIO 事件的回调函数类型
+
+**参数**
+
+- `gpio`: 触发此中断的 GPIO
+- `event_mask`: 触发此中断的事件。详见 `gpio_irq_level`。
+
+**参见**
+
+`gpio_set_irq_enabled_with_callback()`、`gpio_set_irq_callback()`
+
+### 枚举类型文档
+
+#### gpio_function_rp2040 <span className="chip-tag rp2040">RP2040</span>
+
+`enum gpio_function_rp2040`
+
+RP2040 上的 GPIO 引脚功能选择项（用作 `gpio_function_t` 类型定义）
+
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
+| GPIO_FUNC_XIP | 选择 XIP 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_SPI | 选择 SPI 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_UART | 选择 UART 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_I2C | 选择 I2C 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_PWM | 选择 PWM 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_SIO | 选择 SIO 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_PIO0 | 选择 PIO0 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_PIO1 | 选择 PIO1 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_GPCK | 选择 GPCK 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_USB | 选择 USB 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_NULL | 选择 NULL 作为 GPIO 引脚功能。 |
+
+#### gpio_function_rp2350 <span className="chip-tag rp2350">RP2350</span>
+
+`enum gpio_function_rp2350`
+
+RP2350 上的 GPIO 引脚功能选择项（用作 `gpio_function_t` 类型定义）
+
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
+| GPIO_FUNC_HSTX | 选择 HSTX 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_SPI | 选择 SPI 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_UART | 选择 UART 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_I2C | 选择 I2C 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_PWM | 选择 PWM 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_SIO | 选择 SIO 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_PIO0 | 选择 PIO0 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_PIO1 | 选择 PIO1 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_PIO2 | 选择 PIO2 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_GPCK | 选择 GPCK 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_XIP_CS1 | 选择 XIP CS1 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_CORESIGHT_TRACE | 选择 CORESIGHT TRACE 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_USB | 选择 USB 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_UART_AUX | 选择 UART_AUX 作为 GPIO 引脚功能。 |
+| GPIO_FUNC_NULL | 选择 NULL 作为 GPIO 引脚功能。 |
+
+#### gpio_irq_level
+
+`enum gpio_irq_level`
+
+GPIO 中断电平定义（GPIO 事件）
+
+GPIO 中断电平
+
+每个 GPIO 引脚可在以下 4 种情况下产生中断：
+
+- 电平高：GPIO 引脚为逻辑 1
+
+- 电平低：GPIO 引脚为逻辑 0
+
+- 上升沿：GPIO 从逻辑 0 跳变为逻辑 1
+
+- 下降沿：GPIO 从逻辑 1 跳变为逻辑 0
+
+电平中断不会被锁存。这意味着，若引脚为逻辑 1 且电平高中断处于活动状态，则引脚变为逻辑 0 时该中断立即变为非活动状态。边沿中断保存在 `INTR` 寄存器中，可通过写入 `INTR` 寄存器清除。
+
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
+| GPIO_IRQ_LEVEL_LOW | GPIO 引脚为逻辑 0 时触发 IRQ。 |
+| GPIO_IRQ_LEVEL_HIGH | GPIO 引脚为逻辑 1 时触发 IRQ。 |
+| GPIO_IRQ_EDGE_FALL | GPIO 从逻辑 1 跳变为逻辑 0 时触发 IRQ。 |
+| GPIO_IRQ_EDGE_RISE | GPIO 从逻辑 0 跳变为逻辑 1 时触发 IRQ。 |
+
+#### gpio_override
+
+`enum gpio_override`
+
+GPIO 覆盖模式。
+
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
+| GPIO_OVERRIDE_NORMAL | 由 `gpio_set_function` 选择的外设信号 |
+| GPIO_OVERRIDE_INVERT | 反转由 `gpio_set_function` 选择的外设信号 |
+| GPIO_OVERRIDE_LOW | 驱动为低电平／禁用输出 |
+| GPIO_OVERRIDE_HIGH | 驱动为高电平／使能输出 |
+
+**参见**
+
+`gpio_set_irqover`、`gpio_set_outover`、`gpio_set_inover`、`gpio_set_oeover`
+
+#### gpio_slew_rate
+
+`enum gpio_slew_rate`
+
+GPIO 输出的压摆率限制级别。
+
+压摆率限制会在 GPIO 输出轻载时增大最小上升／下降时间，有助于降低电磁辐射。
+
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
+| GPIO_SLEW_RATE_SLOW | 使能压摆率限制。 |
+| GPIO_SLEW_RATE_FAST | 禁用压摆率限制。 |
+
+**参见**
+
+`gpio_set_slew_rate`
+
+#### gpio_drive_strength
+
+`enum gpio_drive_strength`
+
+GPIO 输出的驱动强度级别。
+
+GPIO 输出的驱动强度级别。
+
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
+| GPIO_DRIVE_STRENGTH_2MA | 2 mA 标称驱动强度 |
+| GPIO_DRIVE_STRENGTH_4MA | 4 mA 标称驱动强度 |
+| GPIO_DRIVE_STRENGTH_8MA | 8 mA 标称驱动强度 |
+| GPIO_DRIVE_STRENGTH_12MA | 12 mA 标称驱动强度 |
+
+**参见**
+
+`gpio_set_drive_strength`
+
+### 函数文档
+
+#### gpio_acknowledge_irq
+
+`static void gpio_acknowledge_irq (uint gpio, uint32_t event_mask) [inline], [static]`
+
+确认当前核心上指定事件的 GPIO 中断。
+
+**注意**：可以使用由 `gpio_irq_level` 中任意有效位组成的掩码调用此函数，但它对电平敏感中断无效——只要 GPIO 保持在指定电平，这类中断就一直处于待处理状态。处理电平敏感中断时，通常应先禁用该中断（参见 `gpio_set_irq_enabled`），待 GPIO 电平改变后再重新设置（或改为捕获相反的电平）。
+
+**注意**：对于通过 `gpio_set_irq_enabled_with_callback` 或 `gpio_set_irq_callback` 设置的回调，此函数会被自动调用。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `event_mask`: 要清除的事件位掩码。详见 `gpio_irq_level`。
+
+#### gpio_add_raw_irq_handler
+
+`static void gpio_add_raw_irq_handler (uint gpio, irq_handler_t handler) [inline], [static]`
+
+为当前核心上指定的单个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认事件回调被调用。
+
+此方法添加这样一个回调，并对指定的 GPIO 禁用“默认”回调。
+
+原始处理程序应自行检查它所处理的 GPIO 与事件，并自行确认中断；其形式大致如下：
+
+**注意**：不应为同一个 GPIO 添加多个原始处理程序，尝试这样做会触发断言。此函数内部调用 `irq_add_shared_handler`，当共享处理程序数量超过上限（可通过 `PICO_MAX_SHARED_IRQ_HANDLERS` 配置）时同样会触发断言。
+
+```c
+void my_irq_handler(void) {
+    if (gpio_get_irq_event_mask(my_gpio_num) & my_gpio_event_mask) {
+       gpio_acknowledge_irq(my_gpio_num, my_gpio_event_mask);
+      // handle the IRQ
+    }
+}
+```
+
+**参数**
+
+- `gpio`: 将不再传递给此核心默认回调的 GPIO 编号
+- `handler`: 要加入此核心 GPIO IRQ 处理程序列表的处理程序
+
+#### gpio_add_raw_irq_handler_masked
+
+`void gpio_add_raw_irq_handler_masked (uint32_t gpio_mask, irq_handler_t handler)`
+
+为当前核心上指定的多个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认事件回调被调用。
+
+此方法添加这样一个回调，并对指定的多个 GPIO 禁用“默认”回调。
+
+原始处理程序应自行检查它所处理的 GPIO 与事件，并自行确认中断；其形式大致如下：
+
+**注意**：不应为同一组 GPIO 添加多个原始处理程序，尝试这样做会触发断言。此函数内部调用 `irq_add_shared_handler`，当共享处理程序数量超过上限（可通过 `PICO_MAX_SHARED_IRQ_HANDLERS` 配置）时同样会触发断言。
+
+```c
+void my_irq_handler(void) {
+    if (gpio_get_irq_event_mask(my_gpio_num) & my_gpio_event_mask) {
+       gpio_acknowledge_irq(my_gpio_num, my_gpio_event_mask);
+      // handle the IRQ
+    }
+    if (gpio_get_irq_event_mask(my_gpio_num2) & my_gpio_event_mask2) {
+       gpio_acknowledge_irq(my_gpio_num2, my_gpio_event_mask2);
+      // handle the IRQ
+    }
+}
+```
+
+**参数**
+
+- `gpio_mask`: GPIO 编号的位掩码，这些 GPIO 将不再传递给此核心的默认回调
+- `handler`: 要加入此核心 GPIO IRQ 处理程序列表的处理程序
+
+#### gpio_add_raw_irq_handler_masked64
+
+`void gpio_add_raw_irq_handler_masked64 (uint64_t gpio_mask, irq_handler_t handler)`
+
+为当前核心上指定的多个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认事件回调被调用。
+
+此方法添加这样一个回调，并对指定的多个 GPIO 禁用“默认”回调。
+
+原始处理程序应自行检查它所处理的 GPIO 与事件，并自行确认中断；其形式大致如下：
+
+**注意**：不应为同一组 GPIO 添加多个原始处理程序，尝试这样做会触发断言。此函数内部调用 `irq_add_shared_handler`，当共享处理程序数量超过上限（可通过 `PICO_MAX_SHARED_IRQ_HANDLERS` 配置）时同样会触发断言。
+
+```c
+void my_irq_handler(void) {
+    if (gpio_get_irq_event_mask(my_gpio_num) & my_gpio_event_mask) {
+       gpio_acknowledge_irq(my_gpio_num, my_gpio_event_mask);
+      // handle the IRQ
+    }
+    if (gpio_get_irq_event_mask(my_gpio_num2) & my_gpio_event_mask2) {
+       gpio_acknowledge_irq(my_gpio_num2, my_gpio_event_mask2);
+      // handle the IRQ
+    }
+}
+```
+
+**参数**
+
+- `gpio_mask`: GPIO 编号的 64 位掩码，这些 GPIO 将不再传递给此核心的默认回调
+- `handler`: 要加入此核心 GPIO IRQ 处理程序列表的处理程序
+
+#### gpio_add_raw_irq_handler_with_order_priority
+
+`static void gpio_add_raw_irq_handler_with_order_priority (uint gpio, irq_handler_t handler, uint8_t order_priority) [inline], [static]`
+
+为当前核心上指定的单个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认回调被调用。相对于默认回调的执行顺序可通过 `order_priority` 参数控制（默认回调的优先级为 `GPIO_IRQ_CALLBACK_ORDER_PRIORITY`，默认取最低优先级，以便最后执行）。
+
+此方法添加这样一个回调，并对指定的 GPIO 禁用“默认”回调。
+
+原始处理程序应自行检查它所处理的 GPIO 与事件，并自行确认中断；其形式大致如下：
+
+**注意**：不应为同一个 GPIO 添加多个原始处理程序，尝试这样做会触发断言。此函数内部调用 `irq_add_shared_handler`，当共享处理程序数量超过上限（可通过 `PICO_MAX_SHARED_IRQ_HANDLERS` 配置）时同样会触发断言。
+
+```c
+void my_irq_handler(void) {
+    if (gpio_get_irq_event_mask(my_gpio_num) & my_gpio_event_mask) {
+       gpio_acknowledge_irq(my_gpio_num, my_gpio_event_mask);
+      // handle the IRQ
+    }
+}
+```
+
+**参数**
+
+- `gpio`: 将不再传递给此核心默认回调的 GPIO 编号
+- `handler`: 要加入此核心 GPIO IRQ 处理程序列表的处理程序
+- `order_priority`: 用于确定该处理程序在此核心 GPIO IRQ 处理程序列表中相对位置的优先级顺序
+
+#### gpio_add_raw_irq_handler_with_order_priority_masked
+
+`void gpio_add_raw_irq_handler_with_order_priority_masked (uint32_t gpio_mask, irq_handler_t handler, uint8_t order_priority)`
+
+为当前核心上指定的多个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认回调被调用。相对于默认回调的执行顺序可通过 `order_priority` 参数控制（默认回调的优先级为 `GPIO_IRQ_CALLBACK_ORDER_PRIORITY`，默认取最低优先级，以便最后执行）。
+
+此方法添加这样一个显式 GPIO IRQ 处理程序，并对指定的多个 GPIO 禁用“默认”回调。
+
+原始处理程序应自行检查它所处理的 GPIO 与事件，并自行确认中断；其形式大致如下：
+
+**注意**：不应为同一组 GPIO 添加多个原始处理程序，尝试这样做会触发断言。此函数内部调用 `irq_add_shared_handler`，当共享处理程序数量超过上限（可通过 `PICO_MAX_SHARED_IRQ_HANDLERS` 配置）时同样会触发断言。
+
+```c
+void my_irq_handler(void) {
+    if (gpio_get_irq_event_mask(my_gpio_num) & my_gpio_event_mask) {
+       gpio_acknowledge_irq(my_gpio_num, my_gpio_event_mask);
+      // handle the IRQ
+    }
+    if (gpio_get_irq_event_mask(my_gpio_num2) & my_gpio_event_mask2) {
+       gpio_acknowledge_irq(my_gpio_num2, my_gpio_event_mask2);
+      // handle the IRQ
+    }
+}
+```
+
+**参数**
+
+- `gpio_mask`: GPIO 编号的位掩码，这些 GPIO 将不再传递给此核心的默认回调
+- `handler`: 要加入此核心 GPIO IRQ 处理程序列表的处理程序
+- `order_priority`: 用于确定该处理程序在此核心 GPIO IRQ 处理程序列表中相对位置的优先级顺序
+
+#### gpio_add_raw_irq_handler_with_order_priority_masked64
+
+`void gpio_add_raw_irq_handler_with_order_priority_masked64 (uint64_t gpio_mask, irq_handler_t handler, uint8_t order_priority)`
+
+为当前核心上指定的多个 GPIO 添加原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认回调被调用。相对于默认回调的执行顺序可通过 `order_priority` 参数控制（默认回调的优先级为 `GPIO_IRQ_CALLBACK_ORDER_PRIORITY`，默认取最低优先级，以便最后执行）。
+
+此方法添加这样一个显式 GPIO IRQ 处理程序，并对指定的多个 GPIO 禁用“默认”回调。
+
+原始处理程序应自行检查它所处理的 GPIO 与事件，并自行确认中断；其形式大致如下：
+
+**注意**：不应为同一组 GPIO 添加多个原始处理程序，尝试这样做会触发断言。此函数内部调用 `irq_add_shared_handler`，当共享处理程序数量超过上限（可通过 `PICO_MAX_SHARED_IRQ_HANDLERS` 配置）时同样会触发断言。
+
+```c
+void my_irq_handler(void) {
+    if (gpio_get_irq_event_mask(my_gpio_num) & my_gpio_event_mask) {
+       gpio_acknowledge_irq(my_gpio_num, my_gpio_event_mask);
+      // handle the IRQ
+    }
+    if (gpio_get_irq_event_mask(my_gpio_num2) & my_gpio_event_mask2) {
+       gpio_acknowledge_irq(my_gpio_num2, my_gpio_event_mask2);
+      // handle the IRQ
+    }
+}
+```
+
+**参数**
+
+- `gpio_mask`: GPIO 编号的位掩码，这些 GPIO 将不再传递给此核心的默认回调
+- `handler`: 要加入此核心 GPIO IRQ 处理程序列表的处理程序
+- `order_priority`: 用于确定该处理程序在此核心 GPIO IRQ 处理程序列表中相对位置的优先级顺序
+
+#### gpio_clr_mask
+
+`static void gpio_clr_mask (uint32_t mask) [inline], [static]`
+
+将掩码中出现的所有 GPIO 驱动为低电平。
+
+**参数**
+
+- `mask`: 要清除的 GPIO 值位掩码
+
+#### gpio_clr_mask64
+
+`static void gpio_clr_mask64 (uint64_t mask) [inline], [static]`
+
+将掩码中出现的所有 GPIO 驱动为低电平。
+
+**参数**
+
+- `mask`: 要清除的 GPIO 值位掩码
+
+#### gpio_clr_mask_n
+
+`static void gpio_clr_mask_n (uint n, uint32_t mask) [inline], [static]`
+
+将掩码中出现的所有 GPIO 驱动为低电平。
+
+**参数**
+
+- `n`: 要更新的掩码的 GPIO 起始编号。`n == 0` 表示 0→31，`n == 1` 表示 32→63，以此类推。
+- `mask`: 32 个 GPIO 值的位掩码，表示要清除的位
+
+#### gpio_deinit
+
+`void gpio_deinit (uint gpio)`
+
+将 GPIO 复位回 NULL 功能，即禁用该 GPIO。
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+#### gpio_disable_pulls
+
+`static void gpio_disable_pulls (uint gpio) [inline], [static]`
+
+禁用指定 GPIO 的上拉与下拉。
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+#### gpio_get
+
+`static bool gpio_get (uint gpio) [inline], [static]`
+
+获取单个指定 GPIO 的状态。
+
+GPIO 的当前状态。0 表示低电平，非 0 表示高电平
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+GPIO 的当前状态。0 表示低电平，非 0 表示高电平
+
+#### gpio_get_all
+
+`static uint32_t gpio_get_all (void) [inline], [static]`
+
+获取所有 GPIO 的原始值。
+
+GPIO 原始值的位掩码
+
+**返回值**
+
+GPIO 原始值的位掩码
+
+#### gpio_get_all64
+
+`static uint64_t gpio_get_all64 (void) [inline], [static]`
+
+获取所有 GPIO 的原始值。
+
+GPIO 原始值的位掩码
+
+**返回值**
+
+GPIO 原始值的位掩码
+
+#### gpio_get_dir
+
+`static uint gpio_get_dir (uint gpio) [inline], [static]`
+
+获取指定 GPIO 的方向。
+
+1 表示输出，0 表示输入
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+1 表示输出，0 表示输入
+
+#### gpio_get_drive_strength
+
+`enum gpio_drive_strength gpio_get_drive_strength (uint gpio)`
+
+获取指定 GPIO 当前的驱动强度。
+
+该 GPIO 当前的驱动强度
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+该 GPIO 当前的驱动强度
+
+**参见**
+
+`gpio_set_drive_strength`
+
+#### gpio_get_function
+
+`gpio_function_t gpio_get_function (uint gpio)`
+
+确定当前的 GPIO 功能。
+
+当前从 `gpio_function_t` 列表中选中的 GPIO 功能
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+当前从 `gpio_function_t` 列表中选中的 GPIO 功能
+
+#### gpio_get_irq_event_mask
+
+`static uint32_t gpio_get_irq_event_mask (uint gpio) [inline], [static]`
+
+返回指定 GPIO 当前的中断状态（待处理事件）。
+
+该 GPIO 当前待处理事件的位掩码。详见 `gpio_irq_level`。
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+该 GPIO 当前待处理事件的位掩码。详见 `gpio_irq_level`。
+
+**参见**
+
+`gpio_acknowledge_irq`
+
+#### gpio_get_out_level
+
+`static bool gpio_get_out_level (uint gpio) [inline], [static]`
+
+判断 GPIO 当前被驱动为高电平还是低电平。
+
+此函数返回最近一次通过 `gpio_put()` 或类似函数为 GPIO 指定的高／低输出电平。这是呈现给 IO 多路复用器的输出值，**并非**从焊盘返回的输入电平（后者可通过 `gpio_get()` 读取）。
+
+为避免竞态，驱动 GPIO 时不得将此函数用于“读—改—写”序列；应改用 `gpio_put()` 等函数原子地更新 GPIO。此访问函数仅供调试使用。
+
+GPIO 输出电平为高时返回 true，为低时返回 false。
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+GPIO 输出电平为高时返回 true，为低时返回 false。
+
+#### gpio_get_slew_rate
+
+`enum gpio_slew_rate gpio_get_slew_rate (uint gpio)`
+
+获取指定 GPIO 当前的压摆率。
+
+该 GPIO 当前的压摆率
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+该 GPIO 当前的压摆率
+
+**参见**
+
+`gpio_set_slew_rate`
+
+#### gpio_init
+
+`void gpio_init (uint gpio)`
+
+初始化一个 GPIO（使能 I/O 并将功能设为 `GPIO_FUNC_SIO`）
+
+清除输出使能（即设为输入），并清除所有输出值。
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+#### gpio_init_mask
+
+`void gpio_init_mask (uint32_t gpio_mask)`
+
+初始化多个 GPIO（使能 I/O 并将功能设为 `GPIO_FUNC_SIO`）
+
+清除输出使能（即设为输入），并清除所有输出值。
+
+**参数**
+
+- `gpio_mask`: 每个 GPIO 编号占 1 位的掩码，指定要初始化的 GPIO
+
+#### gpio_init_mask64
+
+`static void gpio_init_mask64 (uint64_t gpio_mask) [inline], [static]`
+
+初始化多个 GPIO（使能 I/O 并将功能设为 `GPIO_FUNC_SIO`）
+
+清除输出使能（即设为输入），并清除所有输出值。
+
+**参数**
+
+- `gpio_mask`: 每个 GPIO 编号占 1 位的掩码，指定要初始化的 GPIO
+
+#### gpio_is_dir_out
+
+`static bool gpio_is_dir_out (uint gpio) [inline], [static]`
+
+检查指定 GPIO 的方向是否为输出（OUT）。
+
+引脚方向为输出（OUT）时返回 true
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+引脚方向为输出（OUT）时返回 true
+
+#### gpio_is_input_hysteresis_enabled
+
+`bool gpio_is_input_hysteresis_enabled (uint gpio)`
+
+判断指定 GPIO 是否使能了输入迟滞。
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**参见**
+
+`gpio_set_input_hysteresis_enabled`
+
+#### gpio_is_pulled_down
+
+`static bool gpio_is_pulled_down (uint gpio) [inline], [static]`
+
+判断指定 GPIO 是否下拉。
+
+GPIO 已下拉时返回 true
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+GPIO 已下拉时返回 true
+
+#### gpio_is_pulled_up
+
+`static bool gpio_is_pulled_up (uint gpio) [inline], [static]`
+
+判断指定 GPIO 是否上拉。
+
+GPIO 已上拉时返回 true
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+**返回值**
+
+GPIO 已上拉时返回 true
+
+#### gpio_pull_down
+
+`static void gpio_pull_down (uint gpio) [inline], [static]`
+
+将指定 GPIO 设置为下拉。
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+#### gpio_pull_up
+
+`static void gpio_pull_up (uint gpio) [inline], [static]`
+
+将指定 GPIO 设置为上拉。
+
+**参数**
+
+- `gpio`: GPIO 编号
+
+#### gpio_put
+
+`static void gpio_put (uint gpio, bool value) [inline], [static]`
+
+驱动单个 GPIO 为高电平或低电平。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `value`: 为 false 时清除该 GPIO，否则置位该 GPIO。
+
+#### gpio_put_all
+
+`static void gpio_put_all (uint32_t value) [inline], [static]`
+
+同时驱动所有引脚。
+
+**参数**
+
+- `value`: 要改变的 GPIO 值位掩码
+
+#### gpio_put_all64
+
+`static void gpio_put_all64 (uint64_t value) [inline], [static]`
+
+同时驱动所有引脚。
+
+**参数**
+
+- `value`: 要改变的 GPIO 值位掩码
+
+#### gpio_put_masked
+
+`static void gpio_put_masked (uint32_t mask, uint32_t value) [inline], [static]`
+
+根据参数将 GPIO 驱动为高电平或低电平。
+
+对 `mask` 中每个为 1 的位，将对应引脚驱动为 `value` 中相应位给定的值，其余引脚保持不变。由于使用 TOGL 别名，该函数与同一核心上操作不同引脚的 IRQ 等代码并发使用时是安全的。
+
+**参数**
+
+- `mask`: 要改变的 GPIO 值位掩码
+- `value`: 要设置的值
+
+#### gpio_put_masked64
+
+`static void gpio_put_masked64 (uint64_t mask, uint64_t value) [inline], [static]`
+
+根据参数将 GPIO 驱动为高电平或低电平。
+
+对 `mask` 中每个为 1 的位，将对应引脚驱动为 `value` 中相应位给定的值，其余引脚保持不变。由于使用 TOGL 别名，该函数与同一核心上操作不同引脚的 IRQ 等代码并发使用时是安全的。
+
+**参数**
+
+- `mask`: 要改变的 GPIO 值位掩码
+- `value`: 要设置的值
+
+#### gpio_put_masked_n
+
+`static void gpio_put_masked_n (uint n, uint32_t mask, uint32_t value) [inline], [static]`
+
+根据参数将 GPIO 驱动为高电平或低电平。
+
+对 `mask` 中每个为 1 的位，将对应引脚驱动为 `value` 中相应位给定的值，其余引脚保持不变。由于使用 TOGL 别名，该函数与同一核心上操作不同引脚的 IRQ 等代码并发使用时是安全的。
+
+**参数**
+
+- `n`: 要更新的掩码的 GPIO 起始编号。`n == 0` 表示 0→31，`n == 1` 表示 32→63，以此类推。
+- `mask`: 要改变的 GPIO 值位掩码
+- `value`: 要设置的值
+
+#### gpio_remove_raw_irq_handler
+
+`static void gpio_remove_raw_irq_handler (uint gpio, irq_handler_t handler) [inline], [static]`
+
+移除当前核心上指定单个 GPIO 的原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认事件回调被调用。
+
+此方法移除这样一个回调，并为指定的 GPIO 重新启用“默认”回调。
+
+**参数**
+
+- `gpio`: 将重新传递给此核心默认回调的 GPIO 编号
+- `handler`: 要从此核心 GPIO IRQ 处理程序列表中移除的处理程序
+
+#### gpio_remove_raw_irq_handler_masked
+
+`void gpio_remove_raw_irq_handler_masked (uint32_t gpio_mask, irq_handler_t handler)`
+
+移除当前核心上指定多个 GPIO 的原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认事件回调被调用。
+
+此方法移除这样一个回调，并为指定的多个 GPIO 重新启用“默认”回调。
+
+**注意**：应始终使用与添加原始 IRQ 处理程序时相同的 `gpio_mask`。
+
+**参数**
+
+- `gpio_mask`: GPIO 编号的位掩码，这些 GPIO 将重新传递给此核心的默认回调
+- `handler`: 要从此核心 GPIO IRQ 处理程序列表中移除的处理程序
+
+#### gpio_remove_raw_irq_handler_masked64
+
+`void gpio_remove_raw_irq_handler_masked64 (uint64_t gpio_mask, irq_handler_t handler)`
+
+移除当前核心上指定多个 GPIO 的原始 GPIO IRQ 处理程序。
+
+除了每个核心一个 GPIO IRQ 事件回调这一默认机制（参见 `gpio_set_irq_callback`）之外，还可以添加显式的 GPIO IRQ 处理程序，它们独立于默认事件回调被调用。
+
+此方法移除这样一个回调，并为指定的多个 GPIO 重新启用“默认”回调。
+
+**参数**
+
+- `gpio_mask`: GPIO 编号的位掩码，这些 GPIO 将重新传递给此核心的默认回调
+- `handler`: 要从此核心 GPIO IRQ 处理程序列表中移除的处理程序
+
+#### gpio_set_dir
+
+`static void gpio_set_dir (uint gpio, bool out) [inline], [static]`
+
+设置单个 GPIO 的方向。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `out`: true 表示输出，false 表示输入
+
+#### gpio_set_dir_all_bits
+
+`static void gpio_set_dir_all_bits (uint32_t values) [inline], [static]`
+
+同时设置所有引脚的方向。
+
+**参数**
+
+- `values`: 每个 GPIO 的独立设置；对 GPIO N，第 N 位为 1 表示输出，为 0 表示输入
+
+#### gpio_set_dir_all_bits64
+
+`static void gpio_set_dir_all_bits64 (uint64_t values) [inline], [static]`
+
+同时设置所有引脚的方向。
+
+**参数**
+
+- `values`: 每个 GPIO 的独立设置；对 GPIO N，第 N 位为 1 表示输出，为 0 表示输入
+
+#### gpio_set_dir_in_masked
+
+`static void gpio_set_dir_in_masked (uint32_t mask) [inline], [static]`
+
+将多个 GPIO 设置为输入。
+
+**参数**
+
+- `mask`: 要设为输入的 GPIO 位掩码
+
+#### gpio_set_dir_in_masked64
+
+`static void gpio_set_dir_in_masked64 (uint64_t mask) [inline], [static]`
+
+将多个 GPIO 设置为输入。
+
+**参数**
+
+- `mask`: 要设为输入的 GPIO 位掩码
+
+#### gpio_set_dir_masked
+
+`static void gpio_set_dir_masked (uint32_t mask, uint32_t value) [inline], [static]`
+
+设置多个 GPIO 的方向。
+
+对 `mask` 中每个为 1 的位，将对应引脚切换为 `value` 中相应位给定的方向，其余引脚保持不变。例如 `gpio_set_dir_masked(0x3, 0x2)` 会同时把引脚 0 设为输入、引脚 1 设为输出。
+
+**参数**
+
+- `mask`: 要设为输入的 GPIO 位掩码，使用第 0～29 位
+- `value`: 要设置的值
+
+#### gpio_set_dir_masked64
+
+`static void gpio_set_dir_masked64 (uint64_t mask, uint64_t value) [inline], [static]`
+
+设置多个 GPIO 的方向。
+
+对 `mask` 中每个为 1 的位，将对应引脚切换为 `value` 中相应位给定的方向，其余引脚保持不变。例如 `gpio_set_dir_masked(0x3, 0x2)` 会同时把引脚 0 设为输入、引脚 1 设为输出。
+
+**参数**
+
+- `mask`: 要设为输入的 GPIO 位掩码，使用第 0～29 位
+- `value`: 要设置的值
+
+#### gpio_set_dir_out_masked
+
+`static void gpio_set_dir_out_masked (uint32_t mask) [inline], [static]`
+
+将多个 GPIO 设置为输出。
+
+将 `mask` 中的所有 GPIO 切换为输出
+
+**参数**
+
+- `mask`: 要设为输出的 GPIO 位掩码
+
+#### gpio_set_dir_out_masked64
+
+`static void gpio_set_dir_out_masked64 (uint64_t mask) [inline], [static]`
+
+将多个 GPIO 设置为输出。
+
+将 `mask` 中的所有 GPIO 切换为输出
+
+**参数**
+
+- `mask`: 要设为输出的 GPIO 位掩码
+
+#### gpio_set_dormant_irq_enabled
+
+`void gpio_set_dormant_irq_enabled (uint gpio, uint32_t event_mask, bool enabled)`
+
+为指定 GPIO 和指定事件使能休眠唤醒中断。
+
+该功能用于配置 IRQ，使 XOSC 或 ROSC 在休眠模式下被关闭后重新启动
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `event_mask`: 将触发中断的事件。详见 `gpio_irq_level`。
+- `enabled`: 使能／禁用标志
+
+#### gpio_set_drive_strength
+
+`void gpio_set_drive_strength (uint gpio, enum gpio_drive_strength drive)`
+
+设置指定 GPIO 的驱动强度。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `drive`: GPIO 输出驱动强度
+
+**参见**
+
+`gpio_get_drive_strength`
+
+#### gpio_set_function
+
+`void gpio_set_function (uint gpio, gpio_function_t fn)`
+
+选择 GPIO 功能。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `fn`: 从 `gpio_function_t` 列表中选用哪个 GPIO 功能
+
+#### gpio_set_function_masked
+
+`void gpio_set_function_masked (uint32_t gpio_mask, gpio_function_t fn)`
+
+为多个 GPIO 选择功能。
+
+**参数**
+
+- `gpio_mask`: 每个 GPIO 编号占 1 位的掩码，指定要设置功能的 GPIO
+- `fn`: 从 `gpio_function_t` 列表中选用哪个 GPIO 功能
+
+**参见**
+
+`gpio_set_function`
+
+#### gpio_set_function_masked64
+
+`static void gpio_set_function_masked64 (uint64_t gpio_mask, gpio_function_t fn) [inline], [static]`
+
+为多个 GPIO 选择功能。
+
+**参数**
+
+- `gpio_mask`: 每个 GPIO 编号占 1 位的掩码，指定要设置功能的 GPIO
+- `fn`: 从 `gpio_function_t` 列表中选用哪个 GPIO 功能
+
+**参见**
+
+`gpio_set_function`
+
+#### gpio_set_inover
+
+`void gpio_set_inover (uint gpio, uint value)`
+
+选择 GPIO 输入覆盖。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `value`: 参见 `gpio_override`
+
+#### gpio_set_input_enabled
+
+`void gpio_set_input_enabled (uint gpio, bool enabled)`
+
+使能 GPIO 输入。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `enabled`: 为 true 时使能指定 GPIO 的输入
+
+#### gpio_set_input_hysteresis_enabled
+
+`void gpio_set_input_hysteresis_enabled (uint gpio, bool enabled)`
+
+使能或禁用 GPIO 输入迟滞（施密特触发器）
+
+使能或禁用指定 GPIO 的施密特触发器输入迟滞。所有 GPIO 默认启用该功能。禁用输入迟滞后，当输入信号的上升／下降时间很长时可能导致读数不稳定，但会略微减小 GPIO 的输入延迟。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `enabled`: 为 true 时使能指定 GPIO 的输入迟滞
+
+**参见**
+
+`gpio_is_input_hysteresis_enabled`
+
+#### gpio_set_irq_callback
+
+`void gpio_set_irq_callback (gpio_irq_callback_t callback)`
+
+设置当前核心用于 GPIO IRQ 事件的通用回调。
+
+此函数设置当前核心上所有未通过 `gpio_add_raw_irq_handler` 或其它 `gpio_add_raw_irq_handler_` 系列函数显式挂接的 GPIO IRQ 所使用的回调。
+
+对每个已使能事件且有事件待处理（参见 `gpio_get_irq_event_mask`）的 GPIO（未显式挂接处理程序的），都会以该 GPIO 编号和事件掩码调用此函数。
+
+**注意**：IO IRQ 在各处理器上相互独立。此函数只影响调用它的处理器。
+
+**参数**
+
+- `callback`: GPIO IRQ 发生时要调用的默认用户函数。注意每个处理器只能设置一个。
+
+#### gpio_set_irq_enabled
+
+`void gpio_set_irq_enabled (uint gpio, uint32_t event_mask, bool enabled)`
+
+为指定 GPIO 使能或禁用特定的中断事件。
+
+此函数设置哪些 GPIO 事件会在调用它的核心上产生 GPIO 中断。关于设置处理这些事件的 GPIO 中断处理程序，请参见 `gpio_set_irq_callback`、`gpio_set_irq_enabled_with_callback` 和 `gpio_add_raw_irq_handler`。
+
+事件参数是以下 `gpio_irq_level` 值组成的位掩码：
+
+| 位 | 常量 | 中断 |
+| --- | --- | --- |
+| 0 | `GPIO_IRQ_LEVEL_LOW` | 电平为低时持续触发 |
+| 1 | `GPIO_IRQ_LEVEL_HIGH` | 电平为高时持续触发 |
+| 2 | `GPIO_IRQ_EDGE_FALL` | 每次从高到低跳变时触发 |
+| 3 | `GPIO_IRQ_EDGE_RISE` | 每次从低到高跳变时触发 |
+
+这些值的定义见 `gpio_irq_level`。
+
+**注意**：IO IRQ 在各处理器上相互独立。此函数配置的是调用它的处理器上的中断事件。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `event_mask`: 将触发中断的事件
+- `enabled`: 使能／禁用标志
+
+#### gpio_set_irq_enabled_with_callback
+
+`void gpio_set_irq_enabled_with_callback (uint gpio, uint32_t event_mask, bool enabled, gpio_irq_callback_t callback)`
+
+便捷函数，一次性完成多项 GPIO IRQ 相关的初始化。
+
+此方法混合了若干初始化操作，略显杂糅，具体包括：
+
+- 根据使能标志，更新指定 GPIO 的指定事件是否会在调用它的核心上产生中断。
+
+- 将调用它的核心的回调处理程序设为 `callback`（若 `callback` 为 NULL，则清除该处理程序）。
+
+- 若 `enabled` 为 true，则使能当前核心上的 GPIO IRQ。
+
+此方法通常用于一次性设置，之后其它 IRQ／事件通过 `gpio_set_irq_enabled` 使能。以这种方式在同一核心上添加的所有 GPIO／事件共用同一个回调；如需为不同 GPIO 设置多个相互独立的处理程序，应使用 `gpio_add_raw_irq_handler` 及相关函数。
+
+此方法等价于：
+
+**注意**：IO IRQ 在各处理器上相互独立。此方法只影响调用它的处理器。
+
+```c
+gpio_set_irq_enabled(gpio, event_mask, enabled);
+gpio_set_irq_callback(callback);
+if (enabled) irq_set_enabled(IO_IRQ_BANK0, true);
+```
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `event_mask`: 将触发中断的事件。详见 `gpio_irq_level`。
+- `enabled`: 使能／禁用标志
+- `callback`: GPIO IRQ 发生时要调用的用户函数；若为 NULL，则移除该回调
+
+#### gpio_set_irqover
+
+`void gpio_set_irqover (uint gpio, uint value)`
+
+设置 GPIO IRQ 覆盖。
+
+可选择反转 GPIO IRQ 信号，或将其强制驱动为高电平或低电平
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `value`: 参见 `gpio_override`
+
+#### gpio_set_mask
+
+`static void gpio_set_mask (uint32_t mask) [inline], [static]`
+
+将掩码中出现的所有 GPIO 驱动为高电平。
+
+**参数**
+
+- `mask`: 要置位的 GPIO 值位掩码
+
+#### gpio_set_mask64
+
+`static void gpio_set_mask64 (uint64_t mask) [inline], [static]`
+
+将掩码中出现的所有 GPIO 驱动为高电平。
+
+**参数**
+
+- `mask`: 要置位的 GPIO 值位掩码
+
+#### gpio_set_mask_n
+
+`static void gpio_set_mask_n (uint n, uint32_t mask) [inline], [static]`
+
+将掩码中出现的所有 GPIO 驱动为高电平。
+
+**参数**
+
+- `n`: 要更新的掩码的 GPIO 起始编号。`n == 0` 表示 0→31，`n == 1` 表示 32→63，以此类推。
+- `mask`: 32 个 GPIO 值的位掩码，表示要置位的位
+
+#### gpio_set_oeover
+
+`void gpio_set_oeover (uint gpio, uint value)`
+
+选择 GPIO 输出使能覆盖。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `value`: 参见 `gpio_override`
+
+#### gpio_set_outover
+
+`void gpio_set_outover (uint gpio, uint value)`
+
+设置 GPIO 输出覆盖。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `value`: 参见 `gpio_override`
+
+#### gpio_set_pulls
+
+`void gpio_set_pulls (uint gpio, bool up, bool down)`
+
+设置指定 GPIO 的上拉和下拉。
+
+**注意**：在 RP2040 上，同时使能上拉和下拉会启用“总线保持”功能，即把 GPIO 弱拉到它当前的高／低电平状态。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `up`: 为 true 时对该 GPIO 设置上拉
+- `down`: 为 true 时对该 GPIO 设置下拉
+
+#### gpio_set_slew_rate
+
+`void gpio_set_slew_rate (uint gpio, enum gpio_slew_rate slew)`
+
+设置指定 GPIO 的压摆率。
+
+**参数**
+
+- `gpio`: GPIO 编号
+- `slew`: GPIO 输出压摆率
+
+**参见**
+
+`gpio_get_slew_rate`
+
+#### gpio_xor_mask
+
+`static void gpio_xor_mask (uint32_t mask) [inline], [static]`
+
+翻转掩码中出现的所有 GPIO。
+
+**参数**
+
+- `mask`: 要翻转的 GPIO 值位掩码
+
+#### gpio_xor_mask64
+
+`static void gpio_xor_mask64 (uint64_t mask) [inline], [static]`
+
+翻转掩码中出现的所有 GPIO。
+
+**参数**
+
+- `mask`: 要翻转的 GPIO 值位掩码
+
+#### gpio_xor_mask_n
+
+`static void gpio_xor_mask_n (uint n, uint32_t mask) [inline], [static]`
+
+翻转掩码中出现的所有 GPIO。
+
+**参数**
+
+- `n`: 要更新的掩码的 GPIO 起始编号。`n == 0` 表示 0→31，`n == 1` 表示 32→63，以此类推。
+- `mask`: 32 个 GPIO 值的位掩码，表示要翻转的位
+
+<Normal />

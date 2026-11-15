@@ -101,8 +101,10 @@ int main() {
 
 ### 函数
 
-- `void flash_start_xip (void)`: 初始化 QSPI 接口和外部 QSPI 设备以用于就地执行（XIP）。
-- `void flash_range_erase (uint32_t flash_offs, size_t count)`: 擦除 flash 区域。
+`void flash_start_xip (void)`<br/>&emsp;初始化 QSPI 接口和外部 QSPI 设备以用于就地执行（XIP）。
+
+`void flash_range_erase (uint32_t flash_offs, size_t count)`<br/>&emsp;擦除 flash 区域。
+
 `void flash_range_program (uint32_t flash_offs, const uint8_t *data, size_t count)`<br/>&emsp;编程 flash。
 
 `void flash_get_unique_id (uint8_t *id_out)`<br/>&emsp;获取 flash 的唯一 64 位标识符。
@@ -111,7 +113,107 @@ int main() {
 
 `static void flash_do_cmd (const uint8_t *txbuf, uint8_t *rxbuf, size_t count)`<br/>&emsp;在片选 0 上执行双向 flash 命令。
 
+`bool flash_set_qmi_cs1_setup_function (qmi_setup_function_t function)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;设置用于配置 QMI CS1 的函数。
+
+`static uint32_t flash_devinfo_size_to_bytes (flash_devinfo_size_t size)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;将 flash/PSRAM 容量枚举值转换为以字节为单位的整数容量。
+
+`static flash_devinfo_size_t flash_devinfo_bytes_to_size (uint32_t bytes)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;将以字节为单位的整数 flash/PSRAM 容量转换为容量枚举值（按 OTP 中的存储格式供 ROM 使用）。
+
+`flash_devinfo_size_t flash_devinfo_get_cs_size (uint cs)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;根据 FLASH_DEVINFO 获取连接到片选 `cs` 的 QSPI 设备容量。
+
+`uint flash_devinfo_get_cs_gpio (uint cs)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;根据 FLASH_DEVINFO 查询为每个片选分配的 GPIO。
+
+`void flash_devinfo_set_cs_size (uint cs, flash_devinfo_size_t size)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;更新 FLASH_DEVINFO 运行时副本中连接到片选 `cs` 的 QSPI 设备容量。
+
+`void flash_devinfo_set_cs_gpio (uint cs, uint gpio)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;更新 FLASH_DEVINFO 运行时副本中为每个片选分配的 GPIO。
+
+`bool flash_devinfo_get_d8h_erase_supported (void)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;根据 FLASH_DEVINFO 检查所有已连接设备是否都支持 64 KB 大小的 D8h 块擦除。
+
+`void flash_devinfo_set_d8h_erase_supported (bool supported)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;在 FLASH_DEVINFO 运行时副本中指定所有已连接设备是否都支持 64 KB 大小的 D8h 块擦除。
+
 ### 函数文档
+
+#### flash_devinfo_bytes_to_size  <span className="chip-tag rp2350">RP2350</span>
+
+`static flash_devinfo_size_t flash_devinfo_bytes_to_size (uint32_t bytes) [inline], [static]`
+
+将以字节为单位的整数 flash/PSRAM 容量转换为容量枚举值，该枚举按 OTP 中的存储格式供 ROM 使用。
+
+#### flash_devinfo_get_cs_gpio  <span className="chip-tag rp2350">RP2350</span>
+
+`uint flash_devinfo_get_cs_gpio (uint cs)`
+
+根据 FLASH_DEVINFO 查询为每个片选分配的 GPIO。
+
+**参数**
+
+- `cs`: 片选索引（RP2350 上仅支持值 1）
+
+#### flash_devinfo_get_cs_size  <span className="chip-tag rp2350">RP2350</span>
+
+`flash_devinfo_size_t flash_devinfo_get_cs_size (uint cs)`
+
+根据 FLASH_DEVINFO 获取连接到片选 `cs` 的 QSPI 设备容量。
+
+**参数**
+
+- `cs`: 片选索引：0 表示 QMI 片选 0（QSPI CS 引脚），1 表示 QMI 片选 1。
+
+引导 ROM 在启动过程中把 OTP 中的 FLASH_DEVINFO 数据项读入 boot RAM。其中包含 flash 设备的基本信息，无需与外部设备通信即可查询。（通过 QSPI 确定 QSPI 设备容量的方法有多种，但没有一种被所有设备普遍支持。）
+
+由于 FLASH_DEVINFO 信息在运行时存放于 boot RAM，因此可以被更新。以这种方式所做的更新会一直保留到下次重启。ROM 用这些设备信息控制某些底层 flash API 的行为，例如当片选 1 的容量非零时向其发出 XIP 退出序列。
+
+如果定义了宏 `PICO_FLASH_SIZE_BYTES`，它会覆盖片选 0 的容量值。若某块板卡始终装配相同容量的 flash，可在板级头文件中指定该宏。
+
+#### flash_devinfo_get_d8h_erase_supported  <span className="chip-tag rp2350">RP2350</span>
+
+`bool flash_devinfo_get_d8h_erase_supported (void)`
+
+根据 FLASH_DEVINFO 检查所有已连接的设备是否都支持 64 KB 大小的 D8h 块擦除。
+
+该标志决定 `checked_flash_op()` ROM API 是否在可行时使用 D8h 64 KB 块擦除以加快擦除速度；否则该 ROM API 始终使用 20h 4 KB 扇区擦除。
+
+引导 ROM 在启动时从 OTP 的 FLASH_DEVINFO 数据项加载此标志，并存入 boot RAM。可根据运行时对已连接 QSPI 设备的了解更新 boot RAM 中的副本。
+
+#### flash_devinfo_set_cs_gpio  <span className="chip-tag rp2350">RP2350</span>
+
+`void flash_devinfo_set_cs_gpio (uint cs, uint gpio)`
+
+更新 FLASH_DEVINFO 运行时副本中为每个片选分配的 GPIO。
+
+**参数**
+
+- `cs`: 片选索引（RP2350 上仅支持值 1）
+- `gpio`: GPIO 编号（必须小于 `NUM_BANK0_GPIOS`）
+
+#### flash_devinfo_set_cs_size  <span className="chip-tag rp2350">RP2350</span>
+
+`void flash_devinfo_set_cs_size (uint cs, flash_devinfo_size_t size)`
+
+更新 FLASH_DEVINFO 运行时副本中连接到片选 `cs` 的 QSPI 设备容量。
+
+**参数**
+
+- `cs`: 片选索引：0 表示 QMI 片选 0（QSPI CS 引脚），1 表示 QMI 片选 1。
+- `size`: 所连接设备的容量；若该片选上没有设备，则为 `FLASH_DEVINFO_SIZE_NONE`。
+
+引导 ROM 在 boot RAM 中保存一份启动时从 OTP 读取的 FLASH_DEVINFO 副本。此函数更新该副本，以反映运行时获知的已连接 QSPI 设备容量信息。
+
+它会影响某些 ROM flash API 的行为，例如 `checked_flash_op()` API 中擦除／编程地址的边界检查，或在 `flash_exit_xip()` 中当容量非零时向片选 1 发出 XIP 退出序列。
+
+#### flash_devinfo_set_d8h_erase_supported  <span className="chip-tag rp2350">RP2350</span>
+
+`void flash_devinfo_set_d8h_erase_supported (bool supported)`
+
+在 FLASH_DEVINFO 运行时副本中指定所有已连接设备是否都支持 64 KB 大小的 D8h 块擦除。
+
+此函数更新 OTP FLASH_DEVINFO 在 boot RAM 中的副本。此处传入的标志对 ROM API 可见，并会在下次调用 `flash_devinfo_get_d8h_erase_supported()` 时返回。
+
+#### flash_devinfo_size_to_bytes  <span className="chip-tag rp2350">RP2350</span>
+
+`static uint32_t flash_devinfo_size_to_bytes (flash_devinfo_size_t size) [inline], [static]`
+
+将 flash/PSRAM 容量枚举值转换为以字节为单位的整数容量。
 
 #### flash_do_cmd
 
@@ -178,6 +280,20 @@ int main() {
 - `count`: 要编程的字节数。必须是 256 字节（一页）的整数倍。
 
 编程 flash 页实际上是将某些位从 1 改为 0。将 0 位改回 1 的唯一方式是"擦除"该页所在的整个扇区。因此，在调用 flash_range_program 之前，可能需要确保已调用 flash_range_erase。
+
+#### flash_set_qmi_cs1_setup_function  <span className="chip-tag rp2350">RP2350</span>
+
+`bool flash_set_qmi_cs1_setup_function (qmi_setup_function_t function)`
+
+设置用于配置 QMI CS1 的回调函数。
+
+**参数**
+
+- `function`: 用于配置 QMI CS1 的函数
+
+**返回值**
+
+设置成功返回 true，否则返回 false（例如试图设置位于 flash 中的函数）。
 
 #### flash_start_xip
 

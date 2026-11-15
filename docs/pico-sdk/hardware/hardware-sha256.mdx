@@ -4,7 +4,7 @@ draft: false
 description: 硬件 SHA-256 加速器 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK sha256]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -50,11 +50,14 @@ SHA-256 结果的字节大小。
 
 #### sha256_endianness
 
-enum sha256_endianness
+`enum sha256_endianness`
 
 API 中使用的 SHA-256 字节序定义。
 
-.枚举值
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
 | SHA256_LITTLE_ENDIAN | 小端序。 |
 | SHA256_BIG_ENDIAN | 大端序。 |
 

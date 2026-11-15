@@ -4,7 +4,7 @@ draft: false
 description: 高级 Flash API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK flash]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -27,7 +27,7 @@ Flash 在 XIP 模式下无法被擦除或写入。然而，当系统不在 XIP �
 以下情况无法保证安全性：
 
 . 
-使用 `configNUM_CORES`=1 的 `FreeRTOS` `SMP` —— `FreeRTOS` 在此情况下仍会使用 `pico_multicore`，因此 `flash_safe_execute` 无法得知另一个核心正在做什么，也无法在 FreeRTOS 核心与非 FreeRTOS 核心之间强制代码执行。
+使用 `configNUMBER_OF_CORES`=1 的 `FreeRTOS` `SMP` —— `FreeRTOS` 在此情况下仍会使用 `pico_multicore`，因此 `flash_safe_execute` 无法得知另一个核心正在做什么，也无法在 FreeRTOS 核心与非 FreeRTOS 核心之间强制代码执行。
 
 . 
 非 SMP FreeRTOS 与 pico_multicore 同时使用 —— 同样无法在 FreeRTOS 核心与非 FreeRTOS 核心之间强制代码执行。
@@ -93,7 +93,7 @@ FreeRTOS SMP 不需要此操作，但通过 multicore_launch_core1 启动时应�
 
 #### get_flash_safety_helper
 
-flash_safety_helper_t * get_flash_safety_helper (void)
+`flash_safety_helper_t * get_flash_safety_helper (void)`
 
 返回 Flash 安全辅助实现的内部方法。
 

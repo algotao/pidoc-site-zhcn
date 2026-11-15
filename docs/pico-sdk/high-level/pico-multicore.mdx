@@ -4,7 +4,7 @@ draft: false
 description: 支持在第二个处理器核心（core 1）上运行代码并与其交互。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK multicore]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -357,11 +357,11 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 #### 函数
 
-`void multicore_doorbell_claim (uint doorbell_num, uint core_mask)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式申请使用此硬件 alarm_num。
+`void multicore_doorbell_claim (uint doorbell_num, uint core_mask)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式申请使用此门铃。
 
-`int multicore_doorbell_claim_unused (uint core_mask, bool required)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式申请使用此硬件 alarm_num。
+`int multicore_doorbell_claim_unused (uint core_mask, bool required)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式申请使用未使用的门铃。
 
-`void multicore_doorbell_unclaim (uint doorbell_num, uint core_mask)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式释放对此硬件 alarm_num 的申请。
+`void multicore_doorbell_unclaim (uint doorbell_num, uint core_mask)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;协作式释放对此门铃的申请。
 
 `static void multicore_doorbell_set_other_core (uint doorbell_num)` <span className="chip-tag rp2350">RP2350</span><br/>&emsp;激活另一个核心上的指定门铃。
 
@@ -391,9 +391,9 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 `void multicore_doorbell_claim (uint doorbell_num, uint core_mask)`
 
-协作式申请使用此硬件 alarm_num。
+协作式申请使用此门铃。
 
-如果硬件 alarm 当前已被申请，此方法将触发硬断言。
+如果门铃当前已被申请，此方法将触发硬断言。
 
 **参数**
 
@@ -407,9 +407,9 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 `int multicore_doorbell_claim_unused (uint core_mask, bool required)`
 
-协作式申请使用此硬件 alarm_num。
+协作式申请使用未使用的门铃。
 
-此方法尝试申请一个未使用的硬件 alarm。
+此方法尝试申请一个未使用的门铃。
 
 **参数**
 
@@ -418,7 +418,7 @@ RP 系列微控制器包含两个 FIFO，用于在两个核心之间传递数据
 
 **返回**
 
-申请到的门铃编号；若 required 为 false 且无可用资源，返回 -1。
+申请到的门铃编号；若 required 为 false 且无可用资源，返回 `PICO_ERROR_INSUFFICIENT_RESOURCES`。
 
 **另请参阅**
 

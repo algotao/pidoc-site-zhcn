@@ -4,7 +4,7 @@ draft: false
 description: 设置处理器异常处理程序的方法。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK exception]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -38,7 +38,7 @@ import Normal from "../../_normal.mdx";
 
 #### exception_handler_t
 
-typedef void(* exception_handler_t) (void)
+`typedef void(* exception_handler_t) (void)`
 
 异常处理函数类型。
 
@@ -48,7 +48,7 @@ typedef void(* exception_handler_t) (void)
 
 #### exception_number
 
-enum exception_number
+`enum exception_number`
 
 异常编号定义。
 
@@ -118,7 +118,7 @@ RP2350 上 ARM Cortex-M33 仅高 4 位有效，RISC-V 不支持异常优先级�
 
 #### exception_get_vtable_handler
 
-exception_handler_t exception_get_vtable_handler (enum exception_number num)
+`exception_handler_t exception_get_vtable_handler (enum exception_number num)`
 
 从当前执行核心已安装的向量表中获取指定异常的当前处理程序。
 
@@ -149,7 +149,7 @@ exception_set_exclusive_handler()
 
 #### exception_set_exclusive_handler
 
-exception_handler_t exception_set_exclusive_handler (enum exception_number num, exception_handler_t handler)
+`exception_handler_t exception_set_exclusive_handler (enum exception_number num, exception_handler_t handler)`
 
 为当前执行核心的指定异常设置处理程序。
 

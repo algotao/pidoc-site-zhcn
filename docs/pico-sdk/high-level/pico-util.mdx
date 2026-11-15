@@ -4,7 +4,7 @@ draft: false
 description: 实用数据结构与工具函数。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK util]
 last_update:
-  date: 2026-07-13
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -690,6 +690,8 @@ pheap_node_id_t ph_remove_head (pheap_t * heap, bool free)
 
 若队列已满，此函数将阻塞，直到队列上发生一次移除操作。
 
+**注意**：由于此函数可能阻塞，在 IRQ 上下文中请优先使用 `queue_try_add`。
+
 **queue_free**
 
 `void queue_free (queue_t * q)`
@@ -810,6 +812,8 @@ pheap_node_id_t ph_remove_head (pheap_t * heap, bool free)
 
 若队列为空，函数将阻塞直到有值被添加。
 
+**注意**：由于此函数可能阻塞，在 IRQ 上下文中请优先使用 `queue_try_peek`。
+
 **queue_remove_blocking**
 
 `void queue_remove_blocking (queue_t **q, void ** data)`
@@ -822,6 +826,8 @@ pheap_node_id_t ph_remove_head (pheap_t * heap, bool free)
 - data: 指向接收被移除值的位置的指针，若不需要数据可为 NULL
 
 若队列为空，此函数将阻塞直到有值被添加。
+
+**注意**：由于此函数可能阻塞，在 IRQ 上下文中请优先使用 `queue_try_remove`。
 
 **queue_try_add**
 

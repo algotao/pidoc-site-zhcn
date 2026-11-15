@@ -4,7 +4,7 @@ draft: false
 description: 硬件中断处理 API。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK irq]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -158,6 +158,7 @@ RP2350 的中断编号如下：
 - `bool irq_has_shared_handler (uint num)`: 判断给定中断编号的当前 IRQ 处理程序是否为共享处理程序。
 - irq_handler_t irq_get_vtable_handler (uint num): 从执行核心当前安装的硬件向量表（VTOR）中获取指定 IRQ 的当前 IRQ 处理程序。
 - `static void irq_clear (uint int_num)`: 清除执行核心上的特定中断。
+- `bool irq_is_pending (uint num)`: 判断当前核心上是否有中断处于挂起状态。
 - `void irq_set_pending (uint num)`: 强制在执行核心上挂起一个中断。
 - `void user_irq_claim (uint irq_num)`: 在调用核心上声明用户 IRQ 的所有权。
 - `void user_irq_unclaim (uint irq_num)`: 将调用核心上的用户 IRQ 标记为不再使用。
@@ -167,17 +168,19 @@ RP2350 的中断编号如下：
 
 #### irq_num_t <span className="chip-tag rp2350">RP2350</span>
 
-typedef enum irq_num_rp2350 irq_num_t
+`typedef enum irq_num_rp2350 irq_num_t`
 
 RP2350 上的中断编号（用作 typedef `irq_num_t`）
+
 #### irq_num_t <span className="chip-tag rp2040">RP2040</span>
 
-typedef enum irq_num_rp2040 irq_num_t
+`typedef enum irq_num_rp2040 irq_num_t`
 
 RP2040 上的中断编号（用作 typedef `irq_num_t`）
+
 #### irq_handler_t
 
-typedef void(* irq_handler_t) (void)
+`typedef void(* irq_handler_t) (void)`
 
 中断处理程序函数类型。
 
@@ -187,7 +190,7 @@ typedef void(* irq_handler_t) (void)
 
 #### irq_num_rp2350 <span className="chip-tag rp2350">RP2350</span>
 
-enum irq_num_rp2350
+`enum irq_num_rp2350`
 
 RP2350 上的中断编号（用作 typedef `irq_num_t`）
 
@@ -248,7 +251,7 @@ RP2350 上的中断编号（用作 typedef `irq_num_t`）
 
 #### irq_num_rp2040 <span className="chip-tag rp2040">RP2040</span>
 
-enum irq_num_rp2040
+`enum irq_num_rp2040`
 
 RP2040 上的中断编号（用作 typedef `irq_num_t`）
 
@@ -349,7 +352,7 @@ irq_set_exclusive_handler()
 
 #### irq_get_exclusive_handler
 
-irq_handler_t irq_get_exclusive_handler (uint num)
+`irq_handler_t irq_get_exclusive_handler (uint num)`
 
 获取执行核心上中断的独占中断处理程序。
 
@@ -389,7 +392,7 @@ IRQ 优先级
 
 #### irq_get_vtable_handler
 
-irq_handler_t irq_get_vtable_handler (uint num)
+`irq_handler_t irq_get_vtable_handler (uint num)`
 
 从执行核心当前安装的硬件向量表（VTOR）中获取指定 IRQ 的当前 IRQ 处理程序。
 
@@ -470,6 +473,24 @@ mask - 32 位掩码，其中置 1 的位对应已启用的中断 [中断编号]
 **返回**
 
 若中断已启用则返回 true
+
+#### irq_is_pending
+
+`bool irq_is_pending (uint num)`
+
+判断当前核心上是否有中断处于挂起状态。
+
+若外部系统 IRQ 线当前有效，或该 IRQ 已通过 `irq_set_pending()` 在核心内部强制置为有效，则返回 true。
+
+此函数可用于轮询当前已禁用（此前调用过 `irq_set_enabled(num, false)`）的 IRQ 标志。
+
+对于以任何可能抢占当前核心的优先级启用的 IRQ，请勿使用此函数；这类情况下核心可能直接进入 IRQ 处理程序，使此函数始终不会返回 true。
+
+在带 NVIC 的 Arm 核心上轮询外部 IRQ 有效状态时，建议先调用一次 `irq_clear()`，以清除内部挂起锁存器中残留的状态。
+
+**参数**
+
+- num: 中断编号 [中断编号]
 
 #### irq_remove_handler
 

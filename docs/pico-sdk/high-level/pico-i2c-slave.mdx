@@ -4,7 +4,7 @@ draft: false
 description: 提供中断驱动 I2C 从机接口的函数。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK i2c slave, I2C]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -35,12 +35,13 @@ import Normal from "../../_normal.mdx";
 
 #### i2c_slave_event_t
 
-typedef enum i2c_slave_event_t i2c_slave_event_t
+`typedef enum i2c_slave_event_t i2c_slave_event_t`
 
 I2C 从机事件类型。
+
 #### i2c_slave_handler_t
 
-typedef void(** i2c_slave_handler_t) (i2c_inst_t **i2c, i2c_slave_event_t event)
+`typedef void(** i2c_slave_handler_t) (i2c_inst_t **i2c, i2c_slave_event_t event)`
 
 I2C 从机事件处理函数。
 
@@ -55,11 +56,14 @@ I2C 从机事件处理函数。
 
 #### i2c_slave_event_t
 
-enum i2c_slave_event_t
+`enum i2c_slave_event_t`
 
 I2C 从机事件类型。
 
-.枚举值
+**枚举值**
+
+| 枚举值 | 说明 |
+| --- | --- |
 | I2C_SLAVE_RECEIVE | 来自主机的数据可供读取。从机必须从 Rx FIFO 中读取。 |
 | I2C_SLAVE_REQUEST | 主机正在请求数据。从机必须向 Tx FIFO 中写入数据。 |
 | I2C_SLAVE_FINISH | 主机已发送停止或重新开始信号。从机可以为下一次传输做准备。 |

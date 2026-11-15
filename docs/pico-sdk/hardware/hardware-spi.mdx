@@ -4,7 +4,7 @@ draft: false
 description: RP 系列微控制器拥有 2 个相同的串行外设接口（SPI）控制器实例。
 keywords: [Raspberry Pi Pico, Pico SDK, RP2040, RP2350, Pico SDK spi, SPI]
 last_update:
-  date: 2026-05-30
+  date: 2026-11-15
 ---
 import Normal from "../../_normal.mdx";
 
@@ -82,6 +82,7 @@ PrimeCell SSP 是用于与具有 Motorola SPI、National Semiconductor Microwire
 第一个（SPI 0）硬件 SPI 实例的标识符（用于 SPI 函数）。
 
 例如：spi_init(spi0, 48000)
+
 #### spi1
 
 #define spi1 ((spi_inst_t *)spi1_hw)
@@ -89,6 +90,7 @@ PrimeCell SSP 是用于与具有 Motorola SPI、National Semiconductor Microwire
 第二个（SPI 1）硬件 SPI 实例的标识符（用于 SPI 函数）。
 
 例如：spi_init(spi1, 48000)
+
 #### SPI_NUM
 
 #define SPI_NUM(spi)
@@ -96,6 +98,7 @@ PrimeCell SSP 是用于与具有 Motorola SPI、National Semiconductor Microwire
 返回 SPI 实例的 SPI 编号。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### SPI_INSTANCE
 
 #define SPI_INSTANCE(num)
@@ -103,6 +106,7 @@ PrimeCell SSP 是用于与具有 Motorola SPI、National Semiconductor Microwire
 返回具有给定 SPI 编号的 SPI 实例。
 
 注意：此宏旨在在编译时解析，不进行参数检查。
+
 #### SPI_DREQ_NUM
 
 #define SPI_DREQ_NUM(spi, is_tx)
@@ -131,17 +135,19 @@ PrimeCell SSP 是用于与具有 Motorola SPI、National Semiconductor Microwire
 
 #### spi_cpha_t
 
-enum spi_cpha_t
+`enum spi_cpha_t`
 
 SPI CPHA（时钟相位）值枚举。
+
 #### spi_cpol_t
 
-enum spi_cpol_t
+`enum spi_cpol_t`
 
 SPI CPOL（时钟极性）值枚举。
+
 #### spi_order_t
 
-enum spi_order_t
+`enum spi_order_t`
 
 SPI 位序值枚举。
 
